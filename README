@@ -1,0 +1,8 @@
+Libmodbus is a library to send/receive data with a device which uses
+ModBus protocol. This library can use a serial port or an Ethernet
+connexion.
+ 
+The functions included in the library have been derived from the
+Modicon Modbus Protocol Reference Guide which can be obtained from
+Schneider at www.schneiderautomation.com.
+
