@@ -6,7 +6,7 @@ test -z "$srcdir" && srcdir=.
 ORIGDIR=`pwd`
 cd $srcdir
 
-PROJECT=libGtkEntryMask
+PROJECT=libmodbus
 
 DIE=0
 
