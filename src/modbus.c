@@ -1249,7 +1249,7 @@ void modbus_listen_tcp(modbus_param_t *mb_param)
 	int ret;
 	int new_socket;
 	struct sockaddr_in addr;
-	int addrlen;
+	socklen_t addrlen;
 
 	addr.sin_family = AF_INET;
 	/* The modbus port is < 1024
