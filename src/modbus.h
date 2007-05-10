@@ -1,5 +1,5 @@
 /* 
-   Copyright (C) 2001-2005 Stéphane Raimbault <stephane.raimbault@free.fr>
+   Copyright (C) 2001-2007 Stéphane Raimbault <stephane.raimbault@gmail.com>
 
    This library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -27,11 +27,13 @@
 
 #define MODBUS_TCP_PORT      502
 
-#define HEADER_LENGTH_RTU      0
-#define PRESET_QUERY_SIZE_RTU  6
+#define HEADER_LENGTH_RTU         0
+#define PRESET_QUERY_SIZE_RTU     6
+#define PRESET_RESPONSE_SIZE_RTU  2
 
-#define HEADER_LENGTH_TCP      6
-#define PRESET_QUERY_SIZE_TCP 12
+#define HEADER_LENGTH_TCP         6
+#define PRESET_QUERY_SIZE_TCP    12
+#define PRESET_RESPONSE_SIZE_TCP  8
 
 #define CHECKSUM_SIZE_RTU      2
 #define CHECKSUM_SIZE_TCP      0	
@@ -62,6 +64,26 @@
 #define TRUE 1
 #endif
 
+#ifndef OFF
+#define OFF 0
+#endif
+
+#ifndef ON
+#define ON 1
+#endif
+
+/* Function codes */
+#define FC_READ_COIL_STATUS          0x01  /* discretes inputs */
+#define FC_READ_INPUT_STATUS         0x02  /* discretes outputs */
+#define FC_READ_HOLDING_REGISTERS    0x03  
+#define FC_READ_INPUT_REGISTERS      0x04
+#define FC_FORCE_SINGLE_COIL         0x05
+#define FC_PRESET_SINGLE_REGISTER    0x06
+#define FC_READ_EXCEPTION_STATUS     0x07
+#define FC_FORCE_MULTIPLE_COILS      0x0F
+#define FC_PRESET_MULTIPLE_REGISTERS 0x10
+#define FC_REPORT_SLAVE_ID           0x11
+
 /* Protocol exceptions */
 #define ILLEGAL_FUNCTION        -0x01
 #define ILLEGAL_DATA_ADDRESS    -0x02
@@ -84,17 +106,20 @@
 #define INVALID_CRC             -0x10
 #define INVALID_EXCEPTION_CODE  -0x11
 
+/* Internal using */
+#define MSG_SIZE_UNDEFINED -1
+
 typedef enum { RTU, TCP } type_com_t;
 
-typedef struct _modbus_param_t {
+typedef struct {
 	/* Communication : RTU or TCP */
 	type_com_t type_com;
 	/* Device: "/dev/ttyS0" */
 	char device[11];
-	/* Bauds: 19200 */
-	int baud_i;
 	/* Parity: "even", "odd", "none" */
 	char parity[5];
+	/* Bauds: 19200 */
+	int baud_i;
 	/* Data bit */
 	int data_bit;
 	/* Stop bit */
@@ -113,6 +138,17 @@ typedef struct _modbus_param_t {
 	int checksum_size;
 } modbus_param_t;
 
+typedef struct {
+	int nb_coil_status;
+	int nb_input_status;
+	int nb_input_registers;
+	int nb_holding_registers;
+	unsigned char *tab_coil_status;
+	unsigned char *tab_input_status;
+	unsigned short *tab_input_registers;
+	unsigned short *tab_holding_registers;
+} modbus_mapping_t;
+
 /* All functions used for sending or receiving data return :
    - the numbers of values (bits or word) if success (0 or more)
    - less than 0 for exceptions errors
@@ -127,18 +163,18 @@ int read_coil_status(modbus_param_t *mb_param, int slave,
 int read_input_status(modbus_param_t *mb_param, int slave,
 		      int start_addr, int count, int *dest);
 
-/* Read the holding registers in a slave and put the data into an
+/* Reads the holding registers in a slave and put the data into an
    array */
 int read_holding_registers(modbus_param_t *mb_param, int slave,
 			   int start_addr, int count, int *dest);
 
 
-/* Read the input registers in a slave and put the data into an
+/* Reads the input registers in a slave and put the data into an
    array */
 int read_input_registers(modbus_param_t *mb_param, int slave,
 			 int start_addr, int count, int *dest);
 
-/* Turn on or off a single coil on the slave device */
+/* Turns on or off a single coil on the slave device */
 int force_single_coil(modbus_param_t *mb_param, int slave,
 		      int coil_addr, int state);
 
@@ -174,26 +210,32 @@ void modbus_init_rtu(modbus_param_t *mb_param, char *device,
 void modbus_init_tcp(modbus_param_t *mb_param, char *ip_address);
 
 
-/* This function sets up a serial port for RTU communications to
-   modbus or a TCP connexion */
+/* Sets up a serial port for RTU communications to modbus or a TCP
+   connexion */
 int modbus_connect(modbus_param_t *mb_param);
 
-/* This function closes the serial port and restores the previous port
-   configuration or close the TCP connexion */
+/* Closes the serial port and restores the previous port configuration
+   or close the TCP connexion */
 void modbus_close(modbus_param_t *mb_param);
 
-/* Set in debug mode */
+/* Sets debug mode */
 void modbus_set_debug(modbus_param_t *mb_param, int boolean);
 
-/* Useful for a 'daemon' */
-void modbus_listen_tcp(modbus_param_t *mb_param);
+/* Slave/client functions */
+int modbus_mapping_new(modbus_mapping_t *mb_mapping,
+		       int nb_coil_status, int nb_input_status,
+		       int nb_input_registers, int nb_holding_registers);
+void modbus_mapping_free(modbus_mapping_t *mb_mapping);
 
-/* Non implemented :
+int modbus_init_listen_tcp(modbus_param_t *mb_param);
+
+int modbus_listen(modbus_param_t *mb_param, unsigned char *query, int *query_size);
+
+void manage_query(modbus_param_t *mb_param, unsigned char *query,
+		  int query_size, modbus_mapping_t *mb_mapping);
+
+/* Not implemented :
    - read_exception_status()
 */
-
-/* Find out what a master is trying to ask this slave device */
-int get_slave_query_tcp(modbus_param_t *mb_param, int *slave_addr, int *query,
-			int *start_addr, int *point_count, int *data);
 
 #endif  /* _MODBUS_H_ */
