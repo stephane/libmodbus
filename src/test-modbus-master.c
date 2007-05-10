@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2001-2005 Stéphane Raimbault <stephane.raimbault@free.fr>
+   Copyright (C) 2001-2007 Stéphane Raimbault <stephane.raimbault@gmail.com>
 
    This library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -26,11 +26,11 @@
 
 #include <modbus.h>
 
-#define LOOP 1
-#define SLAVE 1
-#define ADDR_MIN 100
-#define ADDR_MAX 150
-#define FIELDS 50
+#define LOOP       1
+#define SLAVE   0x11
+#define ADDR_MIN   0
+#define ADDR_MAX 499
+#define FIELDS   500
 
 int main(void)
 {
@@ -47,7 +47,7 @@ int main(void)
 /*      modbus_init_rtu(&mb_param, "/dev/ttyS0", 19200, "none", 8, 1); */
 
 	/* TCP */
-	modbus_init_tcp(&mb_param, "192.168.0.100");
+	modbus_init_tcp(&mb_param, "169.254.7.104");
 	modbus_set_debug(&mb_param, TRUE);
       
 	modbus_connect(&mb_param);
@@ -56,6 +56,19 @@ int main(void)
 	tab_rq_bits = (int *) malloc(FIELDS * sizeof(int));
 	tab_rp = (int *) malloc(FIELDS * sizeof(int));
 	
+	read_coil_status(&mb_param, SLAVE, 0x13, 0x25, tab_rp);
+	read_input_status(&mb_param, SLAVE, 0xC4, 0x16, tab_rp);
+	read_holding_registers(&mb_param, SLAVE, 0x6B, 3, tab_rp);
+	read_input_registers(&mb_param, SLAVE, 0x8, 1, tab_rp);
+	force_single_coil(&mb_param, SLAVE, 0xAC, ON);
+
+	free(tab_rp);						
+	free(tab_rq);
+	free(tab_rq_bits);
+	modbus_close(&mb_param);
+	
+	return 0;
+
 	loop_nb = ok = fail = 0;
 	while (loop_nb++ < LOOP) { 
 		for (addr=ADDR_MIN; addr <= ADDR_MAX; addr++) {
