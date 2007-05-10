@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(libmodbus, 1.2, stephane.raimbault@free.fr)
+AC_INIT(libmodbus, 1.2, stephane.raimbault@gmail.com)
 AM_INIT_AUTOMAKE(libmodbus, 1.2.0)
 
 # Checks for programs.
