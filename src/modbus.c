@@ -320,17 +320,9 @@ int check_crc16(modbus_param_t *mb_param,
 	if (mb_param->type_com == RTU) {
 		unsigned short crc_calc;
 		unsigned short crc_received;
-		unsigned char recv_crc_hi;
-		unsigned char recv_crc_lo;
 		
 		crc_calc = crc16(msg, msg_size - 2);
-		
-		recv_crc_hi = msg[msg_size - 2];
-		recv_crc_lo = msg[msg_size - 1];
-		
-		crc_received = msg[msg_size - 2];
-		crc_received = crc_received << 8;
-		crc_received = crc_received | msg[msg_size - 1];
+		crc_received = (msg[msg_size - 2] << 8) | msg[msg_size - 1];
 		
 		/* Check CRC of msg */
 		if (crc_calc == crc_received) {
