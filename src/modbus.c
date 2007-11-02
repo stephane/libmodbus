@@ -1013,6 +1013,7 @@ int force_multiple_coils(modbus_param_t *mb_param, int slave,
         int coil_check = 0;
         int status;
         int query_ret;
+        int pos = 0;
 
         unsigned char query[MAX_PACKET_SIZE];
 
@@ -1028,7 +1029,6 @@ int force_multiple_coils(modbus_param_t *mb_param, int slave,
 
         for (i = 0; i < byte_count; i++) {
                 int bit;
-                int pos = 0;
 
                 bit = 0x01;
                 query[query_size] = 0;
