@@ -36,7 +36,7 @@
 #define PRESET_RESPONSE_SIZE_TCP  8
 
 #define CHECKSUM_SIZE_RTU      2
-#define CHECKSUM_SIZE_TCP      0	
+#define CHECKSUM_SIZE_TCP      0        
 
 /* 8 + HEADER_LENGTH_TCP */
 #define MIN_QUERY_SIZE        14
@@ -112,41 +112,41 @@
 typedef enum { RTU, TCP } type_com_t;
 
 typedef struct {
-	/* Communication : RTU or TCP */
-	type_com_t type_com;
-	/* Device: "/dev/ttyS0" */
-	char device[11];
-	/* Parity: "even", "odd", "none" */
-	char parity[5];
-	/* Bauds: 19200 */
-	int baud_i;
-	/* Data bit */
-	int data_bit;
-	/* Stop bit */
-	int stop_bit;
-	/* Save old termios settings */
-	struct termios old_tios;
-	/* Descriptor (tty or socket) */
-	int fd;
-	/* Flag debug */
-	int debug;
-	/* IP address */
-	char ip[16];
-	/* Header length used for offset */
-	int header_length;
-	/* Checksum size RTU = 2 and TCP = 0 */
-	int checksum_size;
+        /* Communication : RTU or TCP */
+        type_com_t type_com;
+        /* Device: "/dev/ttyS0" */
+        char device[11];
+        /* Parity: "even", "odd", "none" */
+        char parity[5];
+        /* Bauds: 19200 */
+        int baud_i;
+        /* Data bit */
+        int data_bit;
+        /* Stop bit */
+        int stop_bit;
+        /* Save old termios settings */
+        struct termios old_tios;
+        /* Descriptor (tty or socket) */
+        int fd;
+        /* Flag debug */
+        int debug;
+        /* IP address */
+        char ip[16];
+        /* Header length used for offset */
+        int header_length;
+        /* Checksum size RTU = 2 and TCP = 0 */
+        int checksum_size;
 } modbus_param_t;
 
 typedef struct {
-	int nb_coil_status;
-	int nb_input_status;
-	int nb_input_registers;
-	int nb_holding_registers;
-	unsigned char *tab_coil_status;
-	unsigned char *tab_input_status;
-	unsigned short *tab_input_registers;
-	unsigned short *tab_holding_registers;
+        int nb_coil_status;
+        int nb_input_status;
+        int nb_input_registers;
+        int nb_holding_registers;
+        unsigned char *tab_coil_status;
+        unsigned char *tab_input_status;
+        unsigned short *tab_input_registers;
+        unsigned short *tab_holding_registers;
 } modbus_mapping_t;
 
 /* All functions used for sending or receiving data return :
@@ -157,43 +157,43 @@ typedef struct {
 /* Reads the boolean status of coils and sets the array elements in
    the destination to TRUE or FALSE */
 int read_coil_status(modbus_param_t *mb_param, int slave,
-		     int start_addr, int count, int *dest);
+                     int start_addr, int count, int *dest);
 
 /* Same as read_coil_status but reads the slaves input table */
 int read_input_status(modbus_param_t *mb_param, int slave,
-		      int start_addr, int count, int *dest);
+                      int start_addr, int count, int *dest);
 
 /* Reads the holding registers in a slave and put the data into an
    array */
 int read_holding_registers(modbus_param_t *mb_param, int slave,
-			   int start_addr, int count, int *dest);
+                           int start_addr, int count, int *dest);
 
 
 /* Reads the input registers in a slave and put the data into an
    array */
 int read_input_registers(modbus_param_t *mb_param, int slave,
-			 int start_addr, int count, int *dest);
+                         int start_addr, int count, int *dest);
 
 /* Turns on or off a single coil on the slave device */
 int force_single_coil(modbus_param_t *mb_param, int slave,
-		      int coil_addr, int state);
+                      int coil_addr, int state);
 
 /* Sets a value in one holding register in the slave device */
 int preset_single_register(modbus_param_t *mb_param, int slave,
-			   int reg_addr, int value);
+                           int reg_addr, int value);
 
 /* Takes an array of ints and sets or resets the coils on a slave
    appropriatly */
 int force_multiple_coils(modbus_param_t *mb_param, int slave,
-			 int start_addr, int coil_count, int *data);
+                         int start_addr, int coil_count, int *data);
 
 /* Copy the values in an array to an array on the slave */
 int preset_multiple_registers(modbus_param_t *mb_param, int slave,
-			      int start_addr, int reg_count, int *data);
+                              int start_addr, int reg_count, int *data);
 
 /* Returns some useful information about the modbus controller */
 int report_slave_id(modbus_param_t *mb_param, int slave,
-		    unsigned char *dest);
+                    unsigned char *dest);
 
 /* Initialises a parameters structure
    - device : "/dev/ttyS0"
@@ -203,8 +203,8 @@ int report_slave_id(modbus_param_t *mb_param, int slave,
    - stop_bits : 1, 2
 */
 void modbus_init_rtu(modbus_param_t *mb_param, char *device,
-		     int baud, char *parity, int data_bit,
-		     int stop_bit);
+                     int baud, char *parity, int data_bit,
+                     int stop_bit);
 /* Initialises a parameters structure for TCP
    - ip : "192.168.0.5" */
 void modbus_init_tcp(modbus_param_t *mb_param, char *ip_address);
@@ -223,8 +223,8 @@ void modbus_set_debug(modbus_param_t *mb_param, int boolean);
 
 /* Slave/client functions */
 int modbus_mapping_new(modbus_mapping_t *mb_mapping,
-		       int nb_coil_status, int nb_input_status,
-		       int nb_input_registers, int nb_holding_registers);
+                       int nb_coil_status, int nb_input_status,
+                       int nb_input_registers, int nb_holding_registers);
 void modbus_mapping_free(modbus_mapping_t *mb_mapping);
 
 int modbus_init_listen_tcp(modbus_param_t *mb_param);
@@ -232,7 +232,7 @@ int modbus_init_listen_tcp(modbus_param_t *mb_param);
 int modbus_listen(modbus_param_t *mb_param, unsigned char *query, int *query_size);
 
 void manage_query(modbus_param_t *mb_param, unsigned char *query,
-		  int query_size, modbus_mapping_t *mb_mapping);
+                  int query_size, modbus_mapping_t *mb_mapping);
 
 /* Not implemented :
    - read_exception_status()
