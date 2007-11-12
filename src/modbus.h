@@ -114,8 +114,8 @@ typedef enum { RTU, TCP } type_com_t;
 typedef struct {
         /* Communication : RTU or TCP */
         type_com_t type_com;
-        /* Device: "/dev/ttyS0" */
-        char device[11];
+        /* Device: "/dev/ttyS0" or "/dev/ttyUSB0" */
+        char device[19];
         /* Parity: "even", "odd", "none" */
         char parity[5];
         /* Bauds: 19200 */

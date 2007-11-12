@@ -1,0 +1,17 @@
+libmodbus 1.2.2 (2007-11-12)
+- Fix #161989 (Konstantinos Togias)
+  Serial device paths more than 10 chars long (eg. /dev/ttyUSB0) don't
+  fit to modbus_param_t -> device char[11] var.
+- Structure is also bit better 'packed' to conserve memory (see the
+  trunk for a real enhancement).
+
+libmodbus 1.2.1 (2007-11-02)
+- Fix #159443 (Stefan Bisanz)
+  Index of incoming data in force multiple coils function
+- Deleted unuseful code in check_crc16()
+- Untabify source code
+- Changed author's email (Stéphane Raimbault)
+
+libmodbus 1.2.0 (2007-05-10)
+- FIX Compilation GCC-4.0
+- Project name in autogen.sh
