@@ -8,7 +8,7 @@ libmodbus 1.2.2 (2007-11-12)
 libmodbus 1.2.1 (2007-11-02)
 - Fix #159443 (Stefan Bisanz)
   Index of incoming data in force multiple coils function
-- Deleted unuseful code in check_crc16()
+- Deleted useless code in check_crc16()
 - Untabify source code
 - Changed author's email (Stéphane Raimbault)
 
