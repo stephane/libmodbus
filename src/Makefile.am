@@ -14,3 +14,6 @@ INCLUDES = @GLIB_CFLAGS@
 LDADD = @GLIB_LIBS@
 CLEANFILES = *~
 
+# Include files to install
+libmodbusincludedir = $(includedir)/libmodbus
+libmodbusinclude_HEADERS = modbus.h
