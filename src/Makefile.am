@@ -10,10 +10,6 @@ test_modbus_slave_SOURCES = test-modbus-slave.c
 test_modbus_slave_INCLUDES = @GLIB_CFLAGS@
 test_modbus_slave_LDADD = libmodbus.la @GLIB_LIBS@
 
-INCLUDES = @GLIB_CFLAGS@
+INCLUDES = @GLIB_CFLAGS@ -I$(top_srcdir)/include
 LDADD = @GLIB_LIBS@
 CLEANFILES = *~
-
-# Include files to install
-libmodbusincludedir = $(includedir)/libmodbus
-libmodbusinclude_HEADERS = modbus.h

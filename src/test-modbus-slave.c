@@ -24,7 +24,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <modbus.h>
+#include <modbus/modbus.h>
 
 int main(void)
 {
