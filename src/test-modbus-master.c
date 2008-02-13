@@ -24,7 +24,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <modbus.h>
+#include <modbus/modbus.h>
 
 #define LOOP       1
 #define SLAVE   0x11

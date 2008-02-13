@@ -12,6 +12,9 @@ AC_PROG_LIBTOOL
 
 # Checks for libraries.
 AM_PATH_GLIB_2_0(2.0.0,,AC_MSG_ERROR(libmodbus needs GLib 2.X))
+PKG_CHECK_MODULES(GLIB, glib-2.0)
+AC_SUBST(GLIB_CFLAGS)
+AC_SUBST(GLIB_LIBS)
 
 # Checks for header files.
 AC_HEADER_STDC
@@ -27,8 +30,11 @@ AC_FUNC_MALLOC
 AC_FUNC_SELECT_ARGTYPES
 AC_CHECK_FUNCS([inet_ntoa memset select socket])
 
-AC_CONFIG_FILES([
-	Makefile
-	src/Makefile
-	])
-AC_OUTPUT
+AC_OUTPUT([
+Makefile
+src/Makefile
+include/Makefile
+include/modbus/Makefile
+modbus.pc
+])
+
