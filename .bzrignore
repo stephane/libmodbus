@@ -20,3 +20,4 @@ src/libmodbus.la
 src/modbus.lo
 src/test-modbus-master
 src/test-modbus-slave
+modbus.pc
