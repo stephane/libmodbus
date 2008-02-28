@@ -93,11 +93,10 @@ int main(void)
  
         socket = modbus_init_listen_tcp(&mb_param);
         
-        i =0;
+        i = 0;
         while (i++ < 5) {
                 unsigned char query[MAX_PACKET_SIZE];
                 int query_size;
-                int i;
 
                 ret = modbus_listen(&mb_param, query, &query_size);
                 if (ret == 0)
