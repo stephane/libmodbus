@@ -776,7 +776,6 @@ void manage_query(modbus_param_t *mb_param, unsigned char *query,
    - query_size, size in bytes of the message */
 int modbus_listen(modbus_param_t *mb_param, unsigned char *query, int *query_size)
 {
-        int offset = mb_param->header_length;
         int ret;
 
         ret = receive_msg(mb_param, MSG_SIZE_UNDEFINED, query, query_size);
