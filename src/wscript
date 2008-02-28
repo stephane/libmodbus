@@ -1,0 +1,19 @@
+def build(bld):
+    obj = bld.create_obj('cc', 'shlib')
+    obj.source = 'modbus.c'
+    obj.includes = '.'
+    obj.uselib = 'GLIB'
+    obj.target = 'modbus'
+    obj.vnum = '1.2.4'
+
+    obj = bld.create_obj('cc', 'program')
+    obj.source = 'test-modbus-master.c'
+    obj.includes = '.'
+    obj.uselib_local = 'modbus'
+    obj.target = 'test-modbus-master'
+
+    obj = bld.create_obj('cc', 'program')
+    obj.source = 'test-modbus-slave.c'
+    obj.includes = '.'
+    obj.uselib_local = 'modbus'
+    obj.target = 'test-modbus-slave'
