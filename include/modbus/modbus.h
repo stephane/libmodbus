@@ -23,7 +23,7 @@
 #include <termios.h>
 #include <arpa/inet.h>
 
-#define MODBUS_TCP_PORT      502
+#define MODBUS_TCP_DEFAULT_PORT 502
 
 #define HEADER_LENGTH_RTU         0
 #define PRESET_QUERY_SIZE_RTU     6
@@ -130,6 +130,8 @@ typedef struct {
         int debug;
         /* IP address */
         char ip[16];
+        /* TCP port */
+        uint16_t port;
         /* Header length used for offset */
         int header_length;
         /* Checksum size RTU = 2 and TCP = 0 */
@@ -203,10 +205,17 @@ int report_slave_id(modbus_param_t *mb_param, int slave,
 void modbus_init_rtu(modbus_param_t *mb_param, char *device,
                      int baud, char *parity, int data_bit,
                      int stop_bit);
+                     
 /* Initialises a parameters structure for TCP
-   - ip : "192.168.0.5" */
-void modbus_init_tcp(modbus_param_t *mb_param, char *ip_address);
+   - ip : "192.168.0.5" 
+   - port : 1099
 
+   Set the port to MODBUS_TCP_DEFAULT_PORT to use the default one
+   (502). It's convenient to use a port number greater than or equal
+   to 1024 because it's not necessary to be root to use this port
+   number.
+*/
+void modbus_init_tcp(modbus_param_t *mb_param, char *ip_address, uint16_t port);
 
 /* Sets up a serial port for RTU communications to modbus or a TCP
    connexion */
