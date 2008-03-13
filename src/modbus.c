@@ -1151,11 +1151,18 @@ void modbus_init_rtu(modbus_param_t *mb_param, char *device,
         mb_param->checksum_size = CHECKSUM_SIZE_RTU;
 }
 
-/* Initialises the modbus_param_t structure for TCP */
-void modbus_init_tcp(modbus_param_t *mb_param, char *ip)
+/* Initialises the modbus_param_t structure for TCP.
+
+   Set the port to MODBUS_TCP_DEFAULT_PORT to use the default one
+   (502). It's convenient to use a port number greater than or equal
+   to 1024 because it's not necessary to be root to use this port
+   number.
+*/
+void modbus_init_tcp(modbus_param_t *mb_param, char *ip, uint16_t port)
 {
         memset(mb_param, 0, sizeof(modbus_param_t));
         strncpy(mb_param->ip, ip, sizeof(char)*16);
+        mb_param->port = port;
         mb_param->type_com = TCP;
         mb_param->header_length = HEADER_LENGTH_TCP;
         mb_param->checksum_size = CHECKSUM_SIZE_TCP;
@@ -1423,7 +1430,7 @@ static int modbus_connect_tcp(modbus_param_t *mb_param)
         struct sockaddr_in addr;
 
         addr.sin_family = AF_INET;
-        addr.sin_port = htons(MODBUS_TCP_PORT);
+        addr.sin_port = htons(mb_param->port);
         addr.sin_addr.s_addr = inet_addr(mb_param->ip);
 
         mb_param->fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -1544,9 +1551,8 @@ int modbus_init_listen_tcp(modbus_param_t *mb_param)
         socklen_t addrlen;
 
         addr.sin_family = AF_INET;
-        /* The modbus port is < 1024
-           This program must be made setuid root. */
-        addr.sin_port = htons(MODBUS_TCP_PORT);
+        /* If the modbus port is < to 1024, we need the setuid root. */
+        addr.sin_port = htons(mb_param->port);
         addr.sin_addr.s_addr = INADDR_ANY;
         memset(&(addr.sin_zero), '\0', 8);
 

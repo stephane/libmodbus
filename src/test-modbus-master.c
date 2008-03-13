@@ -45,7 +45,7 @@ int main(void)
 /*      modbus_init_rtu(&mb_param, "/dev/ttyS0", 19200, "none", 8, 1); */
 
         /* TCP */
-        modbus_init_tcp(&mb_param, "169.254.7.104");
+        modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
         modbus_set_debug(&mb_param, TRUE);
       
         modbus_connect(&mb_param);

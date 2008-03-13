@@ -36,11 +36,12 @@ int main(void)
         int ret;
         int i;
 
-        modbus_init_tcp(&mb_param, "127.0.0.1");
+        modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
         modbus_set_debug(&mb_param, TRUE);
 
         modbus_mapping_new(&mb_mapping,
-                           nb_coil_status, nb_input_status, nb_input_registers, nb_holding_registers);
+                           nb_coil_status, nb_input_status,
+                           nb_input_registers, nb_holding_registers);
 
         /* Examples from PI_MODBUS_300.pdf */
 
