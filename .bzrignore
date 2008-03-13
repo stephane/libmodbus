@@ -21,4 +21,4 @@ src/modbus.lo
 src/test-modbus-master
 src/test-modbus-slave
 modbus.pc
-_build_
+build
