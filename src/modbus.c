@@ -37,7 +37,6 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <errno.h>
-#include <glib.h>
 
 /* TCP */
 #include <sys/types.h>
@@ -137,7 +136,7 @@ static void error_treat(int ret, const char *string, modbus_param_t *mb_param)
 {
         if (ret == -1)
                 perror(string);
-        g_print("\n\nERROR %s\n\n", string);
+        printf("\n\nERROR %s\n\n", string);
 
         if (mb_param->type_com == RTU) {
                 tcflush(mb_param->fd, TCIOFLUSH);
@@ -334,12 +333,10 @@ int check_crc16(modbus_param_t *mb_param,
                 if (crc_calc == crc_received) {
                         ret = 0;
                 } else {
-                        char *s_error;
-                        s_error = g_strdup_printf(
-                                "invalid crc received %0X - crc_calc %0X", 
+                        char s_error[64];
+                        sprintf(s_error, "invalid crc received %0X - crc_calc %0X", 
                                 crc_received, crc_calc);
                         error_treat(0, s_error, mb_param);
-                        g_free(s_error);
                         ret = INVALID_CRC;
                 }
         } else {
@@ -367,11 +364,11 @@ static int modbus_send(modbus_param_t *mb_param, unsigned char *query,
         }
 
         if (mb_param->debug) {
-                g_print("\n");
+                printf("\n");
                 for (i = 0; i < query_size; i++)
-                        g_print("[%.2X]", query[i]);
+                        printf("[%.2X]", query[i]);
 
-                g_print("\n");
+                printf("\n");
         }
         
         if (mb_param->type_com == RTU)
@@ -404,7 +401,7 @@ int compute_query_size_header(int function)
         else
                 byte = 0;
         
-        g_print("compute_query_size_header FC %d, B%d\n", function, byte);
+        printf("compute_query_size_header FC %d, B%d\n", function, byte);
         
         return byte;
 }
@@ -422,7 +419,7 @@ int compute_query_size_data(modbus_param_t *mb_param, unsigned char *msg)
                 byte = 0;
 
         byte += mb_param->checksum_size;
-        g_print("compute_query_size_data FC %d, B %d\n", function, byte);
+        printf("compute_query_size_data FC %d, B %d\n", function, byte);
 
         return byte;
 }
@@ -431,7 +428,7 @@ int compute_query_size_data(modbus_param_t *mb_param, unsigned char *msg)
 {                                                                                       \
         while ((select_ret = select(mb_param->fd+1, &rfds, NULL, NULL, &tv)) == -1) {   \
                 if (errno == EINTR) {                                                   \
-                        g_print("A non blocked signal was caught\n");                   \
+                        printf("A non blocked signal was caught\n");                    \
                         /* Necessary after an error */                                  \
                         FD_ZERO(&rfds);                                                 \
                         FD_SET(mb_param->fd, &rfds);                                    \
@@ -472,9 +469,9 @@ int receive_msg(modbus_param_t *mb_param,
 
         if (mb_param->debug) {
                 if (msg_size_computed == MSG_SIZE_UNDEFINED)
-                        g_print("Waiting for a message...\n");
+                        printf("Waiting for a message...\n");
                 else
-                        g_print("Waiting for a message (%d bytes)...\n", msg_size_computed);
+                        printf("Waiting for a message (%d bytes)...\n", msg_size_computed);
         }
 
         /* Add a file descriptor to the set */
@@ -526,7 +523,7 @@ int receive_msg(modbus_param_t *mb_param,
                 if (mb_param->debug) {
                         int i;
                         for (i=0; i < read_ret; i++)
-                                g_print("<%.2X>", p_msg[i]);
+                                printf("<%.2X>", p_msg[i]);
                 }
 
                 if ((*msg_size) < msg_size_computed) {
@@ -539,20 +536,20 @@ int receive_msg(modbus_param_t *mb_param,
                                 size_to_read = compute_query_size_header(msg[mb_param->header_length + 1]);
                                 msg_size_computed += size_to_read;
                                 state = BYTE;
-                                g_print("\nBYTE:");
+                                printf("\nBYTE:");
                                 break;
                         case BYTE:
                                 size_to_read = compute_query_size_data(mb_param, msg);
                                 msg_size_computed += size_to_read;
                                 state = COMPLETE;
-                                g_print("\nCOMPLETE:");
+                                printf("\nCOMPLETE:");
                                 break;
                         case COMPLETE:
                                 size_to_read = 0;
                                 break;
                         }
                 }
-                g_print(" size to read %d\n", size_to_read);
+                printf(" size to read %d\n", size_to_read);
 
                 /* Moves the pointer to receive other datas */
                 p_msg = &(p_msg[read_ret]);
@@ -571,7 +568,7 @@ int receive_msg(modbus_param_t *mb_param,
         }
         
         if (mb_param->debug)
-                g_print("\n");
+                printf("\n");
 
         /* OK */
         return 0;
@@ -652,12 +649,10 @@ static int modbus_check_response(modbus_param_t *mb_param,
                                 /* The chances are low to hit this
                                    case but can avoid a vicious
                                    segfault */
-                                char *s_error;
-                                s_error = g_strdup_printf(
-                                        "Invalid exception code %d",
-                                        response[offset + 2]);
+                                char s_error[64];
+                                sprintf(s_error, "Invalid exception code %d", response[offset + 2]);
                                 error_treat(0, s_error, mb_param);
-                                g_free(s_error);
+                                free(s_error);
                                 return INVALID_EXCEPTION_CODE;
                         }
                 }
@@ -735,12 +730,12 @@ void manage_query(modbus_param_t *mb_param, unsigned char *query,
                 count = (query[offset+4] << 8) + query[offset+5];
                 byte_count = 2 * count;
                 offset = build_response_packet(mb_param, slave, function, byte_count, response);
-                g_print("offset %d\n", offset);
+                printf("offset %d\n", offset);
                 for (i = address; i < address + count; i++) {
                         response[offset++] = mb_mapping->tab_holding_registers[i] >> 8;
                         response[offset++] = mb_mapping->tab_holding_registers[i] & 0xFF;
                 }
-                g_print("fin offset %d\n", offset);
+                printf("fin offset %d\n", offset);
                 break;
         case FC_READ_INPUT_REGISTERS:
                 count = (query[offset+4] << 8) + query[offset+5];
@@ -758,8 +753,8 @@ void manage_query(modbus_param_t *mb_param, unsigned char *query,
                 else if (data == 0x0)
                         mb_mapping->tab_coil_status[address] = OFF;
                 else
-                        g_print("FIXME Error %d\n", data);
-                g_print("FIXME works only in TCP mode (CRC)");
+                        printf("FIXME Error %d\n", data);
+                printf("FIXME works only in TCP mode (CRC)");
                 memcpy(response, query, query_size);
                 offset = query_size;
                 break;          
@@ -768,7 +763,7 @@ void manage_query(modbus_param_t *mb_param, unsigned char *query,
         case FC_FORCE_MULTIPLE_COILS:
         case FC_PRESET_MULTIPLE_REGISTERS:
         case FC_REPORT_SLAVE_ID:
-                g_print("Not implemented\n");
+                printf("Not implemented\n");
                 break;
         }
 
@@ -897,7 +892,7 @@ int read_holding_registers(modbus_param_t *mb_param, int slave,
         int status;
 
         if (count > MAX_READ_HOLD_REGS) {
-                g_print("WARNING Too many holding registers requested\n");
+                printf("WARNING Too many holding registers requested\n");
                 count = MAX_READ_HOLD_REGS;
         }
 
@@ -914,7 +909,7 @@ int read_input_registers(modbus_param_t *mb_param, int slave,
         int status;
 
         if (count > MAX_READ_INPUT_REGS) {
-                g_print("WARNING Too many input registers requested\n");
+                printf("WARNING Too many input registers requested\n");
                 count = MAX_READ_INPUT_REGS;
         }
 
@@ -1023,7 +1018,7 @@ int force_multiple_coils(modbus_param_t *mb_param, int slave,
         unsigned char query[MAX_PACKET_SIZE];
 
         if (coil_count > MAX_WRITE_COILS) {
-                g_print("WARNING Writing to too many coils\n");
+                printf("WARNING Writing to too many coils\n");
                 coil_count = MAX_WRITE_COILS;
         }
 
@@ -1071,7 +1066,7 @@ int preset_multiple_registers(modbus_param_t *mb_param, int slave,
         unsigned char query[MAX_PACKET_SIZE];
 
         if (reg_count > MAX_WRITE_REGS) {
-                g_print("WARNING Trying to write to too many registers\n");
+                printf("WARNING Trying to write to too many registers\n");
                 reg_count = MAX_WRITE_REGS;
         }
 
@@ -1177,7 +1172,7 @@ static int modbus_connect_rtu(modbus_param_t *mb_param)
         speed_t baud_rate;
 
         if (mb_param->debug) {
-                g_print("Opening %s at %d bauds (%s)\n",
+                printf("Opening %s at %d bauds (%s)\n",
                         mb_param->device, mb_param->baud_i, mb_param->parity);
         }
 
@@ -1191,7 +1186,7 @@ static int modbus_connect_rtu(modbus_param_t *mb_param)
         mb_param->fd = open(mb_param->device, O_RDWR | O_NOCTTY | O_NDELAY);
         if (mb_param->fd < 0) {
                 perror("open");
-                g_print("ERROR Opening device %s (no : %d)\n",
+                printf("ERROR Opening device %s (no : %d)\n",
                         mb_param->device, errno);
                 return -1;
         }
@@ -1240,7 +1235,7 @@ static int modbus_connect_rtu(modbus_param_t *mb_param)
                 break;
         default:
                 baud_rate = B9600;
-                g_print("WARNING Unknown baud rate %d for %s (B9600 used)\n",
+                printf("WARNING Unknown baud rate %d for %s (B9600 used)\n",
                         mb_param->baud_i, mb_param->device);
         }
 
@@ -1460,7 +1455,7 @@ static int modbus_connect_tcp(modbus_param_t *mb_param)
         }
 
         if (mb_param->debug) {
-                g_print("Connecting to %s\n", mb_param->ip);
+                printf("Connecting to %s\n", mb_param->ip);
         }
         
         ret = connect(mb_param->fd, (struct sockaddr *)&addr,
@@ -1499,34 +1494,38 @@ int modbus_mapping_new(modbus_mapping_t *mb_mapping,
 {
         /* 0X */
         mb_mapping->nb_coil_status = nb_coil_status;
-        mb_mapping->tab_coil_status = (unsigned char *) g_malloc0(nb_coil_status * sizeof(unsigned char));
+        mb_mapping->tab_coil_status = (unsigned char *) malloc(nb_coil_status * sizeof(unsigned char));
+        memset(mb_mapping->tab_coil_status, 0, nb_coil_status * sizeof(unsigned char));
         if (mb_mapping->tab_coil_status == NULL)
                 return FALSE;
         
         /* 1X */
         mb_mapping->nb_input_status = nb_input_status;
-        mb_mapping->tab_input_status = (unsigned char *) g_malloc0(nb_input_status * sizeof(unsigned char));
+        mb_mapping->tab_input_status = (unsigned char *) malloc(nb_input_status * sizeof(unsigned char));
+        memset(mb_mapping->tab_input_status, 0, nb_input_status * sizeof(unsigned char));
         if (mb_mapping->tab_input_status == NULL) {
-                g_free(mb_mapping->tab_coil_status);
+                free(mb_mapping->tab_coil_status);
                 return FALSE;
         }
 
         /* 3X */
         mb_mapping->nb_input_registers = nb_input_registers;
-        mb_mapping->tab_input_registers = (unsigned short *) g_malloc0(nb_input_registers * sizeof(unsigned short));
+        mb_mapping->tab_input_registers = (unsigned short *) malloc(nb_input_registers * sizeof(unsigned short));
+        memset(mb_mapping->tab_input_registers, 0, nb_input_registers * sizeof(unsigned short));
         if (mb_mapping->tab_input_registers == NULL) {
-                g_free(mb_mapping->tab_coil_status);
-                g_free(mb_mapping->tab_input_status);
+                free(mb_mapping->tab_coil_status);
+                free(mb_mapping->tab_input_status);
                 return FALSE;
         }
 
         /* 4X */
         mb_mapping->nb_holding_registers = nb_holding_registers;
-        mb_mapping->tab_holding_registers = (unsigned short *) g_malloc0(nb_holding_registers * sizeof(unsigned short));
+        mb_mapping->tab_holding_registers = (unsigned short *) malloc(nb_holding_registers * sizeof(unsigned short));
+        memset(mb_mapping->tab_holding_registers, 0, nb_holding_registers * sizeof(unsigned short));
         if (mb_mapping->tab_holding_registers == NULL) {
-                g_free(mb_mapping->tab_coil_status);
-                g_free(mb_mapping->tab_input_status);
-                g_free(mb_mapping->tab_input_registers);
+                free(mb_mapping->tab_coil_status);
+                free(mb_mapping->tab_input_status);
+                free(mb_mapping->tab_input_registers);
                 return FALSE;
         }
 
@@ -1536,10 +1535,10 @@ int modbus_mapping_new(modbus_mapping_t *mb_mapping,
 /* Frees the 4 arrays */
 void modbus_mapping_free(modbus_mapping_t *mb_mapping)
 {
-        g_free(mb_mapping->tab_coil_status);
-        g_free(mb_mapping->tab_input_status);
-        g_free(mb_mapping->tab_input_registers);
-        g_free(mb_mapping->tab_holding_registers);
+        free(mb_mapping->tab_coil_status);
+        free(mb_mapping->tab_input_status);
+        free(mb_mapping->tab_input_registers);
+        free(mb_mapping->tab_holding_registers);
 }
 
 /* Listens for any query from a modbus master */
@@ -1561,7 +1560,7 @@ int modbus_init_listen_tcp(modbus_param_t *mb_param)
                 perror("socket");
                 exit(1);
         } else {
-                g_print("Socket OK\n");
+                printf("Socket OK\n");
         }
 
         ret = bind(new_socket, (struct sockaddr *)&addr,
@@ -1571,7 +1570,7 @@ int modbus_init_listen_tcp(modbus_param_t *mb_param)
                 close(new_socket);
                 exit(1);
         } else {
-                g_print("Bind OK\n");
+                printf("Bind OK\n");
         }
 
         ret = listen(new_socket, 1);
@@ -1580,7 +1579,7 @@ int modbus_init_listen_tcp(modbus_param_t *mb_param)
                 close(new_socket);
                 exit(1);
         } else {
-                g_print("Listen OK\n");
+                printf("Listen OK\n");
         }
 
         addrlen = sizeof(struct sockaddr_in);
@@ -1591,8 +1590,8 @@ int modbus_init_listen_tcp(modbus_param_t *mb_param)
                 new_socket = 0;
                 exit(1);
         } else {
-                g_print("The client %s is connected\n", 
-                        inet_ntoa(addr.sin_addr));
+                printf("The client %s is connected\n", 
+                       inet_ntoa(addr.sin_addr));
         }
 
         return new_socket;

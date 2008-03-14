@@ -17,7 +17,6 @@ def set_options(opt):
 
 def configure(conf):
      conf.check_tool('compiler_cc')
-     conf.check_pkg('glib-2.0', destvar='GLIB', mandatory=True)
      conf.check_tool('misc')
 
      headers = 'arpa/inet.h fcntl.h netinet/in.h stdlib.h \
@@ -62,8 +61,7 @@ def build(bld):
                  'prefix': bld.env()['PREFIX'], 
                  'exec_prefix': bld.env()['PREFIX'],
                  'libdir': bld.env()['PREFIX'] + '/lib', 
-                 'includedir': bld.env()['PREFIX'] + '/include',
-                 'modbus_pkgdeps' : 'glib-2.0'}
+                 'includedir': bld.env()['PREFIX'] + '/include'}
 
 def shutdown():
      import UnitTest
