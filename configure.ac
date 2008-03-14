@@ -10,14 +10,6 @@ AC_PROG_CC
 AC_PROG_MAKE_SET
 AC_PROG_LIBTOOL
 
-# Checks for libraries.
-AM_PATH_GLIB_2_0(2.0.0,,AC_MSG_ERROR(libmodbus needs GLib 2.X))
-PKG_CHECK_MODULES(GLIB, glib-2.0)
-AC_SUBST(GLIB_CFLAGS)
-AC_SUBST(GLIB_LIBS)
-# Optional requirements to report via pkg-config (in modbus.pc)
-modbus_pkgdeps="glib-2.0"
-
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h netinet/in.h stdlib.h string.h sys/ioctl.h sys/socket.h sys/time.h termio.h termios.h unistd.h])

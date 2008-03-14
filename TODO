@@ -8,7 +8,6 @@ Cleanups
 * split compute_response_size to reuse
 * split modbus.c (tcp/rtu, query/response)
 * t_id in param_msqg
-* drop glib dependency (not sure)
 * only one build_header_message function to replace build_query_packet/response_packet
 
 Documentation
