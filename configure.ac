@@ -24,11 +24,9 @@ AC_FUNC_MALLOC
 AC_FUNC_SELECT_ARGTYPES
 AC_CHECK_FUNCS([inet_ntoa memset select socket])
 
-AC_SUBST(modbus_pkgdeps)
 AC_OUTPUT([
 Makefile
-src/Makefile
-include/Makefile
-include/modbus/Makefile
+modbus/Makefile
+tests/Makefile
 modbus.pc
 ])
