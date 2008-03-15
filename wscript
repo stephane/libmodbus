@@ -8,9 +8,6 @@ APPNAME='libmodbus'
 srcdir = '.'
 blddir = 'build'
 
-def init():
-     print "A groovy libmodbus for Linux!"
-
 def set_options(opt):
      # options provided by the modules
      opt.tool_options('compiler_cc')
@@ -51,17 +48,18 @@ def configure(conf):
 def build(bld):
      import misc
 
-     bld.add_subdirs('src')  
+     bld.add_subdirs('modbus tests')  
 
      obj = bld.create_obj('subst')
      obj.source = 'modbus.pc.in'
      obj.target = 'modbus.pc'
-    
      obj.dict = {'VERSION' : VERSION, 
                  'prefix': bld.env()['PREFIX'], 
                  'exec_prefix': bld.env()['PREFIX'],
-                 'libdir': bld.env()['PREFIX'] + '/lib', 
-                 'includedir': bld.env()['PREFIX'] + '/include'}
+                 'libdir': bld.env()['PREFIX'] + 'lib', 
+                 'includedir': bld.env()['PREFIX'] + 'include'}
+
+     install_files('PREFIX', 'lib/pkgconfig', 'modbus.pc')
 
 def shutdown():
      import UnitTest
