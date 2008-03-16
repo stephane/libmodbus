@@ -1,3 +1,13 @@
+libmodbus 1.2.4 (2008-03-14)
+- Fix #191039 reported by Todd Denniston
+  modbus.h is not installed at prefix.
+
+libmodbus 1.2.3 (2008-02-03)
+- Fix #188189 reported by Chris Hellyar
+  Compute_response_size() no entry for read_input_status()
+- Fix #181887 reported by Jesus Hernandez Tapia.
+  Slave address in build_request_packet_tcp() is hardcoded as 0xFF.
+
 libmodbus 1.2.2 (2007-11-12)
 - Fix #161989 (Konstantinos Togias)
   Serial device paths more than 10 chars long (eg. /dev/ttyUSB0) don't
