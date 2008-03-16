@@ -18,7 +18,7 @@ def configure(conf):
 
      headers = 'arpa/inet.h fcntl.h netinet/in.h stdlib.h \
                 string.h sys/ioctl.h sys/socket.h sys/time.h \
-                termio.h termios.h unistd.h'
+                termios.h unistd.h'
 
      # check for headers and append found headers to headers_found for later use
      headers_found = []
