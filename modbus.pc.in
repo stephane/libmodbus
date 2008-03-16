@@ -4,7 +4,7 @@ libdir=@libdir@
 includedir=@includedir@
 
 Name: modbus
-Description: ModBus library
+Description: Modbus library
 Requires:
 Version: @VERSION@
 Libs: -L${libdir} -lmodbus
