@@ -6,5 +6,4 @@ libmodbus_la_LDFLAGS = -version-info 2:0:0
 libmodbusincludedir = $(includedir)/modbus
 libmodbusinclude_HEADERS = modbus.h
 
-INCLUDES = -I$(top_srcdir)
 CLEANFILES = *~

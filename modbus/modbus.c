@@ -46,7 +46,7 @@
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 
-#include <modbus/modbus.h>
+#include "modbus.h"
 
 #define UNKNOWN_ERROR_MSG "Not defined in modbus specification"
 
