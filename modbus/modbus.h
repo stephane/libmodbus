@@ -109,11 +109,23 @@
 
 typedef enum { RTU, TCP } type_com_t;
 
+/* This structure is byte-aligned */
 typedef struct {
         /* Communication : RTU or TCP */
         type_com_t type_com;
-        /* Device: "/dev/ttyS0" or "/dev/ttyUSB0" */
+
+        /* Device: "/dev/ttyS0", "/dev/ttyUSB0" or "/dev/tty.USA19*"
+           on Mac OS X for KeySpan USB<->Serial adapters this string
+           had to be made bigger on OS X as the directory+file name
+           was bigger than 19 bytes. Making it 67 bytes for now, but
+           OS X does support 256 byte file names. May become a problem
+           in the future. */
+#ifdef SYS_PLATFORM_DARWIN
+        char device[67];
+#else
         char device[19];
+#endif
+
         /* Parity: "even", "odd", "none" */
         char parity[5];
         /* Bauds: 19200 */

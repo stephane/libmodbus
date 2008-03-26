@@ -16,9 +16,10 @@ def configure(conf):
      conf.check_tool('compiler_cc')
      conf.check_tool('misc')
 
-     headers = 'arpa/inet.h fcntl.h netinet/in.h stdlib.h \
-                string.h sys/ioctl.h sys/socket.h sys/time.h \
-                termios.h unistd.h'
+     headers = 'stdio.h string.h stdlib.h termios.h sys/time.h \
+                unistd.h errno.h limits.h fcntl.h \
+                sys/types.h sys/socket.h sys/ioctl.h \
+                netinet/in.h netinet/ip.h netinet/tcp.h arpa/inet.h'
 
      # check for headers and append found headers to headers_found for later use
      headers_found = []
@@ -27,6 +28,7 @@ def configure(conf):
                headers_found.append(header)
 
      functions_defines = (
+          ('setsockopt', 'HAVE_SETSOCKOPT'),
           ('inet_ntoa', 'HAVE_INET_NTOA'),
           ('memset', 'HAVE_MEMSET'),
           ('select', 'HAVE_SELECT'),
@@ -39,9 +41,15 @@ def configure(conf):
           e.headers = headers_found
           e.define = define
           e.run()
- 
+
      conf.define('VERSION', VERSION)
      conf.define('PACKAGE', 'libmodbus')
+
+     import sys
+     if sys.platform[:6] == 'darwin':
+          print "Darwin platform detected"
+          conf.env.append_value('CCFLAGS', '-DPLATFORM_DARWIN')
+          conf.define('PLATFORM_DARWIN', '1')
 
      conf.write_config_header()
 
