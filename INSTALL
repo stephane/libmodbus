@@ -1,10 +1,12 @@
 Basic Installation
 ==================
 
-The build system is Waf, the shell commandes are
-$ ./waf configure
-$ ./waf build
-$ sudo ./waf install
+The build system is Waf (http://code.google.com/p/waf), the shell commandes are
+$ waf configure
+$ waf build
+$ sudo waf install
+
+or ./waf if you use a local Waf script.
 
 The sources are built in the 'build' directory at the root of the
 project source files.
