@@ -29,7 +29,6 @@
    http://www.easysw.com/~mike/serial/serial.html
 */
 
-#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -37,6 +36,8 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <errno.h>
+#include <limits.h>
+#include <fcntl.h>
 
 /* TCP */
 #include <sys/types.h>
@@ -45,8 +46,14 @@
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
+#include <arpa/inet.h>
 
 #include "modbus.h"
+
+#ifdef SYS_PLATFORM_DARWIN
+    #include <netdb.h>
+    #define SOL_CTP getprotobyname("TCP")->p_proto
+#endif
 
 #define UNKNOWN_ERROR_MSG "Not defined in modbus specification"
 
@@ -1292,9 +1299,11 @@ static int modbus_connect_rtu(modbus_param_t *mb_param)
                 tios.c_cflag |= PARODD;
         }
         
-        /* Read your man page for the meaning of all this (man
-           termios). Its a bit to involved to comment here :) */
-        tios.c_line = 0; 
+        /* Read the man page of termios if you need more information. */
+
+        /* This field isn't used on POSIX systems 
+           tios.c_line = 0; 
+        */
 
         /* C_LFLAG      Line options 
 
