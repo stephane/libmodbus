@@ -45,12 +45,6 @@ def configure(conf):
      conf.define('VERSION', VERSION)
      conf.define('PACKAGE', 'libmodbus')
 
-     import sys
-     if sys.platform[:6] == 'darwin':
-          print "Darwin platform detected"
-          conf.env.append_value('CCFLAGS', '-DPLATFORM_DARWIN')
-          conf.define('PLATFORM_DARWIN', '1')
-
      conf.write_config_header()
 
 def build(bld):
