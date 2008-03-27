@@ -120,7 +120,7 @@ typedef struct {
            was bigger than 19 bytes. Making it 67 bytes for now, but
            OS X does support 256 byte file names. May become a problem
            in the future. */
-#ifdef SYS_PLATFORM_DARWIN
+#ifdef __APPLE_CC__
         char device[67];
 #else
         char device[19];

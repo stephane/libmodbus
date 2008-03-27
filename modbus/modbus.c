@@ -50,9 +50,9 @@
 
 #include "modbus.h"
 
-#ifdef SYS_PLATFORM_DARWIN
+#ifdef __APPLE_CC__
     #include <netdb.h>
-    #define SOL_CTP getprotobyname("TCP")->p_proto
+    #define SOL_TCP getprotobyname("TCP")->p_proto
 #endif
 
 #define UNKNOWN_ERROR_MSG "Not defined in modbus specification"
