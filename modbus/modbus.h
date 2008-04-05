@@ -108,6 +108,7 @@
 #define MSG_SIZE_UNDEFINED -1
 
 typedef enum { RTU, TCP } type_com_t;
+typedef enum { RECONNECT_ON_ERROR, NOP_ON_ERROR } error_handling_t;
 
 /* This structure is byte-aligned */
 typedef struct {
@@ -148,6 +149,8 @@ typedef struct {
         int header_length;
         /* Checksum size RTU = 2 and TCP = 0 */
         int checksum_size;
+        /* In error_treat with TCP, do a reconnect or just dump the error */
+        error_handling_t error_handling;
 } modbus_param_t;
 
 typedef struct {
@@ -228,6 +231,19 @@ void modbus_init_rtu(modbus_param_t *mb_param, char *device,
    number.
 */
 void modbus_init_tcp(modbus_param_t *mb_param, char *ip_address, uint16_t port);
+
+/* By default, the error handling mode used is RECONNECT_ON_ERROR.
+
+   With RECONNECT_ON_ERROR, the library will attempt an immediate
+   reconnection which may hang for several seconds if the network to
+   the remote target unit is down.
+
+   With NOP_ON_ERROR, it is expected that the application will
+   check for network error returns and deal with them as necessary.
+
+   This function is only useful in TCP mode.
+ */
+void modbus_set_error_handling(modbus_param_t *mb_param, error_handling_t error_handling);
 
 /* Sets up a serial port for RTU communications to modbus or a TCP
    connexion */

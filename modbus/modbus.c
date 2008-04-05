@@ -148,8 +148,10 @@ static void error_treat(int ret, const char *string, modbus_param_t *mb_param)
         if (mb_param->type_com == RTU) {
                 tcflush(mb_param->fd, TCIOFLUSH);
         } else {
-                modbus_close(mb_param);
-                modbus_connect(mb_param);
+                if (mb_param->error_handling == RECONNECT_ON_ERROR) {
+                        modbus_close(mb_param);
+                        modbus_connect(mb_param);
+                }
         }
 }
 
@@ -1168,6 +1170,28 @@ void modbus_init_tcp(modbus_param_t *mb_param, char *ip, uint16_t port)
         mb_param->type_com = TCP;
         mb_param->header_length = HEADER_LENGTH_TCP;
         mb_param->checksum_size = CHECKSUM_SIZE_TCP;
+        mb_param->error_handling = RECONNECT_ON_ERROR;
+}
+
+/* By default, the error handling mode used is RECONNECT_ON_ERROR.
+
+   With RECONNECT_ON_ERROR, the library will attempt an immediate
+   reconnection which may hang for several seconds if the network to
+   the remote target unit is down.
+
+   With NOP_ON_ERROR, it is expected that the application will
+   check for network error returns and deal with them as necessary.
+
+   This function is only useful in TCP mode. 
+*/
+void modbus_set_error_handling(modbus_param_t *mb_param, error_handling_t error_handling)
+{
+        if (error_handling == RECONNECT_ON_ERROR ||
+            error_handling == NOP_ON_ERROR) {
+                mb_param->error_handling = error_handling;
+        } else {
+                printf("Invalid setting for error handling (not changed)\n");
+        }
 }
 
 

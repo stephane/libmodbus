@@ -1,3 +1,24 @@
+libmodbus 1.9.x
+- Slave API
+  https://blueprints.launchpad.net/libmodbus/+spec/slave-api
+- Waf build support
+  https://blueprints.launchpad.net/libmodbus/+spec/waf-support
+- MacOS X support by Matthew Butch
+  https://blueprints.launchpad.net/libmodbus/+spec/macosx-support
+- No more glib dependency
+  https://blueprints.launchpad.net/libmodbus/+spec/glib-dependency
+- Fix #159443 reported by Stefan Bisanz
+  Index of incoming data in force multiple coils function
+- Fix #161989 reported by Konstantinos Togias
+  Serial device paths more than 10 chars long (eg. /dev/ttyUSB0) don't
+  fit to modbus_param_t -> device char[11] var.
+- Fix #188189 reported by Chris Hellyar
+  Compute_response_size() no entry for read_input_status()
+- Fix #191039 reported by Todd Denniston
+  modbus.h is not installed at prefix.
+- Fix #211460 reported by Todd Denniston
+  With TCP, automatic reconnect on error may not be desired.
+
 libmodbus 1.2.4 (2008-03-14)
 - Fix #191039 reported by Todd Denniston
   modbus.h is not installed at prefix.
@@ -9,18 +30,18 @@ libmodbus 1.2.3 (2008-02-03)
   Slave address in build_request_packet_tcp() is hardcoded as 0xFF.
 
 libmodbus 1.2.2 (2007-11-12)
-- Fix #161989 (Konstantinos Togias)
+- Fix #161989 reported by Konstantinos Togias
   Serial device paths more than 10 chars long (eg. /dev/ttyUSB0) don't
   fit to modbus_param_t -> device char[11] var.
 - Structure is also bit better 'packed' to conserve memory (see the
   trunk for a real enhancement).
 
 libmodbus 1.2.1 (2007-11-02)
-- Fix #159443 (Stefan Bisanz)
+- Fix #159443 reported by Stefan Bisanz
   Index of incoming data in force multiple coils function
 - Deleted useless code in check_crc16()
 - Untabify source code
-- Changed author's email (Stéphane Raimbault)
+- Changed author's email to Stéphane Raimbault
 
 libmodbus 1.2.0 (2007-05-10)
 - FIX Compilation GCC-4.0
