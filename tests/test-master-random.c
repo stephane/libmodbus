@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2008 Stéphane Raimbault <stephane.raimbault@gmail.com>
+ * Copyright (C) 2008 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,6 +24,21 @@
 
 #include <modbus/modbus.h>
 
+/* The goal of this program is to check all major functions of
+   libmodbus:
+   - force_single_coil
+   - read_coil_status
+   - force_multiple_coils
+   - preset_single_register
+   - read_holding_registers
+   - preset_multiple_registers
+   - read_holding_registers
+
+   All these functions are called with random values on a address
+   range defined by following defines.
+
+   This program is also really useful to test your remote target unit.
+*/
 #define LOOP       1
 #define SLAVE   0x11
 #define ADDR_MIN   0
@@ -42,30 +57,23 @@ int main(void)
         modbus_param_t mb_param;
 
         /* RTU parity : none, even, odd */
-/*      modbus_init_rtu(&mb_param, "/dev/ttyS0", 19200, "none", 8, 1); */
+        /* modbus_init_rtu(&mb_param, "/dev/ttyS0", 19200, "none", 8, 1); */
 
         /* TCP */
-        modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
+        modbus_init_tcp(&mb_param, "192.168.0.100", MODBUS_TCP_DEFAULT_PORT);
         modbus_set_debug(&mb_param, TRUE);
-      
-        modbus_connect(&mb_param);
 
+        modbus_connect(&mb_param);./configu
+
+        /* Allocate and initialize the different memory spaces */
         tab_rq = (int *) malloc(FIELDS * sizeof(int));
-        tab_rq_bits = (int *) malloc(FIELDS * sizeof(int));
-        tab_rp = (int *) malloc(FIELDS * sizeof(int));
-        
-        read_coil_status(&mb_param, SLAVE, 0x13, 0x25, tab_rp);
-        read_input_status(&mb_param, SLAVE, 0xC4, 0x16, tab_rp);
-        read_holding_registers(&mb_param, SLAVE, 0x6B, 3, tab_rp);
-        read_input_registers(&mb_param, SLAVE, 0x8, 1, tab_rp);
-        force_single_coil(&mb_param, SLAVE, 0xAC, ON);
+        memset(tab_rq, 0, FIELDS * sizeof(int));
 
-        free(tab_rp);                                           
-        free(tab_rq);
-        free(tab_rq_bits);
-        modbus_close(&mb_param);
-        
-        return 0;
+        tab_rq_bits = (int *) malloc(FIELDS * sizeof(int));
+        memset(tab_rq_bits, 0, FIELDS * sizeof(int));
+
+        tab_rp = (int *) malloc(FIELDS * sizeof(int));
+        memset(tab_rp, 0, FIELDS * sizeof(int));
 
         loop_nb = ok = fail = 0;
         while (loop_nb++ < LOOP) { 
@@ -189,11 +197,14 @@ int main(void)
                 }
         }
 
+        /* Free the memory */
         free(tab_rp);                                           
         free(tab_rq);
         free(tab_rq_bits);
+
+        /* Close the connection */
         modbus_close(&mb_param);
         
         return 0;
 }
-        
+

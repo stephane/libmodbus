@@ -16,7 +16,7 @@ def configure(conf):
      conf.check_tool('compiler_cc')
      conf.check_tool('misc')
 
-     headers = 'stdio.h string.h stdlib.h termios.h sys/time.h \
+     headers = 'termios.h sys/time.h \
                 unistd.h errno.h limits.h fcntl.h \
                 sys/types.h sys/socket.h sys/ioctl.h \
                 netinet/in.h netinet/ip.h netinet/tcp.h arpa/inet.h'
