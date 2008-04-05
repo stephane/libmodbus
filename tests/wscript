@@ -1,14 +1,21 @@
 def build(bld):
     obj = bld.create_obj('cc', 'program')
-    obj.source = 'test-modbus-master.c'
+    obj.source = 'unit-test-master.c'
     obj.includes = '. ..'
     obj.uselib_local = 'modbus'
-    obj.target = 'test-modbus-master'
+    obj.target = 'unit-test-master'
     obj.inst_var = 0
 
     obj = bld.create_obj('cc', 'program')
-    obj.source = 'test-modbus-slave.c'
+    obj.source = 'unit-test-slave.c'
     obj.includes = '. ..'
     obj.uselib_local = 'modbus'
-    obj.target = 'test-modbus-slave'
+    obj.target = 'unit-test-slave'
+    obj.inst_var = 0
+
+    obj = bld.create_obj('cc', 'program')
+    obj.source = 'test-master-random.c'
+    obj.includes = '. ..'
+    obj.uselib_local = 'modbus'
+    obj.target = 'test-master-random'
     obj.inst_var = 0
