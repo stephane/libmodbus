@@ -63,7 +63,7 @@ int main(void)
         modbus_init_tcp(&mb_param, "192.168.0.100", MODBUS_TCP_DEFAULT_PORT);
         modbus_set_debug(&mb_param, TRUE);
 
-        modbus_connect(&mb_param);./configu
+        modbus_connect(&mb_param);
 
         /* Allocate and initialize the different memory spaces */
         tab_rq = (int *) malloc(FIELDS * sizeof(int));
