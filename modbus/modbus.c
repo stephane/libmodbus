@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <termios.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -57,7 +58,7 @@
 
 #define UNKNOWN_ERROR_MSG "Not defined in modbus specification"
 
-static const int SIZE_TAB_ERROR_MSG = 12;
+static const uint8_t NB_TAB_ERROR_MSG = 12;
 static const char *TAB_ERROR_MSG[] = {
         /* 0x00 */ UNKNOWN_ERROR_MSG,
         /* 0x01 */ "Illegal function code",
@@ -74,7 +75,7 @@ static const char *TAB_ERROR_MSG[] = {
 };
 
 /* Table of CRC values for high-order byte */
-static unsigned char table_crc_hi[] = {
+static uint8_t table_crc_hi[] = {
         0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 
         0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 
         0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 
@@ -104,7 +105,7 @@ static unsigned char table_crc_hi[] = {
 };
 
 /* Table of CRC values for low-order byte */
-static unsigned char table_crc_lo[] = {
+static uint8_t table_crc_lo[] = {
         0x00, 0xC0, 0xC1, 0x01, 0xC3, 0x03, 0x02, 0xC2, 0xC6, 0x06, 
         0x07, 0xC7, 0x05, 0xC5, 0xC4, 0x04, 0xCC, 0x0C, 0x0D, 0xCD, 
         0x0F, 0xCF, 0xCE, 0x0E, 0x0A, 0xCA, 0xCB, 0x0B, 0xC9, 0x09, 
@@ -135,8 +136,7 @@ static unsigned char table_crc_lo[] = {
 
 /* Local declaration */
 static int read_reg_response(modbus_param_t *mb_param, 
-                             int *data_dest,
-                             unsigned char *query);
+                             uint16_t *data_dest, uint8_t *query);
 
 /* Treats errors and flush or close connection if necessary */
 static void error_treat(int ret, const char *string, modbus_param_t *mb_param)
@@ -157,7 +157,7 @@ static void error_treat(int ret, const char *string, modbus_param_t *mb_param)
 
 /* Computes the size of the expected response */
 static unsigned int compute_response_size(modbus_param_t *mb_param, 
-                                          unsigned char *query)
+                                          uint8_t *query)
 {
         int response_size_computed;
         int offset;
@@ -171,7 +171,7 @@ static unsigned int compute_response_size(modbus_param_t *mb_param,
                 int coil_count = (query[offset + 4] << 8) | query[offset + 5];
                 response_size_computed = 3 +
                         (coil_count / 8) + ((coil_count % 8) ? 1 : 0);
-                }       
+                }
                 break;
         case FC_READ_HOLDING_REGISTERS:
         case FC_READ_INPUT_REGISTERS:
@@ -192,8 +192,9 @@ static unsigned int compute_response_size(modbus_param_t *mb_param,
 }
 
 /* Buils a RTU header */
-int build_query_packet_rtu(int slave, int function, int start_addr,
-                           int count, unsigned char *packet)
+static int build_query_packet_rtu(uint8_t slave, uint8_t function,
+                                  uint16_t start_addr, uint16_t count,
+                                  uint8_t *packet)
 {
         packet[0] = slave;
         packet[1] = function;
@@ -206,13 +207,14 @@ int build_query_packet_rtu(int slave, int function, int start_addr,
 }
 
 /* Builds a TCP header */
-int build_query_packet_tcp(int slave, int function, int start_addr,
-                           int count, unsigned char *packet)
+static int build_query_packet_tcp(uint8_t slave, uint8_t function,
+                                  uint16_t start_addr, uint16_t count,
+                                  uint8_t *packet)
 {
-        static unsigned short t_id = 0;
+        static uint16_t t_id = 0;
 
         /* Transaction ID */
-        if (t_id < USHRT_MAX)
+        if (t_id < UINT16_MAX)
                 t_id++;
         else
                 t_id = 0;
@@ -235,9 +237,9 @@ int build_query_packet_tcp(int slave, int function, int start_addr,
         return PRESET_QUERY_SIZE_TCP;
 }
 
-int build_query_packet(modbus_param_t *mb_param, int slave, 
-                       int function, int start_addr,
-                       int count, unsigned char *packet)
+static int build_query_packet(modbus_param_t *mb_param, uint8_t slave, 
+                              uint8_t function, uint16_t start_addr,
+                              uint16_t count, uint8_t *packet)
 {
         if (mb_param->type_com == RTU)
                 return build_query_packet_rtu(slave, function, start_addr,
@@ -248,7 +250,8 @@ int build_query_packet(modbus_param_t *mb_param, int slave,
 }
 
 
-int build_response_packet_rtu(int slave, int function, int byte_count, unsigned char *packet)
+static int build_response_packet_rtu(uint8_t slave, uint8_t function,
+                                     uint8_t byte_count, uint8_t *packet)
 {
         packet[0] = slave;
         packet[1] = function;
@@ -258,9 +261,10 @@ int build_response_packet_rtu(int slave, int function, int byte_count, unsigned 
         return PRESET_RESPONSE_SIZE_RTU+1;
 }
 
-int build_response_packet_tcp(int slave, int function, int byte_count, unsigned char *packet)
+static int build_response_packet_tcp(uint8_t slave, uint8_t function,
+                                     uint8_t byte_count, uint8_t *packet)
 {
-        static unsigned short t_id = 0;
+        static uint16_t t_id = 0;
 
         /* Transaction ID */
         if (t_id < USHRT_MAX)
@@ -285,8 +289,8 @@ int build_response_packet_tcp(int slave, int function, int byte_count, unsigned 
         return PRESET_RESPONSE_SIZE_TCP+1;
 }
 
-int build_response_packet(modbus_param_t *mb_param, int slave, 
-                          int function, int byte_count, unsigned char *packet)
+static int build_response_packet(modbus_param_t *mb_param, uint8_t slave, 
+                          uint8_t function, uint8_t byte_count, uint8_t *packet)
 {
         if (mb_param->type_com == RTU)
                 return build_response_packet_rtu(slave, function, byte_count, packet);
@@ -295,9 +299,9 @@ int build_response_packet(modbus_param_t *mb_param, int slave,
 }
 
 /* Sets the length of TCP message in the message */
-void set_packet_length_tcp(unsigned char *packet, size_t packet_size)
+void set_packet_length_tcp(uint8_t *packet, size_t packet_size)
 {
-        unsigned short mbap_length;
+        uint16_t mbap_length;
 
         /* Substract MBAP header length */
         mbap_length = packet_size - 6;
@@ -307,11 +311,11 @@ void set_packet_length_tcp(unsigned char *packet, size_t packet_size)
 }
 
 /* Fast CRC */
-static unsigned short crc16(unsigned char *buffer,
-                            unsigned short buffer_length)
+static uint16_t crc16(uint8_t *buffer,
+                            uint16_t buffer_length)
 {
-        unsigned char crc_hi = 0xFF; /* high CRC byte initialized */
-        unsigned char crc_lo = 0xFF; /* low CRC byte initialized */
+        uint8_t crc_hi = 0xFF; /* high CRC byte initialized */
+        uint8_t crc_lo = 0xFF; /* low CRC byte initialized */
         unsigned int i; /* will index into CRC lookup */
 
         /* pass through message buffer */
@@ -326,14 +330,14 @@ static unsigned short crc16(unsigned char *buffer,
 
 /* If CRC is correct returns 0 else returns INVALID_CRC */
 int check_crc16(modbus_param_t *mb_param,
-                unsigned char *msg,
+                uint8_t *msg,
                 int msg_size)
 {
         int ret;
         
         if (mb_param->type_com == RTU) {
-                unsigned short crc_calc;
-                unsigned short crc_received;
+                uint16_t crc_calc;
+                uint16_t crc_received;
                 
                 crc_calc = crc16(msg, msg_size - 2);
                 crc_received = (msg[msg_size - 2] << 8) | msg[msg_size - 1];
@@ -357,11 +361,11 @@ int check_crc16(modbus_param_t *mb_param,
 }
 
 /* Sends a query/response over a serial or a TCP communication */
-static int modbus_send(modbus_param_t *mb_param, unsigned char *query,
+static int modbus_send(modbus_param_t *mb_param, uint8_t *query,
                        size_t query_size)
 {
         int write_ret;
-        unsigned short s_crc;
+        uint16_t s_crc;
         int i;
         
         if (mb_param->type_com == RTU) {
@@ -396,9 +400,9 @@ static int modbus_send(modbus_param_t *mb_param, unsigned char *query,
 }
 
 /* Computes the size of the header following the function code */
-int compute_query_size_header(int function)
+static uint8_t compute_query_size_header(uint8_t function)
 {
-        int byte;
+        uint8_t byte;
         
         if (function <= FC_FORCE_SINGLE_COIL)
                 /* Read and single write */
@@ -416,10 +420,10 @@ int compute_query_size_header(int function)
 }
 
 /* Computes the size of the data to write in the query */
-int compute_query_size_data(modbus_param_t *mb_param, unsigned char *msg)
+static uint8_t compute_query_size_data(modbus_param_t *mb_param, uint8_t *msg)
 {
-        int function = msg[mb_param->header_length + 1];
-        int byte;
+        uint8_t function = msg[mb_param->header_length + 1];
+        uint8_t byte;
         
         if (function == FC_FORCE_MULTIPLE_COILS ||
             function == FC_PRESET_MULTIPLE_REGISTERS)
@@ -464,7 +468,7 @@ int compute_query_size_data(modbus_param_t *mb_param, unsigned char *msg)
    - msg_size: number of characters received. */
 int receive_msg(modbus_param_t *mb_param,
                 int msg_size_computed,
-                unsigned char *msg,
+                uint8_t *msg,
                 int *msg_size)
 {
         int select_ret;
@@ -472,7 +476,7 @@ int receive_msg(modbus_param_t *mb_param,
         fd_set rfds;
         struct timeval tv;
         int size_to_read;
-        unsigned char *p_msg;
+        uint8_t *p_msg;
         enum { FUNCTION, BYTE, COMPLETE };
         int state;
 
@@ -504,6 +508,8 @@ int receive_msg(modbus_param_t *mb_param,
         }
                 
         size_to_read = msg_size_computed;
+
+        select_ret = 0;
         WAIT_DATA();
 
         /* Read the msg */
@@ -519,6 +525,9 @@ int receive_msg(modbus_param_t *mb_param,
                 if (read_ret == -1) {
                         error_treat(read_ret, "Read port/socket failure", mb_param);
                         return PORT_SOCKET_FAILURE;
+                } else if (read_ret == 0) {
+                        printf("Connection closed\n");
+                        return CONNECTION_CLOSED;
                 }
                         
                 /* Sums bytes received */ 
@@ -593,8 +602,8 @@ int receive_msg(modbus_param_t *mb_param,
    Note: All functions used to send or receive data with modbus return
    these values. */
 static int modbus_check_response(modbus_param_t *mb_param, 
-                                 unsigned char *query,
-                                 unsigned char *response)
+                                 uint8_t *query,
+                                 uint8_t *response)
 {
         int response_size;
         int response_size_computed;     int offset = mb_param->header_length;
@@ -648,7 +657,7 @@ static int modbus_check_response(modbus_param_t *mb_param,
                    0x80 + function */
                 if (0x80 + query[offset + 1] == response[offset + 1]) {
 
-                        if (response[offset + 2] < SIZE_TAB_ERROR_MSG) {
+                        if (response[offset + 2] < NB_TAB_ERROR_MSG) {
                                 error_treat(0,
                                             TAB_ERROR_MSG[response[offset + 2]],
                                             mb_param);
@@ -675,12 +684,12 @@ static int modbus_check_response(modbus_param_t *mb_param,
         return response_size;
 }
 
-int response_io_status(int address, int count,
-                       int nb_io_status, unsigned char *tab_io_status,
-                       unsigned char *response, int offset)
+static int response_io_status(uint8_t address, uint16_t count,
+                              uint8_t *tab_io_status,
+                              uint8_t *response, int offset)
 {
-        unsigned char shift = 0;
-        unsigned char byte = 0;
+        uint8_t shift = 0;
+        uint8_t byte = 0;
         int i;
 
         for (i = address; i < address+count; i++) {
@@ -702,7 +711,7 @@ int response_io_status(int address, int count,
 
 /* Manages the received query.
    Analyses the query and constructs a response */
-void manage_query(modbus_param_t *mb_param, unsigned char *query,
+void manage_query(modbus_param_t *mb_param, uint8_t *query,
                   int query_size, modbus_mapping_t *mb_mapping)
 {                   
         int offset = mb_param->header_length;
@@ -712,7 +721,7 @@ void manage_query(modbus_param_t *mb_param, unsigned char *query,
         /* FIXME count/data */
         int count;
         int data;
-        unsigned char response[MAX_PACKET_SIZE];
+        uint8_t response[MAX_PACKET_SIZE];
         int byte_count;
         int i;
 
@@ -723,16 +732,14 @@ void manage_query(modbus_param_t *mb_param, unsigned char *query,
                 count = (query[offset+4] << 8) + query[offset+5];
                 byte_count = (count / 8.0) + ((count % 8) ? 1 : 0);
                 offset = build_response_packet(mb_param, slave, function, byte_count, response);
-                offset = response_io_status(address, count,
-                                            mb_mapping->nb_coil_status, mb_mapping->tab_coil_status,
+                offset = response_io_status(address, count, mb_mapping->tab_coil_status,
                                             response, offset);
                 break;
         case FC_READ_INPUT_STATUS:
                 count = (query[offset+4] << 8) + query[offset+5];
                 byte_count = (count / 8.0) + ((count % 8) ? 1 : 0);
                 offset = build_response_packet(mb_param, slave, function, byte_count, response);
-                offset = response_io_status(address, count,
-                                            mb_mapping->nb_input_status, mb_mapping->tab_input_status,
+                offset = response_io_status(address, count, mb_mapping->tab_input_status,
                                             response, offset);
                 break;
         case FC_READ_HOLDING_REGISTERS:
@@ -784,7 +791,7 @@ void manage_query(modbus_param_t *mb_param, unsigned char *query,
    - 0 if OK, or a negative error number if the request fails
    - query, message received
    - query_size, size in bytes of the message */
-int modbus_listen(modbus_param_t *mb_param, unsigned char *query, int *query_size)
+int modbus_listen(modbus_param_t *mb_param, uint8_t *query, int *query_size)
 {
         int ret;
 
@@ -798,14 +805,14 @@ int modbus_listen(modbus_param_t *mb_param, unsigned char *query, int *query_siz
 
 /* Reads IO status */
 static int read_io_status(modbus_param_t *mb_param, int slave, int function,
-                          int start_addr, int count, int *data_dest)
+                          int start_addr, int count, uint8_t *data_dest)
 {
         int query_size;
         int query_ret;
         int response_ret;
 
-        unsigned char query[MIN_QUERY_SIZE];
-        unsigned char response[MAX_PACKET_SIZE];
+        uint8_t query[MIN_QUERY_SIZE];
+        uint8_t response[MAX_PACKET_SIZE];
 
         query_size = build_query_packet(mb_param, slave, function, 
                                         start_addr, count, query);
@@ -843,7 +850,7 @@ static int read_io_status(modbus_param_t *mb_param, int slave, int function,
 /* Reads the boolean status of coils and sets the array elements
    in the destination to TRUE or FALSE. */
 int read_coil_status(modbus_param_t *mb_param, int slave, int start_addr,
-                     int count, int *data_dest)
+                     const int count, uint8_t *data_dest)
 {
         int status;
 
@@ -859,7 +866,7 @@ int read_coil_status(modbus_param_t *mb_param, int slave, int start_addr,
 
 /* Same as read_coil_status but reads the slaves input table */
 int read_input_status(modbus_param_t *mb_param, int slave, int start_addr,
-                      int count, int *data_dest)
+                      const int count, uint8_t *data_dest)
 {
         int status;
 
@@ -874,12 +881,12 @@ int read_input_status(modbus_param_t *mb_param, int slave, int start_addr,
 
 /* Reads the data from a modbus slave and put that data into an array */
 static int read_registers(modbus_param_t *mb_param, int slave, int function,
-                          int start_addr, int count, int *data_dest)
+                          int start_addr, int count, uint16_t *data_dest)
 {
         int query_size;
         int status;
         int query_ret;
-        unsigned char query[MIN_QUERY_SIZE];
+        uint8_t query[MIN_QUERY_SIZE];
 
         query_size = build_query_packet(mb_param, slave, function, 
                                         start_addr, count, query);
@@ -896,7 +903,7 @@ static int read_registers(modbus_param_t *mb_param, int slave, int function,
 /* Reads the holding registers in a slave and put the data into an
    array */
 int read_holding_registers(modbus_param_t *mb_param, int slave,
-                           int start_addr, int count, int *data_dest)
+                           int start_addr, int count, uint16_t *data_dest)
 {
         int status;
 
@@ -913,7 +920,7 @@ int read_holding_registers(modbus_param_t *mb_param, int slave,
 /* Reads the input registers in a slave and put the data into
    an array */
 int read_input_registers(modbus_param_t *mb_param, int slave,
-                         int start_addr, int count, int *data_dest)
+                         int start_addr, int count, uint16_t *data_dest)
 {
         int status;
 
@@ -930,10 +937,10 @@ int read_input_registers(modbus_param_t *mb_param, int slave,
 
 /* Reads the response data from a slave and puts the data into an
    array */
-static int read_reg_response(modbus_param_t *mb_param, int *data_dest,
-                             unsigned char *query)
+static int read_reg_response(modbus_param_t *mb_param, uint16_t *data_dest,
+                             uint8_t *query)
 {
-        unsigned char response[MAX_PACKET_SIZE];
+        uint8_t response[MAX_PACKET_SIZE];
         int response_ret;
         int offset;
         int i;
@@ -953,10 +960,10 @@ static int read_reg_response(modbus_param_t *mb_param, int *data_dest,
 }
 
 /* Gets the raw data from the input stream */
-static int preset_response(modbus_param_t *mb_param, unsigned char *query) 
+static int preset_response(modbus_param_t *mb_param, uint8_t *query) 
 {
         int ret;
-        unsigned char response[MAX_PACKET_SIZE];
+        uint8_t response[MAX_PACKET_SIZE];
 
         ret = modbus_check_response(mb_param, query, response);
 
@@ -970,7 +977,7 @@ static int set_single(modbus_param_t *mb_param, int slave, int function,
         int status;
         int query_size;
         int query_ret;
-        unsigned char query[MAX_PACKET_SIZE];
+        uint8_t query[MAX_PACKET_SIZE];
 
         query_size = build_query_packet(mb_param, slave, function, 
                                         addr, value, query);
@@ -1014,7 +1021,7 @@ int preset_single_register(modbus_param_t *mb_param, int slave,
    appropriatly */
 int force_multiple_coils(modbus_param_t *mb_param, int slave,
                          int start_addr, int coil_count,
-                         int *data_src)
+                         uint8_t *data_src)
 {
         int i;
         int byte_count;
@@ -1024,7 +1031,7 @@ int force_multiple_coils(modbus_param_t *mb_param, int slave,
         int query_ret;
         int pos = 0;
 
-        unsigned char query[MAX_PACKET_SIZE];
+        uint8_t query[MAX_PACKET_SIZE];
 
         if (coil_count > MAX_WRITE_COILS) {
                 printf("WARNING Writing to too many coils\n");
@@ -1064,7 +1071,7 @@ int force_multiple_coils(modbus_param_t *mb_param, int slave,
 
 /* Copies the values in an array to an array on the slave */
 int preset_multiple_registers(modbus_param_t *mb_param, int slave,
-                              int start_addr, int reg_count, int *data_src)
+                              int start_addr, int reg_count, uint16_t *data_src)
 {
         int i;
         int query_size;
@@ -1072,7 +1079,7 @@ int preset_multiple_registers(modbus_param_t *mb_param, int slave,
         int status;
         int query_ret;
 
-        unsigned char query[MAX_PACKET_SIZE];
+        uint8_t query[MAX_PACKET_SIZE];
 
         if (reg_count > MAX_WRITE_REGS) {
                 printf("WARNING Trying to write to too many registers\n");
@@ -1101,14 +1108,14 @@ int preset_multiple_registers(modbus_param_t *mb_param, int slave,
 
 /* Returns the slave id ! */
 int report_slave_id(modbus_param_t *mb_param, int slave, 
-                    unsigned char *data_dest)
+                    uint8_t *data_dest)
 {
         int query_size;
         int query_ret;
         int response_ret;
 
-        unsigned char query[MIN_QUERY_SIZE];
-        unsigned char response[MAX_PACKET_SIZE];
+        uint8_t query[MIN_QUERY_SIZE];
+        uint8_t response[MAX_PACKET_SIZE];
         
         query_size = build_query_packet(mb_param, slave, FC_REPORT_SLAVE_ID, 
                                         0, 0, query);
@@ -1519,46 +1526,45 @@ int modbus_connect(modbus_param_t *mb_param)
    holding registers. The pointers are stored in modbus_mapping structure. 
 
    Returns: TRUE if ok, FALSE on failure
-
  */
 int modbus_mapping_new(modbus_mapping_t *mb_mapping,
                        int nb_coil_status, int nb_input_status,
-                       int nb_input_registers, int nb_holding_registers)
+                       int nb_holding_registers, int nb_input_registers)
 {
         /* 0X */
         mb_mapping->nb_coil_status = nb_coil_status;
-        mb_mapping->tab_coil_status = (unsigned char *) malloc(nb_coil_status * sizeof(unsigned char));
-        memset(mb_mapping->tab_coil_status, 0, nb_coil_status * sizeof(unsigned char));
+        mb_mapping->tab_coil_status = (uint8_t *) malloc(nb_coil_status * sizeof(uint8_t));
+        memset(mb_mapping->tab_coil_status, 0, nb_coil_status * sizeof(uint8_t));
         if (mb_mapping->tab_coil_status == NULL)
                 return FALSE;
         
         /* 1X */
         mb_mapping->nb_input_status = nb_input_status;
-        mb_mapping->tab_input_status = (unsigned char *) malloc(nb_input_status * sizeof(unsigned char));
-        memset(mb_mapping->tab_input_status, 0, nb_input_status * sizeof(unsigned char));
+        mb_mapping->tab_input_status = (uint8_t *) malloc(nb_input_status * sizeof(uint8_t));
+        memset(mb_mapping->tab_input_status, 0, nb_input_status * sizeof(uint8_t));
         if (mb_mapping->tab_input_status == NULL) {
                 free(mb_mapping->tab_coil_status);
                 return FALSE;
         }
 
-        /* 3X */
-        mb_mapping->nb_input_registers = nb_input_registers;
-        mb_mapping->tab_input_registers = (unsigned short *) malloc(nb_input_registers * sizeof(unsigned short));
-        memset(mb_mapping->tab_input_registers, 0, nb_input_registers * sizeof(unsigned short));
-        if (mb_mapping->tab_input_registers == NULL) {
+        /* 4X */
+        mb_mapping->nb_holding_registers = nb_holding_registers;
+        mb_mapping->tab_holding_registers = (uint16_t *) malloc(nb_holding_registers * sizeof(uint16_t));
+        memset(mb_mapping->tab_holding_registers, 0, nb_holding_registers * sizeof(uint16_t));
+        if (mb_mapping->tab_holding_registers == NULL) {
                 free(mb_mapping->tab_coil_status);
                 free(mb_mapping->tab_input_status);
                 return FALSE;
         }
 
-        /* 4X */
-        mb_mapping->nb_holding_registers = nb_holding_registers;
-        mb_mapping->tab_holding_registers = (unsigned short *) malloc(nb_holding_registers * sizeof(unsigned short));
-        memset(mb_mapping->tab_holding_registers, 0, nb_holding_registers * sizeof(unsigned short));
-        if (mb_mapping->tab_holding_registers == NULL) {
+        /* 3X */
+        mb_mapping->nb_input_registers = nb_input_registers;
+        mb_mapping->tab_input_registers = (uint16_t *) malloc(nb_input_registers * sizeof(uint16_t));
+        memset(mb_mapping->tab_input_registers, 0, nb_input_registers * sizeof(uint16_t));
+        if (mb_mapping->tab_input_registers == NULL) {
                 free(mb_mapping->tab_coil_status);
                 free(mb_mapping->tab_input_status);
-                free(mb_mapping->tab_input_registers);
+                free(mb_mapping->tab_holding_registers);
                 return FALSE;
         }
 
@@ -1570,11 +1576,11 @@ void modbus_mapping_free(modbus_mapping_t *mb_mapping)
 {
         free(mb_mapping->tab_coil_status);
         free(mb_mapping->tab_input_status);
-        free(mb_mapping->tab_input_registers);
         free(mb_mapping->tab_holding_registers);
+        free(mb_mapping->tab_input_registers);
 }
 
-/* Listens for any query from a modbus master */
+/* Listens for any query from a modbus master in TCP */
 int modbus_init_listen_tcp(modbus_param_t *mb_param)
 {
         int ret;
@@ -1660,3 +1666,51 @@ void modbus_set_debug(modbus_param_t *mb_param, int boolean)
 {
         mb_param->debug = boolean;
 }
+
+/** Utils **/
+
+/* Set many inputs/coils form a single byte value (all 8 bits of the
+   byte value are setted) */
+void set_bits_from_byte(uint8_t *dest, uint16_t address, const uint8_t value)
+{
+        int i;
+
+        for (i=0; i<8; i++) {
+                dest[address+i] = (value & (1 << i)) ? ON : OFF;
+        }
+}
+
+/* Set many inputs/coils from a table of bytes (only the bits between
+   address and address + nb_bits are setted) */
+void set_bits_from_bytes(uint8_t *dest, uint16_t address, uint16_t nb_bits, const uint8_t tab_byte[])
+{
+        int i;
+        int shift = 0;
+
+        for (i=address; i < address + nb_bits; i++) {
+                dest[i] = tab_byte[(i - address) / 8] & (1 << shift) ? ON : OFF;
+                /* gcc doesn't like: shift = (++shift) % 8; */
+                shift++;
+                shift %= 8;
+        }
+}
+
+/* Get the byte value from many inputs/coils.
+   To obtain a full byte, set nb_bits to 8. */
+uint8_t get_byte_from_bits(const uint8_t *src, uint16_t address, int nb_bits)
+{
+        int i;
+        uint8_t value = 0;
+ 
+        if (nb_bits > 8) {
+                printf("Error: nb_bits is too big\n");
+                nb_bits = 8;
+        }
+
+        for (i=0; i<nb_bits; i++) {
+                value |= (src[address+i] << i);
+        }
+        
+        return value;
+}
+
