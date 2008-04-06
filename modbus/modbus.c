@@ -730,14 +730,14 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
         switch (function) {
         case FC_READ_COIL_STATUS:
                 count = (query[offset+4] << 8) + query[offset+5];
-                byte_count = (count / 8.0) + ((count % 8) ? 1 : 0);
+                byte_count = (count / 8) + ((count % 8) ? 1 : 0);
                 offset = build_response_packet(mb_param, slave, function, byte_count, response);
                 offset = response_io_status(address, count, mb_mapping->tab_coil_status,
                                             response, offset);
                 break;
         case FC_READ_INPUT_STATUS:
                 count = (query[offset+4] << 8) + query[offset+5];
-                byte_count = (count / 8.0) + ((count % 8) ? 1 : 0);
+                byte_count = (count / 8) + ((count % 8) ? 1 : 0);
                 offset = build_response_packet(mb_param, slave, function, byte_count, response);
                 offset = response_io_status(address, count, mb_mapping->tab_input_status,
                                             response, offset);
