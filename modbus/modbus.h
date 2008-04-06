@@ -20,6 +20,7 @@
 #ifndef _MODBUS_H_
 #define _MODBUS_H_
 
+#include <stdint.h>
 #include <termios.h>
 #include <arpa/inet.h>
 
@@ -103,6 +104,7 @@
 #define TOO_MANY_DATAS          -0x0F
 #define INVALID_CRC             -0x10
 #define INVALID_EXCEPTION_CODE  -0x11
+#define CONNECTION_CLOSED       -0x12
 
 /* Internal using */
 #define MSG_SIZE_UNDEFINED -1
@@ -158,10 +160,10 @@ typedef struct {
         int nb_input_status;
         int nb_input_registers;
         int nb_holding_registers;
-        unsigned char *tab_coil_status;
-        unsigned char *tab_input_status;
-        unsigned short *tab_input_registers;
-        unsigned short *tab_holding_registers;
+        uint8_t *tab_coil_status;
+        uint8_t *tab_input_status;
+        uint16_t *tab_input_registers;
+        uint16_t *tab_holding_registers;
 } modbus_mapping_t;
 
 /* All functions used for sending or receiving data return :
@@ -172,22 +174,21 @@ typedef struct {
 /* Reads the boolean status of coils and sets the array elements in
    the destination to TRUE or FALSE */
 int read_coil_status(modbus_param_t *mb_param, int slave,
-                     int start_addr, int count, int *dest);
+                     int start_addr, int count, uint8_t *dest);
 
 /* Same as read_coil_status but reads the slaves input table */
 int read_input_status(modbus_param_t *mb_param, int slave,
-                      int start_addr, int count, int *dest);
+                      int start_addr, int count, uint8_t *dest);
 
 /* Reads the holding registers in a slave and put the data into an
    array */
 int read_holding_registers(modbus_param_t *mb_param, int slave,
-                           int start_addr, int count, int *dest);
-
+                           int start_addr, int count, uint16_t *dest);
 
 /* Reads the input registers in a slave and put the data into an
    array */
 int read_input_registers(modbus_param_t *mb_param, int slave,
-                         int start_addr, int count, int *dest);
+                         int start_addr, int count, uint16_t *dest);
 
 /* Turns on or off a single coil on the slave device */
 int force_single_coil(modbus_param_t *mb_param, int slave,
@@ -200,15 +201,14 @@ int preset_single_register(modbus_param_t *mb_param, int slave,
 /* Takes an array of ints and sets or resets the coils on a slave
    appropriatly */
 int force_multiple_coils(modbus_param_t *mb_param, int slave,
-                         int start_addr, int coil_count, int *data);
+                         int start_addr, int coil_count, uint8_t *data);
 
 /* Copy the values in an array to an array on the slave */
 int preset_multiple_registers(modbus_param_t *mb_param, int slave,
-                              int start_addr, int reg_count, int *data);
+                              int start_addr, int reg_count, uint16_t *data);
 
 /* Returns some useful information about the modbus controller */
-int report_slave_id(modbus_param_t *mb_param, int slave,
-                    unsigned char *dest);
+int report_slave_id(modbus_param_t *mb_param, int slave, uint8_t *dest);
 
 /* Initialises a parameters structure
    - device : "/dev/ttyS0"
@@ -259,18 +259,34 @@ void modbus_set_debug(modbus_param_t *mb_param, int boolean);
 /* Slave/client functions */
 int modbus_mapping_new(modbus_mapping_t *mb_mapping,
                        int nb_coil_status, int nb_input_status,
-                       int nb_input_registers, int nb_holding_registers);
+                       int nb_holding_registers, int nb_input_registers);
 void modbus_mapping_free(modbus_mapping_t *mb_mapping);
 
 int modbus_init_listen_tcp(modbus_param_t *mb_param);
 
-int modbus_listen(modbus_param_t *mb_param, unsigned char *query, int *query_size);
+int modbus_listen(modbus_param_t *mb_param, uint8_t *query, int *query_size);
 
-void manage_query(modbus_param_t *mb_param, unsigned char *query,
+void manage_query(modbus_param_t *mb_param, uint8_t *query,
                   int query_size, modbus_mapping_t *mb_mapping);
 
 /* Not implemented :
    - read_exception_status()
 */
+
+/** Utils **/
+
+/* Set many inputs/coils form a single byte value (all 8 bits of the
+   byte value are setted) */
+void set_bits_from_byte(uint8_t *dest, uint16_t address,
+                        const uint8_t value);
+
+/* Set many inputs/coils from a table of bytes (only the bits between
+   address and address + nb_bits are setted) */
+void set_bits_from_bytes(uint8_t *dest, uint16_t address, uint16_t nb_bits,
+                         const uint8_t *tab_byte);
+
+/* Get the byte value from many inputs/coils.
+   To obtain a full byte, set nb_bits to 8. */
+uint8_t get_byte_from_bits(const uint8_t *src, uint16_t address, int nb_bits);
 
 #endif  /* _MODBUS_H_ */
