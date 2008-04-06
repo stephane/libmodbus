@@ -5,6 +5,7 @@ Features
 * slave must listen only request sent for him
 
 Cleanups
+* use uint16_t, reduce size of structs (e.g. address is uint16_t)
 * split compute_response_size to reuse
 * split modbus.c (tcp/rtu, query/response)
 * t_id in param_msqg
