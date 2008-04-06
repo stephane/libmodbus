@@ -35,25 +35,27 @@
    - read_holding_registers
 
    All these functions are called with random values on a address
-   range defined by following defines.
-
-   This program is also really useful to test your remote target unit.
+   range defined by the following defines. 
 */
-#define LOOP       1
-#define SLAVE   0x11
-#define ADDR_MIN   0
-#define ADDR_MAX 499
-#define FIELDS   500
+#define LOOP             1
+#define SLAVE         0x11
+#define ADDRESS_START    0
+#define ADDRESS_END    499
 
+/* At each loop, the program works in the range ADDRESS_START to
+ * ADDRESS_END then ADDRESS_START + 1 to ADDRESS_END and so on.
+ */
 int main(void)
 {
-        int ok, fail;
-        int loop_nb;
+        int ret;
+        int nb_fail;
+        int nb_loop;
         int addr;
-        int field_nb;
-        int *tab_rq;
-        int *tab_rq_bits;
-        int *tab_rp;
+        int nb_points_total;
+        uint8_t *tab_rq_status;
+        uint8_t *tab_rp_status;
+        uint16_t *tab_rq_registers;
+        uint16_t *tab_rp_registers;
         modbus_param_t mb_param;
 
         /* RTU parity : none, even, odd */
@@ -66,141 +68,144 @@ int main(void)
         modbus_connect(&mb_param);
 
         /* Allocate and initialize the different memory spaces */
-        tab_rq = (int *) malloc(FIELDS * sizeof(int));
-        memset(tab_rq, 0, FIELDS * sizeof(int));
+        nb_points_total = ADDRESS_END - ADDRESS_START;
 
-        tab_rq_bits = (int *) malloc(FIELDS * sizeof(int));
-        memset(tab_rq_bits, 0, FIELDS * sizeof(int));
+        tab_rq_status = (uint8_t *) malloc(nb_points_total * sizeof(uint8_t));
+        memset(tab_rq_status, 0, nb_points_total * sizeof(uint8_t));
+        tab_rp_status = (uint8_t *) malloc(nb_points_total * sizeof(uint8_t));
+        memset(tab_rp_status, 0, nb_points_total * sizeof(uint8_t));
 
-        tab_rp = (int *) malloc(FIELDS * sizeof(int));
-        memset(tab_rp, 0, FIELDS * sizeof(int));
+        tab_rq_registers = (uint16_t *) malloc(nb_points_total * sizeof(uint16_t));
+        memset(tab_rq_registers, 0, nb_points_total * sizeof(uint16_t));
+        tab_rp_registers = (uint16_t *) malloc(nb_points_total * sizeof(uint16_t));
+        memset(tab_rp_status, 0, nb_points_total * sizeof(uint16_t));
 
-        loop_nb = ok = fail = 0;
-        while (loop_nb++ < LOOP) { 
-                for (addr=ADDR_MIN; addr <= ADDR_MAX; addr++) {
-                        for (field_nb=1; field_nb<=FIELDS; field_nb++) {
-                                int i;
+        nb_loop = nb_fail = 0;
+        while (nb_loop++ < LOOP) { 
+                for (addr = ADDRESS_START; addr <= ADDRESS_END; addr++) {
+                        int i;
+                        int nb_points;
 
-                                /* Random numbers (short) */
-                                for (i=0; i<field_nb; i++) {
-                                        tab_rq[i] = (int) (16536.0*rand()/(RAND_MAX+1.0));
-                                        tab_rq_bits[i] = (i) % 2;
+                        /* Random numbers (short) */
+                        for (i=0; i<nb_points_total; i++) {
+                                tab_rq_registers[i] = (uint16_t) (65535.0*rand() / (RAND_MAX + 1.0));
+                                tab_rq_status[i] = tab_rq_registers[i] % 2;
+                        }
+                        nb_points = ADDRESS_END - addr;
+
+                        /* SINGLE COIL */
+                        ret = force_single_coil(&mb_param, SLAVE, addr, tab_rq_status[0]);
+                        if (ret != 1) {
+                                printf("ERROR force_single_coil (%d)\n", ret);
+                                printf("Slave = %d, address = %d, value = %d\n",
+                                       SLAVE, addr, tab_rq_status[0]);
+                                nb_fail++;
+                        } else {
+                                ret = read_coil_status(&mb_param, SLAVE, addr, 1, tab_rp_status);
+                                if (ret != 1 || tab_rq_status[0] != tab_rp_status[0]) {
+                                        printf("ERROR read_coil_status single (%d)\n", ret);
+                                        printf("Slave = %d, address = %d\n", 
+                                               SLAVE, addr);
+                                        nb_fail++;
                                 }
+                        }
 
-                                /* SINGLE COIL */
-                                ok = force_single_coil(&mb_param, SLAVE, addr, tab_rq_bits[0]);
-                                if (ok != 1) {
-                                        printf("ERROR force_single_coil (%d)\n", ok);
-                                        printf("Slave = %d, address = %d, value = %d\n",
-                                               SLAVE, addr, tab_rq_bits[0]);
-                                        fail++;
+                        /* MULTIPLE COILS */
+                        ret = force_multiple_coils(&mb_param, SLAVE, addr, nb_points, tab_rq_status);
+                        if (ret != nb_points) {
+                                printf("ERROR force_multiple_coils (%d)\n", ret);
+                                printf("Slave = %d, address = %d, nb_points = %d\n",
+                                       SLAVE, addr, nb_points);
+                                nb_fail++;
+                        } else {
+                                ret = read_coil_status(&mb_param, SLAVE, addr, nb_points, tab_rp_status);
+                                if (ret != nb_points) {
+                                        printf("ERROR read_coil_status\n");
+                                        printf("Slave = %d, address = %d, nb_points = %d\n",
+                                               SLAVE, addr, nb_points);
+                                        nb_fail++;
                                 } else {
-                                        ok = read_coil_status(&mb_param, SLAVE, addr, 1, tab_rp);
-                                        if (ok != 1 || tab_rq_bits[0] != tab_rp[0]) {
-                                                printf("ERROR read_coil_status single (%d)\n", ok);
-                                                printf("Slave = %d, address = %d\n", 
-                                                       SLAVE, addr);
-                                                fail++;
-                                        }
-                                }
-
-                                /* MULTIPLE COILS */
-                                ok = force_multiple_coils(&mb_param, SLAVE, addr, field_nb, tab_rq_bits);
-                                if (ok != field_nb) {
-                                        printf("ERROR force_multiple_coils (%d)\n", ok);
-                                        printf("Slave = %d, address = %d, field_nb = %d\n",
-                                               SLAVE, addr, field_nb);
-                                        fail++;
-                                } else {
-                                        ok = read_coil_status(&mb_param, SLAVE, addr,
-                                                              field_nb, tab_rp);
-                                        if (ok != field_nb) {
-                                                printf("ERROR read_coil_status\n");
-                                                printf("Slave = %d, address = %d, field_nb = %d\n",
-                                                       SLAVE, addr, field_nb);
-                                                fail++;
-                                        } else {
-                                                for (i=0; i<field_nb; i++) {
-                                                        if (tab_rp[i] != tab_rq_bits[i]) {
-                                                                printf("ERROR read_coil_status ");
-                                                                printf("(%d != %d)\n", tab_rp[i], tab_rq_bits[i]);
-                                                                printf("Slave = %d, address = %d\n", 
-                                                                       SLAVE, addr);
-                                                                fail++;
-                                                        }
-                                                }
-                                        }
-                                }
-
-                                /* SINGLE REGISTER */
-                                ok = preset_single_register(&mb_param, SLAVE, addr, tab_rq[0]);
-                                if (ok != 1) {
-                                        printf("ERROR preset_single_register (%d)\n", ok);
-                                        printf("Slave = %d, address = %d, value = %d\n",
-                                               SLAVE, addr, tab_rq[0]);
-                                        fail++;
-                                } else {
-                                        ok = read_holding_registers(&mb_param, SLAVE,
-                                                                    addr, 1, tab_rp);
-                                        if (ok != 1) {
-                                                printf("ERROR read_holding_registers single (%d)\n", ok);
-                                                printf("Slave = %d, address = %d\n",
-                                                       SLAVE, addr);
-                                                fail++;
-                                        } else {
-                                                if (tab_rq[0] != tab_rp[0]) {
-                                                        printf("ERROR read_holding_registers single ");
-                                                        printf("(%d != %d)\n",
-                                                               tab_rq[0], tab_rp[0]);
+                                        for (i=0; i<nb_points; i++) {
+                                                if (tab_rp_status[i] != tab_rq_status[i]) {
+                                                        printf("ERROR read_coil_status ");
+                                                        printf("(%d != %d)\n", tab_rp_status[i], tab_rq_status[i]);
                                                         printf("Slave = %d, address = %d\n", 
                                                                SLAVE, addr);
-                                                        fail++;
-                                                }
-                                        }
-                                }
-
-                                /* MULTIPLE REGISTERS */
-                                ok = preset_multiple_registers(&mb_param, SLAVE,
-                                                               addr, field_nb, tab_rq);
-                                if (ok != field_nb) {
-                                        printf("ERROR preset_multiple_registers (%d)\n", ok);
-                                        printf("Slave = %d, address = %d, field_nb = %d\n",
-                                               SLAVE, addr, field_nb);
-                                        fail++;
-                                } else {
-                                        ok = read_holding_registers(&mb_param, SLAVE,
-                                                                    addr, field_nb, tab_rp);
-                                        if (ok != field_nb) {
-                                                printf("ERROR read_holding_registers (%d)\n", ok);
-                                                printf("Slave = %d, address = %d, field_nb = %d\n",
-                                                       SLAVE, addr, field_nb);
-                                                fail++;
-                                        } else {
-                                                for (i=0; i<field_nb; i++) {
-                                                        if (tab_rq[i] != tab_rp[i]) {
-                                                                printf("ERROR read_holding_registers ");
-                                                                printf("(%d != %d)\n",
-                                                                       tab_rq[i], tab_rp[i]);
-                                                                printf("Slave = %d, address = %d\n", 
-                                                                       SLAVE, addr);
-                                                                fail++;
-                                                        }
+                                                        nb_fail++;
                                                 }
                                         }
                                 }
                         }
-        
-                        if (fail)
-                                printf("Address : %d - Fails sum : %d\n", addr, fail);
-                        else
-                                printf("Address : %d - OK\n", addr);
+
+                        /* SINGLE REGISTER */
+                        ret = preset_single_register(&mb_param, SLAVE, addr, tab_rq_registers[0]);
+                        if (ret != 1) {
+                                printf("ERROR preset_single_register (%d)\n", ret);
+                                printf("Slave = %d, address = %d, value = %d\n",
+                                       SLAVE, addr, tab_rq_registers[0]);
+                                nb_fail++;
+                        } else {
+                                ret = read_holding_registers(&mb_param, SLAVE,
+                                                            addr, 1, tab_rp_registers);
+                                if (ret != 1) {
+                                        printf("ERROR read_holding_registers single (%d)\n", ret);
+                                        printf("Slave = %d, address = %d\n",
+                                               SLAVE, addr);
+                                        nb_fail++;
+                                } else {
+                                        if (tab_rq_registers[0] != tab_rp_registers[0]) {
+                                                printf("ERROR read_holding_registers single ");
+                                                printf("(%d != %d)\n",
+                                                       tab_rq_registers[0], tab_rp_registers[0]);
+                                                printf("Slave = %d, address = %d\n", 
+                                                       SLAVE, addr);
+                                                nb_fail++;
+                                        }
+                                }
+                        }
+                        
+                        /* MULTIPLE REGISTERS */
+                        ret = preset_multiple_registers(&mb_param, SLAVE,
+                                                        addr, nb_points, tab_rq_registers);
+                        if (ret != nb_points) {
+                                printf("ERROR preset_multiple_registers (%d)\n", ret);
+                                printf("Slave = %d, address = %d, nb_points = %d\n",
+                                               SLAVE, addr, nb_points);
+                                nb_fail++;
+                        } else {
+                                ret = read_holding_registers(&mb_param, SLAVE,
+                                                             addr, nb_points, tab_rp_registers);
+                                if (ret != nb_points) {
+                                        printf("ERROR read_holding_registers (%d)\n", ret);
+                                        printf("Slave = %d, address = %d, nb_points = %d\n",
+                                               SLAVE, addr, nb_points);
+                                        nb_fail++;
+                                } else {
+                                        for (i=0; i<nb_points; i++) {
+                                                if (tab_rq_registers[i] != tab_rp_registers[i]) {
+                                                        printf("ERROR read_holding_registers ");
+                                                        printf("(%d != %d)\n",
+                                                               tab_rq_registers[i], tab_rp_registers[i]);
+                                                        printf("Slave = %d, address = %d\n", 
+                                                               SLAVE, addr);
+                                                        nb_fail++;
+                                                }
+                                        }
+                                }
+                        }
                 }
+                        
+                if (nb_fail)
+                        printf("Address: %d - nb of fails: %d\n", addr, nb_fail);
+                else
+                        printf("Address: %d - OK\n", addr);
         }
 
         /* Free the memory */
-        free(tab_rp);                                           
-        free(tab_rq);
-        free(tab_rq_bits);
+        free(tab_rp_status);                                           
+        free(tab_rq_status);
+        free(tab_rp_registers);
+        free(tab_rq_registers);
 
         /* Close the connection */
         modbus_close(&mb_param);
