@@ -72,13 +72,11 @@ int main(void)
 
         socket = modbus_init_listen_tcp(&mb_param);
         
-        i = 0;
-        while (i++ < 5) {
-                unsigned char query[MAX_PACKET_SIZE];
+        while (1) {
+                uint8_t query[MAX_PACKET_SIZE];
                 int query_size;
-
+                
                 ret = modbus_listen(&mb_param, query, &query_size);
-
                 if (ret == 0) {
                         manage_query(&mb_param, query, query_size, &mb_mapping);
                 } else if (ret == CONNECTION_CLOSED) {
