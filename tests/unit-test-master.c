@@ -44,6 +44,7 @@ int main(void)
 
         /* TCP */
         modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
+        modbus_set_debug(&mb_param, TRUE);
       
         modbus_connect(&mb_param);
 
@@ -129,6 +130,11 @@ int main(void)
                 }
         }
         printf("Input registers: OK\n");
+
+
+        /** ILLEGAL DATA ADDRESSES */
+        read_coil_status(&mb_param, SLAVE, UT_COIL_STATUS_ADDRESS + UT_COIL_STATUS_NB_POINTS + 1,
+                         UT_COIL_STATUS_NB_POINTS, tab_rp_status);
         
 close:
         /* Free the memory */

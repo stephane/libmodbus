@@ -134,11 +134,14 @@ static int read_reg_response(modbus_param_t *mb_param,
                              uint16_t *data_dest, uint8_t *query);
 
 /* Treats errors and flush or close connection if necessary */
-static void error_treat(int ret, const char *string, modbus_param_t *mb_param)
+static void error_treat(int code, const char *string, modbus_param_t *mb_param)
 {
-        if (ret == -1)
+        if (code == -1)
                 perror(string);
         printf("\n\nERROR %s\n\n", string);
+
+        // FIXME Create a new FLUSH_OR_RECONNECT_ON_ERROR
+        // FIXME Filter on code
 
         if (mb_param->type_com == RTU) {
                 tcflush(mb_param->fd, TCIOFLUSH);
@@ -187,24 +190,24 @@ static unsigned int compute_response_size(modbus_param_t *mb_param,
 }
 
 /* Buils a RTU header */
-static int build_query_packet_rtu(uint8_t slave, uint8_t function,
-                                  uint16_t start_addr, uint16_t count,
-                                  uint8_t *packet)
+static int build_query_basis_rtu(uint8_t slave, uint8_t function,
+                                 uint16_t start_addr, uint16_t count,
+                                 uint8_t *query)
 {
-        packet[0] = slave;
-        packet[1] = function;
-        packet[2] = start_addr >> 8;
-        packet[3] = start_addr & 0x00ff;
-        packet[4] = count >> 8;
-        packet[5] = count & 0x00ff;
+        query[0] = slave;
+        query[1] = function;
+        query[2] = start_addr >> 8;
+        query[3] = start_addr & 0x00ff;
+        query[4] = count >> 8;
+        query[5] = count & 0x00ff;
 
         return PRESET_QUERY_SIZE_RTU;
 }
 
 /* Builds a TCP header */
-static int build_query_packet_tcp(uint8_t slave, uint8_t function,
-                                  uint16_t start_addr, uint16_t count,
-                                  uint8_t *packet)
+static int build_query_basis_tcp(uint8_t slave, uint8_t function,
+                                 uint16_t start_addr, uint16_t count,
+                                 uint8_t *query)
 {
         static uint16_t t_id = 0;
 
@@ -213,51 +216,46 @@ static int build_query_packet_tcp(uint8_t slave, uint8_t function,
                 t_id++;
         else
                 t_id = 0;
-        packet[0] = t_id >> 8;
-        packet[1] = t_id & 0x00ff;
+        query[0] = t_id >> 8;
+        query[1] = t_id & 0x00ff;
 
         /* Protocol Modbus */
-        packet[2] = 0;
-        packet[3] = 0;
+        query[2] = 0;
+        query[3] = 0;
 
-        /* Length to fix later with set_packet_length_tcp (4 and 5) */
+        /* Length to fix later with set_query_length_tcp (4 and 5) */
 
-        packet[6] = slave;
-        packet[7] = function;
-        packet[8] = start_addr >> 8;
-        packet[9] = start_addr & 0x00ff;
-        packet[10] = count >> 8;
-        packet[11] = count & 0x00ff;
+        query[6] = slave;
+        query[7] = function;
+        query[8] = start_addr >> 8;
+        query[9] = start_addr & 0x00ff;
+        query[10] = count >> 8;
+        query[11] = count & 0x00ff;
 
         return PRESET_QUERY_SIZE_TCP;
 }
 
-static int build_query_packet(modbus_param_t *mb_param, uint8_t slave, 
-                              uint8_t function, uint16_t start_addr,
-                              uint16_t count, uint8_t *packet)
+static int build_query_basis(modbus_param_t *mb_param, uint8_t slave, 
+                             uint8_t function, uint16_t start_addr,
+                             uint16_t count, uint8_t *query)
 {
         if (mb_param->type_com == RTU)
-                return build_query_packet_rtu(slave, function, start_addr,
-                                              count, packet);
+                return build_query_basis_rtu(slave, function, start_addr,
+                                             count, query);
         else
-                return build_query_packet_tcp(slave, function, start_addr,
-                                              count, packet);
+                return build_query_basis_tcp(slave, function, start_addr,
+                                             count, query);
 }
 
-
-static int build_response_packet_rtu(uint8_t slave, uint8_t function,
-                                     uint8_t byte_count, uint8_t *packet)
+static int build_response_basis_rtu(uint8_t slave, uint8_t function, uint8_t *response)
 {
-        packet[0] = slave;
-        packet[1] = function;
-        packet[2] = byte_count;
+        response[0] = slave;
+        response[1] = function;
 
-        /* FIXME +1 */
-        return PRESET_RESPONSE_SIZE_RTU+1;
+        return PRESET_RESPONSE_SIZE_RTU;
 }
 
-static int build_response_packet_tcp(uint8_t slave, uint8_t function,
-                                     uint8_t byte_count, uint8_t *packet)
+static int build_response_basis_tcp(uint8_t slave, uint8_t function, uint8_t *response)
 {
         static uint16_t t_id = 0;
 
@@ -266,34 +264,31 @@ static int build_response_packet_tcp(uint8_t slave, uint8_t function,
                 t_id++;
         else
                 t_id = 0;
-        packet[0] = t_id >> 8;
-        packet[1] = t_id & 0x00ff;
+        response[0] = t_id >> 8;
+        response[1] = t_id & 0x00ff;
 
         /* Protocol Modbus */
-        packet[2] = 0;
-        packet[3] = 0;
+        response[2] = 0;
+        response[3] = 0;
 
-        /* Length to fix later with set_packet_length_tcp (4 and 5) */
+        /* Length to fix later with set_response_length_tcp (4 and 5) */
 
-        packet[6] = slave;
-        packet[7] = function;
+        response[6] = slave;
+        response[7] = function;
 
-        packet[8] = byte_count;
-
-        /* FIXME +1 */
-        return PRESET_RESPONSE_SIZE_TCP+1;
+        return PRESET_RESPONSE_SIZE_TCP;
 }
 
-static int build_response_packet(modbus_param_t *mb_param, uint8_t slave, 
-                          uint8_t function, uint8_t byte_count, uint8_t *packet)
+static int build_response_basis(modbus_param_t *mb_param, uint8_t slave, 
+                                uint8_t function, uint8_t *response)
 {
         if (mb_param->type_com == RTU)
-                return build_response_packet_rtu(slave, function, byte_count, packet);
+                return build_response_basis_rtu(slave, function, response);
         else
-                return build_response_packet_tcp(slave, function, byte_count, packet);
+                return build_response_basis_tcp(slave, function, response);
 }
 
-/* Sets the length of TCP message in the message */
+/* Sets the length of TCP message in the message (query and response) */
 void set_packet_length_tcp(uint8_t *packet, size_t packet_size)
 {
         uint16_t mbap_length;
@@ -306,8 +301,7 @@ void set_packet_length_tcp(uint8_t *packet, size_t packet_size)
 }
 
 /* Fast CRC */
-static uint16_t crc16(uint8_t *buffer,
-                            uint16_t buffer_length)
+static uint16_t crc16(uint8_t *buffer, uint16_t buffer_length)
 {
         uint8_t crc_hi = 0xFF; /* high CRC byte initialized */
         uint8_t crc_lo = 0xFF; /* low CRC byte initialized */
@@ -679,7 +673,7 @@ static int modbus_check_response(modbus_param_t *mb_param,
         return response_size;
 }
 
-static int response_io_status(uint8_t address, uint16_t count,
+static int response_io_status(uint16_t address, uint16_t count,
                               uint8_t *tab_io_status,
                               uint8_t *response, int offset)
 {
@@ -704,68 +698,127 @@ static int response_io_status(uint8_t address, uint16_t count,
         return offset;
 }
 
+/* Build the exception response */
+int response_exception(modbus_param_t *mb_param, int slave, int function,
+                       int exception_code, uint8_t *response)
+{
+        int response_size;
+
+        response_size = build_response_basis(mb_param, slave,
+                                             function + 0x80, response);
+        /* Positive exception code */
+        response[response_size++] = -exception_code;
+
+        return response_size;
+}
+
 /* Manages the received query.
-   Analyses the query and constructs a response */
+   Analyses the query and constructs a response.
+   If an error occurs, this function construct the response
+   accordingly.
+*/
 void manage_query(modbus_param_t *mb_param, uint8_t *query,
                   int query_size, modbus_mapping_t *mb_mapping)
 {                   
         int offset = mb_param->header_length;
         int slave = query[offset];
         int function = query[offset+1];
-        int address = (query[offset+2] << 8) + query[offset+3];
-        /* FIXME count/data */
-        int count;
-        int data;
+        uint16_t address = (query[offset+2] << 8) + query[offset+3];
         uint8_t response[MAX_PACKET_SIZE];
-        int byte_count;
-        int i;
-
-        /* FIXME address illegal used in mb_mapping->tab_X */
+        int response_size = 0;
 
         switch (function) {
         case FC_READ_COIL_STATUS:
-                count = (query[offset+4] << 8) + query[offset+5];
-                byte_count = (count / 8) + ((count % 8) ? 1 : 0);
-                offset = build_response_packet(mb_param, slave, function, byte_count, response);
-                offset = response_io_status(address, count, mb_mapping->tab_coil_status,
-                                            response, offset);
+                if (address >= mb_mapping->nb_coil_status) {
+                        printf("Illegal data address %0X in read_coil_status\n", address); 
+                        response_size = response_exception(mb_param, slave, function,
+                                                           ILLEGAL_DATA_ADDRESS, response);  
+                } else {
+                        int count = (query[offset+4] << 8) + query[offset+5];
+                        
+                        // FIXME Check address + count
+
+                        offset = build_response_basis(mb_param, slave, function, response);
+                        response[offset++] = (count / 8) + ((count % 8) ? 1 : 0);
+                        response_size = response_io_status(address, count,
+                                                           mb_mapping->tab_coil_status,
+                                                           response, offset);
+                }
                 break;
         case FC_READ_INPUT_STATUS:
-                count = (query[offset+4] << 8) + query[offset+5];
-                byte_count = (count / 8) + ((count % 8) ? 1 : 0);
-                offset = build_response_packet(mb_param, slave, function, byte_count, response);
-                offset = response_io_status(address, count, mb_mapping->tab_input_status,
-                                            response, offset);
+                /* Similar to coil status */
+                if (address >= mb_mapping->nb_input_status) {
+                        printf("Illegal data address %0X in read_input_status\n", address); 
+                        response_size = response_exception(mb_param, slave, function,
+                                                           ILLEGAL_DATA_ADDRESS, response);
+                } else {
+                        int count = (query[offset+4] << 8) + query[offset+5];
+
+                        offset = build_response_basis(mb_param, slave, function, response);
+                        response[offset++] = (count / 8) + ((count % 8) ? 1 : 0);
+                        response_size = response_io_status(address, count,
+                                                           mb_mapping->tab_input_status,
+                                                           response, offset);
+                }
                 break;
         case FC_READ_HOLDING_REGISTERS:
-                count = (query[offset+4] << 8) + query[offset+5];
-                byte_count = 2 * count;
-                offset = build_response_packet(mb_param, slave, function, byte_count, response);
-                for (i = address; i < address + count; i++) {
-                        response[offset++] = mb_mapping->tab_holding_registers[i] >> 8;
-                        response[offset++] = mb_mapping->tab_holding_registers[i] & 0xFF;
+                if (address >= mb_mapping->nb_holding_registers) {
+                        printf("Illegal data address %0X in read_holding_registers\n", address); 
+                        response_size = response_exception(mb_param, slave, function,
+                                                           ILLEGAL_DATA_ADDRESS, response);
+                } else {
+                        int count = (query[offset+4] << 8) + query[offset+5];
+                        int i;
+                        
+                        offset = build_response_basis(mb_param, slave, function, response);
+                        response[offset++] = count << 1;
+                        for (i = address; i < address + count; i++) {
+                                response[offset++] = mb_mapping->tab_holding_registers[i] >> 8;
+                                response[offset++] = mb_mapping->tab_holding_registers[i] & 0xFF;
+                        }
+                        response_size = offset;
                 }
                 break;
         case FC_READ_INPUT_REGISTERS:
-                count = (query[offset+4] << 8) + query[offset+5];
-                byte_count = 2 * count;
-                offset = build_response_packet(mb_param, slave, function, byte_count, response);
-                for (i = address; i < address + count; i++) {
-                        response[offset++] = mb_mapping->tab_input_registers[i] >> 8;
-                        response[offset++] = mb_mapping->tab_input_registers[i] & 0xFF;
+                /* Similar to holding registers */
+                if (address >= mb_mapping->nb_input_registers) {
+                        printf("Illegal data address %0X in read_input_registers\n", address); 
+                        response_size = response_exception(mb_param, slave, function,
+                                                           ILLEGAL_DATA_ADDRESS, response);
+                } else {
+                        int count = (query[offset+4] << 8) + query[offset+5];
+                        int i;
+
+                        offset = build_response_basis(mb_param, slave, function, response);
+                        response[offset++] = count << 1;
+                        for (i = address; i < address + count; i++) {
+                                response[offset++] = mb_mapping->tab_input_registers[i] >> 8;
+                                response[offset++] = mb_mapping->tab_input_registers[i] & 0xFF;
+                        }
+                        response_size = offset;
                 }
                 break;
         case FC_FORCE_SINGLE_COIL:
-                data = (query[offset+4] << 8) + query[offset+5];
-                if (data == 0xFF00)
-                        mb_mapping->tab_coil_status[address] = ON;
-                else if (data == 0x0)
-                        mb_mapping->tab_coil_status[address] = OFF;
-                else
-                        printf("FIXME Error %d\n", data);
-                printf("FIXME works only in TCP mode (CRC)");
-                memcpy(response, query, query_size);
-                offset = query_size;
+                if (address >= mb_mapping->nb_coil_status) {
+                        printf("Illegal data address %0X in force_singe_coil\n", address); 
+                        response_size = response_exception(mb_param, slave, function,
+                                                           ILLEGAL_DATA_ADDRESS, response);  
+                } else {
+                        int data = (query[offset+4] << 8) + query[offset+5];
+
+                        if (data == 0xFF00 || data == 0x0) {
+                                mb_mapping->tab_coil_status[address] = (data) ? ON : OFF;
+
+                                memcpy(response, query, query_size);
+                                response_size = query_size;
+                                printf("FIXME works only in TCP mode (CRC)");
+                        } else {
+                                printf("Illegal data value %0X in force_single_coil request at address %0X\n",
+                                       data, address);
+                                response_size = response_exception(mb_param, slave, function,
+                                                                   ILLEGAL_DATA_VALUE, response);
+                        }
+                }
                 break;          
         case FC_PRESET_SINGLE_REGISTER:
         case FC_READ_EXCEPTION_STATUS:
@@ -776,7 +829,7 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
                 break;
         }
 
-        modbus_send(mb_param, response, offset);
+        modbus_send(mb_param, response, response_size);
 }
 
 /* Listens any message on a socket or file descriptor.
@@ -807,8 +860,8 @@ static int read_io_status(modbus_param_t *mb_param, int slave, int function,
         uint8_t query[MIN_QUERY_SIZE];
         uint8_t response[MAX_PACKET_SIZE];
 
-        query_size = build_query_packet(mb_param, slave, function, 
-                                        start_addr, count, query);
+        query_size = build_query_basis(mb_param, slave, function, 
+                                       start_addr, count, query);
 
         query_ret = modbus_send(mb_param, query, query_size);
         if (query_ret > 0) {
@@ -881,8 +934,8 @@ static int read_registers(modbus_param_t *mb_param, int slave, int function,
         int query_ret;
         uint8_t query[MIN_QUERY_SIZE];
 
-        query_size = build_query_packet(mb_param, slave, function, 
-                                        start_addr, count, query);
+        query_size = build_query_basis(mb_param, slave, function, 
+                                       start_addr, count, query);
 
         query_ret = modbus_send(mb_param, query, query_size);
         if (query_ret > 0)
@@ -972,8 +1025,8 @@ static int set_single(modbus_param_t *mb_param, int slave, int function,
         int query_ret;
         uint8_t query[MAX_PACKET_SIZE];
 
-        query_size = build_query_packet(mb_param, slave, function, 
-                                        addr, value, query);
+        query_size = build_query_basis(mb_param, slave, function, 
+                                       addr, value, query);
 
         query_ret = modbus_send(mb_param, query, query_size);
         if (query_ret > 0)
@@ -1031,8 +1084,8 @@ int force_multiple_coils(modbus_param_t *mb_param, int slave,
                 coil_count = MAX_WRITE_COILS;
         }
 
-        query_size = build_query_packet(mb_param, slave, FC_FORCE_MULTIPLE_COILS, 
-                                        start_addr, coil_count, query);
+        query_size = build_query_basis(mb_param, slave, FC_FORCE_MULTIPLE_COILS, 
+                                       start_addr, coil_count, query);
         byte_count = (coil_count / 8) + ((coil_count % 8) ? 1 : 0);
         query[query_size++] = byte_count;
 
@@ -1079,9 +1132,9 @@ int preset_multiple_registers(modbus_param_t *mb_param, int slave,
                 reg_count = MAX_WRITE_REGS;
         }
 
-        query_size = build_query_packet(mb_param, slave,
-                                        FC_PRESET_MULTIPLE_REGISTERS, 
-                                        start_addr, reg_count, query);
+        query_size = build_query_basis(mb_param, slave,
+                                       FC_PRESET_MULTIPLE_REGISTERS, 
+                                       start_addr, reg_count, query);
         byte_count = reg_count * 2;
         query[query_size++] = byte_count;
 
@@ -1110,8 +1163,8 @@ int report_slave_id(modbus_param_t *mb_param, int slave,
         uint8_t query[MIN_QUERY_SIZE];
         uint8_t response[MAX_PACKET_SIZE];
         
-        query_size = build_query_packet(mb_param, slave, FC_REPORT_SLAVE_ID, 
-                                        0, 0, query);
+        query_size = build_query_basis(mb_param, slave, FC_REPORT_SLAVE_ID, 
+                                       0, 0, query);
         
         /* start_addr and count are not used */
         query_size -= 4;
