@@ -699,8 +699,9 @@ static int response_io_status(uint16_t address, uint16_t count,
 }
 
 /* Build the exception response */
-int response_exception(modbus_param_t *mb_param, int slave, int function,
-                       int exception_code, uint8_t *response)
+static int response_exception(modbus_param_t *mb_param, int slave,
+                              int function, int exception_code,
+                              uint8_t *response)
 {
         int response_size;
 
