@@ -741,12 +741,10 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
                 count = (query[offset+4] << 8) + query[offset+5];
                 byte_count = 2 * count;
                 offset = build_response_packet(mb_param, slave, function, byte_count, response);
-                printf("offset %d\n", offset);
                 for (i = address; i < address + count; i++) {
                         response[offset++] = mb_mapping->tab_holding_registers[i] >> 8;
                         response[offset++] = mb_mapping->tab_holding_registers[i] & 0xFF;
                 }
-                printf("fin offset %d\n", offset);
                 break;
         case FC_READ_INPUT_REGISTERS:
                 count = (query[offset+4] << 8) + query[offset+5];
