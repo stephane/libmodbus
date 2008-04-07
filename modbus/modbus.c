@@ -51,11 +51,6 @@
 
 #include "modbus.h"
 
-#ifdef __APPLE_CC__
-    #include <netdb.h>
-    #define SOL_TCP getprotobyname("TCP")->p_proto
-#endif
-
 #define UNKNOWN_ERROR_MSG "Not defined in modbus specification"
 
 static const uint8_t NB_TAB_ERROR_MSG = 12;
@@ -1476,7 +1471,7 @@ static int modbus_connect_tcp(modbus_param_t *mb_param)
         /* Set the TCP no delay flag */
         /* SOL_TCP = IPPROTO_TCP */
         option = 1;
-        ret = setsockopt(mb_param->fd, SOL_TCP, TCP_NODELAY,
+        ret = setsockopt(mb_param->fd, IPPROTO_TCP, TCP_NODELAY,
                          (const void *)&option, sizeof(int));
         if (ret < 0) {
                 perror("setsockopt");
@@ -1486,7 +1481,7 @@ static int modbus_connect_tcp(modbus_param_t *mb_param)
 
         /* Set the IP low delay option */
         option = IPTOS_LOWDELAY;
-        ret = setsockopt(mb_param->fd, SOL_TCP, IP_TOS,
+        ret = setsockopt(mb_param->fd, IPPROTO_TCP, IP_TOS,
                          (const void *)&option, sizeof(int));
         if (ret < 0) {
                 perror("setsockopt");
