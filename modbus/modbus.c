@@ -595,7 +595,8 @@ static int modbus_check_response(modbus_param_t *mb_param,
                                  uint8_t *response)
 {
         int response_size;
-        int response_size_computed;     int offset = mb_param->header_length;
+        int response_size_computed;     
+        int offset = mb_param->header_length;
         int ret;
 
         response_size_computed = compute_response_size(mb_param, query);
