@@ -136,9 +136,6 @@ static int read_reg_response(modbus_param_t *mb_param,
 /* Treats errors and flush or close connection if necessary */
 static void error_treat(int code, const char *string, modbus_param_t *mb_param)
 {
-        // FIXME restore perror management
-        // if (code  0)
-        //     perror(string);
         printf("\n\nERROR %s (%.2X)\n\n", string, code);
 
         if (mb_param->error_handling == FLUSH_OR_RECONNECT_ON_ERROR) {
@@ -358,7 +355,7 @@ int check_crc16(modbus_param_t *mb_param,
 static int modbus_send(modbus_param_t *mb_param, uint8_t *query,
                        size_t query_size)
 {
-        int write_ret;
+        int ret;
         uint16_t s_crc;
         int i;
         
@@ -379,18 +376,18 @@ static int modbus_send(modbus_param_t *mb_param, uint8_t *query,
         }
         
         if (mb_param->type_com == RTU)
-                write_ret = write(mb_param->fd, query, query_size);
+                ret = write(mb_param->fd, query, query_size);
         else
-                write_ret = send(mb_param->fd, query, query_size, 0);
+                ret = send(mb_param->fd, query, query_size, 0);
 
         /* Return the number of bytes written (0 to n)
            or PORT_SOCKET_FAILURE on error */
-        if ((write_ret == -1) || (write_ret != query_size)) {
-                write_ret = PORT_SOCKET_FAILURE;
-                error_treat(write_ret, "Write port/socket failure", mb_param);
+        if ((ret == -1) || (ret != query_size)) {
+                ret = PORT_SOCKET_FAILURE;
+                error_treat(ret, "Write port/socket failure", mb_param);
         }
         
-        return write_ret;
+        return ret;
 }
 
 /* Computes the size of the header following the function code */
@@ -548,20 +545,18 @@ int receive_msg(modbus_param_t *mb_param,
                                 size_to_read = compute_query_size_header(msg[mb_param->header_length + 1]);
                                 msg_size_computed += size_to_read;
                                 state = BYTE;
-                                printf("\nBYTE:");
                                 break;
                         case BYTE:
                                 size_to_read = compute_query_size_data(mb_param, msg);
                                 msg_size_computed += size_to_read;
                                 state = COMPLETE;
-                                printf("\nCOMPLETE:");
                                 break;
                         case COMPLETE:
                                 size_to_read = 0;
                                 break;
                         }
                 }
-                printf(" size to read %d\n", size_to_read);
+                printf("\nsize_to_read: %d\n", size_to_read);
 
                 /* Moves the pointer to receive other datas */
                 p_msg = &(p_msg[read_ret]);
