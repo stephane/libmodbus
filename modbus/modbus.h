@@ -110,7 +110,7 @@
 #define MSG_SIZE_UNDEFINED -1
 
 typedef enum { RTU, TCP } type_com_t;
-typedef enum { RECONNECT_ON_ERROR, NOP_ON_ERROR } error_handling_t;
+typedef enum { FLUSH_OR_RECONNECT_ON_ERROR, NOP_ON_ERROR } error_handling_t;
 
 /* This structure is byte-aligned */
 typedef struct {
