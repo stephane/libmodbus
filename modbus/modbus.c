@@ -136,18 +136,24 @@ static int read_reg_response(modbus_param_t *mb_param,
 /* Treats errors and flush or close connection if necessary */
 static void error_treat(int code, const char *string, modbus_param_t *mb_param)
 {
-        if (code == -1)
-                perror(string);
-        printf("\n\nERROR %s\n\n", string);
-
-        // FIXME Filter on code
+        // FIXME restore perror management
+        // if (code  0)
+        //     perror(string);
+        printf("\n\nERROR %s (%.2X)\n\n", string, code);
 
         if (mb_param->error_handling == FLUSH_OR_RECONNECT_ON_ERROR) {
-                if (mb_param->type_com == RTU) {
-                        tcflush(mb_param->fd, TCIOFLUSH);
-                } else {
-                        modbus_close(mb_param);
-                        modbus_connect(mb_param);
+                switch (code) {
+                case ILLEGAL_DATA_VALUE:
+                case ILLEGAL_DATA_ADDRESS:
+                case ILLEGAL_FUNCTION:
+                        break;
+                default:
+                        if (mb_param->type_com == RTU) {
+                                tcflush(mb_param->fd, TCIOFLUSH);
+                        } else {
+                                modbus_close(mb_param);
+                                modbus_connect(mb_param);
+                        }
                 }
         }
 }
@@ -337,8 +343,8 @@ int check_crc16(modbus_param_t *mb_param,
                         char s_error[64];
                         sprintf(s_error, "invalid crc received %0X - crc_calc %0X", 
                                 crc_received, crc_calc);
-                        error_treat(0, s_error, mb_param);
                         ret = INVALID_CRC;
+                        error_treat(ret, s_error, mb_param);
                 }
         } else {
                 /* In TCP, the modbus CRC is not present (see HDLC level) */
@@ -380,8 +386,8 @@ static int modbus_send(modbus_param_t *mb_param, uint8_t *query,
         /* Return the number of bytes written (0 to n)
            or PORT_SOCKET_FAILURE on error */
         if ((write_ret == -1) || (write_ret != query_size)) {
-                error_treat(write_ret, "Write port/socket failure", mb_param);
                 write_ret = PORT_SOCKET_FAILURE;
+                error_treat(write_ret, "Write port/socket failure", mb_param);
         }
         
         return write_ret;
@@ -434,7 +440,7 @@ static uint8_t compute_query_size_data(modbus_param_t *mb_param, uint8_t *msg)
                         FD_ZERO(&rfds);                                                 \
                         FD_SET(mb_param->fd, &rfds);                                    \
                 } else {                                                                \
-                        error_treat(select_ret, "Select failure", mb_param);            \
+                        error_treat(SELECT_FAILURE, "Select failure", mb_param);        \
                         return SELECT_FAILURE;                                          \
                 }                                                                       \
         }                                                                               \
@@ -511,7 +517,7 @@ int receive_msg(modbus_param_t *mb_param,
                         read_ret = recv(mb_param->fd, p_msg, size_to_read, 0);
 
                 if (read_ret == -1) {
-                        error_treat(read_ret, "Read port/socket failure", mb_param);
+                        error_treat(PORT_SOCKET_FAILURE, "Read port/socket failure", mb_param);
                         return PORT_SOCKET_FAILURE;
                 } else if (read_ret == 0) {
                         printf("Connection closed\n");
@@ -521,7 +527,7 @@ int receive_msg(modbus_param_t *mb_param,
                 /* Sums bytes received */ 
                 (*msg_size) += read_ret;
                 if ((*msg_size) > MAX_PACKET_SIZE) {
-                        error_treat(0, "Too many datas", mb_param);
+                        error_treat(TOO_MANY_DATAS, "Too many datas", mb_param);
                         return TOO_MANY_DATAS;
                 }
 
@@ -641,30 +647,33 @@ static int modbus_check_response(modbus_param_t *mb_param,
                 if (ret != 0)
                         return ret;
 
-                /* Check for exception response
-                   0x80 + function */
+                /* Check for exception response.
+                   0x80 + function is stored in the exception
+                   response. */
                 if (0x80 + query[offset + 1] == response[offset + 1]) {
 
-                        if (response[offset + 2] < NB_TAB_ERROR_MSG) {
-                                error_treat(0,
+                        int exception_code = response[offset + 2];
+                        // FIXME check test
+                        if (exception_code < NB_TAB_ERROR_MSG) {
+                                error_treat(-exception_code,
                                             TAB_ERROR_MSG[response[offset + 2]],
                                             mb_param);
-                                /* Modbus error code (negative) */
-                                return -response[offset + 2];
+                                /* Modbus error code is negative */
+                                return -exception_code;
                         } else {
                                 /* The chances are low to hit this
                                    case but can avoid a vicious
                                    segfault */
                                 char s_error[64];
                                 sprintf(s_error, "Invalid exception code %d", response[offset + 2]);
-                                error_treat(0, s_error, mb_param);
+                                error_treat(INVALID_EXCEPTION_CODE, s_error, mb_param);
                                 free(s_error);
                                 return INVALID_EXCEPTION_CODE;
                         }
                 }
         } else if (ret == COMM_TIME_OUT) {
-                error_treat(0, "Communication time out", mb_param);
-                return COMM_TIME_OUT;
+                error_treat(ret, "Communication time out", mb_param);
+                return ret;
         } else {
                 return ret;
         }
