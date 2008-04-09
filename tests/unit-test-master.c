@@ -156,7 +156,17 @@ int main(void)
         }
         printf("OK\n");
 
-
+        /** WRITE FUNCTIONS **/
+        printf("\nTest write functions:\n");
+        
+        ret = force_single_coil(&mb_param, SLAVE, UT_COIL_STATUS_ADDRESS, ON);
+        printf("* force single coil: ");
+        if (ret == 1) {
+                printf("OK\n");
+        } else {
+                printf("FAILED\n");
+        }
+        
         /** ILLEGAL DATA ADDRESS */
         printf("\nTest illegal data address:");
 
@@ -194,6 +204,15 @@ int main(void)
                 printf("OK");
         else
                 printf("FAILED");
+
+        ret = force_single_coil(&mb_param, SLAVE,
+                                UT_COIL_STATUS_ADDRESS + UT_COIL_STATUS_NB_POINTS, ON);
+        printf("* force single coil: ");
+        if (ret == ILLEGAL_DATA_ADDRESS) {
+                printf("OK\n");
+        } else {
+                printf("FAILED\n");
+        }
 
 close:
         /* Free the memory */
