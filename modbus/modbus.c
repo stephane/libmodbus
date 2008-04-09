@@ -136,7 +136,7 @@ static int read_reg_response(modbus_param_t *mb_param,
 /* Treats errors and flush or close connection if necessary */
 static void error_treat(int code, const char *string, modbus_param_t *mb_param)
 {
-        printf("\n\nERROR %s (%.2X)\n\n", string, code);
+        printf("\nERROR %s (%d)\n", string, code);
 
         if (mb_param->error_handling == FLUSH_OR_RECONNECT_ON_ERROR) {
                 switch (code) {
@@ -405,7 +405,7 @@ static uint8_t compute_query_size_header(uint8_t function)
         else
                 byte = 0;
         
-        printf("compute_query_size_header FC %d, B%d\n", function, byte);
+//        printf("compute_query_size_header FC %d, B%d\n", function, byte);
         
         return byte;
 }
@@ -423,7 +423,7 @@ static uint8_t compute_query_size_data(modbus_param_t *mb_param, uint8_t *msg)
                 byte = 0;
 
         byte += mb_param->checksum_size;
-        printf("compute_query_size_data FC %d, B %d\n", function, byte);
+//        printf("compute_query_size_data FC %d, B %d\n", function, byte);
 
         return byte;
 }
@@ -556,7 +556,8 @@ int receive_msg(modbus_param_t *mb_param,
                                 break;
                         }
                 }
-                printf("\nsize_to_read: %d\n", size_to_read);
+                if (mb_param->debug)
+                        printf("\nsize_to_read: %d\n", size_to_read);
 
                 /* Moves the pointer to receive other datas */
                 p_msg = &(p_msg[read_ret]);
@@ -733,46 +734,50 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
         int response_size = 0;
 
         switch (function) {
-        case FC_READ_COIL_STATUS:
-                if (address >= mb_mapping->nb_coil_status) {
-                        printf("Illegal data address %0X in read_coil_status\n", address); 
+        case FC_READ_COIL_STATUS: {
+                int count = (query[offset+4] << 8) + query[offset+5];
+                
+                if ((address + count) > mb_mapping->nb_coil_status) {
+                        printf("Illegal data address %0X in read_coil_status\n",
+                               address + count); 
                         response_size = response_exception(mb_param, slave, function,
                                                            ILLEGAL_DATA_ADDRESS, response);  
                 } else {
-                        int count = (query[offset+4] << 8) + query[offset+5];
-                        
-                        // FIXME Check address + count
-
                         offset = build_response_basis(mb_param, slave, function, response);
                         response[offset++] = (count / 8) + ((count % 8) ? 1 : 0);
                         response_size = response_io_status(address, count,
                                                            mb_mapping->tab_coil_status,
                                                            response, offset);
                 }
+        }
                 break;
-        case FC_READ_INPUT_STATUS:
+        case FC_READ_INPUT_STATUS: {
                 /* Similar to coil status */
-                if (address >= mb_mapping->nb_input_status) {
-                        printf("Illegal data address %0X in read_input_status\n", address); 
+                int count = (query[offset+4] << 8) + query[offset+5];
+
+                if ((address + count) > mb_mapping->nb_input_status) {
+                        printf("Illegal data address %0X in read_input_status\n",
+                               address + count); 
                         response_size = response_exception(mb_param, slave, function,
                                                            ILLEGAL_DATA_ADDRESS, response);
                 } else {
-                        int count = (query[offset+4] << 8) + query[offset+5];
-
                         offset = build_response_basis(mb_param, slave, function, response);
                         response[offset++] = (count / 8) + ((count % 8) ? 1 : 0);
                         response_size = response_io_status(address, count,
                                                            mb_mapping->tab_input_status,
                                                            response, offset);
                 }
+        }
                 break;
-        case FC_READ_HOLDING_REGISTERS:
-                if (address >= mb_mapping->nb_holding_registers) {
-                        printf("Illegal data address %0X in read_holding_registers\n", address); 
+        case FC_READ_HOLDING_REGISTERS: {
+                int count = (query[offset+4] << 8) + query[offset+5];
+                        
+                if ((address + count) > mb_mapping->nb_holding_registers) {
+                        printf("Illegal data address %0X in read_holding_registers\n",
+                               address + count); 
                         response_size = response_exception(mb_param, slave, function,
                                                            ILLEGAL_DATA_ADDRESS, response);
                 } else {
-                        int count = (query[offset+4] << 8) + query[offset+5];
                         int i;
                         
                         offset = build_response_basis(mb_param, slave, function, response);
@@ -783,15 +788,18 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
                         }
                         response_size = offset;
                 }
+        }
                 break;
-        case FC_READ_INPUT_REGISTERS:
+        case FC_READ_INPUT_REGISTERS: {
                 /* Similar to holding registers */
-                if (address >= mb_mapping->nb_input_registers) {
-                        printf("Illegal data address %0X in read_input_registers\n", address); 
+                int count = (query[offset+4] << 8) + query[offset+5];
+
+                if ((address + count) > mb_mapping->nb_input_registers) {
+                        printf("Illegal data address %0X in read_input_registers\n",
+                               address + count);
                         response_size = response_exception(mb_param, slave, function,
                                                            ILLEGAL_DATA_ADDRESS, response);
                 } else {
-                        int count = (query[offset+4] << 8) + query[offset+5];
                         int i;
 
                         offset = build_response_basis(mb_param, slave, function, response);
@@ -802,6 +810,7 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
                         }
                         response_size = offset;
                 }
+        }
                 break;
         case FC_FORCE_SINGLE_COIL:
                 if (address >= mb_mapping->nb_coil_status) {
