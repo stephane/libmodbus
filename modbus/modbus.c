@@ -823,9 +823,10 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
                         if (data == 0xFF00 || data == 0x0) {
                                 mb_mapping->tab_coil_status[address] = (data) ? ON : OFF;
 
-                                memcpy(response, query, query_size);
+                                /* In RTU mode, the CRC is computed
+                                   and added to the query by modbus_send */
+                                memcpy(response, query, query_size - mb_param->checksum_size);
                                 response_size = query_size;
-                                printf("FIXME works only in TCP mode (CRC)");
                         } else {
                                 printf("Illegal data value %0X in force_single_coil request at address %0X\n",
                                        data, address);
