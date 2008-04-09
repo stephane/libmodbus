@@ -38,13 +38,14 @@ int main(void)
         uint8_t value;
         uint16_t address;
         uint16_t nb_points;
+        int ret;
 
         /* RTU parity : none, even, odd */
 /*      modbus_init_rtu(&mb_param, "/dev/ttyS0", 19200, "none", 8, 1); */
 
         /* TCP */
         modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
-        modbus_set_debug(&mb_param, TRUE);
+//        modbus_set_debug(&mb_param, TRUE);
       
         modbus_connect(&mb_param);
 
@@ -60,11 +61,18 @@ int main(void)
         tab_rp_registers = (uint16_t *) malloc(nb_points * sizeof(uint16_t));
         memset(tab_rp_registers, 0, nb_points * sizeof(uint16_t));
 
-        printf("Unit testing\n");
+        printf("UNIT TESTING\n");
+
+        printf("Test read functions:\n");
 
         /** COIL STATUS **/
-        read_coil_status(&mb_param, SLAVE, UT_COIL_STATUS_ADDRESS,
-                         UT_COIL_STATUS_NB_POINTS, tab_rp_status);
+        ret = read_coil_status(&mb_param, SLAVE, UT_COIL_STATUS_ADDRESS,
+                               UT_COIL_STATUS_NB_POINTS, tab_rp_status);
+        printf("* coil status: ");
+        if (ret != UT_COIL_STATUS_NB_POINTS) {
+                printf("FAILED (nb points %d)\n", ret); 
+                goto close;
+        }
 
         i = 0;
         address = UT_COIL_STATUS_ADDRESS;
@@ -74,7 +82,7 @@ int main(void)
 
                 value = get_byte_from_bits(tab_rp_status, i*8, nb_bits);
                 if (value != UT_COIL_STATUS_TAB[i]) {
-                        printf("Coil status: FAILED (%0X != %0X)\n",
+                        printf("FAILED (%0X != %0X)\n",
                                value, UT_COIL_STATUS_TAB[i]);
                         goto close;
                 }
@@ -82,12 +90,17 @@ int main(void)
                 nb_points -= nb_bits;
                 i++;
         }
-        printf("Coil status: OK\n");
-
+        printf("OK\n");
 
         /** INPUT STATUS **/
-        read_input_status(&mb_param, SLAVE, UT_INPUT_STATUS_ADDRESS,
-                          UT_INPUT_STATUS_NB_POINTS, tab_rp_status);
+        ret = read_input_status(&mb_param, SLAVE, UT_INPUT_STATUS_ADDRESS,
+                                UT_INPUT_STATUS_NB_POINTS, tab_rp_status);
+        printf("* input status :");
+
+        if (ret != UT_INPUT_STATUS_NB_POINTS) {
+                printf("FAILED (nb points %d)\n", ret); 
+                goto close;
+        }
 
         i = 0;
         address = UT_INPUT_STATUS_ADDRESS;
@@ -97,7 +110,7 @@ int main(void)
 
                 value = get_byte_from_bits(tab_rp_status, i*8, nb_bits);
                 if (value != UT_INPUT_STATUS_TAB[i]) {
-                        printf("Input status: FAILED (%0X != %0X)\n",
+                        printf("FAILED (%0X != %0X)\n",
                                value, UT_INPUT_STATUS_TAB[i]);
                         goto close;
                 }
@@ -105,37 +118,83 @@ int main(void)
                 nb_points -= nb_bits;
                 i++;
         }
-        printf("Input status: OK\n");
+        printf("OK\n");
 
         /** HOLDING REGISTERS **/
-        read_holding_registers(&mb_param, SLAVE, UT_HOLDING_REGISTERS_ADDRESS,
-                               UT_HOLDING_REGISTERS_NB_POINTS, tab_rp_registers);
+        ret = read_holding_registers(&mb_param, SLAVE, UT_HOLDING_REGISTERS_ADDRESS,
+                                     UT_HOLDING_REGISTERS_NB_POINTS, tab_rp_registers);
+        printf("* holding registers: ");
+        if (ret != UT_HOLDING_REGISTERS_NB_POINTS) {
+                printf("FAILED (nb points %d)\n", ret); 
+                goto close;
+        }
+
         for (i=0; i < UT_HOLDING_REGISTERS_NB_POINTS; i++) {
                 if (tab_rp_registers[i] != UT_HOLDING_REGISTERS_TAB[i]) {
-                        printf("Holding registers: FAILED (%0X != %0X)\n",
+                        printf("FAILED (%0X != %0X)\n",
                                tab_rp_registers[i], UT_HOLDING_REGISTERS_TAB[i]);
                         goto close;
                 }
         }
-        printf("Holding registers: OK\n");
+        printf("OK\n");
 
         /** INPUT REGISTERS **/
-        read_input_registers(&mb_param, SLAVE, UT_INPUT_REGISTERS_ADDRESS,
-                               UT_INPUT_REGISTERS_NB_POINTS, tab_rp_registers);
+        ret = read_input_registers(&mb_param, SLAVE, UT_INPUT_REGISTERS_ADDRESS,
+                                   UT_INPUT_REGISTERS_NB_POINTS, tab_rp_registers);
+        printf("* input registers: ");
+        if (ret != UT_INPUT_REGISTERS_NB_POINTS) {
+                printf("FAILED (nb points %d)\n", ret); 
+                goto close;
+        }
+         
         for (i=0; i < UT_INPUT_REGISTERS_NB_POINTS; i++) {
                 if (tab_rp_registers[i] != UT_INPUT_REGISTERS_TAB[i]) {
-                        printf("Input registers: FAILED (%0X != %0X)\n",
+                        printf("FAILED (%0X != %0X)\n",
                                tab_rp_registers[i], UT_INPUT_REGISTERS_TAB[i]);
                         goto close;
                 }
         }
-        printf("Input registers: OK\n");
+        printf("OK\n");
 
 
-        /** ILLEGAL DATA ADDRESSES */
-        read_coil_status(&mb_param, SLAVE, UT_COIL_STATUS_ADDRESS + UT_COIL_STATUS_NB_POINTS + 1,
-                         UT_COIL_STATUS_NB_POINTS, tab_rp_status);
+        /** ILLEGAL DATA ADDRESS */
+        printf("\nTest illegal data address:");
+
+        /* The mapping begins at 0 and end at adresse + nb_points so
+         * the adresses above are not valid. */ 
         
+        ret = read_coil_status(&mb_param, SLAVE, UT_COIL_STATUS_ADDRESS,
+                               UT_COIL_STATUS_NB_POINTS + 1, tab_rp_status);
+        printf("* coil status: ");
+        if (ret == ILLEGAL_DATA_ADDRESS)
+                printf("OK");
+        else
+                printf("FAILED");
+
+        ret = read_input_status(&mb_param, SLAVE, UT_INPUT_STATUS_ADDRESS,
+                                UT_INPUT_STATUS_NB_POINTS + 1, tab_rp_status);
+        printf("* input status: ");
+        if (ret == ILLEGAL_DATA_ADDRESS)
+                printf("OK");
+        else
+                printf("FAILED");
+
+        ret = read_holding_registers(&mb_param, SLAVE, UT_HOLDING_REGISTERS_ADDRESS,
+                                     UT_HOLDING_REGISTERS_NB_POINTS + 1, tab_rp_registers);
+        printf("* holding registers: ");
+        if (ret == ILLEGAL_DATA_ADDRESS)
+                printf("OK");
+        else
+                printf("FAILED");
+                
+        ret = read_input_registers(&mb_param, SLAVE, UT_INPUT_REGISTERS_ADDRESS,
+                                   UT_INPUT_REGISTERS_NB_POINTS + 1, tab_rp_registers);
+        printf("* input registers: ");
+        if (ret == ILLEGAL_DATA_ADDRESS)
+                printf("OK");
+        else
+                printf("FAILED");
+
 close:
         /* Free the memory */
         free(tab_rp_status);                                           
