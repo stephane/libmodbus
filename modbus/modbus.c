@@ -322,7 +322,7 @@ static uint16_t crc16(uint8_t *buffer, uint16_t buffer_length)
 /* If CRC is correct returns 0 else returns INVALID_CRC */
 int check_crc16(modbus_param_t *mb_param,
                 uint8_t *msg,
-                int msg_size)
+                const int msg_size)
 {
         int ret;
         
@@ -395,7 +395,8 @@ static uint8_t compute_query_size_header(uint8_t function)
 {
         uint8_t byte;
         
-        if (function <= FC_FORCE_SINGLE_COIL)
+        if (function <= FC_FORCE_SINGLE_COIL ||
+            function == FC_PRESET_SINGLE_REGISTER)
                 /* Read and single write */
                 byte = 4;
         else if (function == FC_FORCE_MULTIPLE_COILS ||
@@ -405,7 +406,7 @@ static uint8_t compute_query_size_header(uint8_t function)
         else
                 byte = 0;
         
-//        printf("compute_query_size_header FC %d, B%d\n", function, byte);
+//        printf("compute_query_size_header FC %d, B %d\n", function, byte);
         
         return byte;
 }
@@ -489,7 +490,8 @@ int receive_msg(modbus_param_t *mb_param,
 
                 /* The message size is undefined (query receiving) so
                  * we need to analyse the message step by step.
-                 * In the first step, we want to reach the function code */
+                 * At the first step, we want to reach the function
+                 * code because all packets have this information. */
                 msg_size_computed = mb_param->header_length + 2;
                 state = FUNCTION;
         } else {
@@ -836,8 +838,21 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
                 }
                 break;          
         case FC_PRESET_SINGLE_REGISTER:
-        case FC_READ_EXCEPTION_STATUS:
+                if (address >= mb_mapping->nb_holding_registers) {
+                        printf("Illegal data address %0X in preset_holding_register\n", address); 
+                        response_size = response_exception(mb_param, slave, function,
+                                                           ILLEGAL_DATA_ADDRESS, response);  
+                } else {
+                        int data = (query[offset+4] << 8) + query[offset+5];
+                        
+                        mb_mapping->tab_holding_registers[address] = data;
+                        printf("Query size %d, %d\n", query_size, mb_param->checksum_size);
+                        memcpy(response, query, query_size - mb_param->checksum_size);
+                        response_size = query_size;
+                }
+                break;
         case FC_FORCE_MULTIPLE_COILS:
+        case FC_READ_EXCEPTION_STATUS:
         case FC_PRESET_MULTIPLE_REGISTERS:
         case FC_REPORT_SLAVE_ID:
                 printf("Not implemented\n");

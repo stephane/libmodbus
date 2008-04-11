@@ -35,6 +35,7 @@ int main(void)
         int i;
 
         modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
+        modbus_set_debug(&mb_param, TRUE);
 
         ret = modbus_mapping_new(&mb_mapping,
                                  UT_COIL_STATUS_ADDRESS + UT_COIL_STATUS_NB_POINTS,
