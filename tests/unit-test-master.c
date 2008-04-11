@@ -45,7 +45,7 @@ int main(void)
 
         /* TCP */
         modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
-//        modbus_set_debug(&mb_param, TRUE);
+        modbus_set_debug(&mb_param, TRUE);
       
         modbus_connect(&mb_param);
 
@@ -165,8 +165,18 @@ int main(void)
                 printf("OK\n");
         } else {
                 printf("FAILED\n");
+                goto close;
         }
-        
+
+        ret = preset_single_register(&mb_param, SLAVE, 0x01, 0x03);
+        printf("* preset_single_register: ");
+        if (ret == 1) {
+                printf("OK\n");
+        } else {
+                printf("FAILED\n");
+                goto close;
+        }
+
         /** ILLEGAL DATA ADDRESS */
         printf("\nTest illegal data address:");
 
