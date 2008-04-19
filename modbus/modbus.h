@@ -201,11 +201,11 @@ int preset_single_register(modbus_param_t *mb_param, int slave,
 
 /* Sets/resets the coils in the slave from an array in argument */
 int force_multiple_coils(modbus_param_t *mb_param, int slave,
-                         int start_addr, int coil_count, uint8_t *data);
+                         int start_addr, int nb_points, uint8_t *data);
 
 /* Copies the values in the slave from the array given in argument */
 int preset_multiple_registers(modbus_param_t *mb_param, int slave,
-                              int start_addr, int reg_count, uint16_t *data);
+                              int start_addr, int nb_points, uint16_t *data);
 
 /* Returns the slave id! */
 int report_slave_id(modbus_param_t *mb_param, int slave, uint8_t *dest);
