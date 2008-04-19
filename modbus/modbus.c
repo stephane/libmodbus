@@ -857,9 +857,6 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
                         resp_length = response_exception(mb_param, slave, function,
                                                          ILLEGAL_DATA_ADDRESS, response);
                 } else {
-                        int i;
-                        /* uint8_t byte_count = query[offset+6]; */
-
                         /* Similar to build_query_basis! */
                         resp_length = build_response_basis(mb_param, slave, function, response);
                         /* 4 to copy the coil address (2) and the quantity of coils */
@@ -868,8 +865,24 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
                 }
         }
                 break;
+        case FC_PRESET_MULTIPLE_REGISTERS: {
+                uint16_t count = (query[offset+4] << 8) + query[offset+5];
+
+                if ((address + count) > mb_mapping->nb_holding_registers) {
+                        printf("Illegal data address %0X in preset_multiple_registers\n",
+                               address + count);
+                        resp_length = response_exception(mb_param, slave, function,
+                                                         ILLEGAL_DATA_ADDRESS, response);
+                } else {
+                        /* Similar to build_query_basis! */
+                        resp_length = build_response_basis(mb_param, slave, function, response);
+                        /* 4 to copy the address (2) and the no. of registers */
+                        memcpy(response + resp_length, query + resp_length, 4);
+                        resp_length += 4;
+                }
+        }
+                break;
         case FC_READ_EXCEPTION_STATUS:
-        case FC_PRESET_MULTIPLE_REGISTERS:
         case FC_REPORT_SLAVE_ID:
                 printf("Not implemented\n");
                 break;

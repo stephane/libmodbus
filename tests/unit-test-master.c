@@ -45,7 +45,7 @@ int main(void)
 
         /* TCP */
         modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
-        modbus_set_debug(&mb_param, TRUE);
+/*        modbus_set_debug(&mb_param, TRUE);*/
       
         modbus_connect(&mb_param);
 
@@ -191,14 +191,16 @@ int main(void)
         }
 
         {
-                uint16_t tab_value[] = { 0x0A, 0x0102 };
-                ret = preset_multiple_registers(&mb_param, SLAVE, 0x01, 0x02, tab_value);
-        }                                  
-        if (ret == 2) {
-                printf("OK\n");
-        } else {
-                printf("FAILED\n");
-                goto close;
+                int nb_points = 2;
+                uint16_t tab_value[] = { 0x000A, 0x0102 };
+                ret = preset_multiple_registers(&mb_param, SLAVE, 0x01, nb_points, tab_value);
+                printf("* preset_multiple_registers: ");
+                if (ret == nb_points) {
+                        printf("OK\n");
+                } else {
+                        printf("FAILED\n");
+                        goto close;
+                }
         }
 
         /** ILLEGAL DATA ADDRESS */
@@ -243,11 +245,30 @@ int main(void)
                                 UT_COIL_STATUS_ADDRESS + UT_COIL_STATUS_NB_POINTS, ON);
         printf("* force single coil: ");
         if (ret == ILLEGAL_DATA_ADDRESS) {
-                printf("OK\n");
+                printf("OK");
         } else {
-                printf("FAILED\n");
+                printf("FAILED");
         }
 
+        ret = force_multiple_coils(&mb_param, SLAVE, UT_COIL_STATUS_ADDRESS,
+                                   UT_COIL_STATUS_NB_POINTS + 1, tab_rp_status);
+        printf("* force multipls coils: ");
+        if (ret == ILLEGAL_DATA_ADDRESS) {
+                printf("OK");
+        } else {
+                printf("FAILED");
+        }
+
+        ret = preset_multiple_registers(&mb_param, SLAVE, UT_HOLDING_REGISTERS_ADDRESS,
+                                        UT_HOLDING_REGISTERS_NB_POINTS + 1, tab_rp_registers);
+        printf("* preset multiple registers: ");
+        if (ret == ILLEGAL_DATA_ADDRESS) {
+                printf("OK");
+        } else {
+                printf("FAILED");
+        }
+        
+        printf("\n");
 close:
         /* Free the memory */
         free(tab_rp_status);                                           
