@@ -10,7 +10,6 @@ Cleanups
 * split modbus.c (tcp/rtu, query/response)
 * t_id in param_msqg
 * only one build_header_message function to replace build_query_packet/response_packet
-* reg_count, coil_count -> nb_points
 * avoid copies (use ptr)
 
 Documentation

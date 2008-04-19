@@ -168,9 +168,9 @@ static unsigned int compute_response_size(modbus_param_t *mb_param,
         case FC_READ_COIL_STATUS:
         case FC_READ_INPUT_STATUS: {
                 /* Header + nb values (code from force_multiple_coils) */
-                int coil_count = (query[offset + 4] << 8) | query[offset + 5];
+                int nb_points = (query[offset + 4] << 8) | query[offset + 5];
                 response_size_computed = 3 +
-                        (coil_count / 8) + ((coil_count % 8) ? 1 : 0);
+                        (nb_points / 8) + ((nb_points % 8) ? 1 : 0);
                 }
                 break;
         case FC_READ_HOLDING_REGISTERS:
@@ -1124,7 +1124,7 @@ int preset_single_register(modbus_param_t *mb_param, int slave,
 
 /* Sets/resets the coils in the slave from an array in argument */
 int force_multiple_coils(modbus_param_t *mb_param, int slave,
-                         int start_addr, int coil_count,
+                         int start_addr, int nb_points,
                          uint8_t *data_src)
 {
         int i;
@@ -1137,14 +1137,14 @@ int force_multiple_coils(modbus_param_t *mb_param, int slave,
 
         uint8_t query[MAX_PACKET_SIZE];
 
-        if (coil_count > MAX_WRITE_COILS) {
+        if (nb_points > MAX_WRITE_COILS) {
                 printf("WARNING Writing to too many coils\n");
-                coil_count = MAX_WRITE_COILS;
+                nb_points = MAX_WRITE_COILS;
         }
 
         query_size = build_query_basis(mb_param, slave, FC_FORCE_MULTIPLE_COILS, 
-                                       start_addr, coil_count, query);
-        byte_count = (coil_count / 8) + ((coil_count % 8) ? 1 : 0);
+                                       start_addr, nb_points, query);
+        byte_count = (nb_points / 8) + ((nb_points % 8) ? 1 : 0);
         query[query_size++] = byte_count;
 
         for (i = 0; i < byte_count; i++) {
@@ -1153,7 +1153,7 @@ int force_multiple_coils(modbus_param_t *mb_param, int slave,
                 bit = 0x01;
                 query[query_size] = 0;
 
-                while ((bit & 0xFF) && (coil_check++ < coil_count)) {
+                while ((bit & 0xFF) && (coil_check++ < nb_points)) {
                         if (data_src[pos++])
                                 query[query_size] |= bit;
                         else
@@ -1175,7 +1175,7 @@ int force_multiple_coils(modbus_param_t *mb_param, int slave,
 
 /* Copies the values in the slave from the array given in argument */
 int preset_multiple_registers(modbus_param_t *mb_param, int slave,
-                              int start_addr, int reg_count, uint16_t *data_src)
+                              int start_addr, int nb_points, uint16_t *data_src)
 {
         int i;
         int query_size;
@@ -1185,18 +1185,18 @@ int preset_multiple_registers(modbus_param_t *mb_param, int slave,
 
         uint8_t query[MAX_PACKET_SIZE];
 
-        if (reg_count > MAX_WRITE_REGS) {
+        if (nb_points > MAX_WRITE_REGS) {
                 printf("WARNING Trying to write to too many registers\n");
-                reg_count = MAX_WRITE_REGS;
+                nb_points = MAX_WRITE_REGS;
         }
 
         query_size = build_query_basis(mb_param, slave,
                                        FC_PRESET_MULTIPLE_REGISTERS, 
-                                       start_addr, reg_count, query);
-        byte_count = reg_count * 2;
+                                       start_addr, nb_points, query);
+        byte_count = nb_points * 2;
         query[query_size++] = byte_count;
 
-        for (i = 0; i < reg_count; i++) {
+        for (i = 0; i < nb_points; i++) {
                 query[query_size++] = data_src[i] >> 8;
                 query[query_size++] = data_src[i] & 0x00FF;
         }
