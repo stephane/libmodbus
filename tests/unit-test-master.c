@@ -177,6 +177,30 @@ int main(void)
                 goto close;
         }
 
+        {
+                int nb_points = 0x0A;
+                uint8_t tab_value[] = { ON, OFF, ON, ON, OFF, OFF, ON, ON, ON, OFF };
+                ret = force_multiple_coils(&mb_param, SLAVE, 0x13, nb_points, tab_value);
+                printf("* force_multiple_coils: ");
+                if (ret == nb_points) {
+                        printf("OK\n");
+                } else {
+                        printf("FAILED\n");
+                        goto close;
+                }
+        }
+
+        {
+                uint16_t tab_value[] = { 0x0A, 0x0102 };
+                ret = preset_multiple_registers(&mb_param, SLAVE, 0x01, 0x02, tab_value);
+        }                                  
+        if (ret == 2) {
+                printf("OK\n");
+        } else {
+                printf("FAILED\n");
+                goto close;
+        }
+
         /** ILLEGAL DATA ADDRESS */
         printf("\nTest illegal data address:");
 
@@ -233,7 +257,4 @@ close:
         modbus_close(&mb_param);
         
         return 0;
-/*
-        force_single_coil(&mb_param, SLAVE, 0xAC, ON);
-*/
 }

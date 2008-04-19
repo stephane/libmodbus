@@ -166,7 +166,8 @@ typedef struct {
         uint16_t *tab_holding_registers;
 } modbus_mapping_t;
 
-/* All functions used for sending or receiving data return :
+
+/* All functions used for sending or receiving data return:
    - the numbers of values (bits or word) if success (0 or more)
    - less than 0 for exceptions errors
 */
@@ -190,7 +191,7 @@ int read_holding_registers(modbus_param_t *mb_param, int slave,
 int read_input_registers(modbus_param_t *mb_param, int slave,
                          int start_addr, int count, uint16_t *dest);
 
-/* Turns on or off a single coil on the slave device */
+/* Turns ON or OFF a single coil in the slave device */
 int force_single_coil(modbus_param_t *mb_param, int slave,
                       int coil_addr, int state);
 
@@ -198,30 +199,29 @@ int force_single_coil(modbus_param_t *mb_param, int slave,
 int preset_single_register(modbus_param_t *mb_param, int slave,
                            int reg_addr, int value);
 
-/* Takes an array of ints and sets or resets the coils on a slave
-   appropriatly */
+/* Sets/resets the coils in the slave from an array in argument */
 int force_multiple_coils(modbus_param_t *mb_param, int slave,
                          int start_addr, int coil_count, uint8_t *data);
 
-/* Copy the values in an array to an array on the slave */
+/* Copies the values in the slave from the array given in argument */
 int preset_multiple_registers(modbus_param_t *mb_param, int slave,
                               int start_addr, int reg_count, uint16_t *data);
 
-/* Returns some useful information about the modbus controller */
+/* Returns the slave id! */
 int report_slave_id(modbus_param_t *mb_param, int slave, uint8_t *dest);
 
-/* Initialises a parameters structure
-   - device : "/dev/ttyS0"
-   - baud :   19200
-   - parity : "even", "odd" or "none" 
-   - data_bits : 5, 6, 7, 8 
-   - stop_bits : 1, 2
+/* Initializes the modbus_param_t structure for RTU.
+   - device: "/dev/ttyS0"
+   - baud:   19200
+   - parity: "even", "odd" or "none" 
+   - data_bits: 5, 6, 7, 8 
+   - stop_bits: 1, 2
 */
 void modbus_init_rtu(modbus_param_t *mb_param, char *device,
                      int baud, char *parity, int data_bit,
                      int stop_bit);
                      
-/* Initialises a parameters structure for TCP
+/* Initializes the modbus_param_t structure for TCP.
    - ip : "192.168.0.5" 
    - port : 1099
 
@@ -245,27 +245,43 @@ void modbus_init_tcp(modbus_param_t *mb_param, char *ip_address, uint16_t port);
  */
 void modbus_set_error_handling(modbus_param_t *mb_param, error_handling_t error_handling);
 
-/* Sets up a serial port for RTU communications to modbus or a TCP
-   connexion */
+/* Establishes a modbus connexion */
 int modbus_connect(modbus_param_t *mb_param);
 
-/* Closes the serial port and restores the previous port configuration
-   or close the TCP connexion */
+/* Closes a modbus connection */
 void modbus_close(modbus_param_t *mb_param);
 
-/* Sets debug mode */
+/* Activates the debug messages */
 void modbus_set_debug(modbus_param_t *mb_param, int boolean);
 
-/* Slave/client functions */
+/**
+ * SLAVE/CLIENT FUNCTIONS 
+ **/
+
+/* Allocates 4 arrays to store coils, input status, input registers and
+   holding registers. The pointers are stored in modbus_mapping structure. 
+
+   Returns: TRUE if ok, FALSE on failure
+ */
 int modbus_mapping_new(modbus_mapping_t *mb_mapping,
                        int nb_coil_status, int nb_input_status,
                        int nb_holding_registers, int nb_input_registers);
+
+/* Frees the 4 arrays */
 void modbus_mapping_free(modbus_mapping_t *mb_mapping);
 
+/* Listens for any query from a modbus master in TCP */
 int modbus_init_listen_tcp(modbus_param_t *mb_param);
 
+/* FIXME */
 int modbus_listen(modbus_param_t *mb_param, uint8_t *query, int *query_size);
 
+/* Manages the received query.
+   Analyses the query and constructs a response.
+
+   If an error occurs, this function construct the response
+   accordingly.
+*/
 void manage_query(modbus_param_t *mb_param, uint8_t *query,
                   int query_size, modbus_mapping_t *mb_mapping);
 
@@ -273,19 +289,21 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
    - read_exception_status()
 */
 
-/** Utils **/
+/** 
+ * UTILS FUNCTIONS
+ **/
 
-/* Set many inputs/coils form a single byte value (all 8 bits of the
+/* Sets many inputs/coils from a single byte value (all 8 bits of the
    byte value are setted) */
 void set_bits_from_byte(uint8_t *dest, uint16_t address,
                         const uint8_t value);
 
-/* Set many inputs/coils from a table of bytes (only the bits between
+/* Sets many inputs/coils from a table of bytes (only the bits between
    address and address + nb_bits are setted) */
 void set_bits_from_bytes(uint8_t *dest, uint16_t address, uint16_t nb_bits,
                          const uint8_t *tab_byte);
 
-/* Get the byte value from many inputs/coils.
+/* Gets the byte value from many inputs/coils.
    To obtain a full byte, set nb_bits to 8. */
 uint8_t get_byte_from_bits(const uint8_t *src, uint16_t address, int nb_bits);
 
