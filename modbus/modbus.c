@@ -292,15 +292,15 @@ static int build_response_basis(modbus_param_t *mb_param, uint8_t slave,
 }
 
 /* Sets the length of TCP message in the message (query and response) */
-void set_packet_length_tcp(uint8_t *packet, size_t packet_length)
+void set_message_length_tcp(uint8_t *msg, size_t msg_length)
 {
         uint16_t mbap_length;
 
         /* Substract MBAP header length */
-        mbap_length = packet_length - 6;
+        mbap_length = msg_length - 6;
 
-        packet[4] = mbap_length >> 8;
-        packet[5] = mbap_length & 0x00FF;
+        msg[4] = mbap_length >> 8;
+        msg[5] = mbap_length & 0x00FF;
 }
 
 /* Fast CRC */
@@ -365,7 +365,7 @@ static int modbus_send(modbus_param_t *mb_param, uint8_t *query,
                 query[query_length++] = s_crc >> 8;
                 query[query_length++] = s_crc & 0x00FF;
         } else {
-                set_packet_length_tcp(query, query_length);
+                set_message_length_tcp(query, query_length);
         }
 
         if (mb_param->debug) {
