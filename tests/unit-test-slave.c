@@ -74,7 +74,7 @@ int main(void)
         socket = modbus_init_listen_tcp(&mb_param);
         
         while (1) {
-                uint8_t query[MAX_PACKET_SIZE];
+                uint8_t query[MAX_MESSAGE_LENGTH];
                 int query_size;
                 
                 ret = modbus_listen(&mb_param, query, &query_size);
