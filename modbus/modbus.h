@@ -26,22 +26,21 @@
 
 #define MODBUS_TCP_DEFAULT_PORT 502
 
-#define HEADER_LENGTH_RTU         0
-#define PRESET_QUERY_SIZE_RTU     6
-#define PRESET_RESPONSE_SIZE_RTU  2
+#define HEADER_LENGTH_RTU           0
+#define PRESET_QUERY_LENGTH_RTU     6
+#define PRESET_RESPONSE_LENGTH_RTU  2
 
-#define HEADER_LENGTH_TCP         6
-#define PRESET_QUERY_SIZE_TCP    12
-#define PRESET_RESPONSE_SIZE_TCP  8
+#define HEADER_LENGTH_TCP           6
+#define PRESET_QUERY_LENGTH_TCP    12
+#define PRESET_RESPONSE_LENGTH_TCP  8
 
-#define CHECKSUM_SIZE_RTU      2
-#define CHECKSUM_SIZE_TCP      0        
+#define CHECKSUM_LENGTH_RTU      2
+#define CHECKSUM_LENGTH_TCP      0        
 
 /* 8 + HEADER_LENGTH_TCP */
-#define MIN_QUERY_SIZE        14
+#define MIN_QUERY_LENGTH        14
 
-/* MIN_RESPONSE_LENGTH + MAX(MAX*) */
-#define MAX_PACKET_SIZE      261
+#define MAX_MESSAGE_LENGTH     256
 
 #define MAX_READ_STATUS      800
 #define MAX_READ_HOLD_REGS   100
@@ -49,7 +48,7 @@
 #define MAX_WRITE_COILS      800
 #define MAX_WRITE_REGS       100
 
-#define REPORT_SLAVE_ID_SIZE 75
+#define REPORT_SLAVE_ID_LENGTH 75
 
 /* Time out between trames in microsecond */
 #define TIME_OUT_BEGIN_OF_TRAME 500000
@@ -107,7 +106,7 @@
 #define CONNECTION_CLOSED       -0x12
 
 /* Internal using */
-#define MSG_SIZE_UNDEFINED -1
+#define MSG_LENGTH_UNDEFINED -1
 
 typedef enum { RTU, TCP } type_com_t;
 typedef enum { FLUSH_OR_RECONNECT_ON_ERROR, NOP_ON_ERROR } error_handling_t;
@@ -149,8 +148,8 @@ typedef struct {
         uint16_t port;
         /* Header length used for offset */
         int header_length;
-        /* Checksum size RTU = 2 and TCP = 0 */
-        int checksum_size;
+        /* Checksum length RTU = 2 and TCP = 0 */
+        int checksum_length;
         /* In error_treat with TCP, do a reconnect or just dump the error */
         error_handling_t error_handling;
 } modbus_param_t;
@@ -274,7 +273,7 @@ void modbus_mapping_free(modbus_mapping_t *mb_mapping);
 int modbus_init_listen_tcp(modbus_param_t *mb_param);
 
 /* FIXME */
-int modbus_listen(modbus_param_t *mb_param, uint8_t *query, int *query_size);
+int modbus_listen(modbus_param_t *mb_param, uint8_t *query, int *query_length);
 
 /* Manages the received query.
    Analyses the query and constructs a response.
@@ -283,7 +282,7 @@ int modbus_listen(modbus_param_t *mb_param, uint8_t *query, int *query_size);
    accordingly.
 */
 void manage_query(modbus_param_t *mb_param, uint8_t *query,
-                  int query_size, modbus_mapping_t *mb_mapping);
+                  int query_length, modbus_mapping_t *mb_mapping);
 
 /* Not implemented :
    - read_exception_status()
