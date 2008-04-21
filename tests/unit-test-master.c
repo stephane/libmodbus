@@ -36,8 +36,8 @@ int main(void)
         modbus_param_t mb_param;
         int i;
         uint8_t value;
-        uint16_t address;
-        uint16_t nb_points;
+        int address;
+        int nb_points;
         int ret;
 
         /* RTU parity : none, even, odd */

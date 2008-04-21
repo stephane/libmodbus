@@ -5,7 +5,6 @@ Features
 * slave must listen only request sent for him
 
 Cleanups
-* see the max length of a message and define size var accordingly (uint8_t)
 * t_id in param_msqg
 
 Documentation

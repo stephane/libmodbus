@@ -229,7 +229,7 @@ void modbus_init_rtu(modbus_param_t *mb_param, char *device,
    to 1024 because it's not necessary to be root to use this port
    number.
 */
-void modbus_init_tcp(modbus_param_t *mb_param, char *ip_address, uint16_t port);
+void modbus_init_tcp(modbus_param_t *mb_param, char *ip_address, int port);
 
 /* By default, the error handling mode used is RECONNECT_ON_ERROR.
 
@@ -294,16 +294,15 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
 
 /* Sets many inputs/coils from a single byte value (all 8 bits of the
    byte value are setted) */
-void set_bits_from_byte(uint8_t *dest, uint16_t address,
-                        const uint8_t value);
+void set_bits_from_byte(uint8_t *dest, int address, const uint8_t value);
 
 /* Sets many inputs/coils from a table of bytes (only the bits between
    address and address + nb_bits are setted) */
-void set_bits_from_bytes(uint8_t *dest, uint16_t address, uint16_t nb_bits,
+void set_bits_from_bytes(uint8_t *dest, int address, int nb_bits,
                          const uint8_t *tab_byte);
 
 /* Gets the byte value from many inputs/coils.
    To obtain a full byte, set nb_bits to 8. */
-uint8_t get_byte_from_bits(const uint8_t *src, uint16_t address, int nb_bits);
+uint8_t get_byte_from_bits(const uint8_t *src, int address, int nb_bits);
 
 #endif  /* _MODBUS_H_ */
