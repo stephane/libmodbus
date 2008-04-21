@@ -135,7 +135,7 @@ static int read_reg_response(modbus_param_t *mb_param,
                              uint16_t *data_dest, uint8_t *query);
 
 /* Treats errors and flush or close connection if necessary */
-static void error_treat(int code, const char *string, modbus_param_t *mb_param)
+static void error_treat(modbus_param_t *mb_param, int code, const char *string)
 {
         printf("\nERROR %s (%d)\n", string, code);
 
@@ -340,7 +340,7 @@ int check_crc16(modbus_param_t *mb_param,
                         sprintf(s_error, "invalid crc received %0X - crc_calc %0X", 
                                 crc_received, crc_calc);
                         ret = INVALID_CRC;
-                        error_treat(ret, s_error, mb_param);
+                        error_treat(mb_param, ret, s_error);
                 }
         } else {
                 /* In TCP, the modbus CRC is not present (see HDLC level) */
@@ -383,7 +383,7 @@ static int modbus_send(modbus_param_t *mb_param, uint8_t *query,
            or PORT_SOCKET_FAILURE on error */
         if ((ret == -1) || (ret != query_length)) {
                 ret = PORT_SOCKET_FAILURE;
-                error_treat(ret, "Write port/socket failure", mb_param);
+                error_treat(mb_param, ret, "Write port/socket failure");
         }
         
         return ret;
@@ -425,25 +425,25 @@ static int compute_query_length_data(modbus_param_t *mb_param, uint8_t *msg)
         return length;
 }
 
-#define WAIT_DATA()                                                     \
-        {                                                               \
-                while ((select_ret = select(mb_param->fd+1, &rfds, NULL, NULL, &tv)) == -1) { \
-                        if (errno == EINTR) {                           \
-                                printf("A non blocked signal was caught\n"); \
-                                /* Necessary after an error */          \
-                                FD_ZERO(&rfds);                         \
-                                FD_SET(mb_param->fd, &rfds);            \
-                        } else {                                        \
-                                error_treat(SELECT_FAILURE, "Select failure", mb_param); \
-                                return SELECT_FAILURE;                  \
-                        }                                               \
-                }                                                       \
-                                                                        \
-                if (select_ret == 0) {                                  \
-                        /* Call to error_treat is done later to manage exceptions */ \
-                        return COMM_TIME_OUT;                           \
-                }                                                       \
-        }
+#define WAIT_DATA()                                                                \
+{                                                                                  \
+    while ((select_ret = select(mb_param->fd+1, &rfds, NULL, NULL, &tv)) == -1) {  \
+            if (errno == EINTR) {                                                  \
+                    printf("A non blocked signal was caught\n");                   \
+                    /* Necessary after an error */                                 \
+                    FD_ZERO(&rfds);                                                \
+                    FD_SET(mb_param->fd, &rfds);                                   \
+            } else {                                                               \
+                    error_treat(mb_param, SELECT_FAILURE, "Select failure");       \
+                    return SELECT_FAILURE;                                         \
+            }                                                                      \
+    }                                                                              \
+                                                                                   \
+    if (select_ret == 0) {                                                         \
+            /* Call to error_treat is done later to manage exceptions */           \
+            return COMM_TIME_OUT;                                                  \
+    }                                                                              \
+}
 
 /* Monitors for the reply from the modbus slave or to receive query
    from a modbus master.
@@ -511,7 +511,7 @@ int receive_msg(modbus_param_t *mb_param,
                         read_ret = recv(mb_param->fd, p_msg, length_to_read, 0);
 
                 if (read_ret == -1) {
-                        error_treat(PORT_SOCKET_FAILURE, "Read port/socket failure", mb_param);
+                        error_treat(mb_param, PORT_SOCKET_FAILURE, "Read port/socket failure");
                         return PORT_SOCKET_FAILURE;
                 } else if (read_ret == 0) {
                         printf("Connection closed\n");
@@ -521,7 +521,7 @@ int receive_msg(modbus_param_t *mb_param,
                 /* Sums bytes received */ 
                 (*msg_length) += read_ret;
                 if ((*msg_length) > MAX_MESSAGE_LENGTH) {
-                        error_treat(TOO_MANY_DATAS, "Too many datas", mb_param);
+                        error_treat(mb_param, TOO_MANY_DATAS, "Too many datas");
                         return TOO_MANY_DATAS;
                 }
 
@@ -649,9 +649,8 @@ static int modbus_check_response(modbus_param_t *mb_param,
                         int exception_code = response[offset + 2];
                         // FIXME check test
                         if (exception_code < NB_TAB_ERROR_MSG) {
-                                error_treat(-exception_code,
-                                            TAB_ERROR_MSG[response[offset + 2]],
-                                            mb_param);
+                                error_treat(mb_param, -exception_code,
+                                            TAB_ERROR_MSG[response[offset + 2]]);
                                 /* Modbus error code is negative */
                                 return -exception_code;
                         } else {
@@ -660,13 +659,13 @@ static int modbus_check_response(modbus_param_t *mb_param,
                                    segfault */
                                 char s_error[64];
                                 sprintf(s_error, "Invalid exception code %d", response[offset + 2]);
-                                error_treat(INVALID_EXCEPTION_CODE, s_error, mb_param);
+                                error_treat(mb_param, INVALID_EXCEPTION_CODE, s_error);
                                 free(s_error);
                                 return INVALID_EXCEPTION_CODE;
                         }
                 }
         } else if (ret == COMM_TIME_OUT) {
-                error_treat(ret, "Communication time out", mb_param);
+                error_treat(mb_param, ret, "Communication time out");
                 return ret;
         } else {
                 return ret;
