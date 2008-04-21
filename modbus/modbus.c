@@ -844,7 +844,7 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
                 }
                 break;
         case FC_FORCE_MULTIPLE_COILS: {
-                uint16_t count = (query[offset+4] << 8) + query[offset+5];
+                int count = (query[offset+4] << 8) + query[offset+5];
 
                 if ((address + count) > mb_mapping->nb_coil_status) {
                         printf("Illegal data address %0X in force_multiple_coils\n",
@@ -860,7 +860,7 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
         }
                 break;
         case FC_PRESET_MULTIPLE_REGISTERS: {
-                uint16_t count = (query[offset+4] << 8) + query[offset+5];
+                int count = (query[offset+4] << 8) + query[offset+5];
 
                 if ((address + count) > mb_mapping->nb_holding_registers) {
                         printf("Illegal data address %0X in preset_multiple_registers\n",
