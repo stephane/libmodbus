@@ -1784,13 +1784,13 @@ void set_bits_from_byte(uint8_t *dest, int address, const uint8_t value)
 }
 
 /* Sets many inputs/coils from a table of bytes (only the bits between
-   address and address + nb_bits are setted) */
-void set_bits_from_bytes(uint8_t *dest, int address, int nb_bits, const uint8_t tab_byte[])
+   address and address + nb_points are setted) */
+void set_bits_from_bytes(uint8_t *dest, int address, int nb_points, const uint8_t tab_byte[])
 {
         int i;
         int shift = 0;
 
-        for (i=address; i < address + nb_bits; i++) {
+        for (i=address; i < address + nb_points; i++) {
                 dest[i] = tab_byte[(i - address) / 8] & (1 << shift) ? ON : OFF;
                 /* gcc doesn't like: shift = (++shift) % 8; */
                 shift++;
@@ -1799,7 +1799,7 @@ void set_bits_from_bytes(uint8_t *dest, int address, int nb_bits, const uint8_t 
 }
 
 /* Gets the byte value from many inputs/coils.
-   To obtain a full byte, set nb_bits to 8. */
+   To obtain a full byte, set nb_points to 8. */
 uint8_t get_byte_from_bits(const uint8_t *src, int address, int nb_bits)
 {
         int i;
