@@ -191,8 +191,8 @@ static unsigned int compute_response_length(modbus_param_t *mb_param,
 }
 
 /* Builds a RTU query header */
-static int build_query_basis_rtu(uint8_t slave, uint8_t function,
-                                 uint16_t start_addr, uint16_t count,
+static int build_query_basis_rtu(int slave, int function,
+                                 int start_addr, int count,
                                  uint8_t *query)
 {
         query[0] = slave;
@@ -206,8 +206,8 @@ static int build_query_basis_rtu(uint8_t slave, uint8_t function,
 }
 
 /* Builds a TCP query header */
-static int build_query_basis_tcp(uint8_t slave, uint8_t function,
-                                 uint16_t start_addr, uint16_t count,
+static int build_query_basis_tcp(int slave, int function,
+                                 int start_addr, int count,
                                  uint8_t *query)
 {
         static uint16_t t_id = 0;
@@ -236,9 +236,9 @@ static int build_query_basis_tcp(uint8_t slave, uint8_t function,
         return PRESET_QUERY_LENGTH_TCP;
 }
 
-static int build_query_basis(modbus_param_t *mb_param, uint8_t slave, 
-                             uint8_t function, uint16_t start_addr,
-                             uint16_t count, uint8_t *query)
+static int build_query_basis(modbus_param_t *mb_param, int slave, 
+                             int function, int start_addr,
+                             int count, uint8_t *query)
 {
         if (mb_param->type_com == RTU)
                 return build_query_basis_rtu(slave, function, start_addr,
@@ -249,7 +249,7 @@ static int build_query_basis(modbus_param_t *mb_param, uint8_t slave,
 }
 
 /* Builds a RTU response header */
-static int build_response_basis_rtu(uint8_t slave, uint8_t function, uint8_t *response)
+static int build_response_basis_rtu(int slave, int function, uint8_t *response)
 {
         response[0] = slave;
         response[1] = function;
@@ -258,7 +258,7 @@ static int build_response_basis_rtu(uint8_t slave, uint8_t function, uint8_t *re
 }
 
 /* Builds a TCP response header */
-static int build_response_basis_tcp(uint8_t slave, uint8_t function, uint8_t *response)
+static int build_response_basis_tcp(int slave, int function, uint8_t *response)
 {
         static uint16_t t_id = 0;
 
@@ -282,8 +282,8 @@ static int build_response_basis_tcp(uint8_t slave, uint8_t function, uint8_t *re
         return PRESET_RESPONSE_LENGTH_TCP;
 }
 
-static int build_response_basis(modbus_param_t *mb_param, uint8_t slave, 
-                                uint8_t function, uint8_t *response)
+static int build_response_basis(modbus_param_t *mb_param, int slave, 
+                                int function, uint8_t *response)
 {
         if (mb_param->type_com == RTU)
                 return build_response_basis_rtu(slave, function, response);
@@ -292,12 +292,10 @@ static int build_response_basis(modbus_param_t *mb_param, uint8_t slave,
 }
 
 /* Sets the length of TCP message in the message (query and response) */
-void set_message_length_tcp(uint8_t *msg, size_t msg_length)
+void set_message_length_tcp(uint8_t *msg, int msg_length)
 {
-        uint16_t mbap_length;
-
-        /* Substract MBAP header length */
-        mbap_length = msg_length - 6;
+        /* Substract the header length to the message length */
+        int mbap_length = msg_length - 6;
 
         msg[4] = mbap_length >> 8;
         msg[5] = mbap_length & 0x00FF;
@@ -354,7 +352,7 @@ int check_crc16(modbus_param_t *mb_param,
 
 /* Sends a query/response over a serial or a TCP communication */
 static int modbus_send(modbus_param_t *mb_param, uint8_t *query,
-                       size_t query_length)
+                       int query_length)
 {
         int ret;
         uint16_t s_crc;
@@ -392,39 +390,39 @@ static int modbus_send(modbus_param_t *mb_param, uint8_t *query,
 }
 
 /* Computes the length of the header following the function code */
-static uint8_t compute_query_length_header(uint8_t function)
+static uint8_t compute_query_length_header(int function)
 {
-        uint8_t byte;
+        int length;
         
         if (function <= FC_FORCE_SINGLE_COIL ||
             function == FC_PRESET_SINGLE_REGISTER)
                 /* Read and single write */
-                byte = 4;
+                length = 4;
         else if (function == FC_FORCE_MULTIPLE_COILS ||
                  function == FC_PRESET_MULTIPLE_REGISTERS)
                 /* Multiple write */
-                byte = 5;
+                length = 5;
         else
-                byte = 0;
+                length = 0;
         
-        return byte;
+        return length;
 }
 
 /* Computes the length of the data to write in the query */
-static uint8_t compute_query_length_data(modbus_param_t *mb_param, uint8_t *msg)
+static int compute_query_length_data(modbus_param_t *mb_param, uint8_t *msg)
 {
-        uint8_t function = msg[mb_param->header_length + 1];
-        uint8_t byte;
+        int function = msg[mb_param->header_length + 1];
+        int length;
         
         if (function == FC_FORCE_MULTIPLE_COILS ||
             function == FC_PRESET_MULTIPLE_REGISTERS)
-                byte = msg[mb_param->header_length + 6];
+                length = msg[mb_param->header_length + 6];
         else
-                byte = 0;
+                length = 0;
 
-        byte += mb_param->checksum_length;
+        length += mb_param->checksum_length;
 
-        return byte;
+        return length;
 }
 
 #define WAIT_DATA()                                                     \
@@ -458,8 +456,7 @@ static uint8_t compute_query_length_data(modbus_param_t *mb_param, uint8_t *msg)
    - msg_length: number of characters received. */
 int receive_msg(modbus_param_t *mb_param,
                 int msg_length_computed,
-                uint8_t *msg,
-                int *msg_length)
+                uint8_t *msg, int *msg_length)
 {
         int select_ret;
         int read_ret;
@@ -678,12 +675,12 @@ static int modbus_check_response(modbus_param_t *mb_param,
         return response_length;
 }
 
-static int response_io_status(uint16_t address, uint16_t count,
+static int response_io_status(int address, int count,
                               uint8_t *tab_io_status,
                               uint8_t *response, int offset)
 {
-        uint8_t shift = 0;
-        uint8_t byte = 0;
+        int shift = 0;
+        int byte = 0;
         int i;
 
         for (i = address; i < address+count; i++) {
@@ -1277,7 +1274,7 @@ void modbus_init_rtu(modbus_param_t *mb_param, char *device,
    to 1024 because it's not necessary to be root to use this port
    number.
 */
-void modbus_init_tcp(modbus_param_t *mb_param, char *ip, uint16_t port)
+void modbus_init_tcp(modbus_param_t *mb_param, char *ip, int port)
 {
         memset(mb_param, 0, sizeof(modbus_param_t));
         strncpy(mb_param->ip, ip, sizeof(char)*16);
@@ -1777,7 +1774,7 @@ int modbus_init_listen_tcp(modbus_param_t *mb_param)
 
 /* Sets many inputs/coils from a single byte value (all 8 bits of the
    byte value are setted) */
-void set_bits_from_byte(uint8_t *dest, uint16_t address, const uint8_t value)
+void set_bits_from_byte(uint8_t *dest, int address, const uint8_t value)
 {
         int i;
 
@@ -1788,7 +1785,7 @@ void set_bits_from_byte(uint8_t *dest, uint16_t address, const uint8_t value)
 
 /* Sets many inputs/coils from a table of bytes (only the bits between
    address and address + nb_bits are setted) */
-void set_bits_from_bytes(uint8_t *dest, uint16_t address, uint16_t nb_bits, const uint8_t tab_byte[])
+void set_bits_from_bytes(uint8_t *dest, int address, int nb_bits, const uint8_t tab_byte[])
 {
         int i;
         int shift = 0;
@@ -1803,7 +1800,7 @@ void set_bits_from_bytes(uint8_t *dest, uint16_t address, uint16_t nb_bits, cons
 
 /* Gets the byte value from many inputs/coils.
    To obtain a full byte, set nb_bits to 8. */
-uint8_t get_byte_from_bits(const uint8_t *src, uint16_t address, int nb_bits)
+uint8_t get_byte_from_bits(const uint8_t *src, int address, int nb_bits)
 {
         int i;
         uint8_t value = 0;
@@ -1819,4 +1816,3 @@ uint8_t get_byte_from_bits(const uint8_t *src, uint16_t address, int nb_bits)
         
         return value;
 }
-
