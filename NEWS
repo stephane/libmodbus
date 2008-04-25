@@ -7,6 +7,15 @@ libmodbus 1.9.x
   https://blueprints.launchpad.net/libmodbus/+spec/macosx-support
 - No more glib dependency
   https://blueprints.launchpad.net/libmodbus/+spec/glib-dependency
+- Unit testing (unit-test-slave and unit-test-master)
+- Port number is now defined at initialisation by Dirk Reusch
+- Better memory management (uint8_t *data and packing of
+  modbus_param_t)
+- Better error management
+- Declare more functions with the static keyword
+- Enhance an integer division
+- Many cleanups
+
 - Fix #159443 reported by Stefan Bisanz
   Index of incoming data in force multiple coils function
 - Fix #161989 reported by Konstantinos Togias
