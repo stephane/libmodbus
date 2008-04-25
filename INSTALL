@@ -1,16 +1,24 @@
 Basic Installation
 ==================
 
-The build system is Waf (http://code.google.com/p/waf), the shell commandes are
-$ waf configure
-$ waf build
-$ sudo waf install
+With autotools
+--------------
 
-or ./waf if you use a local Waf script.
+The shell commands are './configure; make; make install'.
+
+
+With Waf
+--------
+
+The build system is Waf (http://code.google.com/p/waf), the shell commandes are
+$ ./waf configure
+$ ./waf build
+$ sudo ./waf install
+
+or 'waf' if you use a global Waf script.
 
 The sources are built in the 'build' directory at the root of the
 project source files.
 
-The compilation with autotools is DEPRECATED. The shell commands were
-'./configure; make; make install'. Warning, don't use the two build systems at
-the same time.
+
+WARNING, don't use the two build systems at the same time.
