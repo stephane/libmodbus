@@ -130,8 +130,8 @@ typedef struct {
 
         /* Parity: "even", "odd", "none" */
         char parity[5];
-        /* Bauds: 19200 */
-        int baud_i;
+        /* Bauds: 9600, 19200, 57600, 115200, etc */
+        int baud;
         /* Data bit */
         int data_bit;
         /* Stop bit */
@@ -211,7 +211,7 @@ int report_slave_id(modbus_param_t *mb_param, int slave, uint8_t *dest);
 
 /* Initializes the modbus_param_t structure for RTU.
    - device: "/dev/ttyS0"
-   - baud:   19200
+   - baud:   9600, 19200, 57600, 115200, etc
    - parity: "even", "odd" or "none" 
    - data_bits: 5, 6, 7, 8 
    - stop_bits: 1, 2
