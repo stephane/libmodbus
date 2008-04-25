@@ -1243,18 +1243,18 @@ int report_slave_id(modbus_param_t *mb_param, int slave,
 
 /* Initializes the modbus_param_t structure for RTU
    - device: "/dev/ttyS0"
-   - baud:   19200
+   - baud:   9600, 19200, 57600, 115200, etc
    - parity: "even", "odd" or "none" 
    - data_bits: 5, 6, 7, 8 
    - stop_bits: 1, 2
 */
 void modbus_init_rtu(modbus_param_t *mb_param, char *device,
-                     int baud_i, char *parity, int data_bit,
+                     int baud, char *parity, int data_bit,
                      int stop_bit)
 {
         memset(mb_param, 0, sizeof(modbus_param_t));
         strcpy(mb_param->device, device);
-        mb_param->baud_i = baud_i;
+        mb_param->baud = baud;
         strcpy(mb_param->parity, parity);
         mb_param->debug = FALSE;
         mb_param->data_bit = data_bit;
@@ -1309,11 +1309,11 @@ void modbus_set_error_handling(modbus_param_t *mb_param, error_handling_t error_
 static int modbus_connect_rtu(modbus_param_t *mb_param)
 {
         struct termios tios;
-        speed_t baud_rate;
+        speed_t speed;
 
         if (mb_param->debug) {
                 printf("Opening %s at %d bauds (%s)\n",
-                       mb_param->device, mb_param->baud_i, mb_param->parity);
+                       mb_param->device, mb_param->baud, mb_param->parity);
         }
 
         /* The O_NOCTTY flag tells UNIX that this program doesn't want
@@ -1326,7 +1326,7 @@ static int modbus_connect_rtu(modbus_param_t *mb_param)
         mb_param->fd = open(mb_param->device, O_RDWR | O_NOCTTY | O_NDELAY);
         if (mb_param->fd < 0) {
                 perror("open");
-                printf("ERROR Opening device %s (no : %d)\n",
+                printf("ERROR Can't open the device %s (errno %d)\n",
                        mb_param->device, errno);
                 return -1;
         }
@@ -1339,49 +1339,49 @@ static int modbus_connect_rtu(modbus_param_t *mb_param)
         /* C_ISPEED     Input baud (new interface)
            C_OSPEED     Output baud (new interface)
         */
-        switch (mb_param->baud_i) {
+        switch (mb_param->baud) {
         case 110:
-                baud_rate = B110;
+                speed = B110;
                 break;
         case 300:
-                baud_rate = B300;
+                speed = B300;
                 break;
         case 600:
-                baud_rate = B600;
+                speed = B600;
                 break;
         case 1200:
-                baud_rate = B1200;
+                speed = B1200;
                 break;
         case 2400:
-                baud_rate = B2400;
+                speed = B2400;
                 break;
         case 4800:
-                baud_rate = B4800;
+                speed = B4800;
                 break;
         case 9600: 
-                baud_rate = B9600;
+                speed = B9600;
                 break;
         case 19200:
-                baud_rate = B19200;
+                speed = B19200;
                 break;
         case 38400:
-                baud_rate = B38400;
+                speed = B38400;
                 break;
         case 57600:
-                baud_rate = B57600;
+                speed = B57600;
                 break;
         case 115200:
-                baud_rate = B115200;
+                speed = B115200;
                 break;
         default:
-                baud_rate = B9600;
+                speed = B9600;
                 printf("WARNING Unknown baud rate %d for %s (B9600 used)\n",
-                       mb_param->baud_i, mb_param->device);
+                       mb_param->baud, mb_param->device);
         }
 
         /* Set the baud rate */
-        if ((cfsetispeed(&tios, baud_rate) < 0) ||
-            (cfsetospeed(&tios, baud_rate) < 0)) {
+        if ((cfsetispeed(&tios, speed) < 0) ||
+            (cfsetospeed(&tios, speed) < 0)) {
                 perror("cfsetispeed/cfsetospeed\n");
                 return -1;
         }
