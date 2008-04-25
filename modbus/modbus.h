@@ -113,9 +113,18 @@ typedef enum { FLUSH_OR_RECONNECT_ON_ERROR, NOP_ON_ERROR } error_handling_t;
 
 /* This structure is byte-aligned */
 typedef struct {
-        /* Communication : RTU or TCP */
+        /* Descriptor (tty or socket) */
+        int fd;
+        /* Communication mode: RTU or TCP */
         type_com_t type_com;
-
+        /* Flag debug */
+        int debug;
+        /* Header length used for offset */
+        int header_length;
+        /* Checksum length RTU = 2 and TCP = 0 */
+        int checksum_length;
+        /* TCP port */
+        int port;
         /* Device: "/dev/ttyS0", "/dev/ttyUSB0" or "/dev/tty.USA19*"
            on Mac OS X for KeySpan USB<->Serial adapters this string
            had to be made bigger on OS X as the directory+file name
@@ -123,35 +132,24 @@ typedef struct {
            OS X does support 256 byte file names. May become a problem
            in the future. */
 #ifdef __APPLE_CC__
-        char device[67];
+        char device[64];
 #else
-        char device[19];
+        char device[16];
 #endif
-
-        /* Parity: "even", "odd", "none" */
-        char parity[5];
         /* Bauds: 9600, 19200, 57600, 115200, etc */
         int baud;
         /* Data bit */
-        int data_bit;
+        uint8_t data_bit;
         /* Stop bit */
-        int stop_bit;
-        /* Save old termios settings */
-        struct termios old_tios;
-        /* Descriptor (tty or socket) */
-        int fd;
-        /* Flag debug */
-        int debug;
+        uint8_t stop_bit;
+        /* Parity: "even", "odd", "none" */
+        char parity[5];
+        /* In error_treat with TCP, do a reconnect or just dump the error */
+        uint8_t error_handling;
         /* IP address */
         char ip[16];
-        /* TCP port */
-        uint16_t port;
-        /* Header length used for offset */
-        int header_length;
-        /* Checksum length RTU = 2 and TCP = 0 */
-        int checksum_length;
-        /* In error_treat with TCP, do a reconnect or just dump the error */
-        error_handling_t error_handling;
+        /* Save old termios settings */
+        struct termios old_tios;
 } modbus_param_t;
 
 typedef struct {
