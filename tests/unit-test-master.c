@@ -250,8 +250,9 @@ int main(void)
                 printf("FAILED");
         }
 
-        ret = force_multiple_coils(&mb_param, SLAVE, UT_COIL_STATUS_ADDRESS,
-                                   UT_COIL_STATUS_NB_POINTS + 1, tab_rp_status);
+        ret = force_multiple_coils(&mb_param, SLAVE,
+                                   UT_COIL_STATUS_ADDRESS + UT_COIL_STATUS_NB_POINTS,
+                                   UT_COIL_STATUS_NB_POINTS, tab_rp_status);
         printf("* force multipls coils: ");
         if (ret == ILLEGAL_DATA_ADDRESS) {
                 printf("OK");
@@ -259,8 +260,9 @@ int main(void)
                 printf("FAILED");
         }
 
-        ret = preset_multiple_registers(&mb_param, SLAVE, UT_HOLDING_REGISTERS_ADDRESS,
-                                        UT_HOLDING_REGISTERS_NB_POINTS + 1, tab_rp_registers);
+        ret = preset_multiple_registers(&mb_param, SLAVE,
+                                        UT_HOLDING_REGISTERS_ADDRESS + UT_HOLDING_REGISTERS_NB_POINTS,
+                                        UT_HOLDING_REGISTERS_NB_POINTS, tab_rp_registers);
         printf("* preset multiple registers: ");
         if (ret == ILLEGAL_DATA_ADDRESS) {
                 printf("OK");
