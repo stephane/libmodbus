@@ -24,6 +24,10 @@
 #include <termios.h>
 #include <arpa/inet.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif 
+
 #define MODBUS_TCP_DEFAULT_PORT 502
 
 #define HEADER_LENGTH_RTU           0
@@ -302,5 +306,9 @@ void set_bits_from_bytes(uint8_t *dest, int address, int nb_bits,
 /* Gets the byte value from many inputs/coils.
    To obtain a full byte, set nb_bits to 8. */
 uint8_t get_byte_from_bits(const uint8_t *src, int address, int nb_bits);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  /* _MODBUS_H_ */
