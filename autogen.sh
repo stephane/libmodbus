@@ -22,7 +22,7 @@ find -type f \( -name missing -o -name install-sh -o -name mkinstalldirs \
 	-o -name Makefile.in \) -print0 | xargs -0 rm -f
 
 echo Running autoreconf...
-autoreconf -v --install
+autoreconf -v --force --install
 
 # For the Debian package build
 test -d debian && {

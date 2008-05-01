@@ -1,6 +1,9 @@
+==================
 A groovy libmodbus
 ==================
 
+Presentation
+============
 https://launchpad.net/libmodbus
 http://copyleft.free.fr/wordpress/index.php/libmodbus/
 
@@ -11,3 +14,25 @@ Ethernet connection.
 The functions included in the library have been derived from the
 Modicon Modbus Protocol Reference Guide which can be obtained from
 Schneider at www.schneiderautomation.com.
+
+Installation
+============
+
+WARNING, don't use the two build systems at the same time.
+
+With autotools
+--------------
+The shell commands are './configure; make; make install'.
+
+With Waf
+--------
+The build system is Waf (http://code.google.com/p/waf), the shell commandes are:
+  $ ./waf configure
+  $ ./waf build
+  $ sudo ./waf install
+
+or 'waf' if you use a global Waf script.
+
+The sources are built in the 'build' directory at the root of the
+project source files.
+
