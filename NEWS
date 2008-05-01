@@ -1,4 +1,5 @@
-libmodbus 1.9.x
+libmodbus 2.0.0 (to be released)
+================================
 - Slave API
   https://blueprints.launchpad.net/libmodbus/+spec/slave-api
 - Waf build support
@@ -14,8 +15,8 @@ libmodbus 1.9.x
 - Better error management
 - Declare more functions with the static keyword
 - Enhance an integer division
+- The GNU licences are in version 3
 - Many cleanups
-
 - Fix #159443 reported by Stefan Bisanz
   Index of incoming data in force multiple coils function
 - Fix #161989 reported by Konstantinos Togias
@@ -29,18 +30,23 @@ libmodbus 1.9.x
   With TCP, automatic reconnect on error may not be desired.
 - Fix #224485 reported by Todd Denniston
   libmodbus does not link with c++ code.
+- Fix #224496 reported by Todd Denniston
+  It is easier to install on rpm based systems with a spec file.
 
 libmodbus 1.2.4 (2008-03-14)
+============================
 - Fix #191039 reported by Todd Denniston
   modbus.h is not installed at prefix.
 
 libmodbus 1.2.3 (2008-02-03)
+============================
 - Fix #188189 reported by Chris Hellyar
   Compute_response_size() no entry for read_input_status()
 - Fix #181887 reported by Jesus Hernandez Tapia.
   Slave address in build_request_packet_tcp() is hardcoded as 0xFF.
 
 libmodbus 1.2.2 (2007-11-12)
+============================
 - Fix #161989 reported by Konstantinos Togias
   Serial device paths more than 10 chars long (eg. /dev/ttyUSB0) don't
   fit to modbus_param_t -> device char[11] var.
@@ -48,6 +54,7 @@ libmodbus 1.2.2 (2007-11-12)
   trunk for a real enhancement).
 
 libmodbus 1.2.1 (2007-11-02)
+============================
 - Fix #159443 reported by Stefan Bisanz
   Index of incoming data in force multiple coils function
 - Deleted useless code in check_crc16()
@@ -55,5 +62,6 @@ libmodbus 1.2.1 (2007-11-02)
 - Changed author's email to Stéphane Raimbault
 
 libmodbus 1.2.0 (2007-05-10)
+============================
 - FIX Compilation GCC-4.0
 - Project name in autogen.sh
