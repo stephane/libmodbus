@@ -1,5 +1,4 @@
 Features
-* check byte count in message
 * args in command line (master/slave)
 * broadcasting
 * slave must listen only request sent for him
