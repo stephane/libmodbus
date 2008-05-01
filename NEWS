@@ -27,6 +27,8 @@ libmodbus 1.9.x
   modbus.h is not installed at prefix.
 - Fix #211460 reported by Todd Denniston
   With TCP, automatic reconnect on error may not be desired.
+- Fix #224485 reported by Todd Denniston
+  libmodbus does not link with c++ code.
 
 libmodbus 1.2.4 (2008-03-14)
 - Fix #191039 reported by Todd Denniston
