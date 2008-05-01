@@ -7,13 +7,17 @@ Presentation
 https://launchpad.net/libmodbus
 http://copyleft.free.fr/wordpress/index.php/libmodbus/
 
-libmodbus is a library to send/receive data with a device which
-respect the Modbus protocol. This library can use a serial port or an
-Ethernet connection.
- 
+libmodbus is a free software library to send/receive data with a
+device which respect the Modbus protocol. This library can use a
+serial port or an Ethernet connection.
+
 The functions included in the library have been derived from the
 Modicon Modbus Protocol Reference Guide which can be obtained from
 Schneider at www.schneiderautomation.com.
+
+The license of libmodbus is LGPL v3.
+The licence of programs in the tests directory is GPL v3.
+
 
 Installation
 ============
