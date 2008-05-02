@@ -44,11 +44,8 @@ extern "C" {
 
 #define MAX_MESSAGE_LENGTH     256
 
-#define MAX_READ_STATUS      800
-#define MAX_READ_HOLD_REGS   100
-#define MAX_READ_INPUT_REGS  100
-#define MAX_WRITE_COILS      800
-#define MAX_WRITE_REGS       100
+#define MAX_STATUS             800
+#define MAX_REGISTERS          100
 
 #define REPORT_SLAVE_ID_LENGTH 75
 

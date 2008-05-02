@@ -998,9 +998,10 @@ int read_holding_registers(modbus_param_t *mb_param, int slave,
 {
         int status;
 
-        if (count > MAX_READ_HOLD_REGS) {
-                printf("WARNING Too many holding registers requested\n");
-                count = MAX_READ_HOLD_REGS;
+        if (count > MAX_REGISTERS) {
+                printf("WARNING Too many holding registers requested (%d > %d)\n",
+                       count, MAX_REGISTERS);
+                count = MAX_REGISTERS;
         }
 
         status = read_registers(mb_param, slave, FC_READ_HOLDING_REGISTERS,
@@ -1015,9 +1016,10 @@ int read_input_registers(modbus_param_t *mb_param, int slave,
 {
         int status;
 
-        if (count > MAX_READ_INPUT_REGS) {
-                printf("WARNING Too many input registers requested\n");
-                count = MAX_READ_INPUT_REGS;
+        if (count > MAX_REGISTERS) {
+                printf("WARNING Too many input registers requested (%d > %d)\n",
+                       count, MAX_REGISTERS);
+                count = MAX_REGISTERS;
         }
 
         status = read_registers(mb_param, slave, FC_READ_INPUT_REGISTERS,
@@ -1123,9 +1125,10 @@ int force_multiple_coils(modbus_param_t *mb_param, int slave,
 
         uint8_t query[MAX_MESSAGE_LENGTH];
 
-        if (nb_points > MAX_WRITE_COILS) {
-                printf("WARNING Writing to too many coils\n");
-                nb_points = MAX_WRITE_COILS;
+        if (nb_points > MAX_STATUS) {
+                printf("WARNING Writing to too many coils (%d > %d)\n",
+                       nb_points, MAX_STATUS);
+                nb_points = MAX_STATUS;
         }
 
         query_length = build_query_basis(mb_param, slave, FC_FORCE_MULTIPLE_COILS, 
@@ -1171,9 +1174,10 @@ int preset_multiple_registers(modbus_param_t *mb_param, int slave,
 
         uint8_t query[MAX_MESSAGE_LENGTH];
 
-        if (nb_points > MAX_WRITE_REGS) {
-                printf("WARNING Trying to write to too many registers\n");
-                nb_points = MAX_WRITE_REGS;
+        if (nb_points > MAX_REGISTERS) {
+                printf("WARNING Trying to write to too many registers (%d > %d)\n",
+                       nb_points, MAX_REGISTERS);
+                nb_points = MAX_REGISTERS;
         }
 
         query_length = build_query_basis(mb_param, slave,
