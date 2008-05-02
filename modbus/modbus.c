@@ -208,6 +208,13 @@ static int build_query_basis_tcp(int slave, int function,
                                  int start_addr, int count,
                                  uint8_t *query)
 {
+
+        /* Extract from MODBUS Messaging on TCP/IP Implementation
+           Guide V1.0b (page 23/46):
+           The transaction identifier is used to associate the future
+           response with the request. So, at a time, on a TCP
+           connection, this identifier must be unique.
+        */
         static uint16_t t_id = 0;
 
         /* Transaction ID */
@@ -256,15 +263,12 @@ static int build_response_basis_rtu(int slave, int function, uint8_t *response)
 }
 
 /* Builds a TCP response header */
-static int build_response_basis_tcp(int slave, int function, uint8_t *response)
+static int build_response_basis_tcp(int slave, int function, uint8_t *response, int t_id)
 {
-        static uint16_t t_id = 0;
-
-        /* Transaction ID */
-        if (t_id < USHRT_MAX)
-                t_id++;
-        else
-                t_id = 0;
+        /* Extract from MODBUS Messaging on TCP/IP Implementation
+           Guide V1.0b (page 23/46):
+           The transaction identifier is used to associate the future
+           response with the request. */
         response[0] = t_id >> 8;
         response[1] = t_id & 0x00ff;
 
@@ -281,12 +285,12 @@ static int build_response_basis_tcp(int slave, int function, uint8_t *response)
 }
 
 static int build_response_basis(modbus_param_t *mb_param, int slave, 
-                                int function, uint8_t *response)
+                                int function, uint8_t *response, int t_id)
 {
         if (mb_param->type_com == RTU)
                 return build_response_basis_rtu(slave, function, response);
         else
-                return build_response_basis_tcp(slave, function, response);
+                return build_response_basis_tcp(slave, function, response, t_id);
 }
 
 /* Sets the length of TCP message in the message (query and response) */
@@ -696,12 +700,13 @@ static int response_io_status(int address, int count,
 /* Build the exception response */
 static int response_exception(modbus_param_t *mb_param, int slave,
                               int function, int exception_code,
-                              uint8_t *response)
+                              uint8_t *response, int t_id)
 {
         int response_length;
 
         response_length = build_response_basis(mb_param, slave,
-                                               function + 0x80, response);
+                                               function + 0x80, response,
+                                               t_id);
         /* Positive exception code */
         response[response_length++] = -exception_code;
 
@@ -722,6 +727,12 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
         uint16_t address = (query[offset+2] << 8) + query[offset+3];
         uint8_t response[MAX_MESSAGE_LENGTH];
         int resp_length = 0;
+        int t_id;
+
+        if (mb_param->type_com == TCP)
+                t_id = (query[0] << 8) + query[1];
+        else
+                t_id = 0;
 
         switch (function) {
         case FC_READ_COIL_STATUS: {
@@ -731,9 +742,9 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
                         printf("Illegal data address %0X in read_coil_status\n",
                                address + count); 
                         resp_length = response_exception(mb_param, slave, function,
-                                                         ILLEGAL_DATA_ADDRESS, response);  
+                                                         ILLEGAL_DATA_ADDRESS, response, t_id);  
                 } else {
-                        resp_length = build_response_basis(mb_param, slave, function, response);
+                        resp_length = build_response_basis(mb_param, slave, function, response, t_id);
                         response[resp_length++] = (count / 8) + ((count % 8) ? 1 : 0);
                         resp_length = response_io_status(address, count,
                                                          mb_mapping->tab_coil_status,
@@ -749,9 +760,9 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
                         printf("Illegal data address %0X in read_input_status\n",
                                address + count); 
                         resp_length = response_exception(mb_param, slave, function,
-                                                         ILLEGAL_DATA_ADDRESS, response);
+                                                         ILLEGAL_DATA_ADDRESS, response, t_id);
                 } else {
-                        resp_length = build_response_basis(mb_param, slave, function, response);
+                        resp_length = build_response_basis(mb_param, slave, function, response, t_id);
                         response[resp_length++] = (count / 8) + ((count % 8) ? 1 : 0);
                         resp_length = response_io_status(address, count,
                                                          mb_mapping->tab_input_status,
@@ -766,11 +777,11 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
                         printf("Illegal data address %0X in read_holding_registers\n",
                                address + count); 
                         resp_length = response_exception(mb_param, slave, function,
-                                                         ILLEGAL_DATA_ADDRESS, response);
+                                                         ILLEGAL_DATA_ADDRESS, response, t_id);
                 } else {
                         int i;
                         
-                        resp_length = build_response_basis(mb_param, slave, function, response);
+                        resp_length = build_response_basis(mb_param, slave, function, response, t_id);
                         response[resp_length++] = count << 1;
                         for (i = address; i < address + count; i++) {
                                 response[resp_length++] = mb_mapping->tab_holding_registers[i] >> 8;
@@ -787,11 +798,11 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
                         printf("Illegal data address %0X in read_input_registers\n",
                                address + count);
                         resp_length = response_exception(mb_param, slave, function,
-                                                         ILLEGAL_DATA_ADDRESS, response);
+                                                         ILLEGAL_DATA_ADDRESS, response, t_id);
                 } else {
                         int i;
 
-                        resp_length = build_response_basis(mb_param, slave, function, response);
+                        resp_length = build_response_basis(mb_param, slave, function, response, t_id);
                         response[resp_length++] = count << 1;
                         for (i = address; i < address + count; i++) {
                                 response[resp_length++] = mb_mapping->tab_input_registers[i] >> 8;
@@ -804,7 +815,7 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
                 if (address >= mb_mapping->nb_coil_status) {
                         printf("Illegal data address %0X in force_singe_coil\n", address); 
                         resp_length = response_exception(mb_param, slave, function,
-                                                         ILLEGAL_DATA_ADDRESS, response);  
+                                                         ILLEGAL_DATA_ADDRESS, response, t_id);  
                 } else {
                         int data = (query[offset+4] << 8) + query[offset+5];
                         
@@ -819,7 +830,7 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
                                 printf("Illegal data value %0X in force_single_coil request at address %0X\n",
                                        data, address);
                                 resp_length = response_exception(mb_param, slave, function,
-                                                                 ILLEGAL_DATA_VALUE, response);
+                                                                 ILLEGAL_DATA_VALUE, response, t_id);
                         }
                 }
                 break;          
@@ -827,7 +838,7 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
                 if (address >= mb_mapping->nb_holding_registers) {
                         printf("Illegal data address %0X in preset_holding_register\n", address); 
                         resp_length = response_exception(mb_param, slave, function,
-                                                         ILLEGAL_DATA_ADDRESS, response);  
+                                                         ILLEGAL_DATA_ADDRESS, response, t_id);  
                 } else {
                         int data = (query[offset+4] << 8) + query[offset+5];
                         
@@ -843,9 +854,9 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
                         printf("Illegal data address %0X in force_multiple_coils\n",
                                address + count);
                         resp_length = response_exception(mb_param, slave, function,
-                                                         ILLEGAL_DATA_ADDRESS, response);
+                                                         ILLEGAL_DATA_ADDRESS, response, t_id);
                 } else {
-                        resp_length = build_response_basis(mb_param, slave, function, response);
+                        resp_length = build_response_basis(mb_param, slave, function, response, t_id);
                         /* 4 to copy the coil address (2) and the quantity of coils */
                         memcpy(response + resp_length, query + resp_length, 4);
                         resp_length += 4;
@@ -859,9 +870,9 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
                         printf("Illegal data address %0X in preset_multiple_registers\n",
                                address + count);
                         resp_length = response_exception(mb_param, slave, function,
-                                                         ILLEGAL_DATA_ADDRESS, response);
+                                                         ILLEGAL_DATA_ADDRESS, response, t_id);
                 } else {
-                        resp_length = build_response_basis(mb_param, slave, function, response);
+                        resp_length = build_response_basis(mb_param, slave, function, response, t_id);
                         /* 4 to copy the address (2) and the no. of registers */
                         memcpy(response + resp_length, query + resp_length, 4);
                         resp_length += 4;
