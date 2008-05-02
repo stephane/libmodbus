@@ -19,3 +19,17 @@ def build(bld):
     obj.uselib_local = 'modbus'
     obj.target = 'test-master-random'
     obj.inst_var = 0
+
+    obj = bld.create_obj('cc', 'program')
+    obj.source = 'bench-bandwidth-slave.c'
+    obj.includes = '. ..'
+    obj.uselib_local = 'modbus'
+    obj.target = 'bench-bandwidth-slave'
+    obj.inst_var = 0
+
+    obj = bld.create_obj('cc', 'program')
+    obj.source = 'bench-bandwidth-master.c'
+    obj.includes = '. ..'
+    obj.uselib_local = 'modbus'
+    obj.target = 'bench-bandwidth-master'
+    obj.inst_var = 0
