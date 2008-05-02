@@ -202,7 +202,7 @@ int main(void)
         }
 
         /** ILLEGAL DATA ADDRESS */
-        printf("\nTest illegal data address:");
+        printf("\nTest illegal data address:\n");
 
         /* The mapping begins at 0 and end at adresse + nb_points so
          * the adresses above are not valid. */ 
@@ -211,41 +211,41 @@ int main(void)
                                UT_COIL_STATUS_NB_POINTS + 1, tab_rp_status);
         printf("* coil status: ");
         if (ret == ILLEGAL_DATA_ADDRESS)
-                printf("OK");
+                printf("OK\n");
         else
-                printf("FAILED");
+                printf("FAILED\n");
 
         ret = read_input_status(&mb_param, SLAVE, UT_INPUT_STATUS_ADDRESS,
                                 UT_INPUT_STATUS_NB_POINTS + 1, tab_rp_status);
         printf("* input status: ");
         if (ret == ILLEGAL_DATA_ADDRESS)
-                printf("OK");
+                printf("OK\n");
         else
-                printf("FAILED");
+                printf("FAILED\n");
 
         ret = read_holding_registers(&mb_param, SLAVE, UT_HOLDING_REGISTERS_ADDRESS,
                                      UT_HOLDING_REGISTERS_NB_POINTS + 1, tab_rp_registers);
         printf("* holding registers: ");
         if (ret == ILLEGAL_DATA_ADDRESS)
-                printf("OK");
+                printf("OK\n");
         else
-                printf("FAILED");
+                printf("FAILED\n");
                 
         ret = read_input_registers(&mb_param, SLAVE, UT_INPUT_REGISTERS_ADDRESS,
                                    UT_INPUT_REGISTERS_NB_POINTS + 1, tab_rp_registers);
         printf("* input registers: ");
         if (ret == ILLEGAL_DATA_ADDRESS)
-                printf("OK");
+                printf("OK\n");
         else
-                printf("FAILED");
+                printf("FAILED\n");
 
         ret = force_single_coil(&mb_param, SLAVE,
                                 UT_COIL_STATUS_ADDRESS + UT_COIL_STATUS_NB_POINTS, ON);
         printf("* force single coil: ");
         if (ret == ILLEGAL_DATA_ADDRESS) {
-                printf("OK");
+                printf("OK\n");
         } else {
-                printf("FAILED");
+                printf("FAILED\n");
         }
 
         ret = force_multiple_coils(&mb_param, SLAVE,
@@ -253,9 +253,9 @@ int main(void)
                                    UT_COIL_STATUS_NB_POINTS, tab_rp_status);
         printf("* force multipls coils: ");
         if (ret == ILLEGAL_DATA_ADDRESS) {
-                printf("OK");
+                printf("OK\n");
         } else {
-                printf("FAILED");
+                printf("FAILED\n");
         }
 
         ret = preset_multiple_registers(&mb_param, SLAVE,
@@ -263,12 +263,11 @@ int main(void)
                                         UT_HOLDING_REGISTERS_NB_POINTS, tab_rp_registers);
         printf("* preset multiple registers: ");
         if (ret == ILLEGAL_DATA_ADDRESS) {
-                printf("OK");
+                printf("OK\n");
         } else {
-                printf("FAILED");
+                printf("FAILED\n");
         }
-        
-        printf("\n");
+
 close:
         /* Free the memory */
         free(tab_rp_status);                                           
