@@ -365,10 +365,8 @@ static int modbus_send(modbus_param_t *mb_param, uint8_t *query,
         }
 
         if (mb_param->debug) {
-                printf("\n");
                 for (i = 0; i < query_length; i++)
                         printf("[%.2X]", query[i]);
-
                 printf("\n");
         }
         
@@ -551,8 +549,6 @@ int receive_msg(modbus_param_t *mb_param,
                                 break;
                         }
                 }
-                if (mb_param->debug)
-                        printf("\nlength_to_read: %d\n", length_to_read);
 
                 /* Moves the pointer to receive other datas */
                 p_msg = &(p_msg[read_ret]);
