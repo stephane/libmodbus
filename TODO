@@ -1,11 +1,7 @@
 Features
 * check the count, eg. read_holding_registers (MAX_STATUS, etc)
-* args in command line (master/slave)
 * broadcasting
 * slave must listen only request sent for him
-
-Cleanups
-* t_id in param_msqg
 
 Documentation
 * README with an example to test the library
