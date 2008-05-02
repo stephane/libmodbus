@@ -272,7 +272,7 @@ static int build_response_basis_tcp(int slave, int function, uint8_t *response)
         response[2] = 0;
         response[3] = 0;
 
-        /* Length to fix later with set_response_length_tcp (4 and 5) */
+        /* Length to fix later with set_message_length_tcp (4 and 5) */
 
         response[6] = slave;
         response[7] = function;
