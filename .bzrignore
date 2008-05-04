@@ -22,3 +22,4 @@ src/test-modbus-master
 src/test-modbus-slave
 modbus.pc
 build
+.waf-*
