@@ -2,10 +2,8 @@
 A groovy libmodbus
 ==================
 
-Presentation
-============
-https://launchpad.net/libmodbus
-http://copyleft.free.fr/wordpress/index.php/libmodbus/
+Overview
+========
 
 libmodbus is a free software library to send/receive data with a
 device which respect the Modbus protocol. This library can use a
@@ -17,6 +15,9 @@ Schneider at www.schneiderautomation.com.
 
 The license of libmodbus is LGPL v3.
 The licence of programs in the tests directory is GPL v3.
+
+https://launchpad.net/libmodbus
+http://copyleft.free.fr/wordpress/index.php/libmodbus/
 
 
 Installation
@@ -40,3 +41,11 @@ or 'waf' if you use a global Waf script.
 The sources are built in the 'build' directory at the root of the
 project source files.
 
+
+Testing
+=======
+
+Some testing programs are provided in the tests directory, you can
+freely edit the code source to fit your needs (it's Free Sofware :).
+
+See tests/README for a description of each program.
