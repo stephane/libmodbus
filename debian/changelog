@@ -1,0 +1,6 @@
+libmodbus (2.0.0-1) stable; urgency=low
+
+  * Initial release.
+
+ -- Stéphane Raimbault <stephane.raimbault@gmail.com>  Wed, 14 May 2008 22:30:53 +0200
+
