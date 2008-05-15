@@ -533,8 +533,8 @@ int receive_msg(modbus_param_t *mb_param,
                 /* Sums bytes received */ 
                 (*msg_length) += read_ret;
                 if ((*msg_length) > MAX_MESSAGE_LENGTH) {
-                        error_treat(mb_param, TOO_MANY_DATAS, "Too many datas");
-                        return TOO_MANY_DATAS;
+                        error_treat(mb_param, TOO_MANY_DATA, "Too many data");
+                        return TOO_MANY_DATA;
                 }
 
                 /* Display the hex code of each character received */
@@ -566,7 +566,7 @@ int receive_msg(modbus_param_t *mb_param,
                         }
                 }
 
-                /* Moves the pointer to receive other datas */
+                /* Moves the pointer to receive other data */
                 p_msg = &(p_msg[read_ret]);
 
                 if (length_to_read > 0) {
@@ -969,9 +969,15 @@ static int read_io_status(modbus_param_t *mb_param, int slave, int function,
 /* Reads the boolean status of coils and sets the array elements
    in the destination to TRUE or FALSE. */
 int read_coil_status(modbus_param_t *mb_param, int slave, int start_addr,
-                     const int count, uint8_t *data_dest)
+                     int count, uint8_t *data_dest)
 {
         int status;
+
+        if (count > MAX_STATUS) {
+                printf("ERROR Too many coils status requested (%d > %d)\n",
+                       count, MAX_STATUS);
+                return TOO_MANY_DATA;
+        }
 
         status = read_io_status(mb_param, slave, FC_READ_COIL_STATUS,
                                 start_addr, count, data_dest);
@@ -985,9 +991,15 @@ int read_coil_status(modbus_param_t *mb_param, int slave, int start_addr,
 
 /* Same as read_coil_status but reads the slaves input table */
 int read_input_status(modbus_param_t *mb_param, int slave, int start_addr,
-                      const int count, uint8_t *data_dest)
+                      int count, uint8_t *data_dest)
 {
         int status;
+
+        if (count > MAX_STATUS) {
+                printf("ERROR Too many inputs status requested (%d > %d)\n",
+                       count, MAX_STATUS);
+                return TOO_MANY_DATA;
+        }
 
         status = read_io_status(mb_param, slave, FC_READ_INPUT_STATUS,
                                 start_addr, count, data_dest);
@@ -1006,6 +1018,12 @@ static int read_registers(modbus_param_t *mb_param, int slave, int function,
         int status;
         int query_ret;
         uint8_t query[MIN_QUERY_LENGTH];
+
+        if (count > MAX_REGISTERS) {
+                printf("EROOR Too many holding registers requested (%d > %d)\n",
+                       count, MAX_REGISTERS);
+                return TOO_MANY_DATA;
+        }
 
         query_length = build_query_basis(mb_param, slave, function, 
                                          start_addr, count, query);
@@ -1027,9 +1045,9 @@ int read_holding_registers(modbus_param_t *mb_param, int slave,
         int status;
 
         if (count > MAX_REGISTERS) {
-                printf("WARNING Too many holding registers requested (%d > %d)\n",
+                printf("ERROR Too many holding registers requested (%d > %d)\n",
                        count, MAX_REGISTERS);
-                count = MAX_REGISTERS;
+                return TOO_MANY_DATA;
         }
 
         status = read_registers(mb_param, slave, FC_READ_HOLDING_REGISTERS,
@@ -1045,9 +1063,9 @@ int read_input_registers(modbus_param_t *mb_param, int slave,
         int status;
 
         if (count > MAX_REGISTERS) {
-                printf("WARNING Too many input registers requested (%d > %d)\n",
+                printf("ERROR Too many input registers requested (%d > %d)\n",
                        count, MAX_REGISTERS);
-                count = MAX_REGISTERS;
+                return TOO_MANY_DATA;
         }
 
         status = read_registers(mb_param, slave, FC_READ_INPUT_REGISTERS,
@@ -1156,9 +1174,9 @@ int force_multiple_coils(modbus_param_t *mb_param, int slave,
         uint8_t query[MAX_MESSAGE_LENGTH];
 
         if (nb_points > MAX_STATUS) {
-                printf("WARNING Writing to too many coils (%d > %d)\n",
+                printf("ERROR Writing to too many coils (%d > %d)\n",
                        nb_points, MAX_STATUS);
-                nb_points = MAX_STATUS;
+                return TOO_MANY_DATA;
         }
 
         query_length = build_query_basis(mb_param, slave,
@@ -1206,9 +1224,9 @@ int preset_multiple_registers(modbus_param_t *mb_param, int slave,
         uint8_t query[MAX_MESSAGE_LENGTH];
 
         if (nb_points > MAX_REGISTERS) {
-                printf("WARNING Trying to write to too many registers (%d > %d)\n",
+                printf("ERROR Trying to write to too many registers (%d > %d)\n",
                        nb_points, MAX_REGISTERS);
-                nb_points = MAX_REGISTERS;
+                return TOO_MANY_DATA;
         }
 
         query_length = build_query_basis(mb_param, slave,

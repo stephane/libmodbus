@@ -1,5 +1,4 @@
 Features
-* check the count, eg. read_holding_registers (MAX_STATUS, etc)
 * broadcasting
 * slave must listen only request sent for him
 

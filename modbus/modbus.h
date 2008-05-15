@@ -99,7 +99,7 @@ extern "C" {
 #define COMM_TIME_OUT           -0x0C
 #define PORT_SOCKET_FAILURE     -0x0D
 #define SELECT_FAILURE          -0x0E
-#define TOO_MANY_DATAS          -0x0F
+#define TOO_MANY_DATA           -0x0F
 #define INVALID_CRC             -0x10
 #define INVALID_EXCEPTION_CODE  -0x11
 #define CONNECTION_CLOSED       -0x12
