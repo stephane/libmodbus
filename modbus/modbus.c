@@ -182,7 +182,8 @@ static unsigned int compute_response_length(modbus_param_t *mb_param,
         case FC_READ_HOLDING_REGISTERS:
         case FC_READ_INPUT_REGISTERS:
                 /* Header + 2 * nb values */
-                resp_length = 3 + 2 * (query[offset + 4] << 8 | query[offset + 5]);
+                resp_length = 3 + 2 * (query[offset + 4] << 8 | 
+                                       query[offset + 5]);
                 break;
         case FC_READ_EXCEPTION_STATUS:
                 resp_length = 4;
@@ -347,7 +348,8 @@ int check_crc16(modbus_param_t *mb_param,
                         ret = 0;
                 } else {
                         char s_error[64];
-                        sprintf(s_error, "invalid crc received %0X - crc_calc %0X", 
+                        sprintf(s_error,
+                                "invalid crc received %0X - crc_calc %0X", 
                                 crc_received, crc_calc);
                         ret = INVALID_CRC;
                         error_treat(mb_param, ret, s_error);
@@ -479,7 +481,8 @@ int receive_msg(modbus_param_t *mb_param,
                 if (msg_length_computed == MSG_LENGTH_UNDEFINED)
                         printf("Waiting for a message...\n");
                 else
-                        printf("Waiting for a message (%d bytes)...\n", msg_length_computed);
+                        printf("Waiting for a message (%d bytes)...\n",
+                               msg_length_computed);
         }
 
         /* Add a file descriptor to the set */
@@ -519,7 +522,8 @@ int receive_msg(modbus_param_t *mb_param,
                         read_ret = recv(mb_param->fd, p_msg, length_to_read, 0);
 
                 if (read_ret == -1) {
-                        error_treat(mb_param, PORT_SOCKET_FAILURE, "Read port/socket failure");
+                        error_treat(mb_param, PORT_SOCKET_FAILURE,
+                                    "Read port/socket failure");
                         return PORT_SOCKET_FAILURE;
                 } else if (read_ret == 0) {
                         printf("Connection closed\n");
@@ -604,7 +608,8 @@ static int modbus_check_response(modbus_param_t *mb_param,
         int ret;
 
         response_length_computed = compute_response_length(mb_param, query);
-        ret = receive_msg(mb_param, response_length_computed, response, &response_length);
+        ret = receive_msg(mb_param, response_length_computed,
+                          response, &response_length);
         if (ret == 0) {
                 /* Check message */
                 ret = check_crc16(mb_param, response, response_length);
@@ -664,8 +669,11 @@ static int modbus_check_response(modbus_param_t *mb_param,
                                    case but can avoid a vicious
                                    segfault */
                                 char s_error[64];
-                                sprintf(s_error, "Invalid exception code %d", response[offset + 2]);
-                                error_treat(mb_param, INVALID_EXCEPTION_CODE, s_error);
+                                sprintf(s_error,
+                                        "Invalid exception code %d",
+                                        response[offset + 2]);
+                                error_treat(mb_param, INVALID_EXCEPTION_CODE,
+                                            s_error);
                                 free(s_error);
                                 return INVALID_EXCEPTION_CODE;
                         }
@@ -1114,7 +1122,8 @@ int force_single_coil(modbus_param_t *mb_param, int slave,
         if (state)
                 state = 0xFF00;
 
-        status = set_single(mb_param, slave, FC_FORCE_SINGLE_COIL, coil_addr, state);
+        status = set_single(mb_param, slave, FC_FORCE_SINGLE_COIL,
+                            coil_addr, state);
 
         return status;
 }
@@ -1125,7 +1134,8 @@ int preset_single_register(modbus_param_t *mb_param, int slave,
 {
         int status;
 
-        status = set_single(mb_param, slave, FC_PRESET_SINGLE_REGISTER, reg_addr, value);
+        status = set_single(mb_param, slave, FC_PRESET_SINGLE_REGISTER,
+                            reg_addr, value);
 
         return status;
 }
@@ -1151,7 +1161,8 @@ int force_multiple_coils(modbus_param_t *mb_param, int slave,
                 nb_points = MAX_STATUS;
         }
 
-        query_length = build_query_basis(mb_param, slave, FC_FORCE_MULTIPLE_COILS, 
+        query_length = build_query_basis(mb_param, slave,
+                                         FC_FORCE_MULTIPLE_COILS, 
                                          start_addr, nb_points, query);
         byte_count = (nb_points / 8) + ((nb_points % 8) ? 1 : 0);
         query[query_length++] = byte_count;
@@ -1312,7 +1323,8 @@ void modbus_init_tcp(modbus_param_t *mb_param, char *ip, int port)
    With NOP_ON_ERROR, it is expected that the application will
    check for error returns and deal with them as necessary.
 */
-void modbus_set_error_handling(modbus_param_t *mb_param, error_handling_t error_handling)
+void modbus_set_error_handling(modbus_param_t *mb_param,
+                               error_handling_t error_handling)
 {
         if (error_handling == FLUSH_OR_RECONNECT_ON_ERROR ||
             error_handling == NOP_ON_ERROR) {
@@ -1684,15 +1696,19 @@ int modbus_mapping_new(modbus_mapping_t *mb_mapping,
 {
         /* 0X */
         mb_mapping->nb_coil_status = nb_coil_status;
-        mb_mapping->tab_coil_status = (uint8_t *) malloc(nb_coil_status * sizeof(uint8_t));
-        memset(mb_mapping->tab_coil_status, 0, nb_coil_status * sizeof(uint8_t));
+        mb_mapping->tab_coil_status =
+                (uint8_t *) malloc(nb_coil_status * sizeof(uint8_t));
+        memset(mb_mapping->tab_coil_status, 0,
+               nb_coil_status * sizeof(uint8_t));
         if (mb_mapping->tab_coil_status == NULL)
                 return FALSE;
         
         /* 1X */
         mb_mapping->nb_input_status = nb_input_status;
-        mb_mapping->tab_input_status = (uint8_t *) malloc(nb_input_status * sizeof(uint8_t));
-        memset(mb_mapping->tab_input_status, 0, nb_input_status * sizeof(uint8_t));
+        mb_mapping->tab_input_status =
+                (uint8_t *) malloc(nb_input_status * sizeof(uint8_t));
+        memset(mb_mapping->tab_input_status, 0,
+               nb_input_status * sizeof(uint8_t));
         if (mb_mapping->tab_input_status == NULL) {
                 free(mb_mapping->tab_coil_status);
                 return FALSE;
@@ -1700,8 +1716,10 @@ int modbus_mapping_new(modbus_mapping_t *mb_mapping,
 
         /* 4X */
         mb_mapping->nb_holding_registers = nb_holding_registers;
-        mb_mapping->tab_holding_registers = (uint16_t *) malloc(nb_holding_registers * sizeof(uint16_t));
-        memset(mb_mapping->tab_holding_registers, 0, nb_holding_registers * sizeof(uint16_t));
+        mb_mapping->tab_holding_registers =
+                (uint16_t *) malloc(nb_holding_registers * sizeof(uint16_t));
+        memset(mb_mapping->tab_holding_registers, 0,
+               nb_holding_registers * sizeof(uint16_t));
         if (mb_mapping->tab_holding_registers == NULL) {
                 free(mb_mapping->tab_coil_status);
                 free(mb_mapping->tab_input_status);
@@ -1710,8 +1728,10 @@ int modbus_mapping_new(modbus_mapping_t *mb_mapping,
 
         /* 3X */
         mb_mapping->nb_input_registers = nb_input_registers;
-        mb_mapping->tab_input_registers = (uint16_t *) malloc(nb_input_registers * sizeof(uint16_t));
-        memset(mb_mapping->tab_input_registers, 0, nb_input_registers * sizeof(uint16_t));
+        mb_mapping->tab_input_registers =
+                (uint16_t *) malloc(nb_input_registers * sizeof(uint16_t));
+        memset(mb_mapping->tab_input_registers, 0,
+               nb_input_registers * sizeof(uint16_t));
         if (mb_mapping->tab_input_registers == NULL) {
                 free(mb_mapping->tab_coil_status);
                 free(mb_mapping->tab_input_status);
@@ -1802,7 +1822,8 @@ void set_bits_from_byte(uint8_t *dest, int address, const uint8_t value)
 
 /* Sets many inputs/coils from a table of bytes (only the bits between
    address and address + nb_points are setted) */
-void set_bits_from_bytes(uint8_t *dest, int address, int nb_points, const uint8_t tab_byte[])
+void set_bits_from_bytes(uint8_t *dest, int address, int nb_points,
+                         const uint8_t tab_byte[])
 {
         int i;
         int shift = 0;
