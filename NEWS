@@ -15,7 +15,8 @@ libmodbus 2.0.0 (to be released)
 - Better error management
 - Declare more functions with the static keyword
 - Enhance an integer division
-- The GNU licences are in version 3
+- The GNU licences LGPL and GPL are in version 3
+- Debian and RPM packages (#224496) 
 - Many cleanups
 - Fix #159443 reported by Stefan Bisanz
   Index of incoming data in force multiple coils function
