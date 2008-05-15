@@ -1,4 +1,5 @@
 Source: libmodbus
+Distribution: hardy
 Priority: extra
 Maintainer: Stéphane Raimbault <stephane.raimbault@gmail.com>
 Standards-Version: 3.7.3

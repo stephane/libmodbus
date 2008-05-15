@@ -1,4 +1,4 @@
-libmodbus (2.0.0-1) stable; urgency=low
+libmodbus (2.0.0-1) hardy; urgency=low
 
   * Initial release.
 
