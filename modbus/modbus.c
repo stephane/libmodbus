@@ -175,8 +175,8 @@ static unsigned int compute_response_length(modbus_param_t *mb_param,
         case FC_READ_COIL_STATUS:
         case FC_READ_INPUT_STATUS: {
                 /* Header + nb values (code from force_multiple_coils) */
-                int nb_points = (query[offset + 4] << 8) | query[offset + 5];
-                resp_length = 3 + (nb_points / 8) + ((nb_points % 8) ? 1 : 0);
+                int nb = (query[offset + 4] << 8) | query[offset + 5];
+                resp_length = 3 + (nb / 8) + ((nb % 8) ? 1 : 0);
         }
                 break;
         case FC_READ_HOLDING_REGISTERS:
@@ -199,22 +199,22 @@ static unsigned int compute_response_length(modbus_param_t *mb_param,
 
 /* Builds a RTU query header */
 static int build_query_basis_rtu(int slave, int function,
-                                 int start_addr, int count,
+                                 int start_addr, int nb,
                                  uint8_t *query)
 {
         query[0] = slave;
         query[1] = function;
         query[2] = start_addr >> 8;
         query[3] = start_addr & 0x00ff;
-        query[4] = count >> 8;
-        query[5] = count & 0x00ff;
+        query[4] = nb >> 8;
+        query[5] = nb & 0x00ff;
 
         return PRESET_QUERY_LENGTH_RTU;
 }
 
 /* Builds a TCP query header */
 static int build_query_basis_tcp(int slave, int function,
-                                 int start_addr, int count,
+                                 int start_addr, int nb,
                                  uint8_t *query)
 {
 
@@ -244,22 +244,22 @@ static int build_query_basis_tcp(int slave, int function,
         query[7] = function;
         query[8] = start_addr >> 8;
         query[9] = start_addr & 0x00ff;
-        query[10] = count >> 8;
-        query[11] = count & 0x00ff;
+        query[10] = nb >> 8;
+        query[11] = nb & 0x00ff;
 
         return PRESET_QUERY_LENGTH_TCP;
 }
 
 static int build_query_basis(modbus_param_t *mb_param, int slave, 
                              int function, int start_addr,
-                             int count, uint8_t *query)
+                             int nb, uint8_t *query)
 {
         if (mb_param->type_com == RTU)
                 return build_query_basis_rtu(slave, function, start_addr,
-                                             count, query);
+                                             nb, query);
         else
                 return build_query_basis_tcp(slave, function, start_addr,
-                                             count, query);
+                                             nb, query);
 }
 
 /* Builds a RTU response header */
@@ -688,7 +688,7 @@ static int modbus_check_response(modbus_param_t *mb_param,
         return response_length;
 }
 
-static int response_io_status(int address, int count,
+static int response_io_status(int address, int nb,
                               uint8_t *tab_io_status,
                               uint8_t *response, int offset)
 {
@@ -696,7 +696,7 @@ static int response_io_status(int address, int count,
         int byte = 0;
         int i;
 
-        for (i = address; i < address+count; i++) {
+        for (i = address; i < address+nb; i++) {
                 byte |= tab_io_status[i] << shift;
                 if (shift == 7) {
                         /* Byte is full */
@@ -753,17 +753,17 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
 
         switch (function) {
         case FC_READ_COIL_STATUS: {
-                int count = (query[offset+4] << 8) + query[offset+5];
+                int nb = (query[offset+4] << 8) + query[offset+5];
                 
-                if ((address + count) > mb_mapping->nb_coil_status) {
+                if ((address + nb) > mb_mapping->nb_coil_status) {
                         printf("Illegal data address %0X in read_coil_status\n",
-                               address + count); 
+                               address + nb); 
                         resp_length = response_exception(mb_param, &sft,
                                                          ILLEGAL_DATA_ADDRESS, response);  
                 } else {
                         resp_length = build_response_basis(mb_param, &sft, response);
-                        response[resp_length++] = (count / 8) + ((count % 8) ? 1 : 0);
-                        resp_length = response_io_status(address, count,
+                        response[resp_length++] = (nb / 8) + ((nb % 8) ? 1 : 0);
+                        resp_length = response_io_status(address, nb,
                                                          mb_mapping->tab_coil_status,
                                                          response, resp_length);
                 }
@@ -771,36 +771,36 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
                 break;
         case FC_READ_INPUT_STATUS: {
                 /* Similar to coil status */
-                int count = (query[offset+4] << 8) + query[offset+5];
+                int nb = (query[offset+4] << 8) + query[offset+5];
 
-                if ((address + count) > mb_mapping->nb_input_status) {
+                if ((address + nb) > mb_mapping->nb_input_status) {
                         printf("Illegal data address %0X in read_input_status\n",
-                               address + count); 
+                               address + nb); 
                         resp_length = response_exception(mb_param, &sft,
                                                          ILLEGAL_DATA_ADDRESS, response);
                 } else {
                         resp_length = build_response_basis(mb_param, &sft, response);
-                        response[resp_length++] = (count / 8) + ((count % 8) ? 1 : 0);
-                        resp_length = response_io_status(address, count,
+                        response[resp_length++] = (nb / 8) + ((nb % 8) ? 1 : 0);
+                        resp_length = response_io_status(address, nb,
                                                          mb_mapping->tab_input_status,
                                                          response, resp_length);
                 }
         }
                 break;
         case FC_READ_HOLDING_REGISTERS: {
-                int count = (query[offset+4] << 8) + query[offset+5];
+                int nb = (query[offset+4] << 8) + query[offset+5];
                         
-                if ((address + count) > mb_mapping->nb_holding_registers) {
+                if ((address + nb) > mb_mapping->nb_holding_registers) {
                         printf("Illegal data address %0X in read_holding_registers\n",
-                               address + count); 
+                               address + nb); 
                         resp_length = response_exception(mb_param, &sft,
                                                          ILLEGAL_DATA_ADDRESS, response);
                 } else {
                         int i;
                         
                         resp_length = build_response_basis(mb_param, &sft, response);
-                        response[resp_length++] = count << 1;
-                        for (i = address; i < address + count; i++) {
+                        response[resp_length++] = nb << 1;
+                        for (i = address; i < address + nb; i++) {
                                 response[resp_length++] = mb_mapping->tab_holding_registers[i] >> 8;
                                 response[resp_length++] = mb_mapping->tab_holding_registers[i] & 0xFF;
                         }
@@ -809,19 +809,19 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
                 break;
         case FC_READ_INPUT_REGISTERS: {
                 /* Similar to holding registers */
-                int count = (query[offset+4] << 8) + query[offset+5];
+                int nb = (query[offset+4] << 8) + query[offset+5];
 
-                if ((address + count) > mb_mapping->nb_input_registers) {
+                if ((address + nb) > mb_mapping->nb_input_registers) {
                         printf("Illegal data address %0X in read_input_registers\n",
-                               address + count);
+                               address + nb);
                         resp_length = response_exception(mb_param, &sft,
                                                          ILLEGAL_DATA_ADDRESS, response);
                 } else {
                         int i;
 
                         resp_length = build_response_basis(mb_param, &sft, response);
-                        response[resp_length++] = count << 1;
-                        for (i = address; i < address + count; i++) {
+                        response[resp_length++] = nb << 1;
+                        for (i = address; i < address + nb; i++) {
                                 response[resp_length++] = mb_mapping->tab_input_registers[i] >> 8;
                                 response[resp_length++] = mb_mapping->tab_input_registers[i] & 0xFF;
                         }
@@ -865,11 +865,11 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
                 }
                 break;
         case FC_FORCE_MULTIPLE_COILS: {
-                int count = (query[offset+4] << 8) + query[offset+5];
+                int nb = (query[offset+4] << 8) + query[offset+5];
 
-                if ((address + count) > mb_mapping->nb_coil_status) {
+                if ((address + nb) > mb_mapping->nb_coil_status) {
                         printf("Illegal data address %0X in force_multiple_coils\n",
-                               address + count);
+                               address + nb);
                         resp_length = response_exception(mb_param, &sft,
                                                          ILLEGAL_DATA_ADDRESS, response);
                 } else {
@@ -881,11 +881,11 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
         }
                 break;
         case FC_PRESET_MULTIPLE_REGISTERS: {
-                int count = (query[offset+4] << 8) + query[offset+5];
+                int nb = (query[offset+4] << 8) + query[offset+5];
 
-                if ((address + count) > mb_mapping->nb_holding_registers) {
+                if ((address + nb) > mb_mapping->nb_holding_registers) {
                         printf("Illegal data address %0X in preset_multiple_registers\n",
-                               address + count);
+                               address + nb);
                         resp_length = response_exception(mb_param, &sft,
                                                          ILLEGAL_DATA_ADDRESS, response);
                 } else {
@@ -924,7 +924,7 @@ int modbus_listen(modbus_param_t *mb_param, uint8_t *query, int *query_length)
 
 /* Reads IO status */
 static int read_io_status(modbus_param_t *mb_param, int slave, int function,
-                          int start_addr, int count, uint8_t *data_dest)
+                          int start_addr, int nb, uint8_t *data_dest)
 {
         int query_length;
         int query_ret;
@@ -934,7 +934,7 @@ static int read_io_status(modbus_param_t *mb_param, int slave, int function,
         uint8_t response[MAX_MESSAGE_LENGTH];
 
         query_length = build_query_basis(mb_param, slave, function, 
-                                         start_addr, count, query);
+                                         start_addr, nb, query);
 
         query_ret = modbus_send(mb_param, query, query_length);
         if (query_ret > 0) {
@@ -952,7 +952,7 @@ static int read_io_status(modbus_param_t *mb_param, int slave, int function,
                         /* Shift reg hi_byte to temp */
                         temp = response[3 + i];
                         
-                        for (bit = 0x01; (bit & 0xff) && (processed < count);) {
+                        for (bit = 0x01; (bit & 0xff) && (processed < nb);) {
                                 data_dest[pos++] = (temp & bit) ? TRUE : FALSE;
                                 processed++;
                                 bit = bit << 1;
@@ -969,21 +969,21 @@ static int read_io_status(modbus_param_t *mb_param, int slave, int function,
 /* Reads the boolean status of coils and sets the array elements
    in the destination to TRUE or FALSE. */
 int read_coil_status(modbus_param_t *mb_param, int slave, int start_addr,
-                     int count, uint8_t *data_dest)
+                     int nb, uint8_t *data_dest)
 {
         int status;
 
-        if (count > MAX_STATUS) {
+        if (nb > MAX_STATUS) {
                 printf("ERROR Too many coils status requested (%d > %d)\n",
-                       count, MAX_STATUS);
+                       nb, MAX_STATUS);
                 return TOO_MANY_DATA;
         }
 
         status = read_io_status(mb_param, slave, FC_READ_COIL_STATUS,
-                                start_addr, count, data_dest);
+                                start_addr, nb, data_dest);
 
         if (status > 0)
-                status = count;
+                status = nb;
         
         return status;
 }
@@ -991,42 +991,42 @@ int read_coil_status(modbus_param_t *mb_param, int slave, int start_addr,
 
 /* Same as read_coil_status but reads the slaves input table */
 int read_input_status(modbus_param_t *mb_param, int slave, int start_addr,
-                      int count, uint8_t *data_dest)
+                      int nb, uint8_t *data_dest)
 {
         int status;
 
-        if (count > MAX_STATUS) {
-                printf("ERROR Too many inputs status requested (%d > %d)\n",
-                       count, MAX_STATUS);
+        if (nb > MAX_STATUS) {
+                printf("ERROR Too many input status requested (%d > %d)\n",
+                       nb, MAX_STATUS);
                 return TOO_MANY_DATA;
         }
 
         status = read_io_status(mb_param, slave, FC_READ_INPUT_STATUS,
-                                start_addr, count, data_dest);
+                                start_addr, nb, data_dest);
 
         if (status > 0)
-                status = count;
+                status = nb;
 
         return status;
 }
 
 /* Reads the data from a modbus slave and put that data into an array */
 static int read_registers(modbus_param_t *mb_param, int slave, int function,
-                          int start_addr, int count, uint16_t *data_dest)
+                          int start_addr, int nb, uint16_t *data_dest)
 {
         int query_length;
         int status;
         int query_ret;
         uint8_t query[MIN_QUERY_LENGTH];
 
-        if (count > MAX_REGISTERS) {
+        if (nb > MAX_REGISTERS) {
                 printf("EROOR Too many holding registers requested (%d > %d)\n",
-                       count, MAX_REGISTERS);
+                       nb, MAX_REGISTERS);
                 return TOO_MANY_DATA;
         }
 
         query_length = build_query_basis(mb_param, slave, function, 
-                                         start_addr, count, query);
+                                         start_addr, nb, query);
 
         query_ret = modbus_send(mb_param, query, query_length);
         if (query_ret > 0)
@@ -1040,36 +1040,36 @@ static int read_registers(modbus_param_t *mb_param, int slave, int function,
 /* Reads the holding registers in a slave and put the data into an
    array */
 int read_holding_registers(modbus_param_t *mb_param, int slave,
-                           int start_addr, int count, uint16_t *data_dest)
+                           int start_addr, int nb, uint16_t *data_dest)
 {
         int status;
 
-        if (count > MAX_REGISTERS) {
+        if (nb > MAX_REGISTERS) {
                 printf("ERROR Too many holding registers requested (%d > %d)\n",
-                       count, MAX_REGISTERS);
+                       nb, MAX_REGISTERS);
                 return TOO_MANY_DATA;
         }
 
         status = read_registers(mb_param, slave, FC_READ_HOLDING_REGISTERS,
-                                start_addr, count, data_dest);
+                                start_addr, nb, data_dest);
         return status;
 }
 
 /* Reads the input registers in a slave and put the data into
    an array */
 int read_input_registers(modbus_param_t *mb_param, int slave,
-                         int start_addr, int count, uint16_t *data_dest)
+                         int start_addr, int nb, uint16_t *data_dest)
 {
         int status;
 
-        if (count > MAX_REGISTERS) {
+        if (nb > MAX_REGISTERS) {
                 printf("ERROR Too many input registers requested (%d > %d)\n",
-                       count, MAX_REGISTERS);
+                       nb, MAX_REGISTERS);
                 return TOO_MANY_DATA;
         }
 
         status = read_registers(mb_param, slave, FC_READ_INPUT_REGISTERS,
-                                start_addr, count, data_dest);
+                                start_addr, nb, data_dest);
 
         return status;
 }
@@ -1160,7 +1160,7 @@ int preset_single_register(modbus_param_t *mb_param, int slave,
 
 /* Sets/resets the coils in the slave from an array in argument */
 int force_multiple_coils(modbus_param_t *mb_param, int slave,
-                         int start_addr, int nb_points,
+                         int start_addr, int nb,
                          uint8_t *data_src)
 {
         int i;
@@ -1173,16 +1173,16 @@ int force_multiple_coils(modbus_param_t *mb_param, int slave,
 
         uint8_t query[MAX_MESSAGE_LENGTH];
 
-        if (nb_points > MAX_STATUS) {
+        if (nb > MAX_STATUS) {
                 printf("ERROR Writing to too many coils (%d > %d)\n",
-                       nb_points, MAX_STATUS);
+                       nb, MAX_STATUS);
                 return TOO_MANY_DATA;
         }
 
         query_length = build_query_basis(mb_param, slave,
                                          FC_FORCE_MULTIPLE_COILS, 
-                                         start_addr, nb_points, query);
-        byte_count = (nb_points / 8) + ((nb_points % 8) ? 1 : 0);
+                                         start_addr, nb, query);
+        byte_count = (nb / 8) + ((nb % 8) ? 1 : 0);
         query[query_length++] = byte_count;
 
         for (i = 0; i < byte_count; i++) {
@@ -1191,7 +1191,7 @@ int force_multiple_coils(modbus_param_t *mb_param, int slave,
                 bit = 0x01;
                 query[query_length] = 0;
 
-                while ((bit & 0xFF) && (coil_check++ < nb_points)) {
+                while ((bit & 0xFF) && (coil_check++ < nb)) {
                         if (data_src[pos++])
                                 query[query_length] |= bit;
                         else
@@ -1213,7 +1213,7 @@ int force_multiple_coils(modbus_param_t *mb_param, int slave,
 
 /* Copies the values in the slave from the array given in argument */
 int preset_multiple_registers(modbus_param_t *mb_param, int slave,
-                              int start_addr, int nb_points, uint16_t *data_src)
+                              int start_addr, int nb, uint16_t *data_src)
 {
         int i;
         int query_length;
@@ -1223,19 +1223,19 @@ int preset_multiple_registers(modbus_param_t *mb_param, int slave,
 
         uint8_t query[MAX_MESSAGE_LENGTH];
 
-        if (nb_points > MAX_REGISTERS) {
+        if (nb > MAX_REGISTERS) {
                 printf("ERROR Trying to write to too many registers (%d > %d)\n",
-                       nb_points, MAX_REGISTERS);
+                       nb, MAX_REGISTERS);
                 return TOO_MANY_DATA;
         }
 
         query_length = build_query_basis(mb_param, slave,
                                          FC_PRESET_MULTIPLE_REGISTERS, 
-                                         start_addr, nb_points, query);
-        byte_count = nb_points * 2;
+                                         start_addr, nb, query);
+        byte_count = nb * 2;
         query[query_length++] = byte_count;
 
-        for (i = 0; i < nb_points; i++) {
+        for (i = 0; i < nb; i++) {
                 query[query_length++] = data_src[i] >> 8;
                 query[query_length++] = data_src[i] & 0x00FF;
         }
@@ -1827,8 +1827,8 @@ int modbus_init_listen_tcp(modbus_param_t *mb_param)
 
 /** Utils **/
 
-/* Sets many inputs/coils from a single byte value (all 8 bits of the
-   byte value are setted) */
+/* Sets many input/coil status from a single byte value (all 8 bits of
+   the byte value are setted) */
 void set_bits_from_byte(uint8_t *dest, int address, const uint8_t value)
 {
         int i;
@@ -1838,15 +1838,15 @@ void set_bits_from_byte(uint8_t *dest, int address, const uint8_t value)
         }
 }
 
-/* Sets many inputs/coils from a table of bytes (only the bits between
-   address and address + nb_points are setted) */
-void set_bits_from_bytes(uint8_t *dest, int address, int nb_points,
+/* Sets many input/coil status from a table of bytes (only the bits
+   between address and address + nb_bits are setted) */
+void set_bits_from_bytes(uint8_t *dest, int address, int nb_bits,
                          const uint8_t tab_byte[])
 {
         int i;
         int shift = 0;
 
-        for (i=address; i < address + nb_points; i++) {
+        for (i = address; i < address + nb_bits; i++) {
                 dest[i] = tab_byte[(i - address) / 8] & (1 << shift) ? ON : OFF;
                 /* gcc doesn't like: shift = (++shift) % 8; */
                 shift++;
@@ -1854,8 +1854,8 @@ void set_bits_from_bytes(uint8_t *dest, int address, int nb_points,
         }
 }
 
-/* Gets the byte value from many inputs/coils.
-   To obtain a full byte, set nb_points to 8. */
+/* Gets the byte value from many input/coil status.
+   To obtain a full byte, set nb_bits to 8. */
 uint8_t get_byte_from_bits(const uint8_t *src, int address, int nb_bits)
 {
         int i;
@@ -1866,7 +1866,7 @@ uint8_t get_byte_from_bits(const uint8_t *src, int address, int nb_bits)
                 nb_bits = 8;
         }
 
-        for (i=0; i<nb_bits; i++) {
+        for (i=0; i < nb_bits; i++) {
                 value |= (src[address+i] << i);
         }
         
