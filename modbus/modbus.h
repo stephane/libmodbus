@@ -171,21 +171,21 @@ typedef struct {
 /* Reads the boolean status of coils and sets the array elements in
    the destination to TRUE or FALSE */
 int read_coil_status(modbus_param_t *mb_param, int slave,
-                     int start_addr, int count, uint8_t *dest);
+                     int start_addr, int nb, uint8_t *dest);
 
 /* Same as read_coil_status but reads the slaves input table */
 int read_input_status(modbus_param_t *mb_param, int slave,
-                      int start_addr, int count, uint8_t *dest);
+                      int start_addr, int nb, uint8_t *dest);
 
 /* Reads the holding registers in a slave and put the data into an
    array */
 int read_holding_registers(modbus_param_t *mb_param, int slave,
-                           int start_addr, int count, uint16_t *dest);
+                           int start_addr, int nb, uint16_t *dest);
 
 /* Reads the input registers in a slave and put the data into an
    array */
 int read_input_registers(modbus_param_t *mb_param, int slave,
-                         int start_addr, int count, uint16_t *dest);
+                         int start_addr, int nb, uint16_t *dest);
 
 /* Turns ON or OFF a single coil in the slave device */
 int force_single_coil(modbus_param_t *mb_param, int slave,
@@ -197,11 +197,11 @@ int preset_single_register(modbus_param_t *mb_param, int slave,
 
 /* Sets/resets the coils in the slave from an array in argument */
 int force_multiple_coils(modbus_param_t *mb_param, int slave,
-                         int start_addr, int nb_points, uint8_t *data);
+                         int start_addr, int nb, uint8_t *data);
 
 /* Copies the values in the slave from the array given in argument */
 int preset_multiple_registers(modbus_param_t *mb_param, int slave,
-                              int start_addr, int nb_points, uint16_t *data);
+                              int start_addr, int nb, uint16_t *data);
 
 /* Returns the slave id! */
 int report_slave_id(modbus_param_t *mb_param, int slave, uint8_t *dest);
@@ -289,16 +289,16 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
  * UTILS FUNCTIONS
  **/
 
-/* Sets many inputs/coils from a single byte value (all 8 bits of the
-   byte value are setted) */
+/* Sets many input/coil status from a single byte value (all 8 bits of
+   the byte value are setted) */
 void set_bits_from_byte(uint8_t *dest, int address, const uint8_t value);
 
-/* Sets many inputs/coils from a table of bytes (only the bits between
-   address and address + nb_bits are setted) */
+/* Sets many input/coil status from a table of bytes (only the bits
+   between address and address + nb_bits are setted) */
 void set_bits_from_bytes(uint8_t *dest, int address, int nb_bits,
                          const uint8_t *tab_byte);
 
-/* Gets the byte value from many inputs/coils.
+/* Gets the byte value from many input/coil status.
    To obtain a full byte, set nb_bits to 8. */
 uint8_t get_byte_from_bits(const uint8_t *src, int address, int nb_bits);
 
