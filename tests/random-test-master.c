@@ -38,7 +38,7 @@
 #define LOOP             1
 #define SLAVE         0x11
 #define ADDRESS_START    0
-#define ADDRESS_END      3
+#define ADDRESS_END      99
 
 /* At each loop, the program works in the range ADDRESS_START to
  * ADDRESS_END then ADDRESS_START + 1 to ADDRESS_END and so on.
@@ -91,7 +91,6 @@ int main(void)
                         for (i=0; i<nb; i++) {
                                 tab_rq_registers[i] = (uint16_t) (65535.0*rand() / (RAND_MAX + 1.0));
                                 tab_rq_status[i] = tab_rq_registers[i] % 2;
-                                printf("%d = %d\n", i, tab_rq_status[i]);
                         }
                         nb = ADDRESS_END - addr;
 
@@ -128,27 +127,24 @@ int main(void)
                                         nb_fail++;
                                 } else {
                                         for (i=0; i<nb; i++) {
-                                                printf("i = %d, tab_rp_status[i] = %d, tab_rq_status[i] = %d\n",
-                                                       i, tab_rp_status[i], tab_rq_status[i]);
                                                 if (tab_rp_status[i] != tab_rq_status[i]) {
-                                                        printf("ERROR read_coil_status ");
-                                                        printf("(%d != %d)\n", tab_rp_status[i], tab_rq_status[i]);
-                                                        printf("Slave = %d, address = %d\n", 
-                                                               SLAVE, addr);
+                                                        printf("ERROR read_coil_status\n");
+                                                        printf("Slave = %d, address = %d, value %d (0x%X) != %d (0x%X)\n", 
+                                                               SLAVE, addr,
+                                                               tab_rq_status[i], tab_rq_status[i],
+                                                               tab_rp_status[i], tab_rp_status[i]);
                                                         nb_fail++;
                                                 }
                                         }
                                 }
                         }
 
-                        break;
-
                         /* SINGLE REGISTER */
                         ret = preset_single_register(&mb_param, SLAVE, addr, tab_rq_registers[0]);
                         if (ret != 1) {
                                 printf("ERROR preset_single_register (%d)\n", ret);
-                                printf("Slave = %d, address = %d, value = %d\n",
-                                       SLAVE, addr, tab_rq_registers[0]);
+                                printf("Slave = %d, address = %d, value = %d (0x%X)\n",
+                                       SLAVE, addr, tab_rq_registers[0], tab_rq_registers[0]);
                                 nb_fail++;
                         } else {
                                 ret = read_holding_registers(&mb_param, SLAVE,
@@ -160,11 +156,11 @@ int main(void)
                                         nb_fail++;
                                 } else {
                                         if (tab_rq_registers[0] != tab_rp_registers[0]) {
-                                                printf("ERROR read_holding_registers single ");
-                                                printf("(%d != %d)\n",
-                                                       tab_rq_registers[0], tab_rp_registers[0]);
-                                                printf("Slave = %d, address = %d\n", 
-                                                       SLAVE, addr);
+                                                printf("ERROR read_holding_registers single\n");
+                                                printf("Slave = %d, address = %d, value = %d (0x%X) != %d (0x%X)\n",
+                                                       SLAVE, addr,
+                                                       tab_rq_registers[0], tab_rq_registers[0],
+                                                       tab_rp_registers[0], tab_rp_registers[0]);
                                                 nb_fail++;
                                         }
                                 }
@@ -189,22 +185,24 @@ int main(void)
                                 } else {
                                         for (i=0; i<nb; i++) {
                                                 if (tab_rq_registers[i] != tab_rp_registers[i]) {
-                                                        printf("ERROR read_holding_registers ");
-                                                        printf("(%d != %d)\n",
-                                                               tab_rq_registers[i], tab_rp_registers[i]);
-                                                        printf("Slave = %d, address = %d\n", 
-                                                               SLAVE, addr);
+                                                        printf("ERROR read_holding_registers\n");
+                                                        printf("Slave = %d, address = %d, value %d (0x%X) != %d (0x%X)\n",
+                                                               SLAVE, addr,
+                                                               tab_rq_registers[i], tab_rq_registers[i],
+                                                               tab_rp_registers[i], tab_rp_registers[i]);
                                                         nb_fail++;
                                                 }
                                         }
                                 }
                         }
+
                 }
                         
+                printf("Test: ");
                 if (nb_fail)
-                        printf("Address: %d - nb of fails: %d\n", addr, nb_fail);
+                        printf("%d FAILS\n", nb_fail);
                 else
-                        printf("Address: %d - OK\n", addr);
+                        printf("SUCCESS\n");
         }
 
         /* Free the memory */
