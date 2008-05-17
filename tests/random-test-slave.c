@@ -29,7 +29,7 @@ int main(void)
         int ret;
 
         modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
-        modbus_set_debug(&mb_param, TRUE);
+        /* modbus_set_debug(&mb_param, TRUE); */
 
         ret = modbus_mapping_new(&mb_mapping, 500, 500, 500, 500);
         if (ret == FALSE) {
