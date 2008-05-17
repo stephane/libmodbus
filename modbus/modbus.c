@@ -461,9 +461,9 @@ static int compute_query_length_data(modbus_param_t *mb_param, uint8_t *msg)
 
    msg_length_computed must be set to MSG_LENGTH_COMPUTED if undefined
 
-   Returns:
-   - 0: OK, <0: error
-   - msg_length: number of characters received. */
+   Returns a negative number if an error occured.
+   The variable msg_length is assigned to the number of characters
+   received. */
 int receive_msg(modbus_param_t *mb_param,
                 int msg_length_computed,
                 uint8_t *msg, int *msg_length)
