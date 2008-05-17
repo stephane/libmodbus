@@ -45,23 +45,13 @@ int main(void)
                 exit(1);
         }
 
-        /* Examples from PI_MODBUS_300.pdf */
-
-        /** COIL STATUS **/
-        set_bits_from_bytes(mb_mapping.tab_coil_status,
-                            UT_COIL_STATUS_ADDRESS, UT_COIL_STATUS_NB_POINTS,
-                            UT_COIL_STATUS_TAB);
-
+        /* Examples from PI_MODBUS_300.pdf.
+           Only the read-only input values are assigned. */
+        
         /** INPUT STATUS **/
         set_bits_from_bytes(mb_mapping.tab_input_status,
                             UT_INPUT_STATUS_ADDRESS, UT_INPUT_STATUS_NB_POINTS,
                             UT_INPUT_STATUS_TAB);
-
-        /** HOLDING REGISTERS **/
-        for (i=0; i < UT_HOLDING_REGISTERS_NB_POINTS; i++) {
-                mb_mapping.tab_holding_registers[UT_HOLDING_REGISTERS_ADDRESS+i] =
-                        UT_HOLDING_REGISTERS_TAB[i];;
-        }
 
         /** INPUT REGISTERS **/
         for (i=0; i < UT_INPUT_REGISTERS_NB_POINTS; i++) {
