@@ -65,12 +65,57 @@ int main(void)
 
         printf("** UNIT TESTING **\n");
 
-        printf("TEST READ FUNCTIONS:\n");
+        printf("\nTEST WRITE/READ:\n");
 
         /** COIL STATUS **/
+
+        /* Single */
+        ret = force_single_coil(&mb_param, SLAVE, UT_COIL_STATUS_ADDRESS, ON);
+        printf("1/2 force_single_coil: ");
+        if (ret == 1) {
+                printf("OK\n");
+        } else {
+                printf("FAILED\n");
+                goto close;
+        }
+
+        ret = read_coil_status(&mb_param, SLAVE, UT_COIL_STATUS_ADDRESS, 1,
+                               tab_rp_status);
+        printf("2/2 read_coil_status: ");
+        if (ret != 1) {
+                printf("FAILED (nb points %d)\n", ret); 
+                goto close;
+        }
+
+        if (tab_rp_status[0] != ON) {
+                printf("FAILED (%0X = != %0X)\n", tab_rp_status[0], ON);
+                goto close;
+        }
+        printf("OK\n");
+        /* End single */
+
+        /* Multiple coils */
+        {
+                uint8_t tab_value[UT_COIL_STATUS_NB_POINTS];
+                
+                set_bits_from_bytes(tab_value, 0, UT_COIL_STATUS_NB_POINTS,
+                                    UT_COIL_STATUS_TAB);
+                ret = force_multiple_coils(&mb_param, SLAVE,
+                                           UT_COIL_STATUS_ADDRESS,
+                                           UT_COIL_STATUS_NB_POINTS,
+                                           tab_value);
+                printf("1/2 force_multiple_coils: ");
+                if (ret == UT_COIL_STATUS_NB_POINTS) {
+                        printf("OK\n");
+                } else {
+                        printf("FAILED\n");
+                        goto close;
+                }
+        }
+
         ret = read_coil_status(&mb_param, SLAVE, UT_COIL_STATUS_ADDRESS,
                                UT_COIL_STATUS_NB_POINTS, tab_rp_status);
-        printf("* coil status: ");
+        printf("2/2 read_coil_status: ");
         if (ret != UT_COIL_STATUS_NB_POINTS) {
                 printf("FAILED (nb points %d)\n", ret); 
                 goto close;
@@ -93,11 +138,12 @@ int main(void)
                 i++;
         }
         printf("OK\n");
+        /* End of multiple coils */
 
         /** INPUT STATUS **/
         ret = read_input_status(&mb_param, SLAVE, UT_INPUT_STATUS_ADDRESS,
                                 UT_INPUT_STATUS_NB_POINTS, tab_rp_status);
-        printf("* read_input_status: ");
+        printf("1/1 read_input_status: ");
 
         if (ret != UT_INPUT_STATUS_NB_POINTS) {
                 printf("FAILED (nb points %d)\n", ret); 
@@ -123,11 +169,53 @@ int main(void)
         printf("OK\n");
 
         /** HOLDING REGISTERS **/
+
+        /* Single register */
+        ret = preset_single_register(&mb_param, SLAVE,
+                                     UT_HOLDING_REGISTERS_ADDRESS, 0x1234);
+        printf("1/2 preset_single_register: ");
+        if (ret == 1) {
+                printf("OK\n");
+        } else {
+                printf("FAILED\n");
+                goto close;
+        }
+
+        ret = read_holding_registers(&mb_param, SLAVE,
+                                     UT_HOLDING_REGISTERS_ADDRESS,
+                                     1, tab_rp_registers);
+        printf("2/2 read_holding_registers: ");
+        if (ret != 1) {
+                printf("FAILED (nb points %d)\n", ret); 
+                goto close;
+        }
+
+        if (tab_rp_registers[0] != 0x1234) {
+                printf("FAILED (%0X != %0X)\n",
+                       tab_rp_registers[0], 0x1234);
+                goto close;
+        }
+        printf("OK\n");
+        /* End of single register */
+
+        /* Many registers */
+        ret = preset_multiple_registers(&mb_param, SLAVE,
+                                        UT_HOLDING_REGISTERS_ADDRESS,
+                                        UT_HOLDING_REGISTERS_NB_POINTS,
+                                        UT_HOLDING_REGISTERS_TAB);
+        printf("1/2 preset_multiple_registers: ");
+        if (ret == UT_HOLDING_REGISTERS_NB_POINTS) {
+                printf("OK\n");
+        } else {
+                printf("FAILED\n");
+                goto close;
+        }
+
         ret = read_holding_registers(&mb_param,
                                      SLAVE, UT_HOLDING_REGISTERS_ADDRESS,
                                      UT_HOLDING_REGISTERS_NB_POINTS,
                                      tab_rp_registers);
-        printf("* read_holding_registers: ");
+        printf("2/2 read_holding_registers: ");
         if (ret != UT_HOLDING_REGISTERS_NB_POINTS) {
                 printf("FAILED (nb points %d)\n", ret); 
                 goto close;
@@ -142,13 +230,15 @@ int main(void)
                 }
         }
         printf("OK\n");
+        /* End of many registers */
+
 
         /** INPUT REGISTERS **/
         ret = read_input_registers(&mb_param,
                                    SLAVE, UT_INPUT_REGISTERS_ADDRESS,
                                    UT_INPUT_REGISTERS_NB_POINTS,
                                    tab_rp_registers);
-        printf("* read_input_registers: ");
+        printf("1/1 read_input_registers: ");
         if (ret != UT_INPUT_REGISTERS_NB_POINTS) {
                 printf("FAILED (nb points %d)\n", ret); 
                 goto close;
@@ -162,57 +252,7 @@ int main(void)
                 }
         }
         printf("OK\n");
-
-        /** WRITE FUNCTIONS **/
-        printf("\nTEST WRITE FUNCTIONS:\n");
         
-        ret = force_single_coil(&mb_param, SLAVE, UT_COIL_STATUS_ADDRESS, ON);
-        printf("* force_single_coil: ");
-        if (ret == 1) {
-                printf("OK\n");
-        } else {
-                printf("FAILED\n");
-                goto close;
-        }
-
-        ret = preset_single_register(&mb_param, SLAVE, 0x01, 0x03);
-        printf("* preset_single_register: ");
-        if (ret == 1) {
-                printf("OK\n");
-        } else {
-                printf("FAILED\n");
-                goto close;
-        }
-
-        {
-                int nb_points = 0x0A;
-                uint8_t tab_value[] = { ON, OFF, ON, ON,
-                                        OFF, OFF, ON, ON,
-                                        ON, OFF };
-                ret = force_multiple_coils(&mb_param, SLAVE, 0x13,
-                                           nb_points, tab_value);
-                printf("* force_multiple_coils: ");
-                if (ret == nb_points) {
-                        printf("OK\n");
-                } else {
-                        printf("FAILED\n");
-                        goto close;
-                }
-        }
-
-        {
-                int nb_points = 2;
-                uint16_t tab_value[] = { 0x000A, 0x0102 };
-                ret = preset_multiple_registers(&mb_param, SLAVE,
-                                                0x01, nb_points, tab_value);
-                printf("* preset_multiple_registers: ");
-                if (ret == nb_points) {
-                        printf("OK\n");
-                } else {
-                        printf("FAILED\n");
-                        goto close;
-                }
-        }
 
         /** ILLEGAL DATA ADDRESS */
         printf("\nTEST ILLEGAL DATA ADDRESS:\n");
