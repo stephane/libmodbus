@@ -733,8 +733,8 @@ static int response_exception(modbus_param_t *mb_param, sft_t *sft,
    If an error occurs, this function construct the response
    accordingly.
 */
-void manage_query(modbus_param_t *mb_param, uint8_t *query,
-                  int query_length, modbus_mapping_t *mb_mapping)
+void modbus_manage_query(modbus_param_t *mb_param, uint8_t *query,
+                         int query_length, modbus_mapping_t *mb_mapping)
 {                   
         int offset = mb_param->header_length;
         int slave = query[offset];
