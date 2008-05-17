@@ -267,10 +267,11 @@ int modbus_mapping_new(modbus_mapping_t *mb_mapping,
 /* Frees the 4 arrays */
 void modbus_mapping_free(modbus_mapping_t *mb_mapping);
 
-/* Listens for any query from a modbus master in TCP */
+/* Initializes the modbus_param_t structure for a TCP slave (server) */
 int modbus_init_listen_tcp(modbus_param_t *mb_param);
 
-/* FIXME */
+/* Listens for any query from a modbus master in TCP 
+   Not tested in RTU communication. */
 int modbus_listen(modbus_param_t *mb_param, uint8_t *query, int *query_length);
 
 /* Manages the received query.
@@ -279,12 +280,9 @@ int modbus_listen(modbus_param_t *mb_param, uint8_t *query, int *query_length);
    If an error occurs, this function construct the response
    accordingly.
 */
-void manage_query(modbus_param_t *mb_param, uint8_t *query,
-                  int query_length, modbus_mapping_t *mb_mapping);
+void modbus_manage_query(modbus_param_t *mb_param, uint8_t *query,
+                         int query_length, modbus_mapping_t *mb_mapping);
 
-/* Not implemented :
-   - read_exception_status()
-*/
 
 /** 
  * UTILS FUNCTIONS

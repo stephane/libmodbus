@@ -67,7 +67,7 @@ int main(void)
                 
                 ret = modbus_listen(&mb_param, query, &query_size);
                 if (ret == 0) {
-                        manage_query(&mb_param, query, query_size, &mb_mapping);
+                        modbus_manage_query(&mb_param, query, query_size, &mb_mapping);
                 } else if (ret == CONNECTION_CLOSED) {
                         /* Connection closed by the client, end of server */
                         break;
