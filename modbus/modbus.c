@@ -733,7 +733,7 @@ static int response_exception(modbus_param_t *mb_param, sft_t *sft,
    If an error occurs, this function construct the response
    accordingly.
 */
-void modbus_manage_query(modbus_param_t *mb_param, uint8_t *query,
+void modbus_manage_query(modbus_param_t *mb_param, const uint8_t *query,
                          int query_length, modbus_mapping_t *mb_mapping)
 {                   
         int offset = mb_param->header_length;
@@ -1171,7 +1171,7 @@ int preset_single_register(modbus_param_t *mb_param, int slave,
 /* Sets/resets the coils in the slave from an array in argument */
 int force_multiple_coils(modbus_param_t *mb_param, int slave,
                          int start_addr, int nb,
-                         uint8_t *data_src)
+                         const uint8_t *data_src)
 {
         int i;
         int byte_count;
@@ -1223,7 +1223,8 @@ int force_multiple_coils(modbus_param_t *mb_param, int slave,
 
 /* Copies the values in the slave from the array given in argument */
 int preset_multiple_registers(modbus_param_t *mb_param, int slave,
-                              int start_addr, int nb, uint16_t *data_src)
+                              int start_addr, int nb,
+                              const uint16_t *data_src)
 {
         int i;
         int query_length;
@@ -1305,8 +1306,8 @@ int report_slave_id(modbus_param_t *mb_param, int slave,
    - data_bits: 5, 6, 7, 8 
    - stop_bits: 1, 2
 */
-void modbus_init_rtu(modbus_param_t *mb_param, char *device,
-                     int baud, char *parity, int data_bit,
+void modbus_init_rtu(modbus_param_t *mb_param, const char *device,
+                     int baud, const char *parity, int data_bit,
                      int stop_bit)
 {
         memset(mb_param, 0, sizeof(modbus_param_t));
@@ -1330,7 +1331,7 @@ void modbus_init_rtu(modbus_param_t *mb_param, char *device,
    to 1024 because it's not necessary to be root to use this port
    number.
 */
-void modbus_init_tcp(modbus_param_t *mb_param, char *ip, int port)
+void modbus_init_tcp(modbus_param_t *mb_param, const char *ip, int port)
 {
         memset(mb_param, 0, sizeof(modbus_param_t));
         strncpy(mb_param->ip, ip, sizeof(char)*16);
