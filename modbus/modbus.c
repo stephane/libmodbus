@@ -330,33 +330,27 @@ static uint16_t crc16(uint8_t *buffer, uint16_t buffer_length)
 }
 
 /* If CRC is correct returns 0 else returns INVALID_CRC */
-int check_crc16(modbus_param_t *mb_param,
-                uint8_t *msg,
-                const int msg_length)
+static int check_crc16(modbus_param_t *mb_param,
+                       uint8_t *msg,
+                       const int msg_length)
 {
         int ret;
+        uint16_t crc_calc;
+        uint16_t crc_received;
+                
+        crc_calc = crc16(msg, msg_length - 2);
+        crc_received = (msg[msg_length - 2] << 8) | msg[msg_length - 1];
         
-        if (mb_param->type_com == RTU) {
-                uint16_t crc_calc;
-                uint16_t crc_received;
-                
-                crc_calc = crc16(msg, msg_length - 2);
-                crc_received = (msg[msg_length - 2] << 8) | msg[msg_length - 1];
-                
-                /* Check CRC of msg */
-                if (crc_calc == crc_received) {
-                        ret = 0;
-                } else {
-                        char s_error[64];
-                        sprintf(s_error,
-                                "invalid crc received %0X - crc_calc %0X", 
-                                crc_received, crc_calc);
-                        ret = INVALID_CRC;
-                        error_treat(mb_param, ret, s_error);
-                }
-        } else {
-                /* In TCP, the modbus CRC is not present (see HDLC level) */
+        /* Check CRC of msg */
+        if (crc_calc == crc_received) {
                 ret = 0;
+        } else {
+                char s_error[64];
+                sprintf(s_error,
+                        "invalid crc received %0X - crc_calc %0X", 
+                        crc_received, crc_calc);
+                ret = INVALID_CRC;
+                error_treat(mb_param, ret, s_error);
         }
 
         return ret;
@@ -585,6 +579,10 @@ int receive_msg(modbus_param_t *mb_param,
         if (mb_param->debug)
                 printf("\n");
 
+        if (mb_param->type_com == RTU) {
+                check_crc16(mb_param, msg, *msg_length);
+        }
+        
         /* OK */
         return 0;
 }
@@ -611,11 +609,6 @@ static int modbus_check_response(modbus_param_t *mb_param,
         ret = receive_msg(mb_param, response_length_computed,
                           response, &response_length);
         if (ret == 0) {
-                /* Check message */
-                ret = check_crc16(mb_param, response, response_length);
-                if (ret != 0)
-                        return ret;
-
                 /* Good response */
                 switch (response[offset + 1]) {
                 case FC_READ_COIL_STATUS:
@@ -644,13 +637,16 @@ static int modbus_check_response(modbus_param_t *mb_param,
 
         } else if (ret == COMM_TIME_OUT &&
                    response_length == offset + 3 + mb_param->checksum_length) {
-                /* Optimisation allowed because exception response is
+                /* Optimization allowed because exception response is
                    the smallest trame in modbus protocol (3) so always
-                   raise an timeout error */
-                /* CRC */
-                ret = check_crc16(mb_param, response, response_length);
-                if (ret != 0)
-                        return ret;
+                   raise a timeout error */
+
+                /* CRC must be checked here (not done in receive_msg) */
+                if (mb_param->type_com == RTU) {
+                        ret = check_crc16(mb_param, response, response_length);
+                        if (ret != 0)
+                                return ret;
+                }
 
                 /* Check for exception response.
                    0x80 + function is stored in the exception
@@ -925,9 +921,6 @@ int modbus_listen(modbus_param_t *mb_param, uint8_t *query, int *query_length)
         int ret;
 
         ret = receive_msg(mb_param, MSG_LENGTH_UNDEFINED, query, query_length);
-        if (ret == 0) {
-                ret = check_crc16(mb_param, query, *query_length);
-        }
         
         return ret;
 }
