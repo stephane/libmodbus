@@ -38,7 +38,7 @@
 #define LOOP             1
 #define SLAVE         0x11
 #define ADDRESS_START    0
-#define ADDRESS_END    499
+#define ADDRESS_END      3
 
 /* At each loop, the program works in the range ADDRESS_START to
  * ADDRESS_END then ADDRESS_START + 1 to ADDRESS_END and so on.
@@ -49,7 +49,7 @@ int main(void)
         int nb_fail;
         int nb_loop;
         int addr;
-        int nb_points_total;
+        int nb;
         uint8_t *tab_rq_status;
         uint8_t *tab_rp_status;
         uint16_t *tab_rq_registers;
@@ -60,36 +60,40 @@ int main(void)
         /* modbus_init_rtu(&mb_param, "/dev/ttyS0", 19200, "none", 8, 1); */
 
         /* TCP */
-        modbus_init_tcp(&mb_param, "192.168.0.100", MODBUS_TCP_DEFAULT_PORT);
+        modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
         modbus_set_debug(&mb_param, TRUE);
-
-        modbus_connect(&mb_param);
+        if (modbus_connect(&mb_param) == -1) {
+                printf("ERROR Connection failed\n");
+                exit(1);
+        }
 
         /* Allocate and initialize the different memory spaces */
-        nb_points_total = ADDRESS_END - ADDRESS_START;
+        nb = ADDRESS_END - ADDRESS_START;
 
-        tab_rq_status = (uint8_t *) malloc(nb_points_total * sizeof(uint8_t));
-        memset(tab_rq_status, 0, nb_points_total * sizeof(uint8_t));
-        tab_rp_status = (uint8_t *) malloc(nb_points_total * sizeof(uint8_t));
-        memset(tab_rp_status, 0, nb_points_total * sizeof(uint8_t));
+        tab_rq_status = (uint8_t *) malloc(nb * sizeof(uint8_t));
+        memset(tab_rq_status, 0, nb * sizeof(uint8_t));
 
-        tab_rq_registers = (uint16_t *) malloc(nb_points_total * sizeof(uint16_t));
-        memset(tab_rq_registers, 0, nb_points_total * sizeof(uint16_t));
-        tab_rp_registers = (uint16_t *) malloc(nb_points_total * sizeof(uint16_t));
-        memset(tab_rp_status, 0, nb_points_total * sizeof(uint16_t));
+        tab_rp_status = (uint8_t *) malloc(nb * sizeof(uint8_t));
+        memset(tab_rp_status, 0, nb * sizeof(uint8_t));
+
+        tab_rq_registers = (uint16_t *) malloc(nb * sizeof(uint16_t));
+        memset(tab_rq_registers, 0, nb * sizeof(uint16_t));
+
+        tab_rp_registers = (uint16_t *) malloc(nb * sizeof(uint16_t));
+        memset(tab_rp_registers, 0, nb * sizeof(uint16_t));
 
         nb_loop = nb_fail = 0;
         while (nb_loop++ < LOOP) { 
                 for (addr = ADDRESS_START; addr <= ADDRESS_END; addr++) {
                         int i;
-                        int nb_points;
 
                         /* Random numbers (short) */
-                        for (i=0; i<nb_points_total; i++) {
+                        for (i=0; i<nb; i++) {
                                 tab_rq_registers[i] = (uint16_t) (65535.0*rand() / (RAND_MAX + 1.0));
                                 tab_rq_status[i] = tab_rq_registers[i] % 2;
+                                printf("%d = %d\n", i, tab_rq_status[i]);
                         }
-                        nb_points = ADDRESS_END - addr;
+                        nb = ADDRESS_END - addr;
 
                         /* SINGLE COIL */
                         ret = force_single_coil(&mb_param, SLAVE, addr, tab_rq_status[0]);
@@ -109,21 +113,23 @@ int main(void)
                         }
 
                         /* MULTIPLE COILS */
-                        ret = force_multiple_coils(&mb_param, SLAVE, addr, nb_points, tab_rq_status);
-                        if (ret != nb_points) {
+                        ret = force_multiple_coils(&mb_param, SLAVE, addr, nb, tab_rq_status);
+                        if (ret != nb) {
                                 printf("ERROR force_multiple_coils (%d)\n", ret);
-                                printf("Slave = %d, address = %d, nb_points = %d\n",
-                                       SLAVE, addr, nb_points);
+                                printf("Slave = %d, address = %d, nb = %d\n",
+                                       SLAVE, addr, nb);
                                 nb_fail++;
                         } else {
-                                ret = read_coil_status(&mb_param, SLAVE, addr, nb_points, tab_rp_status);
-                                if (ret != nb_points) {
+                                ret = read_coil_status(&mb_param, SLAVE, addr, nb, tab_rp_status);
+                                if (ret != nb) {
                                         printf("ERROR read_coil_status\n");
-                                        printf("Slave = %d, address = %d, nb_points = %d\n",
-                                               SLAVE, addr, nb_points);
+                                        printf("Slave = %d, address = %d, nb = %d\n",
+                                               SLAVE, addr, nb);
                                         nb_fail++;
                                 } else {
-                                        for (i=0; i<nb_points; i++) {
+                                        for (i=0; i<nb; i++) {
+                                                printf("i = %d, tab_rp_status[i] = %d, tab_rq_status[i] = %d\n",
+                                                       i, tab_rp_status[i], tab_rq_status[i]);
                                                 if (tab_rp_status[i] != tab_rq_status[i]) {
                                                         printf("ERROR read_coil_status ");
                                                         printf("(%d != %d)\n", tab_rp_status[i], tab_rq_status[i]);
@@ -134,6 +140,8 @@ int main(void)
                                         }
                                 }
                         }
+
+                        break;
 
                         /* SINGLE REGISTER */
                         ret = preset_single_register(&mb_param, SLAVE, addr, tab_rq_registers[0]);
@@ -164,22 +172,22 @@ int main(void)
                         
                         /* MULTIPLE REGISTERS */
                         ret = preset_multiple_registers(&mb_param, SLAVE,
-                                                        addr, nb_points, tab_rq_registers);
-                        if (ret != nb_points) {
+                                                        addr, nb, tab_rq_registers);
+                        if (ret != nb) {
                                 printf("ERROR preset_multiple_registers (%d)\n", ret);
-                                printf("Slave = %d, address = %d, nb_points = %d\n",
-                                               SLAVE, addr, nb_points);
+                                printf("Slave = %d, address = %d, nb = %d\n",
+                                               SLAVE, addr, nb);
                                 nb_fail++;
                         } else {
                                 ret = read_holding_registers(&mb_param, SLAVE,
-                                                             addr, nb_points, tab_rp_registers);
-                                if (ret != nb_points) {
+                                                             addr, nb, tab_rp_registers);
+                                if (ret != nb) {
                                         printf("ERROR read_holding_registers (%d)\n", ret);
-                                        printf("Slave = %d, address = %d, nb_points = %d\n",
-                                               SLAVE, addr, nb_points);
+                                        printf("Slave = %d, address = %d, nb = %d\n",
+                                               SLAVE, addr, nb);
                                         nb_fail++;
                                 } else {
-                                        for (i=0; i<nb_points; i++) {
+                                        for (i=0; i<nb; i++) {
                                                 if (tab_rq_registers[i] != tab_rp_registers[i]) {
                                                         printf("ERROR read_holding_registers ");
                                                         printf("(%d != %d)\n",
@@ -200,10 +208,10 @@ int main(void)
         }
 
         /* Free the memory */
-        free(tab_rp_status);                                           
         free(tab_rq_status);
-        free(tab_rp_registers);
+        free(tab_rp_status);                                           
         free(tab_rq_registers);
+        free(tab_rp_registers);
 
         /* Close the connection */
         modbus_close(&mb_param);

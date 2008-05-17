@@ -1,15 +1,16 @@
-test-master-random 
+random-test-slave
+-----------------
+It's necessary to launch this server before run random-test-master. By
+default, it receives and responses to Modbus query on the localhost
+and port 1502.
+
+random-test-master
 ------------------
 This programm sends many different queries to a large range of
 addresses and values to test the communication between the master and
 the slave.
 
 unit-test-slave
----------------
-It's necessary to launch this server before run unit-test-master. By
-default, it receives and responses to Modbus query on the localhost
-and port 1502.
-
 unit-test-master
 ----------------
 By default, this program sends some queries with the values defined in
@@ -17,10 +18,6 @@ unit-test.h and checks the responses. These programs are useful to
 test the protocol implementation.
 
 bench-bandwidth-slave
----------------------
-It's a program very similar to unit-test-slave and works with
-bench-bandwidth-master.
-
 bench-bandwidth-master
 ----------------------
 It returns some very useful informations about the performance of

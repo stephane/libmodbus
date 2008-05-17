@@ -53,8 +53,10 @@ int main(void)
 
         /* TCP */
         modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
-      
-        modbus_connect(&mb_param);
+        if (modbus_connect(&mb_param) == -1) {
+                printf("ERROR Connection failed\n");
+                exit(1);
+        }
 
         /* Allocate and initialize the memory to store the status */
         tab_rp_status = (uint8_t *) malloc(MAX_STATUS * sizeof(uint8_t));
