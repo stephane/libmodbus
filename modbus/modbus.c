@@ -873,6 +873,9 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
                         resp_length = response_exception(mb_param, &sft,
                                                          ILLEGAL_DATA_ADDRESS, response);
                 } else {
+                        /* 6 = byte count, 7 = first byte of data */
+                        set_bits_from_bytes(mb_mapping->tab_coil_status, address, nb, &query[offset + 7]);
+
                         resp_length = build_response_basis(mb_param, &sft, response);
                         /* 4 to copy the coil address (2) and the quantity of coils */
                         memcpy(response + resp_length, query + resp_length, 4);
@@ -889,6 +892,13 @@ void manage_query(modbus_param_t *mb_param, uint8_t *query,
                         resp_length = response_exception(mb_param, &sft,
                                                          ILLEGAL_DATA_ADDRESS, response);
                 } else {
+                        int i, j;
+                        for (i = address, j = 0; i < address + nb; i++, j += 2) {
+                                /* 6 = byte count, 7 and 8 = first value */
+                                mb_mapping->tab_holding_registers[i] = 
+                                        (query[offset + 7 + j] << 8) + query[offset + 8 + j];
+                        }
+                        
                         resp_length = build_response_basis(mb_param, &sft, response);
                         /* 4 to copy the address (2) and the no. of registers */
                         memcpy(response + resp_length, query + resp_length, 4);
