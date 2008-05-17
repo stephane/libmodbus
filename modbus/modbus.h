@@ -241,7 +241,8 @@ void modbus_init_tcp(modbus_param_t *mb_param, char *ip_address, int port);
  */
 void modbus_set_error_handling(modbus_param_t *mb_param, error_handling_t error_handling);
 
-/* Establishes a modbus connexion */
+/* Establishes a modbus connexion.
+   Returns -1 if an error occured. */
 int modbus_connect(modbus_param_t *mb_param);
 
 /* Closes a modbus connection */

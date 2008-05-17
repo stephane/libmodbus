@@ -1659,7 +1659,8 @@ static int modbus_connect_tcp(modbus_param_t *mb_param)
         return 0;
 }
 
-/* Establishes a modbus connexion */
+/* Establishes a modbus connexion.
+   Returns -1 if an error occured. */
 int modbus_connect(modbus_param_t *mb_param)
 {
         int ret;
