@@ -37,6 +37,11 @@ libmodbus 2.0.0 (2008-05-18)
 - Fix #224496 reported by Todd Denniston
   It is easier to install on rpm based systems with a spec file.
 
+libmodbus 1.2.5 (2008-05-18)
+============================
+- Fix #224485 reported by Todd Denniston
+  libmodbus does not link with c++ code.
+
 libmodbus 1.2.4 (2008-03-14)
 ============================
 - Fix #191039 reported by Todd Denniston
