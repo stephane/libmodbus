@@ -1,7 +1,10 @@
-libmodbus 2.0.0 (to be released)
-================================
+libmodbus 2.0.0 (2008-05-18)
+============================
 - Slave API
   https://blueprints.launchpad.net/libmodbus/+spec/slave-api
+- No more glib dependency
+  https://blueprints.launchpad.net/libmodbus/+spec/glib-dependency
+- Unit testing and many test programs
 - Waf build support
   https://blueprints.launchpad.net/libmodbus/+spec/waf-support
 - MacOS X support by Matthew Butch
@@ -13,7 +16,7 @@ libmodbus 2.0.0 (to be released)
 - Better memory management (uint8_t *data and packing of
   modbus_param_t)
 - Better error management
-- Declare more functions with the static keyword
+- Declare many static functions and const arrays
 - Enhance an integer division
 - The GNU licences LGPL and GPL are in version 3
 - Debian and RPM packages (#224496) 
