@@ -1,3 +1,5 @@
+EXTRA_DIST = README
+
 noinst_PROGRAMS = \
 	random-test-slave \
 	random-test-master \
@@ -15,10 +17,10 @@ random_test_slave_LDADD = $(common_ldflags)
 random_test_master_SOURCES = random-test-master.c
 random_test_master_LDADD = $(common_ldflags)
 
-unit_test_slave_SOURCES = unit-test-slave.c
+unit_test_slave_SOURCES = unit-test-slave.c unit-test.h
 unit_test_slave_LDADD = $(common_ldflags)
 
-unit_test_master_SOURCES = unit-test-master.c
+unit_test_master_SOURCES = unit-test-master.c unit-test.h
 unit_test_master_LDADD = $(common_ldflags)
 
 bench_bandwidth_slave_SOURCES = bench-bandwidth-slave.c

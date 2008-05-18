@@ -1,3 +1,4 @@
+EXTRA_DIST = MIGRATION
 SUBDIRS = modbus tests
 
 pkgconfigdir = $(libdir)/pkgconfig
