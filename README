@@ -6,7 +6,7 @@ Overview
 ========
 
 libmodbus is a free software library to send/receive data with a
-device which respect the Modbus protocol. This library can use a
+device which respects the Modbus protocol. This library can use a
 serial port or an Ethernet connection.
 
 The functions included in the library have been derived from the
@@ -46,6 +46,6 @@ Testing
 =======
 
 Some testing programs are provided in the tests directory, you can
-freely edit the code source to fit your needs (it's Free Sofware :).
+freely edit the source code to fit your needs (it's Free Sofware :).
 
 See tests/README for a description of each program.
