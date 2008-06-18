@@ -662,9 +662,9 @@ static int modbus_check_response(modbus_param_t *mb_param,
                                 return -exception_code;
                         } else {
                                 /* The chances are low to hit this
-                                   case but can avoid a vicious
+                                   case but it can avoid a vicious
                                    segfault */
-                                char s_error[64];
+                                char *s_error = malloc(64 * sizeof(char));
                                 sprintf(s_error,
                                         "Invalid exception code %d",
                                         response[offset + 2]);

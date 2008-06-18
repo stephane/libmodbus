@@ -1,3 +1,9 @@
+libmodbus 2.0.1 (2008-07-XX)
+============================
+- Include libmodbus.spec in the tarball
+- Fix #241006 reported by Jesus Hernandez Tapia
+  modbus_check_response() crashes on an invalid exception code
+
 libmodbus 2.0.0 (2008-05-18)
 ============================
 - Slave API
