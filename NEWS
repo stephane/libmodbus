@@ -1,4 +1,4 @@
-libmodbus 2.0.1 (2008-07-XX)
+libmodbus 2.0.1 (2008-07-02)
 ============================
 - Include libmodbus.spec in the tarball
 - Fix #241006 reported by Jesus Hernandez Tapia
