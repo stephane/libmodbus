@@ -3,6 +3,6 @@ def build(bld):
     obj.source = 'modbus.c'
     obj.includes = '.'
     obj.target = 'modbus'
-    obj.vnum = '2.0.0'
+    obj.vnum = '2.0.1'
 
     install_files('PREFIX', 'include/modbus', 'modbus.h')
