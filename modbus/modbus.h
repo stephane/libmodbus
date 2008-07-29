@@ -42,6 +42,10 @@ extern "C" {
 /* 8 + HEADER_LENGTH_TCP */
 #define MIN_QUERY_LENGTH        14
 
+/* Page 102, Application Notes of PI–MBUS–300: 
+ *  The maximum length of the entire message must not exceed 256
+ *  bytes.
+ */
 #define MAX_MESSAGE_LENGTH     256
 
 #define MAX_STATUS             800

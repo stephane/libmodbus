@@ -453,7 +453,8 @@ static int compute_query_length_data(modbus_param_t *mb_param, uint8_t *msg)
    from a modbus master.
    This function blocks for timeout seconds if there is no reply.
 
-   msg_length_computed must be set to MSG_LENGTH_COMPUTED if undefined
+   - msg is an array of uint8_t to receive the message
+   - msg_length_computed must be set to MSG_LENGTH_UNDEFINED if undefined
 
    Returns a negative number if an error occured.
    The variable msg_length is assigned to the number of characters
@@ -491,7 +492,7 @@ int receive_msg(modbus_param_t *mb_param,
                 /* The message length is undefined (query receiving) so
                  * we need to analyse the message step by step.
                  * At the first step, we want to reach the function
-                 * code because all packets have this information. */
+                 * code because all packets have that information. */
                 msg_length_computed = mb_param->header_length + 2;
                 state = FUNCTION;
         } else {
@@ -588,7 +589,7 @@ int receive_msg(modbus_param_t *mb_param,
 }
 
 
-/* Checks whether the right response is returned with good checksum.
+/* Checks the right response is returned with good checksum.
 
    Returns:
    - the numbers of values (bits or word) if success
@@ -609,7 +610,8 @@ static int modbus_check_response(modbus_param_t *mb_param,
         ret = receive_msg(mb_param, response_length_computed,
                           response, &response_length);
         if (ret == 0) {
-                /* Good response */
+                /* GOOD RESPONSE */
+
                 switch (response[offset + 1]) {
                 case FC_READ_COIL_STATUS:
                 case FC_READ_INPUT_STATUS:
@@ -637,6 +639,8 @@ static int modbus_check_response(modbus_param_t *mb_param,
 
         } else if (ret == COMM_TIME_OUT &&
                    response_length == offset + 3 + mb_param->checksum_length) {
+                /* EXCEPTION CODE RECEIVED */
+
                 /* Optimization allowed because exception response is
                    the smallest trame in modbus protocol (3) so always
                    raise a timeout error */
@@ -675,9 +679,11 @@ static int modbus_check_response(modbus_param_t *mb_param,
                         }
                 }
         } else if (ret == COMM_TIME_OUT) {
+                /* COMMUNICATION TIME OUT */
                 error_treat(mb_param, ret, "Communication time out");
                 return ret;
         } else {
+                /* OTHER */
                 return ret;
         }
 
@@ -929,9 +935,8 @@ int modbus_listen(modbus_param_t *mb_param, uint8_t *query, int *query_length)
 static int read_io_status(modbus_param_t *mb_param, int slave, int function,
                           int start_addr, int nb, uint8_t *data_dest)
 {
+        int ret;
         int query_length;
-        int query_ret;
-        int response_ret;
 
         uint8_t query[MIN_QUERY_LENGTH];
         uint8_t response[MAX_MESSAGE_LENGTH];
@@ -939,18 +944,21 @@ static int read_io_status(modbus_param_t *mb_param, int slave, int function,
         query_length = build_query_basis(mb_param, slave, function, 
                                          start_addr, nb, query);
 
-        query_ret = modbus_send(mb_param, query, query_length);
-        if (query_ret > 0) {
+        ret = modbus_send(mb_param, query, query_length);
+        if (ret > 0) {
                 int i, temp, bit;
                 int pos = 0;
                 int processed = 0;
                 int offset;
                 int offset_length;
 
-                response_ret = modbus_check_response(mb_param, query, response);
+                ret = modbus_check_response(mb_param, query, response);
+                if (ret < 0)
+                        return ret;
+
                 offset = mb_param->header_length;
 
-                offset_length = offset + response_ret;          
+                offset_length = offset + ret;          
                 for (i = offset; i < offset_length; i++) {
                         /* Shift reg hi_byte to temp */
                         temp = response[3 + i];
@@ -962,11 +970,9 @@ static int read_io_status(modbus_param_t *mb_param, int slave, int function,
                         }
                         
                 }
-        } else {
-                response_ret = query_ret;
         }
 
-        return response_ret;
+        return ret;
 }
 
 /* Reads the boolean status of coils and sets the array elements
@@ -1017,9 +1023,8 @@ int read_input_status(modbus_param_t *mb_param, int slave, int start_addr,
 static int read_registers(modbus_param_t *mb_param, int slave, int function,
                           int start_addr, int nb, uint16_t *data_dest)
 {
+        int ret;
         int query_length;
-        int status;
-        int query_ret;
         uint8_t query[MIN_QUERY_LENGTH];
 
         if (nb > MAX_REGISTERS) {
@@ -1031,13 +1036,11 @@ static int read_registers(modbus_param_t *mb_param, int slave, int function,
         query_length = build_query_basis(mb_param, slave, function, 
                                          start_addr, nb, query);
 
-        query_ret = modbus_send(mb_param, query, query_length);
-        if (query_ret > 0)
-                status = read_reg_response(mb_param, data_dest, query);
-        else
-                status = query_ret;
+        ret = modbus_send(mb_param, query, query_length);
+        if (ret > 0)
+                ret = read_reg_response(mb_param, data_dest, query);
         
-        return status;
+        return ret;
 }
 
 /* Reads the holding registers in a slave and put the data into an
@@ -1116,21 +1119,18 @@ static int preset_response(modbus_param_t *mb_param, uint8_t *query)
 static int set_single(modbus_param_t *mb_param, int slave, int function,
                       int addr, int value)
 {
-        int status;
+        int ret;
         int query_length;
-        int query_ret;
         uint8_t query[MAX_MESSAGE_LENGTH];
 
         query_length = build_query_basis(mb_param, slave, function, 
                                          addr, value, query);
 
-        query_ret = modbus_send(mb_param, query, query_length);
-        if (query_ret > 0)
-                status = preset_response(mb_param, query);
-        else
-                status = query_ret;
+        ret = modbus_send(mb_param, query, query_length);
+        if (ret > 0)
+                ret = preset_response(mb_param, query);
 
-        return status;
+        return ret;
 }
 
 
@@ -1166,12 +1166,11 @@ int force_multiple_coils(modbus_param_t *mb_param, int slave,
                          int start_addr, int nb,
                          const uint8_t *data_src)
 {
+        int ret;
         int i;
         int byte_count;
         int query_length;
         int coil_check = 0;
-        int status;
-        int query_ret;
         int pos = 0;
 
         uint8_t query[MAX_MESSAGE_LENGTH];
@@ -1205,13 +1204,11 @@ int force_multiple_coils(modbus_param_t *mb_param, int slave,
                 query_length++;
         }
 
-        query_ret = modbus_send(mb_param, query, query_length);
-        if (query_ret > 0)
-                status = preset_response(mb_param, query);
-        else
-                status = query_ret;
+        ret = modbus_send(mb_param, query, query_length);
+        if (ret > 0)
+                ret = preset_response(mb_param, query);
 
-        return status;
+        return ret;
 }
 
 /* Copies the values in the slave from the array given in argument */
@@ -1219,11 +1216,10 @@ int preset_multiple_registers(modbus_param_t *mb_param, int slave,
                               int start_addr, int nb,
                               const uint16_t *data_src)
 {
+        int ret;
         int i;
         int query_length;
         int byte_count;
-        int status;
-        int query_ret;
 
         uint8_t query[MAX_MESSAGE_LENGTH];
 
@@ -1244,22 +1240,19 @@ int preset_multiple_registers(modbus_param_t *mb_param, int slave,
                 query[query_length++] = data_src[i] & 0x00FF;
         }
 
-        query_ret = modbus_send(mb_param, query, query_length);
-        if (query_ret > 0)
-                status = preset_response(mb_param, query);
-        else
-                status = query_ret;
+        ret = modbus_send(mb_param, query, query_length);
+        if (ret > 0)
+                ret = preset_response(mb_param, query);
 
-        return status;
+        return ret;
 }
 
 /* Returns the slave id! */
 int report_slave_id(modbus_param_t *mb_param, int slave, 
                     uint8_t *data_dest)
 {
+        int ret;
         int query_length;
-        int query_ret;
-        int response_ret;
 
         uint8_t query[MIN_QUERY_LENGTH];
         uint8_t response[MAX_MESSAGE_LENGTH];
@@ -1270,26 +1263,26 @@ int report_slave_id(modbus_param_t *mb_param, int slave,
         /* start_addr and count are not used */
         query_length -= 4;
         
-        query_ret = modbus_send(mb_param, query, query_length);
-        if (query_ret > 0) {
+        ret = modbus_send(mb_param, query, query_length);
+        if (ret > 0) {
                 int i;
                 int offset;
                 int offset_length;
 
                 /* Byte count, slave id, run indicator status,
                    additional data */
-                response_ret = modbus_check_response(mb_param, query, response);
-                
+                ret = modbus_check_response(mb_param, query, response);
+                if (ret < 0)
+                        return ret;
+
                 offset = mb_param->header_length;
-                offset_length = offset + response_ret;
+                offset_length = offset + ret;
 
                 for (i = offset; i < offset_length; i++)
                         data_dest[i] = response[i];
-        } else {
-                response_ret = query_ret;
         }
 
-        return response_ret;
+        return ret;
 }
 
 /* Initializes the modbus_param_t structure for RTU
