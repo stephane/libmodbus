@@ -1026,6 +1026,7 @@ static int read_registers(modbus_param_t *mb_param, int slave, int function,
         int ret;
         int query_length;
         uint8_t query[MIN_QUERY_LENGTH];
+        uint8_t response[MAX_MESSAGE_LENGTH];
 
         if (nb > MAX_REGISTERS) {
                 printf("EROOR Too many holding registers requested (%d > %d)\n",
@@ -1037,8 +1038,21 @@ static int read_registers(modbus_param_t *mb_param, int slave, int function,
                                          start_addr, nb, query);
 
         ret = modbus_send(mb_param, query, query_length);
-        if (ret > 0)
-                ret = read_reg_response(mb_param, data_dest, query);
+        if (ret > 0) {
+                int offset;
+                int i;
+
+                ret = modbus_check_response(mb_param, query, response);
+        
+                offset = mb_param->header_length;
+
+                /* If response_ret is negative, the loop is jumped ! */
+                for (i = 0; i < ret; i++) {
+                        /* shift reg hi_byte to temp OR with lo_byte */
+                        data_dest[i] = response[offset + 3 + (i << 1)] << 8 | 
+                                response[offset + 4 + (i << 1)];    
+                }
+        }
         
         return ret;
 }
@@ -1078,30 +1092,6 @@ int read_input_registers(modbus_param_t *mb_param, int slave,
                                 start_addr, nb, data_dest);
 
         return status;
-}
-
-/* Reads the response data from a slave and puts the data into an
-   array */
-static int read_reg_response(modbus_param_t *mb_param, uint16_t *data_dest,
-                             uint8_t *query)
-{
-        uint8_t response[MAX_MESSAGE_LENGTH];
-        int response_ret;
-        int offset;
-        int i;
-
-        response_ret = modbus_check_response(mb_param, query, response);
-        
-        offset = mb_param->header_length;
-
-        /* If response_ret is negative, the loop is jumped ! */
-        for (i = 0; i < response_ret; i++) {
-                /* shift reg hi_byte to temp OR with lo_byte */
-                data_dest[i] = response[offset + 3 + (i << 1)] << 8 | 
-                        response[offset + 4 + (i << 1)];    
-        }
-        
-        return response_ret;
 }
 
 /* Gets the raw data from the input stream */
