@@ -398,6 +398,24 @@ int main(void)
                 printf("FAILED\n");
         }
 
+        /* BAD RESPONSE */
+
+        /* Allocate only the required space */
+        uint16_t *tab_rp_registers_bad = (uint16_t *) malloc(
+                UT_HOLDING_REGISTERS_NB_POINTS_SPECIAL * sizeof(uint16_t));
+        printf("1/1 read_holding_registers: ");
+        ret = read_holding_registers(&mb_param,
+                                     SLAVE, UT_HOLDING_REGISTERS_ADDRESS,
+                                     UT_HOLDING_REGISTERS_NB_POINTS_SPECIAL,
+                                     tab_rp_registers_bad);
+        if (ret > 0) {
+                /* Error not detected */
+                printf("FAILED\n");
+        } else {
+                printf("OK\n");
+        }
+        free(tab_rp_registers_bad);
+
 close:
         /* Free the memory */
         free(tab_rp_status);                                           

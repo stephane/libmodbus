@@ -67,6 +67,14 @@ int main(void)
                 
                 ret = modbus_listen(&mb_param, query, &query_size);
                 if (ret == 0) {
+                        if (((query[HEADER_LENGTH_TCP + 4] << 8) + query[HEADER_LENGTH_TCP + 5])
+                            == UT_HOLDING_REGISTERS_NB_POINTS_SPECIAL) {
+                                /* Change the number of values (offset
+                                   TCP = 6) */
+                                query[HEADER_LENGTH_TCP + 4] = 0;
+                                query[HEADER_LENGTH_TCP + 5] = UT_HOLDING_REGISTERS_NB_POINTS;
+                        }
+
                         modbus_manage_query(&mb_param, query, query_size, &mb_mapping);
                 } else if (ret == CONNECTION_CLOSED) {
                         /* Connection closed by the client, end of server */

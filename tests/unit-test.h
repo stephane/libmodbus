@@ -31,6 +31,10 @@ const uint8_t UT_INPUT_STATUS_TAB[] = { 0xAC, 0xDB, 0x35 };
 const uint16_t UT_HOLDING_REGISTERS_ADDRESS = 0x6B;
 const uint16_t UT_HOLDING_REGISTERS_NB_POINTS = 0x3;
 const uint16_t UT_HOLDING_REGISTERS_TAB[] = { 0x022B, 0x0000, 0x0064 };
+/* If the following value is used, a bad response is sent.
+   It's better to test with a lower value than
+   UT_HOLDING_REGISTERS_NB_POINTS to try to raise a segfault. */
+const uint16_t UT_HOLDING_REGISTERS_NB_POINTS_SPECIAL = 0x2;
 
 const uint16_t UT_INPUT_REGISTERS_ADDRESS = 0x08;
 const uint16_t UT_INPUT_REGISTERS_NB_POINTS = 0x1;
