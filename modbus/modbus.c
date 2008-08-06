@@ -136,10 +136,6 @@ static uint8_t table_crc_lo[] = {
         0x43, 0x83, 0x41, 0x81, 0x80, 0x40
 };
 
-/* Local declaration */
-static int read_reg_response(modbus_param_t *mb_param, 
-                             uint16_t *data_dest, uint8_t *query);
-
 /* Treats errors and flush or close connection if necessary */
 static void error_treat(modbus_param_t *mb_param, int code, const char *string)
 {
