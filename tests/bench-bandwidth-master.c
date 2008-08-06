@@ -26,7 +26,7 @@
 
 /* Tests based on PI-MBUS-300 documentation */
 #define SLAVE     0x11
-#define NB_LOOPS  1000
+#define NB_LOOPS  10000
 
 #define G_USEC_PER_SEC 1000000
 uint32_t gettime(void)
