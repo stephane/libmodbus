@@ -512,21 +512,18 @@ int receive_msg(modbus_param_t *mb_param,
                 else
                         read_ret = recv(mb_param->fd, p_msg, length_to_read, 0);
 
-                if (read_ret == -1) {
+                if (read_ret == 0) {
+                        printf("Connection closed\n");
+                        return CONNECTION_CLOSED;
+                } else if (read_ret < 0) {
+                        /* The only negative possible value is -1 */
                         error_treat(mb_param, PORT_SOCKET_FAILURE,
                                     "Read port/socket failure");
                         return PORT_SOCKET_FAILURE;
-                } else if (read_ret == 0) {
-                        printf("Connection closed\n");
-                        return CONNECTION_CLOSED;
                 }
                         
                 /* Sums bytes received */ 
                 (*msg_length) += read_ret;
-                if ((*msg_length) > MAX_MESSAGE_LENGTH) {
-                        error_treat(mb_param, TOO_MANY_DATA, "Too many data");
-                        return TOO_MANY_DATA;
-                }
 
                 /* Display the hex code of each character received */
                 if (mb_param->debug) {
@@ -544,11 +541,18 @@ int receive_msg(modbus_param_t *mb_param,
                                 /* Function code position */
                                 length_to_read = compute_query_length_header(msg[mb_param->header_length + 1]);
                                 msg_length_computed += length_to_read;
+                                /* It's useless to check
+                                   msg_length_computed value in this
+                                   case (only defined values are used). */
                                 state = BYTE;
                                 break;
                         case BYTE:
                                 length_to_read = compute_query_length_data(mb_param, msg);
                                 msg_length_computed += length_to_read;
+                                if (msg_length_computed > MAX_MESSAGE_LENGTH) {
+                                     error_treat(mb_param, TOO_MANY_DATA, "Too many data");
+                                     return TOO_MANY_DATA;  
+                                }
                                 state = COMPLETE;
                                 break;
                         case COMPLETE:
@@ -1042,7 +1046,7 @@ static int read_registers(modbus_param_t *mb_param, int slave, int function,
         
                 offset = mb_param->header_length;
 
-                /* If response_ret is negative, the loop is jumped ! */
+                /* If ret is negative, the loop is jumped ! */
                 for (i = 0; i < ret; i++) {
                         /* shift reg hi_byte to temp OR with lo_byte */
                         data_dest[i] = response[offset + 3 + (i << 1)] << 8 | 
