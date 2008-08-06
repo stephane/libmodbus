@@ -589,7 +589,7 @@ int receive_msg(modbus_param_t *mb_param,
 }
 
 
-/* Checks the right response is returned with good checksum.
+/* Receives the response and checks values (and checksum in RTU).
 
    Returns:
    - the numbers of values (bits or word) if success
@@ -597,9 +597,9 @@ int receive_msg(modbus_param_t *mb_param,
 
    Note: all functions used to send or receive data with modbus return
    these values. */
-static int modbus_check_response(modbus_param_t *mb_param, 
-                                 uint8_t *query,
-                                 uint8_t *response)
+static int modbus_receive(modbus_param_t *mb_param, 
+                          uint8_t *query,
+                          uint8_t *response)
 {
         int response_length;
         int response_length_computed;     
@@ -952,7 +952,7 @@ static int read_io_status(modbus_param_t *mb_param, int slave, int function,
                 int offset;
                 int offset_length;
 
-                ret = modbus_check_response(mb_param, query, response);
+                ret = modbus_receive(mb_param, query, response);
                 if (ret < 0)
                         return ret;
 
@@ -1042,7 +1042,7 @@ static int read_registers(modbus_param_t *mb_param, int slave, int function,
                 int offset;
                 int i;
 
-                ret = modbus_check_response(mb_param, query, response);
+                ret = modbus_receive(mb_param, query, response);
         
                 offset = mb_param->header_length;
 
@@ -1111,7 +1111,7 @@ static int set_single(modbus_param_t *mb_param, int slave, int function,
                 /* Used by force_single_coil and
                  * preset_single_register */
                 uint8_t response[MIN_QUERY_LENGTH];
-                ret = modbus_check_response(mb_param, query, response);
+                ret = modbus_receive(mb_param, query, response);
         }
 
         return ret;
@@ -1190,7 +1190,7 @@ int force_multiple_coils(modbus_param_t *mb_param, int slave,
         ret = modbus_send(mb_param, query, query_length);
         if (ret > 0) {
                 uint8_t response[MAX_MESSAGE_LENGTH];
-                ret = modbus_check_response(mb_param, query, response);
+                ret = modbus_receive(mb_param, query, response);
         }
 
 
@@ -1229,7 +1229,7 @@ int preset_multiple_registers(modbus_param_t *mb_param, int slave,
         ret = modbus_send(mb_param, query, query_length);
         if (ret > 0) {
                 uint8_t response[MAX_MESSAGE_LENGTH];
-                ret = modbus_check_response(mb_param, query, response);
+                ret = modbus_receive(mb_param, query, response);
         }
 
         return ret;
@@ -1258,7 +1258,7 @@ int report_slave_id(modbus_param_t *mb_param, int slave,
 
                 /* Byte count, slave id, run indicator status,
                    additional data */
-                ret = modbus_check_response(mb_param, query, response);
+                ret = modbus_receive(mb_param, query, response);
                 if (ret < 0)
                         return ret;
 
