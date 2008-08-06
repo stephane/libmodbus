@@ -39,8 +39,16 @@ extern "C" {
 #define CHECKSUM_LENGTH_RTU      2
 #define CHECKSUM_LENGTH_TCP      0        
 
-/* 8 + HEADER_LENGTH_TCP */
-#define MIN_QUERY_LENGTH        14
+/* It's not really the minimal length (the real one is report slave ID
+ * in RTU (4 bytes)) but it's a convenient size to use in RTU or TCP
+ * communications to read many values or write a single one.
+ * Maximum between :
+ * - HEADER_LENGTH_TCP (6) + slave (1) + function (1) + address (2) +
+ *   number (2)
+ * - HEADER_LENGTH_RTU (0) + slave (1) + function (1) + address (2) +
+ *   number (2) + CRC (2)
+*/
+#define MIN_QUERY_LENGTH        12
 
 /* Page 102, Application Notes of PI–MBUS–300: 
  *  The maximum length of the entire message must not exceed 256
