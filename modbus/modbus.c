@@ -1094,35 +1094,28 @@ int read_input_registers(modbus_param_t *mb_param, int slave,
         return status;
 }
 
-/* Gets the raw data from the input stream */
-static int preset_response(modbus_param_t *mb_param, uint8_t *query) 
-{
-        int ret;
-        uint8_t response[MAX_MESSAGE_LENGTH];
-
-        ret = modbus_check_response(mb_param, query, response);
-
-        return ret;
-}
-
-/* Sends a value to a register in a slave */
+/* Sends a value to a register in a slave.
+   Used by force_single_coil and preset_single_register */
 static int set_single(modbus_param_t *mb_param, int slave, int function,
                       int addr, int value)
 {
         int ret;
         int query_length;
-        uint8_t query[MAX_MESSAGE_LENGTH];
+        uint8_t query[MIN_QUERY_LENGTH];
 
         query_length = build_query_basis(mb_param, slave, function, 
                                          addr, value, query);
 
         ret = modbus_send(mb_param, query, query_length);
-        if (ret > 0)
-                ret = preset_response(mb_param, query);
+        if (ret > 0) {
+                /* Used by force_single_coil and
+                 * preset_single_register */
+                uint8_t response[MIN_QUERY_LENGTH];
+                ret = modbus_check_response(mb_param, query, response);
+        }
 
         return ret;
 }
-
 
 /* Turns ON or OFF a single coil in the slave device */
 int force_single_coil(modbus_param_t *mb_param, int slave,
@@ -1195,8 +1188,11 @@ int force_multiple_coils(modbus_param_t *mb_param, int slave,
         }
 
         ret = modbus_send(mb_param, query, query_length);
-        if (ret > 0)
-                ret = preset_response(mb_param, query);
+        if (ret > 0) {
+                uint8_t response[MAX_MESSAGE_LENGTH];
+                ret = modbus_check_response(mb_param, query, response);
+        }
+
 
         return ret;
 }
@@ -1231,8 +1227,10 @@ int preset_multiple_registers(modbus_param_t *mb_param, int slave,
         }
 
         ret = modbus_send(mb_param, query, query_length);
-        if (ret > 0)
-                ret = preset_response(mb_param, query);
+        if (ret > 0) {
+                uint8_t response[MAX_MESSAGE_LENGTH];
+                ret = modbus_check_response(mb_param, query, response);
+        }
 
         return ret;
 }
@@ -1243,14 +1241,12 @@ int report_slave_id(modbus_param_t *mb_param, int slave,
 {
         int ret;
         int query_length;
-
         uint8_t query[MIN_QUERY_LENGTH];
-        uint8_t response[MAX_MESSAGE_LENGTH];
         
         query_length = build_query_basis(mb_param, slave, FC_REPORT_SLAVE_ID, 
                                          0, 0, query);
         
-        /* start_addr and count are not used */
+        /* HACKISH, start_addr and count are not used */
         query_length -= 4;
         
         ret = modbus_send(mb_param, query, query_length);
@@ -1258,6 +1254,7 @@ int report_slave_id(modbus_param_t *mb_param, int slave,
                 int i;
                 int offset;
                 int offset_length;
+                uint8_t response[MAX_MESSAGE_LENGTH];
 
                 /* Byte count, slave id, run indicator status,
                    additional data */
