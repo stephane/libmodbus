@@ -445,19 +445,23 @@ static int compute_query_length_data(modbus_param_t *mb_param, uint8_t *msg)
     }                                                                              \
 }
 
-/* Monitors for the reply from the modbus slave or to receive query
-   from a modbus master.
+/* Waits a reply from a modbus slave or a query from a modbus master.
    This function blocks for timeout seconds if there is no reply.
 
-   - msg is an array of uint8_t to receive the message
+   In
    - msg_length_computed must be set to MSG_LENGTH_UNDEFINED if undefined
 
-   Returns a negative number if an error occured.
-   The variable msg_length is assigned to the number of characters
-   received. */
-int receive_msg(modbus_param_t *mb_param,
-                int msg_length_computed,
-                uint8_t *msg, int *msg_length)
+   Out
+   - msg is an array of uint8_t to receive the message
+   - p_msg_length, the variable is assigned to the number of
+     characters received. This value won't be greater than
+     msg_length_computed.
+
+   Returns 0 in success or a negative value if an error occured.
+*/
+static int receive_msg(modbus_param_t *mb_param,
+                       int msg_length_computed,
+                       uint8_t *msg, int *p_msg_length)
 {
         int select_ret;
         int read_ret;
@@ -502,8 +506,8 @@ int receive_msg(modbus_param_t *mb_param,
         select_ret = 0;
         WAIT_DATA();
 
-        /* Read the msg */
-        (*msg_length) = 0;
+        /* Initialize the readin the message */
+        (*p_msg_length) = 0;
         p_msg = msg;
 
         while (select_ret) {
@@ -523,7 +527,7 @@ int receive_msg(modbus_param_t *mb_param,
                 }
                         
                 /* Sums bytes received */ 
-                (*msg_length) += read_ret;
+                (*p_msg_length) += read_ret;
 
                 /* Display the hex code of each character received */
                 if (mb_param->debug) {
@@ -532,9 +536,9 @@ int receive_msg(modbus_param_t *mb_param,
                                 printf("<%.2X>", p_msg[i]);
                 }
 
-                if ((*msg_length) < msg_length_computed) {
+                if ((*p_msg_length) < msg_length_computed) {
                         /* Message incomplete */
-                        length_to_read = msg_length_computed - (*msg_length);
+                        length_to_read = msg_length_computed - (*p_msg_length);
                 } else {
                         switch (state) {
                         case FUNCTION:
@@ -542,7 +546,7 @@ int receive_msg(modbus_param_t *mb_param,
                                 length_to_read = compute_query_length_header(msg[mb_param->header_length + 1]);
                                 msg_length_computed += length_to_read;
                                 /* It's useless to check
-                                   msg_length_computed value in this
+                                   p_msg_length_computed value in this
                                    case (only defined values are used). */
                                 state = BYTE;
                                 break;
@@ -581,7 +585,7 @@ int receive_msg(modbus_param_t *mb_param,
                 printf("\n");
 
         if (mb_param->type_com == RTU) {
-                check_crc16(mb_param, msg, *msg_length);
+                check_crc16(mb_param, msg, (*p_msg_length));
         }
         
         /* OK */
@@ -592,7 +596,8 @@ int receive_msg(modbus_param_t *mb_param,
 /* Receives the response and checks values (and checksum in RTU).
 
    Returns:
-   - the numbers of values (bits or word) if success
+   - the number of values (bits or word) if success or the response
+     length if no value is returned
    - less than 0 for exception errors
 
    Note: all functions used to send or receive data with modbus return
@@ -601,10 +606,10 @@ static int modbus_receive(modbus_param_t *mb_param,
                           uint8_t *query,
                           uint8_t *response)
 {
-        int response_length;
-        int response_length_computed;     
-        int offset = mb_param->header_length;
         int ret;
+        int response_length;
+        int response_length_computed;
+        int offset = mb_param->header_length;
 
         response_length_computed = compute_response_length(mb_param, query);
         ret = receive_msg(mb_param, response_length_computed,
@@ -612,21 +617,23 @@ static int modbus_receive(modbus_param_t *mb_param,
         if (ret == 0) {
                 /* GOOD RESPONSE */
 
+                /* The number of values is returned for the following
+                 * cases */
                 switch (response[offset + 1]) {
                 case FC_READ_COIL_STATUS:
                 case FC_READ_INPUT_STATUS:
                         /* Read functions 1 value = 1 byte */
-                        response_length = response[offset + 2];
+                        ret = response[offset + 2];
                         break;
                 case FC_READ_HOLDING_REGISTERS:
                 case FC_READ_INPUT_REGISTERS:
                         /* Read functions 1 value = 2 bytes */
-                        response_length = response[offset + 2] / 2;
+                        ret = response[offset + 2] / 2;
                         break;
                 case FC_FORCE_MULTIPLE_COILS:
                 case FC_PRESET_MULTIPLE_REGISTERS:
                         /* N Write functions */
-                        response_length = response[offset + 4] << 8 |
+                        ret = response[offset + 4] << 8 |
                                 response[offset + 5];
                         break;
                 case FC_REPORT_SLAVE_ID:
@@ -634,60 +641,62 @@ static int modbus_receive(modbus_param_t *mb_param,
                         break;
                 default:
                         /* 1 Write functions & others */
-                        response_length = 1;
-                }
-
-        } else if (ret == COMM_TIME_OUT &&
-                   response_length == offset + 3 + mb_param->checksum_length) {
-                /* EXCEPTION CODE RECEIVED */
-
-                /* Optimization allowed because exception response is
-                   the smallest trame in modbus protocol (3) so always
-                   raise a timeout error */
-
-                /* CRC must be checked here (not done in receive_msg) */
-                if (mb_param->type_com == RTU) {
-                        ret = check_crc16(mb_param, response, response_length);
-                        if (ret != 0)
-                                return ret;
-                }
-
-                /* Check for exception response.
-                   0x80 + function is stored in the exception
-                   response. */
-                if (0x80 + query[offset + 1] == response[offset + 1]) {
-
-                        int exception_code = response[offset + 2];
-                        // FIXME check test
-                        if (exception_code < NB_TAB_ERROR_MSG) {
-                                error_treat(mb_param, -exception_code,
-                                            TAB_ERROR_MSG[response[offset + 2]]);
-                                /* Modbus error code is negative */
-                                return -exception_code;
-                        } else {
-                                /* The chances are low to hit this
-                                   case but it can avoid a vicious
-                                   segfault */
-                                char *s_error = malloc(64 * sizeof(char));
-                                sprintf(s_error,
-                                        "Invalid exception code %d",
-                                        response[offset + 2]);
-                                error_treat(mb_param, INVALID_EXCEPTION_CODE,
-                                            s_error);
-                                free(s_error);
-                                return INVALID_EXCEPTION_CODE;
-                        }
+                        ret = 1;
                 }
         } else if (ret == COMM_TIME_OUT) {
+
+                if (response_length == (offset + 3 + mb_param->checksum_length)) {
+                        /* EXCEPTION CODE RECEIVED */
+
+                        /* Optimization allowed because exception response is
+                           the smallest trame in modbus protocol (3) so always
+                           raise a timeout error */
+
+                        /* CRC must be checked here (not done in receive_msg) */
+                        if (mb_param->type_com == RTU) {
+                                ret = check_crc16(mb_param, response, response_length);
+                                if (ret != 0)
+                                        return ret;
+                        }
+
+                        /* Check for exception response.
+                           0x80 + function is stored in the exception
+                           response. */
+                        if (0x80 + query[offset + 1] == response[offset + 1]) {
+
+                                int exception_code = response[offset + 2];
+                                // FIXME check test
+                                if (exception_code < NB_TAB_ERROR_MSG) {
+                                        error_treat(mb_param, -exception_code,
+                                                    TAB_ERROR_MSG[response[offset + 2]]);
+                                        /* Modbus error code is negative */
+
+                                        /* RETURN THE GOOD EXCEPTION CODE */
+                                        return -exception_code;
+                                } else {
+                                        /* The chances are low to hit this
+                                           case but it can avoid a vicious
+                                           segfault */
+                                        char *s_error = malloc(64 * sizeof(char));
+                                        sprintf(s_error,
+                                                "Invalid exception code %d",
+                                                response[offset + 2]);
+                                        error_treat(mb_param, INVALID_EXCEPTION_CODE,
+                                                    s_error);
+                                        free(s_error);
+                                        return INVALID_EXCEPTION_CODE;
+                                }
+                        }
+                        /* If doesn't return previously, return as
+                           TIME OUT here */
+                }
+
                 /* COMMUNICATION TIME OUT */
                 error_treat(mb_param, ret, "Communication time out");
                 return ret;
-        } else {
-                /* OTHER */
-                return ret;
         }
 
-        return response_length;
+        return ret;
 }
 
 static int response_io_status(int address, int nb,
@@ -926,6 +935,7 @@ int modbus_listen(modbus_param_t *mb_param, uint8_t *query, int *query_length)
 {
         int ret;
 
+        /* The length of the query to receive isn't known. */
         ret = receive_msg(mb_param, MSG_LENGTH_UNDEFINED, query, query_length);
         
         return ret;
