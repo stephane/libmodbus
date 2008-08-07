@@ -254,7 +254,7 @@ int main(void)
         printf("OK\n");
         
 
-        /** ILLEGAL DATA ADDRESS */
+        /** ILLEGAL DATA ADDRESS **/
         printf("\nTEST ILLEGAL DATA ADDRESS:\n");
 
         /* The mapping begins at 0 and ending at address + nb_points so
@@ -333,7 +333,7 @@ int main(void)
         }
 
 
-        /** TOO MANY DATA */
+        /** TOO MANY DATA **/
         printf("\nTEST TOO MANY DATA ERROR:\n");
 
         ret = read_coil_status(&mb_param, SLAVE,
@@ -398,16 +398,17 @@ int main(void)
                 printf("FAILED\n");
         }
 
-        /* BAD RESPONSE */
+        /** BAD RESPONSE **/
+        printf("\nTEST BAD RESPONSE ERROR:\n");
 
         /* Allocate only the required space */
         uint16_t *tab_rp_registers_bad = (uint16_t *) malloc(
                 UT_HOLDING_REGISTERS_NB_POINTS_SPECIAL * sizeof(uint16_t));
-        printf("1/1 read_holding_registers: ");
         ret = read_holding_registers(&mb_param,
                                      SLAVE, UT_HOLDING_REGISTERS_ADDRESS,
                                      UT_HOLDING_REGISTERS_NB_POINTS_SPECIAL,
                                      tab_rp_registers_bad);
+        printf("* read_holding_registers: ");
         if (ret > 0) {
                 /* Error not detected */
                 printf("FAILED\n");
