@@ -1,3 +1,17 @@
+libmodbus 2.0.2 (2008-08-XX)
+============================
+- Fix a bug reported by email by Davide Pippa
+  The function modbus_receive must check the number of values
+  indicated in the response accordingly to the query.
+- Fix #241006 reported by Jesus Hernandez Tapia
+  modbus_check_response() crashes on an invalid exception code
+- Reduce the number of function calls (read_reg_response and
+  preset_response have been removed)
+- Add a new unit test for bad response
+- Catch the timeout even if the length is equal to a exception trame
+- Test only msg_length_computed on change
+- Many comments and cleanups
+
 libmodbus 2.0.1 (2008-07-02)
 ============================
 - Include libmodbus.spec in the tarball
