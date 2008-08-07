@@ -616,32 +616,51 @@ static int modbus_receive(modbus_param_t *mb_param,
                           response, &response_length);
         if (ret == 0) {
                 /* GOOD RESPONSE */
+                int query_nb_value;
+                int response_nb_value;
 
-                /* The number of values is returned for the following
-                 * cases */
+                /* The number of values is returned if it's corresponding
+                 * to the query */
                 switch (response[offset + 1]) {
                 case FC_READ_COIL_STATUS:
                 case FC_READ_INPUT_STATUS:
-                        /* Read functions 1 value = 1 byte */
-                        ret = response[offset + 2];
+                        /* Read functions, 8 values in a byte (nb
+                         * of values in the query and byte count in
+                         * the response. */
+                        query_nb_value = (query[offset+4] << 8) + query[offset+5];
+                        query_nb_value = (query_nb_value / 8) + ((query_nb_value % 8) ? 1 : 0);
+                        response_nb_value = response[offset + 2];
                         break;
                 case FC_READ_HOLDING_REGISTERS:
                 case FC_READ_INPUT_REGISTERS:
                         /* Read functions 1 value = 2 bytes */
-                        ret = response[offset + 2] / 2;
+                        query_nb_value = (query[offset+4] << 8) + query[offset+5];
+                        response_nb_value = (response[offset + 2] / 2);
                         break;
                 case FC_FORCE_MULTIPLE_COILS:
                 case FC_PRESET_MULTIPLE_REGISTERS:
                         /* N Write functions */
-                        ret = response[offset + 4] << 8 |
-                                response[offset + 5];
+                        query_nb_value = (query[offset+4] << 8) + query[offset+5];
+                        response_nb_value = (response[offset + 4] << 8) | response[offset + 5];
                         break;
                 case FC_REPORT_SLAVE_ID:
                         /* Report slave ID (bytes received) */
+                        query_nb_value = response_nb_value = response_length;
                         break;
                 default:
                         /* 1 Write functions & others */
-                        ret = 1;
+                        query_nb_value = response_nb_value = 1;
+                }
+
+                if (query_nb_value == response_nb_value) {
+                        ret = response_nb_value;
+                } else {
+                        char *s_error = malloc(64 * sizeof(char));
+                        sprintf(s_error, "Quantity (%d) not corresponding to the query (%d)",
+                                response_nb_value, query_nb_value);
+                        ret = ILLEGAL_DATA_VALUE;
+                        error_treat(mb_param, ILLEGAL_DATA_VALUE, s_error);
+                        free(s_error);
                 }
         } else if (ret == COMM_TIME_OUT) {
 
@@ -669,9 +688,8 @@ static int modbus_receive(modbus_param_t *mb_param,
                                 if (exception_code < NB_TAB_ERROR_MSG) {
                                         error_treat(mb_param, -exception_code,
                                                     TAB_ERROR_MSG[response[offset + 2]]);
+                                        /* RETURN THE EXCEPTION CODE */
                                         /* Modbus error code is negative */
-
-                                        /* RETURN THE GOOD EXCEPTION CODE */
                                         return -exception_code;
                                 } else {
                                         /* The chances are low to hit this
@@ -781,7 +799,8 @@ void modbus_manage_query(modbus_param_t *mb_param, const uint8_t *query,
         }
                 break;
         case FC_READ_INPUT_STATUS: {
-                /* Similar to coil status */
+                /* Similar to coil status (but too much arguments to use a
+                 * function) */
                 int nb = (query[offset+4] << 8) + query[offset+5];
 
                 if ((address + nb) > mb_mapping->nb_input_status) {
@@ -819,7 +838,8 @@ void modbus_manage_query(modbus_param_t *mb_param, const uint8_t *query,
         }
                 break;
         case FC_READ_INPUT_REGISTERS: {
-                /* Similar to holding registers */
+                /* Similar to holding registers (but too much arguments to use a
+                 * function) */
                 int nb = (query[offset+4] << 8) + query[offset+5];
 
                 if ((address + nb) > mb_mapping->nb_input_registers) {
@@ -1059,7 +1079,7 @@ static int read_registers(modbus_param_t *mb_param, int slave, int function,
                 /* If ret is negative, the loop is jumped ! */
                 for (i = 0; i < ret; i++) {
                         /* shift reg hi_byte to temp OR with lo_byte */
-                        data_dest[i] = response[offset + 3 + (i << 1)] << 8 | 
+                        data_dest[i] = (response[offset + 3 + (i << 1)] << 8) | 
                                 response[offset + 4 + (i << 1)];    
                 }
         }
