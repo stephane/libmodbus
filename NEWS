@@ -1,4 +1,9 @@
-libmodbus 2.0.2 (2008-08-XX)
+libmodbus 2.0.3 (2008-XX-XX)
+============================
+- Fix #274511 reported by 'Kylesch'
+  Invalid error check in modbus_init_listen_tcp
+
+libmodbus 2.0.2 (2008-08-10)
 ============================
 - Fix a bug reported by email by Davide Pippa
   The function modbus_receive must check the number of values

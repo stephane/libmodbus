@@ -1827,7 +1827,7 @@ int modbus_init_listen_tcp(modbus_param_t *mb_param)
 
         addrlen = sizeof(struct sockaddr_in);
         mb_param->fd = accept(new_socket, (struct sockaddr *)&addr, &addrlen);
-        if (ret < 0) {
+        if (mb_param->fd < 0) {
                 perror("accept");
                 close(new_socket);
                 new_socket = 0;
