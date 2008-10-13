@@ -162,7 +162,7 @@ static void error_treat(modbus_param_t *mb_param, int code, const char *string)
 static unsigned int compute_response_length(modbus_param_t *mb_param, 
                                             uint8_t *query)
 {
-        int resp_length;
+        int length;
         int offset;
 
         offset = mb_param->header_length;
@@ -172,25 +172,23 @@ static unsigned int compute_response_length(modbus_param_t *mb_param,
         case FC_READ_INPUT_STATUS: {
                 /* Header + nb values (code from force_multiple_coils) */
                 int nb = (query[offset + 4] << 8) | query[offset + 5];
-                resp_length = 3 + (nb / 8) + ((nb % 8) ? 1 : 0);
+                length = 3 + (nb / 8) + ((nb % 8) ? 1 : 0);
         }
                 break;
         case FC_READ_HOLDING_REGISTERS:
         case FC_READ_INPUT_REGISTERS:
                 /* Header + 2 * nb values */
-                resp_length = 3 + 2 * (query[offset + 4] << 8 | 
+                length = 3 + 2 * (query[offset + 4] << 8 | 
                                        query[offset + 5]);
                 break;
         case FC_READ_EXCEPTION_STATUS:
-                resp_length = 4;
+                length = 4;
                 break;
         default:
-                resp_length = 6;
+                length = 6;
         }
 
-        resp_length += offset + mb_param->checksum_length;
-
-        return resp_length;
+        return length + offset + mb_param->checksum_length;
 }
 
 /* Builds a RTU query header */
