@@ -978,7 +978,6 @@ static int read_io_status(modbus_param_t *mb_param, int slave, int function,
         if (ret > 0) {
                 int i, temp, bit;
                 int pos = 0;
-                int processed = 0;
                 int offset;
                 int offset_length;
 
@@ -993,9 +992,8 @@ static int read_io_status(modbus_param_t *mb_param, int slave, int function,
                         /* Shift reg hi_byte to temp */
                         temp = response[3 + i];
                         
-                        for (bit = 0x01; (bit & 0xff) && (processed < nb);) {
+                        for (bit = 0x01; (bit & 0xff) && (pos < nb);) {
                                 data_dest[pos++] = (temp & bit) ? TRUE : FALSE;
-                                processed++;
                                 bit = bit << 1;
                         }
                         
