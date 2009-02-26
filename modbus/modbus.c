@@ -773,10 +773,12 @@ void modbus_manage_query(modbus_param_t *mb_param, const uint8_t *query,
 
         sft.slave = slave;
         sft.function = function;
-        if (mb_param->type_com == TCP)
+        if (mb_param->type_com == TCP) {
                 sft.t_id = (query[0] << 8) + query[1];
-        else
+        } else {
                 sft.t_id = 0;
+                query_length -= CHECKSUM_LENGTH_RTU;
+        }
 
         switch (function) {
         case FC_READ_COIL_STATUS: {
@@ -868,9 +870,11 @@ void modbus_manage_query(modbus_param_t *mb_param, const uint8_t *query,
                         if (data == 0xFF00 || data == 0x0) {
                                 mb_mapping->tab_coil_status[address] = (data) ? ON : OFF;
 
-                                /* In RTU mode, the CRC is computed
-                                   and added to the query by modbus_send */
-                                memcpy(response, query, query_length - mb_param->checksum_length);
+                                /* In RTU mode, the CRC is computed and added
+                                   to the query by modbus_send, the computed
+                                   CRC will be same and optimisation is
+                                   possible here (FIXME). */
+                                memcpy(response, query, query_length);
                                 resp_length = query_length;
                         } else {
                                 printf("Illegal data value %0X in force_single_coil request at address %0X\n",
@@ -889,7 +893,7 @@ void modbus_manage_query(modbus_param_t *mb_param, const uint8_t *query,
                         int data = (query[offset+4] << 8) + query[offset+5];
                         
                         mb_mapping->tab_holding_registers[address] = data;
-                        memcpy(response, query, query_length - mb_param->checksum_length);
+                        memcpy(response, query, query_length);
                         resp_length = query_length;
                 }
                 break;
