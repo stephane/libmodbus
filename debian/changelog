@@ -1,3 +1,15 @@
+libmodbus (2.0.3-1) intrepid; urgency=low
+
+  * New upstream release
+	
+ -- Stéphane Raimbault <stephane.raimbault@gmail.com>  Sun, 22 Mar 2009 12:16:52 +0200
+
+libmodbus (2.0.2-1) hardy; urgency=low
+
+  * New upstream release
+
+ -- Stephane Raimbault <stephane.raimbault@gmail.com>  Sun, 10 Aug 2008 16:44:49 +0200
+	
 libmodbus (2.0.1-1) hardy; urgency=low
 
   * New upstream release

@@ -1,5 +1,9 @@
-libmodbus 2.0.3 (2008-XX-XX)
+libmodbus 2.0.3 (2009-03-22)
 ============================
+- Fix CRC error when a slave RTU send a response.
+  Thanks to Justin Carroll to have reported and tested my patch.
+- Remove an assignment in compute_response_length()
+- Remove duplicate counter in read_io_status()
 - Fix #274511 reported by 'Kylesch'
   Invalid error check in modbus_init_listen_tcp
 

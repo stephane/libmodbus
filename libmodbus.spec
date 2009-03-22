@@ -1,15 +1,15 @@
 Summary: A Modbus library in C, which supports RTU communication over a serial line or a TCP link. 
 Name: libmodbus
-Version: 2.0.1
+Version: 2.0.3
 Release: 1
 License: LGPL V3+
 Packager: Some random Internet user
 URL: https://launchpad.net/libmodbus/
 Group: Applications/System          
-Provides: libmodbus=2.0.1
+Provides: libmodbus=2.0.3
 Requires: ,/bin/sh
 
-Source0: libmodbus-2.0.1.tar.bz2
+Source0: libmodbus-2.0.3.tar.bz2
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: autoconf, automake
@@ -50,7 +50,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0755,root,root) %dir %{_includedir}/modbus/
 %dir %{_libdir}/libmodbus.so.2
 %dir %{_libdir}/libmodbus.so
-%attr(0755,root,root) %{_libdir}/libmodbus.so.2.0.1
+%attr(0755,root,root) %{_libdir}/libmodbus.so.2.0.3
 %attr(0755,root,root) %{_libdir}/libmodbus.la
 %attr(0644,root,root) %{_libdir}/pkgconfig/modbus.pc
 %attr(0644,root,root) %{_includedir}/modbus/modbus.h
@@ -58,6 +58,12 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Sun Mar 22 2009 Stéphane Raimbault <stephane.raimbault@gmail.com> - 2.0.3-1
+- new upstream release
+
+* Sun Aug 10 2008 Stéphane Raimbault <stephane.raimbault@gmail.com> - 2.0.2-1
+- new upstream release
+
 * Fri Jul 2 2008 Stéphane Raimbault <stephane.raimbault@gmail.com> - 2.0.1-1
 - new upstream release
 
