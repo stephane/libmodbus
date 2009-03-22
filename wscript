@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-VERSION='2.0.1'
+VERSION='2.0.3'
 APPNAME='libmodbus'
 
 # these variables are mandatory ('/' are converted automatically)
