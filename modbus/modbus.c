@@ -1388,8 +1388,8 @@ static int modbus_connect_rtu(modbus_param_t *mb_param)
         mb_param->fd = open(mb_param->device, O_RDWR | O_NOCTTY | O_NDELAY);
         if (mb_param->fd < 0) {
                 perror("open");
-                printf("ERROR Can't open the device %s (errno %d)\n",
-                       mb_param->device, errno);
+                printf("ERROR Can't open the device %s (%s)\n",
+                       mb_param->device, strerror(errno));
                 return -1;
         }
 
