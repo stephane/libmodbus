@@ -33,7 +33,7 @@ uint32_t gettime(void)
 {
         struct timeval tv;
         gettimeofday (&tv, NULL);
-        
+
         return (uint32_t) tv.tv_sec * G_USEC_PER_SEC + tv.tv_usec;
 }
 
@@ -61,7 +61,7 @@ int main(void)
         /* Allocate and initialize the memory to store the status */
         tab_rp_status = (uint8_t *) malloc(MAX_STATUS * sizeof(uint8_t));
         memset(tab_rp_status, 0, MAX_STATUS * sizeof(uint8_t));
-        
+
         /* Allocate and initialize the memory to store the registers */
         tab_rp_registers = (uint16_t *) malloc(MAX_REGISTERS * sizeof(uint16_t));
         memset(tab_rp_registers, 0, MAX_REGISTERS * sizeof(uint16_t));
@@ -78,7 +78,7 @@ int main(void)
 
         rate = (NB_LOOPS * nb_points) * G_USEC_PER_SEC / (end - start);
         printf("Transfert rate in points/seconds:\n");
-        printf("* %'d points/s\n", rate); 
+        printf("* %'d points/s\n", rate);
         printf("\n");
 
         bytes = NB_LOOPS * (nb_points / 8) + ((nb_points % 8) ? 1 : 0);
@@ -88,7 +88,7 @@ int main(void)
         printf("* %.3f ms for %d bytes\n", elapsed, bytes);
         printf("* %'d KiB/s\n", rate);
         printf("\n");
-        
+
         /* TCP: Query and reponse header and values */
         bytes = 12 + 9 + (nb_points / 8) + ((nb_points % 8) ? 1 : 0);
         printf("Values and TCP Modbus overhead:\n");
@@ -111,7 +111,7 @@ int main(void)
 
         rate = (NB_LOOPS * nb_points) * G_USEC_PER_SEC / (end - start);
         printf("Transfert rate in points/seconds:\n");
-        printf("* %'d registers/s\n", rate); 
+        printf("* %'d registers/s\n", rate);
         printf("\n");
 
         bytes = NB_LOOPS * nb_points * sizeof(uint16_t);
@@ -121,7 +121,7 @@ int main(void)
         printf("* %.3f ms for %d bytes\n", elapsed, bytes);
         printf("* %'d KiB/s\n", rate);
         printf("\n");
-        
+
         /* TCP:Query and reponse header and values */
         bytes = 12 + 9 + (nb_points * sizeof(uint16_t));
         printf("Values and TCP Modbus overhead:\n");
@@ -133,11 +133,11 @@ int main(void)
         printf("\n");
 
         /* Free the memory */
-        free(tab_rp_status);                                           
+        free(tab_rp_status);
         free(tab_rp_registers);
 
         /* Close the connection */
         modbus_close(&mb_param);
-        
+
         return 0;
 }

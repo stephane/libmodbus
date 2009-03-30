@@ -1,3 +1,27 @@
+=============================
+Migration from the 2.0 series
+=============================
+
+modbus_init_listen_tcp() has been renamed to modbus_slave_listen_tcp() and
+requires a new argument, the maximal number of connections:
+
+int modbus_slave_init_tcp(modbus_param_t *mb_param, int nb_connection);
+
+
+New function modbus_slave_accept_tcp() to etablish a new connection (previously
+in modbus_init_listen_tcp()):
+
+int modbus_slave_accept_tcp(modbus_param_t *mb_param, int *socket);
+
+
+modbus_listen() has been renamed to modbus_slave_receive() and requires a new
+argument, the socket file descriptor to listen on. If the sockfd is -1, the
+internal fd of modbus_param_t is used:
+
+int modbus_slave_receive(modbus_param_t *mb_param, int sockfd,
+                         uint8_t *query, int *query_length);
+
+
 ===================================
 Migration notes from the 1.2 series
 ===================================

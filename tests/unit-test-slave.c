@@ -59,13 +59,14 @@ int main(void)
                         UT_INPUT_REGISTERS_TAB[i];;
         }
 
-        socket = modbus_init_listen_tcp(&mb_param);
-        
+        socket = modbus_slave_listen_tcp(&mb_param, 1);
+        modbus_slave_accept_tcp(&mb_param, &socket);
+
         while (1) {
                 uint8_t query[MAX_MESSAGE_LENGTH];
                 int query_size;
                 
-                ret = modbus_listen(&mb_param, query, &query_size);
+                ret = modbus_slave_receive(&mb_param, -1, query, &query_size);
                 if (ret == 0) {
                         if (((query[HEADER_LENGTH_TCP + 4] << 8) + query[HEADER_LENGTH_TCP + 5])
                             == UT_HOLDING_REGISTERS_NB_POINTS_SPECIAL) {

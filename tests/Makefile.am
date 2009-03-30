@@ -5,8 +5,9 @@ noinst_PROGRAMS = \
 	random-test-master \
 	unit-test-slave \
 	unit-test-master \
-	bench-bandwidth-slave \
-	bench-bandwidth-master
+	bandwidth-slave-one \
+	bandwidth-slave-many-up \
+	bandwidth-master
 
 common_ldflags = \
 	$(top_builddir)/modbus/libmodbus.la
@@ -23,11 +24,14 @@ unit_test_slave_LDADD = $(common_ldflags)
 unit_test_master_SOURCES = unit-test-master.c unit-test.h
 unit_test_master_LDADD = $(common_ldflags)
 
-bench_bandwidth_slave_SOURCES = bench-bandwidth-slave.c
-bench_bandwidth_slave_LDADD = $(common_ldflags)
+bandwidth_slave_one_SOURCES = bandwidth-slave-one.c
+bandwidth_slave_one_LDADD = $(common_ldflags)
 
-bench_bandwidth_master_SOURCES = bench-bandwidth-master.c
-bench_bandwidth_master_LDADD = $(common_ldflags)
+bandwidth_slave_many_up_SOURCES = bandwidth-slave-many-up.c
+bandwidth_slave_many_up_LDADD = $(common_ldflags)
+
+bandwidth_master_SOURCES = bandwidth-master.c
+bandwidth_master_LDADD = $(common_ldflags)
 
 INCLUDES = -I$(top_srcdir)
 CLEANFILES = *~

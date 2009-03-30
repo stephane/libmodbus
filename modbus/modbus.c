@@ -498,7 +498,7 @@ static int receive_msg(modbus_param_t *mb_param,
                 tv.tv_usec = TIME_OUT_BEGIN_OF_TRAME;
                 state = COMPLETE;
         }
-                
+
         length_to_read = msg_length_computed;
 
         select_ret = 0;
@@ -515,7 +515,6 @@ static int receive_msg(modbus_param_t *mb_param,
                         read_ret = recv(mb_param->fd, p_msg, length_to_read, 0);
 
                 if (read_ret == 0) {
-                        printf("Connection closed\n");
                         return CONNECTION_CLOSED;
                 } else if (read_ret < 0) {
                         /* The only negative possible value is -1 */
@@ -524,7 +523,7 @@ static int receive_msg(modbus_param_t *mb_param,
                         return PORT_SOCKET_FAILURE;
                 }
                         
-                /* Sums bytes received */ 
+                /* Sums bytes received */
                 (*p_msg_length) += read_ret;
 
                 /* Display the hex code of each character received */
@@ -590,6 +589,28 @@ static int receive_msg(modbus_param_t *mb_param,
         return 0;
 }
 
+/* Listens for any query from a modbus master in TCP, requires the socket file
+   descriptor etablished with the master device in argument or -1 to use the
+   internal one of modbus_param_t.
+
+   Returns:
+   - 0 if OK, or a negative error number if the request fails
+   - query, message received
+   - query_length, length in bytes of the message */
+int modbus_slave_receive(modbus_param_t *mb_param, int sockfd,
+                         uint8_t *query, int *query_length)
+{
+        int ret;
+
+        if (sockfd != -1) {
+                mb_param->fd = sockfd;
+        }
+
+        /* The length of the query to receive isn't known. */
+        ret = receive_msg(mb_param, MSG_LENGTH_UNDEFINED, query, query_length);
+        
+        return ret;
+}
 
 /* Receives the response and checks values (and checksum in RTU).
 
@@ -757,6 +778,7 @@ static int response_exception(modbus_param_t *mb_param, sft_t *sft,
 
 /* Manages the received query.
    Analyses the query and constructs a response.
+
    If an error occurs, this function construct the response
    accordingly.
 */
@@ -946,21 +968,6 @@ void modbus_manage_query(modbus_param_t *mb_param, const uint8_t *query,
         }
 
         modbus_send(mb_param, response, resp_length);
-}
-
-/* Listens any message on a socket or file descriptor.
-   Returns:
-   - 0 if OK, or a negative error number if the request fails
-   - query, message received
-   - query_length, length in bytes of the message */
-int modbus_listen(modbus_param_t *mb_param, uint8_t *query, int *query_length)
-{
-        int ret;
-
-        /* The length of the query to receive isn't known. */
-        ret = receive_msg(mb_param, MSG_LENGTH_UNDEFINED, query, query_length);
-        
-        return ret;
 }
 
 /* Reads IO status */
@@ -1628,10 +1635,6 @@ static int modbus_connect_tcp(modbus_param_t *mb_param)
         int option;
         struct sockaddr_in addr;
 
-        addr.sin_family = AF_INET;
-        addr.sin_port = htons(mb_param->port);
-        addr.sin_addr.s_addr = inet_addr(mb_param->ip);
-
         mb_param->fd = socket(AF_INET, SOCK_STREAM, 0);
         if (mb_param->fd < 0) {
                 return mb_param->fd;
@@ -1661,7 +1664,10 @@ static int modbus_connect_tcp(modbus_param_t *mb_param)
         if (mb_param->debug) {
                 printf("Connecting to %s\n", mb_param->ip);
         }
-        
+
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(mb_param->port);
+        addr.sin_addr.s_addr = inet_addr(mb_param->ip);        
         ret = connect(mb_param->fd, (struct sockaddr *)&addr,
                       sizeof(struct sockaddr_in));
         if (ret < 0) {
@@ -1784,60 +1790,64 @@ void modbus_mapping_free(modbus_mapping_t *mb_mapping)
         free(mb_mapping->tab_input_registers);
 }
 
-/* Listens for any query from a modbus master in TCP */
-int modbus_init_listen_tcp(modbus_param_t *mb_param)
+/* Listens for any query from one or many modbus masters in TCP */
+int modbus_slave_listen_tcp(modbus_param_t *mb_param, int nb_connection)
 {
-        int ret;
         int new_socket;
+        int yes;
         struct sockaddr_in addr;
-        socklen_t addrlen;
-
-        addr.sin_family = AF_INET;
-        /* If the modbus port is < to 1024, we need the setuid root. */
-        addr.sin_port = htons(mb_param->port);
-        addr.sin_addr.s_addr = INADDR_ANY;
-        memset(&(addr.sin_zero), '\0', 8);
 
         new_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (new_socket < 0) {
                 perror("socket");
-                exit(1);
-        } else {
-                printf("Socket OK\n");
+                return -1;
         }
 
-        ret = bind(new_socket, (struct sockaddr *)&addr,
-                   sizeof(struct sockaddr_in));
-        if (ret < 0) {
+        yes = 1;
+        if (setsockopt(new_socket, SOL_SOCKET, SO_REUSEADDR,
+                       (char *) &yes, sizeof(yes)) < 0) {
+                perror("setsockopt");
+                close(new_socket);
+                return -1;
+        }
+
+        memset(&addr, 0, sizeof(addr));
+        addr.sin_family = AF_INET;
+        /* If the modbus port is < to 1024, we need the setuid root. */
+        addr.sin_port = htons(mb_param->port);
+        addr.sin_addr.s_addr = INADDR_ANY;
+        if (bind(new_socket, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
                 perror("bind");
                 close(new_socket);
-                exit(1);
-        } else {
-                printf("Bind OK\n");
+                return -1;
         }
 
-        ret = listen(new_socket, 1);
-        if (ret != 0) {
+        if (listen(new_socket, nb_connection) < 0) {
                 perror("listen");
                 close(new_socket);
-                exit(1);
-        } else {
-                printf("Listen OK\n");
+                return -1;
         }
 
+        return new_socket;
+}
+
+int modbus_slave_accept_tcp(modbus_param_t *mb_param, int *socket)
+{
+        struct sockaddr_in addr;
+        socklen_t addrlen;
+        
         addrlen = sizeof(struct sockaddr_in);
-        mb_param->fd = accept(new_socket, (struct sockaddr *)&addr, &addrlen);
+        mb_param->fd = accept(*socket, (struct sockaddr *)&addr, &addrlen);
         if (mb_param->fd < 0) {
                 perror("accept");
-                close(new_socket);
-                new_socket = 0;
-                exit(1);
+                close(*socket);
+                *socket = 0;
         } else {
                 printf("The client %s is connected\n", 
                        inet_ntoa(addr.sin_addr));
         }
 
-        return new_socket;
+        return mb_param->fd;
 }
 
 /** Utils **/

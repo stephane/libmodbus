@@ -28,15 +28,22 @@ def build(bld):
     obj.inst_var = 0
 
     obj = bld.create_obj('cc', 'program')
-    obj.source = 'bench-bandwidth-slave.c'
+    obj.source = 'bandwidth-slave-one.c'
     obj.includes = '. ..'
     obj.uselib_local = 'modbus'
-    obj.target = 'bench-bandwidth-slave'
+    obj.target = 'bandwidth-slave-one'
     obj.inst_var = 0
 
     obj = bld.create_obj('cc', 'program')
-    obj.source = 'bench-bandwidth-master.c'
+    obj.source = 'bandwidth-slave-many-up.c'
     obj.includes = '. ..'
     obj.uselib_local = 'modbus'
-    obj.target = 'bench-bandwidth-master'
+    obj.target = 'bandwidth-slave-many-up'
+    obj.inst_var = 0
+
+    obj = bld.create_obj('cc', 'program')
+    obj.source = 'bandwidth-master.c'
+    obj.includes = '. ..'
+    obj.uselib_local = 'modbus'
+    obj.target = 'bandwidth-master'
     obj.inst_var = 0

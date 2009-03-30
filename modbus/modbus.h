@@ -279,12 +279,25 @@ int modbus_mapping_new(modbus_mapping_t *mb_mapping,
 /* Frees the 4 arrays */
 void modbus_mapping_free(modbus_mapping_t *mb_mapping);
 
-/* Initializes the modbus_param_t structure for a TCP slave (server) */
-int modbus_init_listen_tcp(modbus_param_t *mb_param);
+/* Listens for any query from one or many modbus masters in TCP.
 
-/* Listens for any query from a modbus master in TCP 
-   Not tested in RTU communication. */
-int modbus_listen(modbus_param_t *mb_param, uint8_t *query, int *query_length);
+   Returns: socket
+ */
+int modbus_slave_listen_tcp(modbus_param_t *mb_param, int nb_connection);
+
+/* Waits for a connection */
+int modbus_slave_accept_tcp(modbus_param_t *mb_param, int *socket);
+
+/* Listens for any query from a modbus master in TCP, requires the socket file
+   descriptor etablished with the master device in argument.
+
+   Returns:
+   - 0 if OK, or a negative error number if the request fails
+   - query, message received
+   - query_length, length in bytes of the message 
+*/
+int modbus_slave_receive(modbus_param_t *mb_param, int sockfd,
+                         uint8_t *query, int *query_length);
 
 /* Manages the received query.
    Analyses the query and constructs a response.
