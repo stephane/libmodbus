@@ -136,6 +136,16 @@ static uint8_t table_crc_lo[] = {
         0x43, 0x83, 0x41, 0x81, 0x80, 0x40
 };
 
+static const int TAB_HEADER_LENGTH[2] = {
+        HEADER_LENGTH_RTU,
+        HEADER_LENGTH_TCP
+};
+
+static const int TAB_CHECKSUM_LENGTH[2] = {
+        CHECKSUM_LENGTH_RTU,
+        CHECKSUM_LENGTH_TCP
+};
+
 /* Treats errors and flush or close connection if necessary */
 static void error_treat(modbus_param_t *mb_param, int code, const char *string)
 {
@@ -165,7 +175,7 @@ static unsigned int compute_response_length(modbus_param_t *mb_param,
         int length;
         int offset;
 
-        offset = mb_param->header_length;
+        offset = TAB_HEADER_LENGTH[mb_param->type_com];
 
         switch (query[offset + 1]) {
         case FC_READ_COIL_STATUS:
@@ -188,7 +198,7 @@ static unsigned int compute_response_length(modbus_param_t *mb_param,
                 length = 6;
         }
 
-        return length + offset + mb_param->checksum_length;
+        return length + offset + TAB_CHECKSUM_LENGTH[mb_param->type_com];
 }
 
 /* Builds a RTU query header */
@@ -409,16 +419,16 @@ static uint8_t compute_query_length_header(int function)
 /* Computes the length of the data to write in the query */
 static int compute_query_length_data(modbus_param_t *mb_param, uint8_t *msg)
 {
-        int function = msg[mb_param->header_length + 1];
+        int function = msg[TAB_HEADER_LENGTH[mb_param->type_com] + 1];
         int length;
 
         if (function == FC_FORCE_MULTIPLE_COILS ||
             function == FC_PRESET_MULTIPLE_REGISTERS)
-                length = msg[mb_param->header_length + 6];
+                length = msg[TAB_HEADER_LENGTH[mb_param->type_com] + 6];
         else
                 length = 0;
 
-        length += mb_param->checksum_length;
+        length += TAB_CHECKSUM_LENGTH[mb_param->type_com];
 
         return length;
 }
@@ -491,7 +501,7 @@ static int receive_msg(modbus_param_t *mb_param,
                  * we need to analyse the message step by step.
                  * At the first step, we want to reach the function
                  * code because all packets have that information. */
-                msg_length_computed = mb_param->header_length + 2;
+                msg_length_computed = TAB_HEADER_LENGTH[mb_param->type_com] + 2;
                 state = FUNCTION;
         } else {
                 tv.tv_sec = 0;
@@ -540,7 +550,8 @@ static int receive_msg(modbus_param_t *mb_param,
                         switch (state) {
                         case FUNCTION:
                                 /* Function code position */
-                                length_to_read = compute_query_length_header(msg[mb_param->header_length + 1]);
+                                length_to_read = compute_query_length_header(
+                                        msg[TAB_HEADER_LENGTH[mb_param->type_com] + 1]);
                                 msg_length_computed += length_to_read;
                                 /* It's useless to check
                                    p_msg_length_computed value in this
@@ -628,7 +639,7 @@ static int modbus_receive(modbus_param_t *mb_param,
         int ret;
         int response_length;
         int response_length_computed;
-        int offset = mb_param->header_length;
+        int offset = TAB_HEADER_LENGTH[mb_param->type_com];
 
         response_length_computed = compute_response_length(mb_param, query);
         ret = receive_msg(mb_param, response_length_computed,
@@ -683,7 +694,7 @@ static int modbus_receive(modbus_param_t *mb_param,
                 }
         } else if (ret == COMM_TIME_OUT) {
 
-                if (response_length == (offset + 3 + mb_param->checksum_length)) {
+                if (response_length == (offset + 3 + TAB_CHECKSUM_LENGTH[mb_param->type_com])) {
                         /* EXCEPTION CODE RECEIVED */
 
                         /* Optimization allowed because exception response is
@@ -785,7 +796,7 @@ static int response_exception(modbus_param_t *mb_param, sft_t *sft,
 void modbus_manage_query(modbus_param_t *mb_param, const uint8_t *query,
                          int query_length, modbus_mapping_t *mb_mapping)
 {
-        int offset = mb_param->header_length;
+        int offset = TAB_HEADER_LENGTH[mb_param->type_com];
         int slave = query[offset];
         int function = query[offset+1];
         uint16_t address = (query[offset+2] << 8) + query[offset+3];
@@ -994,7 +1005,7 @@ static int read_io_status(modbus_param_t *mb_param, int slave, int function,
                 if (ret < 0)
                         return ret;
 
-                offset = mb_param->header_length;
+                offset = TAB_HEADER_LENGTH[mb_param->type_com];
 
                 offset_length = offset + ret;
                 for (i = offset; i < offset_length; i++) {
@@ -1081,7 +1092,7 @@ static int read_registers(modbus_param_t *mb_param, int slave, int function,
 
                 ret = modbus_receive(mb_param, query, response);
 
-                offset = mb_param->header_length;
+                offset = TAB_HEADER_LENGTH[mb_param->type_com];
 
                 /* If ret is negative, the loop is jumped ! */
                 for (i = 0; i < ret; i++) {
@@ -1299,7 +1310,7 @@ int report_slave_id(modbus_param_t *mb_param, int slave,
                 if (ret < 0)
                         return ret;
 
-                offset = mb_param->header_length;
+                offset = TAB_HEADER_LENGTH[mb_param->type_com];
                 offset_length = offset + ret;
 
                 for (i = offset; i < offset_length; i++)
@@ -1328,8 +1339,6 @@ void modbus_init_rtu(modbus_param_t *mb_param, const char *device,
         mb_param->data_bit = data_bit;
         mb_param->stop_bit = stop_bit;
         mb_param->type_com = RTU;
-        mb_param->header_length = HEADER_LENGTH_RTU;
-        mb_param->checksum_length = CHECKSUM_LENGTH_RTU;
         mb_param->error_handling = FLUSH_OR_RECONNECT_ON_ERROR;
 }
 
@@ -1348,8 +1357,6 @@ void modbus_init_tcp(modbus_param_t *mb_param, const char *ip, int port)
         strncpy(mb_param->ip, ip, sizeof(char)*16);
         mb_param->port = port;
         mb_param->type_com = TCP;
-        mb_param->header_length = HEADER_LENGTH_TCP;
-        mb_param->checksum_length = CHECKSUM_LENGTH_TCP;
         mb_param->error_handling = FLUSH_OR_RECONNECT_ON_ERROR;
 }
 

@@ -119,7 +119,7 @@ extern "C" {
 /* Internal using */
 #define MSG_LENGTH_UNDEFINED -1
 
-typedef enum { RTU, TCP } type_com_t;
+typedef enum { RTU=0, TCP } type_com_t;
 typedef enum { FLUSH_OR_RECONNECT_ON_ERROR, NOP_ON_ERROR } error_handling_t;
 
 /* This structure is byte-aligned */
@@ -130,10 +130,6 @@ typedef struct {
         type_com_t type_com;
         /* Flag debug */
         int debug;
-        /* Header length used for offset */
-        int header_length;
-        /* Checksum length RTU = 2 and TCP = 0 */
-        int checksum_length;
         /* TCP port */
         int port;
         /* Device: "/dev/ttyS0", "/dev/ttyUSB0" or "/dev/tty.USA19*"
