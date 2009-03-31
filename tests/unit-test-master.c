@@ -44,7 +44,7 @@ int main(void)
         /* TCP */
         modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
 /*        modbus_set_debug(&mb_param, TRUE);*/
-      
+
         if (modbus_connect(&mb_param) == -1) {
                 printf("ERROR Connection failed\n");
                 exit(1);
@@ -55,9 +55,9 @@ int main(void)
                 UT_COIL_STATUS_NB_POINTS : UT_INPUT_STATUS_NB_POINTS;
         tab_rp_status = (uint8_t *) malloc(nb_points * sizeof(uint8_t));
         memset(tab_rp_status, 0, nb_points * sizeof(uint8_t));
-        
+
         /* Allocate and initialize the memory to store the registers */
-        nb_points = (UT_HOLDING_REGISTERS_NB_POINTS > 
+        nb_points = (UT_HOLDING_REGISTERS_NB_POINTS >
                      UT_INPUT_REGISTERS_NB_POINTS) ?
                 UT_HOLDING_REGISTERS_NB_POINTS : UT_INPUT_REGISTERS_NB_POINTS;
         tab_rp_registers = (uint16_t *) malloc(nb_points * sizeof(uint16_t));
@@ -83,7 +83,7 @@ int main(void)
                                tab_rp_status);
         printf("2/2 read_coil_status: ");
         if (ret != 1) {
-                printf("FAILED (nb points %d)\n", ret); 
+                printf("FAILED (nb points %d)\n", ret);
                 goto close;
         }
 
@@ -97,7 +97,7 @@ int main(void)
         /* Multiple coils */
         {
                 uint8_t tab_value[UT_COIL_STATUS_NB_POINTS];
-                
+
                 set_bits_from_bytes(tab_value, 0, UT_COIL_STATUS_NB_POINTS,
                                     UT_COIL_STATUS_TAB);
                 ret = force_multiple_coils(&mb_param, SLAVE,
@@ -117,7 +117,7 @@ int main(void)
                                UT_COIL_STATUS_NB_POINTS, tab_rp_status);
         printf("2/2 read_coil_status: ");
         if (ret != UT_COIL_STATUS_NB_POINTS) {
-                printf("FAILED (nb points %d)\n", ret); 
+                printf("FAILED (nb points %d)\n", ret);
                 goto close;
         }
 
@@ -146,7 +146,7 @@ int main(void)
         printf("1/1 read_input_status: ");
 
         if (ret != UT_INPUT_STATUS_NB_POINTS) {
-                printf("FAILED (nb points %d)\n", ret); 
+                printf("FAILED (nb points %d)\n", ret);
                 goto close;
         }
 
@@ -186,7 +186,7 @@ int main(void)
                                      1, tab_rp_registers);
         printf("2/2 read_holding_registers: ");
         if (ret != 1) {
-                printf("FAILED (nb points %d)\n", ret); 
+                printf("FAILED (nb points %d)\n", ret);
                 goto close;
         }
 
@@ -217,7 +217,7 @@ int main(void)
                                      tab_rp_registers);
         printf("2/2 read_holding_registers: ");
         if (ret != UT_HOLDING_REGISTERS_NB_POINTS) {
-                printf("FAILED (nb points %d)\n", ret); 
+                printf("FAILED (nb points %d)\n", ret);
                 goto close;
         }
 
@@ -240,10 +240,10 @@ int main(void)
                                    tab_rp_registers);
         printf("1/1 read_input_registers: ");
         if (ret != UT_INPUT_REGISTERS_NB_POINTS) {
-                printf("FAILED (nb points %d)\n", ret); 
+                printf("FAILED (nb points %d)\n", ret);
                 goto close;
         }
-         
+
         for (i=0; i < UT_INPUT_REGISTERS_NB_POINTS; i++) {
                 if (tab_rp_registers[i] != UT_INPUT_REGISTERS_TAB[i]) {
                         printf("FAILED (%0X != %0X)\n",
@@ -252,14 +252,14 @@ int main(void)
                 }
         }
         printf("OK\n");
-        
+
 
         /** ILLEGAL DATA ADDRESS **/
         printf("\nTEST ILLEGAL DATA ADDRESS:\n");
 
         /* The mapping begins at 0 and ending at address + nb_points so
-         * the addresses below are not valid. */ 
-        
+         * the addresses below are not valid. */
+
         ret = read_coil_status(&mb_param, SLAVE,
                                UT_COIL_STATUS_ADDRESS,
                                UT_COIL_STATUS_NB_POINTS + 1,
@@ -289,7 +289,7 @@ int main(void)
                 printf("OK\n");
         else
                 printf("FAILED\n");
-                
+
         ret = read_input_registers(&mb_param, SLAVE,
                                    UT_INPUT_REGISTERS_ADDRESS,
                                    UT_INPUT_REGISTERS_NB_POINTS + 1,
@@ -365,7 +365,7 @@ int main(void)
                 printf("OK\n");
         else
                 printf("FAILED\n");
-                
+
         ret = read_input_registers(&mb_param, SLAVE,
                                    UT_INPUT_REGISTERS_ADDRESS,
                                    MAX_REGISTERS + 1,
@@ -419,11 +419,11 @@ int main(void)
 
 close:
         /* Free the memory */
-        free(tab_rp_status);                                           
+        free(tab_rp_status);
         free(tab_rp_registers);
 
         /* Close the connection */
         modbus_close(&mb_param);
-        
+
         return 0;
 }

@@ -33,7 +33,7 @@
    - read_holding_registers
 
    All these functions are called with random values on a address
-   range defined by the following defines. 
+   range defined by the following defines.
 */
 #define LOOP             1
 #define SLAVE         0x11
@@ -83,7 +83,7 @@ int main(void)
         memset(tab_rp_registers, 0, nb * sizeof(uint16_t));
 
         nb_loop = nb_fail = 0;
-        while (nb_loop++ < LOOP) { 
+        while (nb_loop++ < LOOP) {
                 for (addr = ADDRESS_START; addr <= ADDRESS_END; addr++) {
                         int i;
 
@@ -105,7 +105,7 @@ int main(void)
                                 ret = read_coil_status(&mb_param, SLAVE, addr, 1, tab_rp_status);
                                 if (ret != 1 || tab_rq_status[0] != tab_rp_status[0]) {
                                         printf("ERROR read_coil_status single (%d)\n", ret);
-                                        printf("Slave = %d, address = %d\n", 
+                                        printf("Slave = %d, address = %d\n",
                                                SLAVE, addr);
                                         nb_fail++;
                                 }
@@ -129,7 +129,7 @@ int main(void)
                                         for (i=0; i<nb; i++) {
                                                 if (tab_rp_status[i] != tab_rq_status[i]) {
                                                         printf("ERROR read_coil_status\n");
-                                                        printf("Slave = %d, address = %d, value %d (0x%X) != %d (0x%X)\n", 
+                                                        printf("Slave = %d, address = %d, value %d (0x%X) != %d (0x%X)\n",
                                                                SLAVE, addr,
                                                                tab_rq_status[i], tab_rq_status[i],
                                                                tab_rp_status[i], tab_rp_status[i]);
@@ -165,7 +165,7 @@ int main(void)
                                         }
                                 }
                         }
-                        
+
                         /* MULTIPLE REGISTERS */
                         ret = preset_multiple_registers(&mb_param, SLAVE,
                                                         addr, nb, tab_rq_registers);
@@ -197,7 +197,7 @@ int main(void)
                         }
 
                 }
-                        
+
                 printf("Test: ");
                 if (nb_fail)
                         printf("%d FAILS\n", nb_fail);
@@ -207,13 +207,12 @@ int main(void)
 
         /* Free the memory */
         free(tab_rq_status);
-        free(tab_rp_status);                                           
+        free(tab_rp_status);
         free(tab_rq_registers);
         free(tab_rp_registers);
 
         /* Close the connection */
         modbus_close(&mb_param);
-        
+
         return 0;
 }
-

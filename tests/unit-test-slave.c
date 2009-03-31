@@ -47,7 +47,7 @@ int main(void)
 
         /* Examples from PI_MODBUS_300.pdf.
            Only the read-only input values are assigned. */
-        
+
         /** INPUT STATUS **/
         set_bits_from_bytes(mb_mapping.tab_input_status,
                             UT_INPUT_STATUS_ADDRESS, UT_INPUT_STATUS_NB_POINTS,
@@ -65,7 +65,7 @@ int main(void)
         while (1) {
                 uint8_t query[MAX_MESSAGE_LENGTH];
                 int query_size;
-                
+
                 ret = modbus_slave_receive(&mb_param, -1, query, &query_size);
                 if (ret == 0) {
                         if (((query[HEADER_LENGTH_TCP + 4] << 8) + query[HEADER_LENGTH_TCP + 5])
@@ -88,7 +88,6 @@ int main(void)
         close(socket);
         modbus_mapping_free(&mb_mapping);
         modbus_close(&mb_param);
-        
+
         return 0;
 }
-        

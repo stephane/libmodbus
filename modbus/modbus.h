@@ -24,7 +24,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
 #define MODBUS_TCP_DEFAULT_PORT 502
 
@@ -37,7 +37,7 @@ extern "C" {
 #define PRESET_RESPONSE_LENGTH_TCP  8
 
 #define CHECKSUM_LENGTH_RTU      2
-#define CHECKSUM_LENGTH_TCP      0        
+#define CHECKSUM_LENGTH_TCP      0
 
 /* It's not really the minimal length (the real one is report slave ID
  * in RTU (4 bytes)) but it's a convenient size to use in RTU or TCP
@@ -50,7 +50,7 @@ extern "C" {
 */
 #define MIN_QUERY_LENGTH        12
 
-/* Page 102, Application Notes of PI–MBUS–300: 
+/* Page 102, Application Notes of PI–MBUS–300:
  *  The maximum length of the entire message must not exceed 256
  *  bytes.
  */
@@ -84,7 +84,7 @@ extern "C" {
 /* Function codes */
 #define FC_READ_COIL_STATUS          0x01  /* discretes inputs */
 #define FC_READ_INPUT_STATUS         0x02  /* discretes outputs */
-#define FC_READ_HOLDING_REGISTERS    0x03  
+#define FC_READ_HOLDING_REGISTERS    0x03
 #define FC_READ_INPUT_REGISTERS      0x04
 #define FC_FORCE_SINGLE_COIL         0x05
 #define FC_PRESET_SINGLE_REGISTER    0x06
@@ -221,16 +221,16 @@ int report_slave_id(modbus_param_t *mb_param, int slave, uint8_t *dest);
 /* Initializes the modbus_param_t structure for RTU.
    - device: "/dev/ttyS0"
    - baud:   9600, 19200, 57600, 115200, etc
-   - parity: "even", "odd" or "none" 
-   - data_bits: 5, 6, 7, 8 
+   - parity: "even", "odd" or "none"
+   - data_bits: 5, 6, 7, 8
    - stop_bits: 1, 2
 */
 void modbus_init_rtu(modbus_param_t *mb_param, const char *device,
                      int baud, const char *parity, int data_bit,
                      int stop_bit);
-                     
+
 /* Initializes the modbus_param_t structure for TCP.
-   - ip : "192.168.0.5" 
+   - ip : "192.168.0.5"
    - port : 1099
 
    Set the port to MODBUS_TCP_DEFAULT_PORT to use the default one
@@ -264,11 +264,11 @@ void modbus_close(modbus_param_t *mb_param);
 void modbus_set_debug(modbus_param_t *mb_param, int boolean);
 
 /**
- * SLAVE/CLIENT FUNCTIONS 
+ * SLAVE/CLIENT FUNCTIONS
  **/
 
 /* Allocates 4 arrays to store coils, input status, input registers and
-   holding registers. The pointers are stored in modbus_mapping structure. 
+   holding registers. The pointers are stored in modbus_mapping structure.
 
    Returns: TRUE if ok, FALSE on failure
  */
@@ -294,7 +294,7 @@ int modbus_slave_accept_tcp(modbus_param_t *mb_param, int *socket);
    Returns:
    - 0 if OK, or a negative error number if the request fails
    - query, message received
-   - query_length, length in bytes of the message 
+   - query_length, length in bytes of the message
 */
 int modbus_slave_receive(modbus_param_t *mb_param, int sockfd,
                          uint8_t *query, int *query_length);
@@ -309,7 +309,7 @@ void modbus_manage_query(modbus_param_t *mb_param, const uint8_t *query,
                          int query_length, modbus_mapping_t *mb_mapping);
 
 
-/** 
+/**
  * UTILS FUNCTIONS
  **/
 

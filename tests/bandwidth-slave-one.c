@@ -43,7 +43,7 @@ int main(void)
         while (1) {
                 uint8_t query[MAX_MESSAGE_LENGTH];
                 int query_size;
-                
+
                 ret = modbus_slave_receive(&mb_param, -1, query, &query_size);
                 if (ret == 0) {
                         modbus_manage_query(&mb_param, query, query_size, &mb_mapping);
@@ -58,7 +58,6 @@ int main(void)
         close(socket);
         modbus_mapping_free(&mb_mapping);
         modbus_close(&mb_param);
-        
+
         return 0;
 }
-        
