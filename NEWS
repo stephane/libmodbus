@@ -1,3 +1,7 @@
+libmodbus 2.2.0 (2009-05-01)
+============================
+- New API for slave server (see MIGRATION)
+
 libmodbus 2.0.3 (2009-03-22)
 ============================
 - Fix CRC error when a slave RTU send a response.
