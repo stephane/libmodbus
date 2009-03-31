@@ -1330,6 +1330,7 @@ void modbus_init_rtu(modbus_param_t *mb_param, const char *device,
         mb_param->type_com = RTU;
         mb_param->header_length = HEADER_LENGTH_RTU;
         mb_param->checksum_length = CHECKSUM_LENGTH_RTU;
+        mb_param->error_handling = FLUSH_OR_RECONNECT_ON_ERROR;
 }
 
 /* Initializes the modbus_param_t structure for TCP.
