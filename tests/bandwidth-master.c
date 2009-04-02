@@ -26,15 +26,16 @@
 
 /* Tests based on PI-MBUS-300 documentation */
 #define SLAVE     0x11
-#define NB_LOOPS  10000
+#define NB_LOOPS  100000
 
-#define G_USEC_PER_SEC 1000000
-uint32_t gettime(void)
+#define G_MSEC_PER_SEC 1000
+
+uint32_t gettime_ms(void)
 {
         struct timeval tv;
         gettimeofday (&tv, NULL);
 
-        return (uint32_t) tv.tv_sec * G_USEC_PER_SEC + tv.tv_usec;
+        return (uint32_t) tv.tv_sec * 1000 + tv.tv_usec / 1000;
 }
 
 int main(void)
@@ -69,20 +70,20 @@ int main(void)
         printf("READ COIL STATUS\n\n");
 
         nb_points = MAX_STATUS;
-        start = gettime();
+        start = gettime_ms();
         for (i=0; i<NB_LOOPS; i++) {
                 ret = read_coil_status(&mb_param, SLAVE, 0, nb_points, tab_rp_status);
         }
-        end = gettime();
-        elapsed = (end - start) / 1000;
+        end = gettime_ms();
+        elapsed = end - start;
 
-        rate = (NB_LOOPS * nb_points) * G_USEC_PER_SEC / (end - start);
+        rate = (NB_LOOPS * nb_points) * G_MSEC_PER_SEC / (end - start);
         printf("Transfert rate in points/seconds:\n");
         printf("* %'d points/s\n", rate);
         printf("\n");
 
         bytes = NB_LOOPS * (nb_points / 8) + ((nb_points % 8) ? 1 : 0);
-        rate = bytes / 1024 * G_USEC_PER_SEC / (end - start);
+        rate = bytes / 1024 * G_MSEC_PER_SEC / (end - start);
         printf("Values:\n");
         printf("* %d x %d values\n", NB_LOOPS, nb_points);
         printf("* %.3f ms for %d bytes\n", elapsed, bytes);
@@ -94,7 +95,7 @@ int main(void)
         printf("Values and TCP Modbus overhead:\n");
         printf("* %d x %d bytes\n", NB_LOOPS, bytes);
         bytes = NB_LOOPS * bytes;
-        rate = bytes / 1024 * G_USEC_PER_SEC / (end - start);
+        rate = bytes / 1024 * G_MSEC_PER_SEC / (end - start);
         printf("* %.3f ms for %d bytes\n", elapsed, bytes);
         printf("* %'d KiB/s\n", rate);
         printf("\n\n");
@@ -102,20 +103,20 @@ int main(void)
         printf("READ HOLDING REGISTERS\n\n");
 
         nb_points = MAX_REGISTERS;
-        start = gettime();
+        start = gettime_ms();
         for (i=0; i<NB_LOOPS; i++) {
                 ret = read_holding_registers(&mb_param, SLAVE, 0, nb_points, tab_rp_registers);
         }
-        end = gettime();
-        elapsed = (end - start) / 1000;
+        end = gettime_ms();
+        elapsed = end - start;
 
-        rate = (NB_LOOPS * nb_points) * G_USEC_PER_SEC / (end - start);
+        rate = (NB_LOOPS * nb_points) * G_MSEC_PER_SEC / (end - start);
         printf("Transfert rate in points/seconds:\n");
         printf("* %'d registers/s\n", rate);
         printf("\n");
 
         bytes = NB_LOOPS * nb_points * sizeof(uint16_t);
-        rate = bytes / 1024 * G_USEC_PER_SEC / (end - start);
+        rate = bytes / 1024 * G_MSEC_PER_SEC / (end - start);
         printf("Values:\n");
         printf("* %d x %d values\n", NB_LOOPS, nb_points);
         printf("* %.3f ms for %d bytes\n", elapsed, bytes);
@@ -127,7 +128,7 @@ int main(void)
         printf("Values and TCP Modbus overhead:\n");
         printf("* %d x %d bytes\n", NB_LOOPS, bytes);
         bytes = NB_LOOPS * bytes;
-        rate = bytes / 1024 * G_USEC_PER_SEC / (end - start);
+        rate = bytes / 1024 * G_MSEC_PER_SEC / (end - start);
         printf("* %.3f ms for %d bytes\n", elapsed, bytes);
         printf("* %'d KiB/s\n", rate);
         printf("\n");
