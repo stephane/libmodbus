@@ -1,49 +1,16 @@
 def build(bld):
-    obj = bld.create_obj('cc', 'program')
-    obj.source = 'random-test-slave.c'
-    obj.includes = '. ..'
-    obj.uselib_local = 'modbus'
-    obj.target = 'random-test-slave'
-    obj.inst_var = 0
+    programs = ('random-test-slave',
+                'unit-test-slave',
+                'unit-test-master',
+                'bandwidth-slave-one',
+                'bandwidth-slave-many-up',
+                'bandwidth-master')
 
-    obj = bld.create_obj('cc', 'program')
-    obj.source = 'random-test-master.c'
-    obj.includes = '. ..'
-    obj.uselib_local = 'modbus'
-    obj.target = 'random-test-master'
-    obj.inst_var = 0
-
-    obj = bld.create_obj('cc', 'program')
-    obj.source = 'unit-test-slave.c'
-    obj.includes = '. ..'
-    obj.uselib_local = 'modbus'
-    obj.target = 'unit-test-slave'
-    obj.inst_var = 0
-
-    obj = bld.create_obj('cc', 'program')
-    obj.source = 'unit-test-master.c'
-    obj.includes = '. ..'
-    obj.uselib_local = 'modbus'
-    obj.target = 'unit-test-master'
-    obj.inst_var = 0
-
-    obj = bld.create_obj('cc', 'program')
-    obj.source = 'bandwidth-slave-one.c'
-    obj.includes = '. ..'
-    obj.uselib_local = 'modbus'
-    obj.target = 'bandwidth-slave-one'
-    obj.inst_var = 0
-
-    obj = bld.create_obj('cc', 'program')
-    obj.source = 'bandwidth-slave-many-up.c'
-    obj.includes = '. ..'
-    obj.uselib_local = 'modbus'
-    obj.target = 'bandwidth-slave-many-up'
-    obj.inst_var = 0
-
-    obj = bld.create_obj('cc', 'program')
-    obj.source = 'bandwidth-master.c'
-    obj.includes = '. ..'
-    obj.uselib_local = 'modbus'
-    obj.target = 'bandwidth-master'
-    obj.inst_var = 0
+    for program in programs:
+        obj = bld.new_task_gen(
+            features = 'cc cprogram',
+            source = program + '.c',
+            target = program,
+            includes = '. ../src',
+            uselib_local = 'modbus',
+            install_path='')

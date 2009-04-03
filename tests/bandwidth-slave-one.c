@@ -20,7 +20,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <modbus/modbus.h>
+#include "modbus.h"
 
 int main(void)
 {

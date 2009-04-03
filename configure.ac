@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.59)
 AC_INIT(libmodbus, 2.0.3, stephane.raimbault@gmail.com)
-AC_CONFIG_SRCDIR([modbus/modbus.c])
+AC_CONFIG_SRCDIR([src/modbus.c])
 AM_INIT_AUTOMAKE
 AM_DISABLE_STATIC
 
@@ -28,7 +28,7 @@ AC_CHECK_FUNCS([inet_ntoa memset select socket])
 
 AC_OUTPUT([
         Makefile
-        modbus/Makefile
+        src/Makefile
         tests/Makefile
         modbus.pc
 ])

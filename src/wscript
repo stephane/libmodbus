@@ -1,0 +1,8 @@
+def build(bld):
+    obj = bld.new_task_gen(
+        features='cc cshlib',
+        source='modbus.c',
+        target = 'modbus',
+        vnum='2.2.0')
+
+    bld.install_files('${PREFIX}/include/modbus', 'modbus.h')

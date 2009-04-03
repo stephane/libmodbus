@@ -1,8 +1,0 @@
-def build(bld):
-    obj = bld.create_obj('cc', 'shlib')
-    obj.source = 'modbus.c'
-    obj.includes = '.'
-    obj.target = 'modbus'
-    obj.vnum = '2.0.1'
-
-    install_files('PREFIX', 'include/modbus', 'modbus.h')

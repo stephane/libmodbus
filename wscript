@@ -24,23 +24,19 @@ def configure(conf):
      # check for headers and append found headers to headers_found for later use
      headers_found = []
      for header in headers.split():
-          if conf.check_header(header):
+          if conf.check_cc(header_name=header):
                headers_found.append(header)
 
-     functions_defines = (
-          ('setsockopt', 'HAVE_SETSOCKOPT'),
-          ('inet_ntoa', 'HAVE_INET_NTOA'),
-          ('memset', 'HAVE_MEMSET'),
-          ('select', 'HAVE_SELECT'),
-          ('socket', 'HAVE_SOCKET'))
+     functions_headers = (
+          ('setsockopt', 'sys/socket.h'),
+          ('inet_ntoa', 'arpa/inet.h'),
+          ('memset', 'string.h'),
+          ('select', 'sys/select.h'),
+          ('socket', 'sys/socket.h'),
+          )
 
-     for (function, define) in functions_defines:
-          e = conf.create_function_enumerator()
-          e.mandatory = True
-          e.function = function
-          e.headers = headers_found
-          e.define = define
-          e.run()
+     for (function, headers) in functions_headers:
+          conf.check_cc(function_name=function, header_name=headers, mandatory=1)
 
      conf.define('VERSION', VERSION)
      conf.define('PACKAGE', 'libmodbus')
@@ -50,18 +46,19 @@ def configure(conf):
 def build(bld):
      import misc
 
-     bld.add_subdirs('modbus tests')  
+     bld.add_subdirs('src tests')
 
-     obj = bld.create_obj('subst')
-     obj.source = 'modbus.pc.in'
-     obj.target = 'modbus.pc'
-     obj.dict = {'VERSION' : VERSION, 
-                 'prefix': bld.env()['PREFIX'], 
-                 'exec_prefix': bld.env()['PREFIX'],
-                 'libdir': bld.env()['PREFIX'] + 'lib', 
-                 'includedir': bld.env()['PREFIX'] + 'include'}
+     obj = bld.new_task_gen(features='subst',
+                            source='modbus.pc.in',
+                            target='modbus.pc',
+                            dict = {'VERSION' : VERSION,
+                                    'prefix': bld.env['PREFIX'],
+                                    'exec_prefix': bld.env['PREFIX'],
+                                    'libdir': bld.env['PREFIX'] + 'lib',
+                                    'includedir': bld.env['PREFIX'] + 'include'}
+                            )
 
-     install_files('PREFIX', 'lib/pkgconfig', 'modbus.pc')
+     bld.install_files('${PREFIX}/lib/pkgconfig', 'modbus.pc')
 
 def shutdown():
      import UnitTest

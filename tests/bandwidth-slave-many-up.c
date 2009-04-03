@@ -22,7 +22,7 @@
 #include <errno.h>
 #include <signal.h>
 
-#include <modbus/modbus.h>
+#include "modbus.h"
 
 #define NB_CONNECTION 5
 int slave_socket;

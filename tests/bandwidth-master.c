@@ -22,7 +22,7 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include <modbus/modbus.h>
+#include "modbus.h"
 
 /* Tests based on PI-MBUS-300 documentation */
 #define SLAVE     0x11
