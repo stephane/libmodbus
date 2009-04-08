@@ -26,7 +26,7 @@
 extern "C" {
 #endif
 
-#define MODBUS_TCP_DEFAULT_PORT 502
+#define MODBUS_TCP_DEFAULT_PORT   502
 
 /* Slave index */
 #define HEADER_LENGTH_RTU           1
@@ -37,8 +37,8 @@ extern "C" {
 #define PRESET_QUERY_LENGTH_TCP    12
 #define PRESET_RESPONSE_LENGTH_TCP  8
 
-#define CHECKSUM_LENGTH_RTU      2
-#define CHECKSUM_LENGTH_TCP      0
+#define CHECKSUM_LENGTH_RTU         2
+#define CHECKSUM_LENGTH_TCP         0
 
 /* It's not really the minimal length (the real one is report slave ID
  * in RTU (4 bytes)) but it's a convenient size to use in RTU or TCP
@@ -47,25 +47,30 @@ extern "C" {
  * - HEADER_LENGTH_TCP (7) + function (1) + address (2) + number (2)
  * - HEADER_LENGTH_RTU (1) + function (1) + address (2) + number (2) + CRC (2)
 */
-#define MIN_QUERY_LENGTH        12
+#define MIN_QUERY_LENGTH           12
 
-/* Page 102, Application Notes of PI–MBUS–300:
- *  The maximum length of the entire message must not exceed 256
- *  bytes.
+/* Modbus_Application_Protocol_V1_1b.pdf Chapter 4 Section 1 Page 5:
+ *  - RS232 / RS485 ADU = 253 bytes + slave (1 byte) + CRC (2 bytes) = 256 bytes
+ *  - TCP MODBUS ADU = 253 bytes + MBAP (7 bytes) = 260 bytes
  */
-#define MAX_MESSAGE_LENGTH     256
+#define MAX_PDU_LENGTH            253
+#define MAX_ADU_LENGTH_RTU        256
+#define MAX_ADU_LENGTH_TCP        260
+
+/* Kept for compatibility reasons (deprecated) */
+#define MAX_MESSAGE_LENGTH        260
 
 /* Modbus_Application_Protocol_V1_1b.pdf (chapter 6 section 1 page 12)
  * Quantity of Coils (2 bytes): 1 to 2000 (0x7D0)
  */
-#define MAX_STATUS            2000
+#define MAX_STATUS               2000
 
 /* Modbus_Application_Protocol_V1_1b.pdf (chapter 6 section 3 page 15)
  * Quantity of Registers (2 bytes): 1 to 125 (0x7D)
  */
-#define MAX_REGISTERS          125
+#define MAX_REGISTERS             125
 
-#define REPORT_SLAVE_ID_LENGTH 75
+#define REPORT_SLAVE_ID_LENGTH     75
 
 /* Time out between trames in microsecond */
 #define TIME_OUT_BEGIN_OF_TRAME 500000

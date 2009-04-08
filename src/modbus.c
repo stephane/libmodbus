@@ -146,6 +146,11 @@ static const int TAB_CHECKSUM_LENGTH[2] = {
         CHECKSUM_LENGTH_TCP
 };
 
+static const int TAB_MAX_ADU_LENGTH[2] = {
+        MAX_ADU_LENGTH_RTU,
+        MAX_ADU_LENGTH_TCP,
+};
+
 /* Treats errors and flush or close connection if necessary */
 static void error_treat(modbus_param_t *mb_param, int code, const char *string)
 {
@@ -561,8 +566,7 @@ static int receive_msg(modbus_param_t *mb_param,
                         case BYTE:
                                 length_to_read = compute_query_length_data(mb_param, msg);
                                 msg_length_computed += length_to_read;
-                                /* FIXME Wrong length */
-                                if (msg_length_computed > MAX_MESSAGE_LENGTH) {
+                                if (msg_length_computed > TAB_MAX_ADU_LENGTH[mb_param->type_com]) {
                                      error_treat(mb_param, TOO_MANY_DATA, "Too many data");
                                      return TOO_MANY_DATA;
                                 }
