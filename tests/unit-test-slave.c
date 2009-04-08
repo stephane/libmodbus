@@ -67,12 +67,12 @@ int main(void)
 
                 ret = modbus_slave_receive(&mb_param, -1, query, &query_size);
                 if (ret == 0) {
-                        if (((query[HEADER_LENGTH_TCP + 4] << 8) + query[HEADER_LENGTH_TCP + 5])
+                        if (((query[HEADER_LENGTH_TCP + 3] << 8) + query[HEADER_LENGTH_TCP + 4])
                             == UT_HOLDING_REGISTERS_NB_POINTS_SPECIAL) {
                                 /* Change the number of values (offset
                                    TCP = 6) */
-                                query[HEADER_LENGTH_TCP + 4] = 0;
-                                query[HEADER_LENGTH_TCP + 5] = UT_HOLDING_REGISTERS_NB_POINTS;
+                                query[HEADER_LENGTH_TCP + 3] = 0;
+                                query[HEADER_LENGTH_TCP + 4] = UT_HOLDING_REGISTERS_NB_POINTS;
                         }
 
                         modbus_manage_query(&mb_param, query, query_size, &mb_mapping);

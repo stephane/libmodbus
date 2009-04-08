@@ -22,6 +22,12 @@ int modbus_slave_receive(modbus_param_t *mb_param, int sockfd,
                          uint8_t *query, int *query_length);
 
 
+If you use the HEADER_LENGTH_ defines, their values have been incremented by 1
+to reflect the PDU and ADU of the Modbus protocol and to reduce the CPU
+consumption:
+ - HEADER_LENGTH_RTU           0 -> 1
+ - HEADER_LENGTH_TCP           6 -> 7
+
 ===================================
 Migration notes from the 1.2 series
 ===================================

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2001-2008 Stéphane Raimbault <stephane.raimbault@gmail.com>
+ * Copyright © 2001-2009 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser Public License as published by
@@ -28,11 +28,12 @@ extern "C" {
 
 #define MODBUS_TCP_DEFAULT_PORT 502
 
-#define HEADER_LENGTH_RTU           0
+/* Slave index */
+#define HEADER_LENGTH_RTU           1
 #define PRESET_QUERY_LENGTH_RTU     6
 #define PRESET_RESPONSE_LENGTH_RTU  2
 
-#define HEADER_LENGTH_TCP           6
+#define HEADER_LENGTH_TCP           7
 #define PRESET_QUERY_LENGTH_TCP    12
 #define PRESET_RESPONSE_LENGTH_TCP  8
 
@@ -43,10 +44,8 @@ extern "C" {
  * in RTU (4 bytes)) but it's a convenient size to use in RTU or TCP
  * communications to read many values or write a single one.
  * Maximum between :
- * - HEADER_LENGTH_TCP (6) + slave (1) + function (1) + address (2) +
- *   number (2)
- * - HEADER_LENGTH_RTU (0) + slave (1) + function (1) + address (2) +
- *   number (2) + CRC (2)
+ * - HEADER_LENGTH_TCP (7) + function (1) + address (2) + number (2)
+ * - HEADER_LENGTH_RTU (1) + function (1) + address (2) + number (2) + CRC (2)
 */
 #define MIN_QUERY_LENGTH        12
 

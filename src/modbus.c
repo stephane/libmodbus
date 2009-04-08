@@ -177,25 +177,25 @@ static unsigned int compute_response_length(modbus_param_t *mb_param,
 
         offset = TAB_HEADER_LENGTH[mb_param->type_com];
 
-        switch (query[offset + 1]) {
+        switch (query[offset]) {
         case FC_READ_COIL_STATUS:
         case FC_READ_INPUT_STATUS: {
                 /* Header + nb values (code from force_multiple_coils) */
-                int nb = (query[offset + 4] << 8) | query[offset + 5];
-                length = 3 + (nb / 8) + ((nb % 8) ? 1 : 0);
+                int nb = (query[offset + 3] << 8) | query[offset + 4];
+                length = 2 + (nb / 8) + ((nb % 8) ? 1 : 0);
         }
                 break;
         case FC_READ_HOLDING_REGISTERS:
         case FC_READ_INPUT_REGISTERS:
                 /* Header + 2 * nb values */
-                length = 3 + 2 * (query[offset + 4] << 8 |
-                                       query[offset + 5]);
+                length = 2 + 2 * (query[offset + 3] << 8 |
+                                       query[offset + 4]);
                 break;
         case FC_READ_EXCEPTION_STATUS:
-                length = 4;
+                length = 3;
                 break;
         default:
-                length = 6;
+                length = 5;
         }
 
         return length + offset + TAB_CHECKSUM_LENGTH[mb_param->type_com];
@@ -419,12 +419,12 @@ static uint8_t compute_query_length_header(int function)
 /* Computes the length of the data to write in the query */
 static int compute_query_length_data(modbus_param_t *mb_param, uint8_t *msg)
 {
-        int function = msg[TAB_HEADER_LENGTH[mb_param->type_com] + 1];
+        int function = msg[TAB_HEADER_LENGTH[mb_param->type_com]];
         int length;
 
         if (function == FC_FORCE_MULTIPLE_COILS ||
             function == FC_PRESET_MULTIPLE_REGISTERS)
-                length = msg[TAB_HEADER_LENGTH[mb_param->type_com] + 6];
+                length = msg[TAB_HEADER_LENGTH[mb_param->type_com] + 5];
         else
                 length = 0;
 
@@ -501,8 +501,8 @@ static int receive_msg(modbus_param_t *mb_param,
                  * we need to analyse the message step by step.
                  * At the first step, we want to reach the function
                  * code because all packets have that information. */
-                msg_length_computed = TAB_HEADER_LENGTH[mb_param->type_com] + 2;
                 state = FUNCTION;
+                msg_length_computed = TAB_HEADER_LENGTH[mb_param->type_com] + 1;
         } else {
                 tv.tv_sec = 0;
                 tv.tv_usec = TIME_OUT_BEGIN_OF_TRAME;
@@ -551,7 +551,7 @@ static int receive_msg(modbus_param_t *mb_param,
                         case FUNCTION:
                                 /* Function code position */
                                 length_to_read = compute_query_length_header(
-                                        msg[TAB_HEADER_LENGTH[mb_param->type_com] + 1]);
+                                        msg[TAB_HEADER_LENGTH[mb_param->type_com]]);
                                 msg_length_computed += length_to_read;
                                 /* It's useless to check
                                    p_msg_length_computed value in this
@@ -561,6 +561,7 @@ static int receive_msg(modbus_param_t *mb_param,
                         case BYTE:
                                 length_to_read = compute_query_length_data(mb_param, msg);
                                 msg_length_computed += length_to_read;
+                                /* FIXME Wrong length */
                                 if (msg_length_computed > MAX_MESSAGE_LENGTH) {
                                      error_treat(mb_param, TOO_MANY_DATA, "Too many data");
                                      return TOO_MANY_DATA;
@@ -651,27 +652,27 @@ static int modbus_receive(modbus_param_t *mb_param,
 
                 /* The number of values is returned if it's corresponding
                  * to the query */
-                switch (response[offset + 1]) {
+                switch (response[offset]) {
                 case FC_READ_COIL_STATUS:
                 case FC_READ_INPUT_STATUS:
                         /* Read functions, 8 values in a byte (nb
                          * of values in the query and byte count in
                          * the response. */
-                        query_nb_value = (query[offset+4] << 8) + query[offset+5];
+                        query_nb_value = (query[offset + 3] << 8) + query[offset + 4];
                         query_nb_value = (query_nb_value / 8) + ((query_nb_value % 8) ? 1 : 0);
-                        response_nb_value = response[offset + 2];
+                        response_nb_value = response[offset + 1];
                         break;
                 case FC_READ_HOLDING_REGISTERS:
                 case FC_READ_INPUT_REGISTERS:
                         /* Read functions 1 value = 2 bytes */
-                        query_nb_value = (query[offset+4] << 8) + query[offset+5];
-                        response_nb_value = (response[offset + 2] / 2);
+                        query_nb_value = (query[offset + 3] << 8) + query[offset + 4];
+                        response_nb_value = (response[offset + 1] / 2);
                         break;
                 case FC_FORCE_MULTIPLE_COILS:
                 case FC_PRESET_MULTIPLE_REGISTERS:
                         /* N Write functions */
-                        query_nb_value = (query[offset+4] << 8) + query[offset+5];
-                        response_nb_value = (response[offset + 4] << 8) | response[offset + 5];
+                        query_nb_value = (query[offset + 3] << 8) + query[offset + 4];
+                        response_nb_value = (response[offset + 3] << 8) | response[offset + 4];
                         break;
                 case FC_REPORT_SLAVE_ID:
                         /* Report slave ID (bytes received) */
@@ -694,7 +695,7 @@ static int modbus_receive(modbus_param_t *mb_param,
                 }
         } else if (ret == COMM_TIME_OUT) {
 
-                if (response_length == (offset + 3 + TAB_CHECKSUM_LENGTH[mb_param->type_com])) {
+                if (response_length == (offset + 2 + TAB_CHECKSUM_LENGTH[mb_param->type_com])) {
                         /* EXCEPTION CODE RECEIVED */
 
                         /* Optimization allowed because exception response is
@@ -711,13 +712,13 @@ static int modbus_receive(modbus_param_t *mb_param,
                         /* Check for exception response.
                            0x80 + function is stored in the exception
                            response. */
-                        if (0x80 + query[offset + 1] == response[offset + 1]) {
+                        if (0x80 + query[offset] == response[offset]) {
 
-                                int exception_code = response[offset + 2];
+                                int exception_code = response[offset + 1];
                                 // FIXME check test
                                 if (exception_code < NB_TAB_ERROR_MSG) {
                                         error_treat(mb_param, -exception_code,
-                                                    TAB_ERROR_MSG[response[offset + 2]]);
+                                                    TAB_ERROR_MSG[response[offset + 1]]);
                                         /* RETURN THE EXCEPTION CODE */
                                         /* Modbus error code is negative */
                                         return -exception_code;
@@ -728,7 +729,7 @@ static int modbus_receive(modbus_param_t *mb_param,
                                         char *s_error = malloc(64 * sizeof(char));
                                         sprintf(s_error,
                                                 "Invalid exception code %d",
-                                                response[offset + 2]);
+                                                response[offset + 1]);
                                         error_treat(mb_param, INVALID_EXCEPTION_CODE,
                                                     s_error);
                                         free(s_error);
@@ -797,9 +798,9 @@ void modbus_manage_query(modbus_param_t *mb_param, const uint8_t *query,
                          int query_length, modbus_mapping_t *mb_mapping)
 {
         int offset = TAB_HEADER_LENGTH[mb_param->type_com];
-        int slave = query[offset];
-        int function = query[offset+1];
-        uint16_t address = (query[offset+2] << 8) + query[offset+3];
+        int slave = query[offset - 1];
+        int function = query[offset];
+        uint16_t address = (query[offset + 1] << 8) + query[offset + 2];
         uint8_t response[MAX_MESSAGE_LENGTH];
         int resp_length = 0;
         sft_t sft;
@@ -815,7 +816,7 @@ void modbus_manage_query(modbus_param_t *mb_param, const uint8_t *query,
 
         switch (function) {
         case FC_READ_COIL_STATUS: {
-                int nb = (query[offset+4] << 8) + query[offset+5];
+                int nb = (query[offset + 3] << 8) + query[offset + 4];
 
                 if ((address + nb) > mb_mapping->nb_coil_status) {
                         printf("Illegal data address %0X in read_coil_status\n",
@@ -834,7 +835,7 @@ void modbus_manage_query(modbus_param_t *mb_param, const uint8_t *query,
         case FC_READ_INPUT_STATUS: {
                 /* Similar to coil status (but too much arguments to use a
                  * function) */
-                int nb = (query[offset+4] << 8) + query[offset+5];
+                int nb = (query[offset + 3] << 8) + query[offset + 4];
 
                 if ((address + nb) > mb_mapping->nb_input_status) {
                         printf("Illegal data address %0X in read_input_status\n",
@@ -851,7 +852,7 @@ void modbus_manage_query(modbus_param_t *mb_param, const uint8_t *query,
         }
                 break;
         case FC_READ_HOLDING_REGISTERS: {
-                int nb = (query[offset+4] << 8) + query[offset+5];
+                int nb = (query[offset + 3] << 8) + query[offset + 4];
 
                 if ((address + nb) > mb_mapping->nb_holding_registers) {
                         printf("Illegal data address %0X in read_holding_registers\n",
@@ -873,7 +874,7 @@ void modbus_manage_query(modbus_param_t *mb_param, const uint8_t *query,
         case FC_READ_INPUT_REGISTERS: {
                 /* Similar to holding registers (but too much arguments to use a
                  * function) */
-                int nb = (query[offset+4] << 8) + query[offset+5];
+                int nb = (query[offset + 3] << 8) + query[offset + 4];
 
                 if ((address + nb) > mb_mapping->nb_input_registers) {
                         printf("Illegal data address %0X in read_input_registers\n",
@@ -898,7 +899,7 @@ void modbus_manage_query(modbus_param_t *mb_param, const uint8_t *query,
                         resp_length = response_exception(mb_param, &sft,
                                                          ILLEGAL_DATA_ADDRESS, response);
                 } else {
-                        int data = (query[offset+4] << 8) + query[offset+5];
+                        int data = (query[offset + 3] << 8) + query[offset + 4];
 
                         if (data == 0xFF00 || data == 0x0) {
                                 mb_mapping->tab_coil_status[address] = (data) ? ON : OFF;
@@ -923,7 +924,7 @@ void modbus_manage_query(modbus_param_t *mb_param, const uint8_t *query,
                         resp_length = response_exception(mb_param, &sft,
                                                          ILLEGAL_DATA_ADDRESS, response);
                 } else {
-                        int data = (query[offset+4] << 8) + query[offset+5];
+                        int data = (query[offset + 3] << 8) + query[offset + 4];
 
                         mb_mapping->tab_holding_registers[address] = data;
                         memcpy(response, query, query_length);
@@ -931,7 +932,7 @@ void modbus_manage_query(modbus_param_t *mb_param, const uint8_t *query,
                 }
                 break;
         case FC_FORCE_MULTIPLE_COILS: {
-                int nb = (query[offset+4] << 8) + query[offset+5];
+                int nb = (query[offset + 3] << 8) + query[offset + 4];
 
                 if ((address + nb) > mb_mapping->nb_coil_status) {
                         printf("Illegal data address %0X in force_multiple_coils\n",
@@ -939,8 +940,8 @@ void modbus_manage_query(modbus_param_t *mb_param, const uint8_t *query,
                         resp_length = response_exception(mb_param, &sft,
                                                          ILLEGAL_DATA_ADDRESS, response);
                 } else {
-                        /* 6 = byte count, 7 = first byte of data */
-                        set_bits_from_bytes(mb_mapping->tab_coil_status, address, nb, &query[offset + 7]);
+                        /* 6 = byte count */
+                        set_bits_from_bytes(mb_mapping->tab_coil_status, address, nb, &query[offset + 6]);
 
                         resp_length = build_response_basis(mb_param, &sft, response);
                         /* 4 to copy the coil address (2) and the quantity of coils */
@@ -950,7 +951,7 @@ void modbus_manage_query(modbus_param_t *mb_param, const uint8_t *query,
         }
                 break;
         case FC_PRESET_MULTIPLE_REGISTERS: {
-                int nb = (query[offset+4] << 8) + query[offset+5];
+                int nb = (query[offset + 3] << 8) + query[offset + 4];
 
                 if ((address + nb) > mb_mapping->nb_holding_registers) {
                         printf("Illegal data address %0X in preset_multiple_registers\n",
@@ -959,10 +960,10 @@ void modbus_manage_query(modbus_param_t *mb_param, const uint8_t *query,
                                                          ILLEGAL_DATA_ADDRESS, response);
                 } else {
                         int i, j;
-                        for (i = address, j = 0; i < address + nb; i++, j += 2) {
-                                /* 6 = byte count, 7 and 8 = first value */
+                        for (i = address, j = 6; i < address + nb; i++, j += 2) {
+                                /* 6 and 7 = first value */
                                 mb_mapping->tab_holding_registers[i] =
-                                        (query[offset + 7 + j] << 8) + query[offset + 8 + j];
+                                        (query[offset + j] << 8) + query[offset + j + 1];
                         }
 
                         resp_length = build_response_basis(mb_param, &sft, response);
@@ -999,18 +1000,17 @@ static int read_io_status(modbus_param_t *mb_param, int slave, int function,
                 int i, temp, bit;
                 int pos = 0;
                 int offset;
-                int offset_length;
+                int offset_end;
 
                 ret = modbus_receive(mb_param, query, response);
                 if (ret < 0)
                         return ret;
 
                 offset = TAB_HEADER_LENGTH[mb_param->type_com];
-
-                offset_length = offset + ret;
-                for (i = offset; i < offset_length; i++) {
+                offset_end = offset + ret;
+                for (i = offset; i < offset_end; i++) {
                         /* Shift reg hi_byte to temp */
-                        temp = response[3 + i];
+                        temp = response[i + 2];
 
                         for (bit = 0x01; (bit & 0xff) && (pos < nb);) {
                                 data_dest[pos++] = (temp & bit) ? TRUE : FALSE;
@@ -1097,8 +1097,8 @@ static int read_registers(modbus_param_t *mb_param, int slave, int function,
                 /* If ret is negative, the loop is jumped ! */
                 for (i = 0; i < ret; i++) {
                         /* shift reg hi_byte to temp OR with lo_byte */
-                        data_dest[i] = (response[offset + 3 + (i << 1)] << 8) |
-                                response[offset + 4 + (i << 1)];
+                        data_dest[i] = (response[offset + 2 + (i << 1)] << 8) |
+                                response[offset + 3 + (i << 1)];
                 }
         }
 
@@ -1301,7 +1301,7 @@ int report_slave_id(modbus_param_t *mb_param, int slave,
         if (ret > 0) {
                 int i;
                 int offset;
-                int offset_length;
+                int offset_end;
                 uint8_t response[MAX_MESSAGE_LENGTH];
 
                 /* Byte count, slave id, run indicator status,
@@ -1310,10 +1310,10 @@ int report_slave_id(modbus_param_t *mb_param, int slave,
                 if (ret < 0)
                         return ret;
 
-                offset = TAB_HEADER_LENGTH[mb_param->type_com];
-                offset_length = offset + ret;
+                offset = TAB_HEADER_LENGTH[mb_param->type_com] - 1;
+                offset_end = offset + ret;
 
-                for (i = offset; i < offset_length; i++)
+                for (i = offset; i < offset_end; i++)
                         data_dest[i] = response[i];
         }
 
