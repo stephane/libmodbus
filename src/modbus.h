@@ -55,8 +55,15 @@ extern "C" {
  */
 #define MAX_MESSAGE_LENGTH     256
 
-#define MAX_STATUS             800
-#define MAX_REGISTERS          100
+/* Modbus_Application_Protocol_V1_1b.pdf (chapter 6 section 1 page 12)
+ * Quantity of Coils (2 bytes): 1 to 2000 (0x7D0)
+ */
+#define MAX_STATUS            2000
+
+/* Modbus_Application_Protocol_V1_1b.pdf (chapter 6 section 3 page 15)
+ * Quantity of Registers (2 bytes): 1 to 125 (0x7D)
+ */
+#define MAX_REGISTERS          125
 
 #define REPORT_SLAVE_ID_LENGTH 75
 
