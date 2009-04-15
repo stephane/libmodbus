@@ -9,8 +9,10 @@ AM_DISABLE_STATIC
 
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_CXX
 AC_PROG_MAKE_SET
 AC_PROG_LIBTOOL
+AC_PROG_RANLIB
 
 # Checks for header files.
 AC_HEADER_STDC
@@ -20,11 +22,16 @@ AC_CHECK_HEADERS([termios.h sys/time.h unistd.h errno.h limits.h fcntl.h sys/typ
 AC_C_CONST
 AC_TYPE_SIZE_T
 AC_HEADER_TIME
+AC_TYPE_UINT16_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT8_T
 
 # Checks for library functions.
+AC_FUNC_FORK
 AC_FUNC_MALLOC
 AC_FUNC_SELECT_ARGTYPES
-AC_CHECK_FUNCS([inet_ntoa memset select socket])
+AC_TYPE_SIGNAL
+AC_CHECK_FUNCS([gettimeofday inet_ntoa memset select socket strerror])
 
 AC_OUTPUT([
         Makefile
