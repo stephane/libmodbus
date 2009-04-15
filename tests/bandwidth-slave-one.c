@@ -22,6 +22,8 @@
 
 #include "modbus.h"
 
+#define SLAVE 0x11
+
 int main(void)
 {
         int socket;
@@ -29,7 +31,7 @@ int main(void)
         modbus_mapping_t mb_mapping;
         int ret;
 
-        modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
+        modbus_init_tcp(&mb_param, "127.0.0.1", 1502, SLAVE);
 
         ret = modbus_mapping_new(&mb_mapping,  MAX_STATUS, 0, MAX_REGISTERS, 0);
         if (ret == FALSE) {
@@ -46,7 +48,7 @@ int main(void)
 
                 ret = modbus_slave_receive(&mb_param, -1, query, &query_size);
                 if (ret == 0) {
-                        modbus_manage_query(&mb_param, query, query_size, &mb_mapping);
+                        modbus_slave_manage(&mb_param, query, query_size, &mb_mapping);
                 } else if (ret == CONNECTION_CLOSED) {
                         /* Connection closed by the client, end of server */
                         break;

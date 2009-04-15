@@ -1,7 +1,11 @@
 libmodbus 2.2.0 (2009-05-01)
 ============================
 - New API for slave server (see MIGRATION)
+- New slave server able to handle multiple connections
+- Slave only replies to broadcast queries or queries with its slave ID
+- Improved Modbus protocol conformance
 - modbus_param_t is smaller (2 int removed)
+- Faster
 
 libmodbus 2.0.3 (2009-03-22)
 ============================

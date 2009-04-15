@@ -53,7 +53,7 @@ int main(void)
         uint32_t rate;
 
         /* TCP */
-        modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
+        modbus_init_tcp(&mb_param, "127.0.0.1", 1502, SLAVE);
         if (modbus_connect(&mb_param) == -1) {
                 printf("ERROR Connection failed\n");
                 exit(1);
@@ -72,7 +72,7 @@ int main(void)
         nb_points = MAX_STATUS;
         start = gettime_ms();
         for (i=0; i<NB_LOOPS; i++) {
-                ret = read_coil_status(&mb_param, SLAVE, 0, nb_points, tab_rp_status);
+                ret = read_coil_status(&mb_param, 0, nb_points, tab_rp_status);
         }
         end = gettime_ms();
         elapsed = end - start;
@@ -105,7 +105,7 @@ int main(void)
         nb_points = MAX_REGISTERS;
         start = gettime_ms();
         for (i=0; i<NB_LOOPS; i++) {
-                ret = read_holding_registers(&mb_param, SLAVE, 0, nb_points, tab_rp_registers);
+                ret = read_holding_registers(&mb_param, 0, nb_points, tab_rp_registers);
         }
         end = gettime_ms();
         elapsed = end - start;

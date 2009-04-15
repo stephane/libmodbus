@@ -31,7 +31,7 @@ int main(void)
         int ret;
         int i;
 
-        modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
+        modbus_init_tcp(&mb_param, "127.0.0.1", 1502, SLAVE);
         modbus_set_debug(&mb_param, TRUE);
 
         ret = modbus_mapping_new(&mb_mapping,
@@ -75,7 +75,7 @@ int main(void)
                                 query[HEADER_LENGTH_TCP + 4] = UT_HOLDING_REGISTERS_NB_POINTS;
                         }
 
-                        modbus_manage_query(&mb_param, query, query_size, &mb_mapping);
+                        modbus_slave_manage(&mb_param, query, query_size, &mb_mapping);
                 } else if (ret == CONNECTION_CLOSED) {
                         /* Connection closed by the client, end of server */
                         break;

@@ -20,6 +20,8 @@
 
 #include <stdint.h>
 
+#define SLAVE 0x11
+
 const uint16_t UT_COIL_STATUS_ADDRESS = 0x13;
 const uint16_t UT_COIL_STATUS_NB_POINTS = 0x25;
 const uint8_t UT_COIL_STATUS_TAB[] = { 0xCD, 0x6B, 0xB2, 0x0E, 0x1B }; 

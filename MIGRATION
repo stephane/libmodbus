@@ -1,36 +1,43 @@
-=============================
-Migration from the 2.0 series
-=============================
+=============================================
+Migration notes from the 2.0 series (for 2.2)
+=============================================
 
-modbus_init_listen_tcp() has been renamed to modbus_slave_listen_tcp() and
-requires a new argument, the maximal number of connections:
+1 - modbus_init_rtu/tcp takes a new argument: the slave and it is only required
+    in that function (eg. read_coil_status doesn't receive the slave ID in
+    argument anymore). If you need to use different slaves with the same
+    connection (eg. RS485), you can copy modbus_param_t or set
+    modbus_param_t.slave to a different value when required.
+
+2 - modbus_init_listen_tcp() has been renamed to modbus_slave_listen_tcp() and
+    requires a new argument, the maximal number of connections:
 
 int modbus_slave_init_tcp(modbus_param_t *mb_param, int nb_connection);
 
 
-New function modbus_slave_accept_tcp() to etablish a new connection (previously
-in modbus_init_listen_tcp()):
+3 - New function modbus_slave_accept_tcp() to etablish a new connection
+    (previously in modbus_init_listen_tcp()):
 
 int modbus_slave_accept_tcp(modbus_param_t *mb_param, int *socket);
 
 
-modbus_listen() has been renamed to modbus_slave_receive() and requires a new
-argument, the socket file descriptor to listen on. If the sockfd is -1, the
-internal fd of modbus_param_t is used:
+4 - modbus_listen() has been renamed to modbus_slave_receive() and requires a
+    new argument, the socket file descriptor to listen on. If the sockfd is -1,
+    the internal fd of modbus_param_t is used:
 
 int modbus_slave_receive(modbus_param_t *mb_param, int sockfd,
                          uint8_t *query, int *query_length);
 
 
-If you use the HEADER_LENGTH_ defines, their values have been incremented by 1
-to reflect the PDU and ADU of the Modbus protocol and to reduce the CPU
-consumption:
- - HEADER_LENGTH_RTU           0 -> 1
- - HEADER_LENGTH_TCP           6 -> 7
+5 - If you use the HEADER_LENGTH_ defines, their values have been incremented by
+    1 to reflect the PDU and ADU of the Modbus protocol and to reduce the CPU
+    consumption:
+     - HEADER_LENGTH_RTU           0 -> 1
+     - HEADER_LENGTH_TCP           6 -> 7
 
-===================================
-Migration notes from the 1.2 series
-===================================
+
+=============================================
+Migration notes from the 1.2 series (for 2.0)
+=============================================
 
 Init
 ====

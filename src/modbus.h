@@ -27,6 +27,7 @@ extern "C" {
 #endif
 
 #define MODBUS_TCP_DEFAULT_PORT   502
+#define MODBUS_BROADCAST_ADDRESS  255
 
 /* Slave index */
 #define HEADER_LENGTH_RTU           1
@@ -135,6 +136,8 @@ typedef enum { FLUSH_OR_RECONNECT_ON_ERROR, NOP_ON_ERROR } error_handling_t;
 
 /* This structure is byte-aligned */
 typedef struct {
+        /* Slave address */
+        int slave;
         /* Descriptor (tty or socket) */
         int fd;
         /* Communication mode: RTU or TCP */
@@ -189,41 +192,39 @@ typedef struct {
 
 /* Reads the boolean status of coils and sets the array elements in
    the destination to TRUE or FALSE */
-int read_coil_status(modbus_param_t *mb_param, int slave,
-                     int start_addr, int nb, uint8_t *dest);
+int read_coil_status(modbus_param_t *mb_param, int start_addr, int nb,
+                     uint8_t *dest);
 
 /* Same as read_coil_status but reads the slaves input table */
-int read_input_status(modbus_param_t *mb_param, int slave,
-                      int start_addr, int nb, uint8_t *dest);
+int read_input_status(modbus_param_t *mb_param, int start_addr, int nb,
+                      uint8_t *dest);
 
 /* Reads the holding registers in a slave and put the data into an
    array */
-int read_holding_registers(modbus_param_t *mb_param, int slave,
-                           int start_addr, int nb, uint16_t *dest);
+int read_holding_registers(modbus_param_t *mb_param, int start_addr, int nb,
+                           uint16_t *dest);
 
 /* Reads the input registers in a slave and put the data into an
    array */
-int read_input_registers(modbus_param_t *mb_param, int slave,
-                         int start_addr, int nb, uint16_t *dest);
+int read_input_registers(modbus_param_t *mb_param, int start_addr, int nb,
+                         uint16_t *dest);
 
 /* Turns ON or OFF a single coil in the slave device */
-int force_single_coil(modbus_param_t *mb_param, int slave,
-                      int coil_addr, int state);
+int force_single_coil(modbus_param_t *mb_param, int coil_addr, int state);
 
 /* Sets a value in one holding register in the slave device */
-int preset_single_register(modbus_param_t *mb_param, int slave,
-                           int reg_addr, int value);
+int preset_single_register(modbus_param_t *mb_param, int reg_addr, int value);
 
 /* Sets/resets the coils in the slave from an array in argument */
-int force_multiple_coils(modbus_param_t *mb_param, int slave,
-                         int start_addr, int nb, const uint8_t *data);
+int force_multiple_coils(modbus_param_t *mb_param, int start_addr, int nb,
+                         const uint8_t *data);
 
 /* Copies the values in the slave from the array given in argument */
-int preset_multiple_registers(modbus_param_t *mb_param, int slave,
-                              int start_addr, int nb, const uint16_t *data);
+int preset_multiple_registers(modbus_param_t *mb_param, int start_addr, int nb,
+                              const uint16_t *data);
 
 /* Returns the slave id! */
-int report_slave_id(modbus_param_t *mb_param, int slave, uint8_t *dest);
+int report_slave_id(modbus_param_t *mb_param, uint8_t *dest);
 
 /* Initializes the modbus_param_t structure for RTU.
    - device: "/dev/ttyS0"
@@ -234,18 +235,20 @@ int report_slave_id(modbus_param_t *mb_param, int slave, uint8_t *dest);
 */
 void modbus_init_rtu(modbus_param_t *mb_param, const char *device,
                      int baud, const char *parity, int data_bit,
-                     int stop_bit);
+                     int stop_bit, int slave);
 
 /* Initializes the modbus_param_t structure for TCP.
-   - ip : "192.168.0.5"
-   - port : 1099
+   - ip: "192.168.0.5"
+   - port: 1099
+   - slave: 5
 
    Set the port to MODBUS_TCP_DEFAULT_PORT to use the default one
    (502). It's convenient to use a port number greater than or equal
    to 1024 because it's not necessary to be root to use this port
    number.
 */
-void modbus_init_tcp(modbus_param_t *mb_param, const char *ip_address, int port);
+void modbus_init_tcp(modbus_param_t *mb_param, const char *ip_address, int port,
+                     int slave);
 
 /* By default, the error handling mode used is RECONNECT_ON_ERROR.
 
@@ -312,7 +315,7 @@ int modbus_slave_receive(modbus_param_t *mb_param, int sockfd,
    If an error occurs, this function construct the response
    accordingly.
 */
-void modbus_manage_query(modbus_param_t *mb_param, const uint8_t *query,
+void modbus_slave_manage(modbus_param_t *mb_param, const uint8_t *query,
                          int query_length, modbus_mapping_t *mb_mapping);
 
 
