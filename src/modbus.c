@@ -1650,7 +1650,7 @@ static int modbus_connect_tcp(modbus_param_t *mb_param)
         int option;
         struct sockaddr_in addr;
 
-        mb_param->fd = socket(AF_INET, SOCK_STREAM, 0);
+        mb_param->fd = socket(PF_INET, SOCK_STREAM, 0);
         if (mb_param->fd < 0) {
                 return mb_param->fd;
         }
@@ -1812,7 +1812,7 @@ int modbus_slave_listen_tcp(modbus_param_t *mb_param, int nb_connection)
         int yes;
         struct sockaddr_in addr;
 
-        new_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        new_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (new_socket < 0) {
                 perror("socket");
                 return -1;
