@@ -324,11 +324,11 @@ void modbus_slave_manage(modbus_param_t *mb_param, const uint8_t *query,
  **/
 
 /* Sets many input/coil status from a single byte value (all 8 bits of
-   the byte value are setted) */
+   the byte value are set) */
 void set_bits_from_byte(uint8_t *dest, int address, const uint8_t value);
 
 /* Sets many input/coil status from a table of bytes (only the bits
-   between address and address + nb_bits are setted) */
+   between address and address + nb_bits are set) */
 void set_bits_from_bytes(uint8_t *dest, int address, int nb_bits,
                          const uint8_t *tab_byte);
 

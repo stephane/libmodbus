@@ -247,7 +247,8 @@ static int build_query_basis_tcp(int slave, int function,
         query[2] = 0;
         query[3] = 0;
 
-        /* Length to fix later with set_query_length_tcp (4 and 5) */
+        /* Length will be defined later by set_query_length_tcp at offsets 4
+         * and 5 */
 
         query[6] = slave;
         query[7] = function;
@@ -1867,7 +1868,7 @@ int modbus_slave_accept_tcp(modbus_param_t *mb_param, int *socket)
 /** Utils **/
 
 /* Sets many input/coil status from a single byte value (all 8 bits of
-   the byte value are setted) */
+   the byte value are set) */
 void set_bits_from_byte(uint8_t *dest, int address, const uint8_t value)
 {
         int i;
@@ -1878,7 +1879,7 @@ void set_bits_from_byte(uint8_t *dest, int address, const uint8_t value)
 }
 
 /* Sets many input/coil status from a table of bytes (only the bits
-   between address and address + nb_bits are setted) */
+   between address and address + nb_bits are set) */
 void set_bits_from_bytes(uint8_t *dest, int address, int nb_bits,
                          const uint8_t tab_byte[])
 {
