@@ -1109,7 +1109,7 @@ static int read_registers(modbus_param_t *mb_param, int function,
         uint8_t response[MAX_MESSAGE_LENGTH];
 
         if (nb > MAX_REGISTERS) {
-                printf("EROOR Too many holding registers requested (%d > %d)\n",
+                printf("ERROR Too many holding registers requested (%d > %d)\n",
                        nb, MAX_REGISTERS);
                 return INVALID_DATA;
         }
