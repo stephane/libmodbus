@@ -42,8 +42,7 @@ int main(void)
 
         /* TCP */
         modbus_init_tcp(&mb_param, "127.0.0.1", 1502, SLAVE);
-/*        modbus_set_debug(&mb_param, TRUE);*/
-        modbus_set_error_handling(&mb_param, NOP_ON_ERROR);
+/*        modbus_set_debug(&mb_param, TRUE); */
 
         if (modbus_connect(&mb_param) == -1) {
                 printf("ERROR Connection failed\n");
@@ -267,8 +266,10 @@ int main(void)
         printf("* read_coil_status: ");
         if (ret == ILLEGAL_DATA_ADDRESS)
                 printf("OK\n");
-        else
+        else {
                 printf("FAILED\n");
+                goto close;
+        }
 
         ret = read_input_status(&mb_param,
                                 UT_INPUT_STATUS_ADDRESS,
@@ -277,8 +278,10 @@ int main(void)
         printf("* read_input_status: ");
         if (ret == ILLEGAL_DATA_ADDRESS)
                 printf("OK\n");
-        else
+        else {
                 printf("FAILED\n");
+                goto close;
+        }
 
         ret = read_holding_registers(&mb_param,
                                      UT_HOLDING_REGISTERS_ADDRESS,
@@ -287,8 +290,10 @@ int main(void)
         printf("* read_holding_registers: ");
         if (ret == ILLEGAL_DATA_ADDRESS)
                 printf("OK\n");
-        else
+        else {
                 printf("FAILED\n");
+                goto close;
+        }
 
         ret = read_input_registers(&mb_param,
                                    UT_INPUT_REGISTERS_ADDRESS,
@@ -297,8 +302,10 @@ int main(void)
         printf("* read_input_registers: ");
         if (ret == ILLEGAL_DATA_ADDRESS)
                 printf("OK\n");
-        else
+        else {
                 printf("FAILED\n");
+                goto close;
+        }
 
         ret = force_single_coil(&mb_param,
                                 UT_COIL_STATUS_ADDRESS + UT_COIL_STATUS_NB_POINTS,
@@ -308,6 +315,7 @@ int main(void)
                 printf("OK\n");
         } else {
                 printf("FAILED\n");
+                goto close;
         }
 
         ret = force_multiple_coils(&mb_param,
@@ -319,6 +327,7 @@ int main(void)
                 printf("OK\n");
         } else {
                 printf("FAILED\n");
+                goto close;
         }
 
         ret = preset_multiple_registers(&mb_param,
@@ -330,6 +339,7 @@ int main(void)
                 printf("OK\n");
         } else {
                 printf("FAILED\n");
+                goto close;
         }
 
 
@@ -341,49 +351,58 @@ int main(void)
                                MAX_STATUS + 1,
                                tab_rp_status);
         printf("* read_coil_status: ");
-        if (ret == TOO_MANY_DATA)
+        if (ret == INVALID_DATA) {
                 printf("OK\n");
-        else
+        } else {
                 printf("FAILED\n");
+                goto close;
+        }
 
         ret = read_input_status(&mb_param,
                                 UT_INPUT_STATUS_ADDRESS,
                                 MAX_STATUS + 1,
                                 tab_rp_status);
         printf("* read_input_status: ");
-        if (ret == TOO_MANY_DATA)
+        if (ret == INVALID_DATA) {
                 printf("OK\n");
-        else
+        } else {
                 printf("FAILED\n");
+                goto close;
+        }
 
         ret = read_holding_registers(&mb_param,
                                      UT_HOLDING_REGISTERS_ADDRESS,
                                      MAX_REGISTERS + 1,
                                      tab_rp_registers);
         printf("* read_holding_registers: ");
-        if (ret == TOO_MANY_DATA)
+        if (ret == INVALID_DATA) {
                 printf("OK\n");
-        else
+        } else {
                 printf("FAILED\n");
+                goto close;
+        }
 
         ret = read_input_registers(&mb_param,
                                    UT_INPUT_REGISTERS_ADDRESS,
                                    MAX_REGISTERS + 1,
                                    tab_rp_registers);
         printf("* read_input_registers: ");
-        if (ret == TOO_MANY_DATA)
+        if (ret == INVALID_DATA) {
                 printf("OK\n");
-        else
+        } else {
                 printf("FAILED\n");
+                goto close;
+        }
 
         ret = force_multiple_coils(&mb_param,
                                    UT_COIL_STATUS_ADDRESS,
                                    MAX_STATUS + 1,
                                    tab_rp_status);
         printf("* force_multiple_coils: ");
-        if (ret == TOO_MANY_DATA) {
+        if (ret == INVALID_DATA) {
                 printf("OK\n");
         } else {
+                goto close;
                 printf("FAILED\n");
         }
 
@@ -392,10 +411,11 @@ int main(void)
                                         MAX_REGISTERS + 1,
                                         tab_rp_registers);
         printf("* preset_multiple_registers: ");
-        if (ret == TOO_MANY_DATA) {
+        if (ret == INVALID_DATA) {
                 printf("OK\n");
         } else {
                 printf("FAILED\n");
+                goto close;
         }
 
         /** SLAVE REPLY **/
@@ -407,10 +427,11 @@ int main(void)
                                      UT_HOLDING_REGISTERS_NB_POINTS,
                                      tab_rp_registers);
         printf("1/2 No reply from slave %d: ", mb_param.slave);
-        if (ret != UT_HOLDING_REGISTERS_NB_POINTS) {
+        if (ret == SELECT_TIMEOUT) {
                 printf("OK\n", ret);
         } else {
                 printf("FAILED\n");
+                goto close;
         }
  
         mb_param.slave = MODBUS_BROADCAST_ADDRESS;
@@ -422,6 +443,7 @@ int main(void)
         if (ret == UT_HOLDING_REGISTERS_NB_POINTS) {
                 printf("OK\n", ret);
         } else {
+                goto close;
                 printf("FAILED\n");
         }
 
@@ -436,11 +458,11 @@ int main(void)
                                      UT_HOLDING_REGISTERS_NB_POINTS_SPECIAL,
                                      tab_rp_registers_bad);
         printf("* read_holding_registers: ");
-        if (ret > 0) {
-                /* Error not detected */
-                printf("FAILED\n");
-        } else {
+        if (ret == INVALID_DATA) {
                 printf("OK\n");
+        } else {
+                printf("FAILED\n");
+                goto close;
         }
         free(tab_rp_registers_bad);
 

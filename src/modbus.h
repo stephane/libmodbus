@@ -120,19 +120,20 @@ extern "C" {
 #define GATEWAY_PROBLEM_TARGET  -0x0B
 
 /* Local */
-#define COMM_TIME_OUT           -0x0C
-#define PORT_SOCKET_FAILURE     -0x0D
-#define SELECT_FAILURE          -0x0E
-#define TOO_MANY_DATA           -0x0F
-#define INVALID_CRC             -0x10
-#define INVALID_EXCEPTION_CODE  -0x11
-#define CONNECTION_CLOSED       -0x12
+#define INVALID_DATA            -0x10
+#define INVALID_CRC             -0x11
+#define INVALID_EXCEPTION_CODE  -0x12
+
+#define SELECT_TIMEOUT          -0x13
+#define SELECT_FAILURE          -0x14
+#define SOCKET_FAILURE          -0x15
+#define CONNECTION_CLOSED       -0x16
 
 /* Internal using */
 #define MSG_LENGTH_UNDEFINED -1
 
 typedef enum { RTU=0, TCP } type_com_t;
-typedef enum { FLUSH_OR_RECONNECT_ON_ERROR, NOP_ON_ERROR } error_handling_t;
+typedef enum { FLUSH_OR_CONNECT_ON_ERROR, NOP_ON_ERROR } error_handling_t;
 
 /* This structure is byte-aligned */
 typedef struct {
@@ -250,9 +251,9 @@ void modbus_init_rtu(modbus_param_t *mb_param, const char *device,
 void modbus_init_tcp(modbus_param_t *mb_param, const char *ip_address, int port,
                      int slave);
 
-/* By default, the error handling mode used is RECONNECT_ON_ERROR.
+/* By default, the error handling mode used is CONNECT_ON_ERROR.
 
-   With RECONNECT_ON_ERROR, the library will attempt an immediate
+   With FLUSH_OR_CONNECT_ON_ERROR, the library will attempt an immediate
    reconnection which may hang for several seconds if the network to
    the remote target unit is down.
 
@@ -269,6 +270,9 @@ int modbus_connect(modbus_param_t *mb_param);
 
 /* Closes a modbus connection */
 void modbus_close(modbus_param_t *mb_param);
+
+/* Flush the pending request */
+void modbus_flush(modbus_param_t *mb_param);
 
 /* Activates the debug messages */
 void modbus_set_debug(modbus_param_t *mb_param, int boolean);

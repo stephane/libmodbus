@@ -151,24 +151,44 @@ static const int TAB_MAX_ADU_LENGTH[2] = {
         MAX_ADU_LENGTH_TCP,
 };
 
+void modbus_flush(modbus_param_t *mb_param)
+{
+        if (mb_param->type_com == RTU) {
+                tcflush(mb_param->fd, TCIOFLUSH);
+        } else {
+                int ret;
+                do {
+                        /* Extract the garbage from the socket */
+                        char devnull[MAX_ADU_LENGTH_TCP];
+                        ret = recv(mb_param->fd, devnull, MAX_ADU_LENGTH_TCP, MSG_DONTWAIT);
+                        if (mb_param->debug && ret > 0) {
+                                printf("%d bytes flushed\n", ret);
+                        }
+                } while (ret > 0);
+        }
+}
+
 /* Treats errors and flush or close connection if necessary */
 static void error_treat(modbus_param_t *mb_param, int code, const char *string)
 {
-        printf("\nERROR %s (%d)\n", string, code);
+        printf("\nERROR %s (%0X)\n", string, -code);
 
-        if (mb_param->error_handling == FLUSH_OR_RECONNECT_ON_ERROR) {
+        if (mb_param->error_handling == FLUSH_OR_CONNECT_ON_ERROR) {
                 switch (code) {
-                case ILLEGAL_DATA_VALUE:
-                case ILLEGAL_DATA_ADDRESS:
-                case ILLEGAL_FUNCTION:
+                case INVALID_DATA:
+                case INVALID_CRC:
+                case INVALID_EXCEPTION_CODE:
+                        modbus_flush(mb_param);
+                        break;
+                case SELECT_FAILURE:
+                case SOCKET_FAILURE:
+                case CONNECTION_CLOSED:
+                        modbus_close(mb_param);
+                        modbus_connect(mb_param);
                         break;
                 default:
-                        if (mb_param->type_com == RTU) {
-                                tcflush(mb_param->fd, TCIOFLUSH);
-                        } else {
-                                modbus_close(mb_param);
-                                modbus_connect(mb_param);
-                        }
+                        /* NOP */
+                        break;
                 }
         }
 }
@@ -394,10 +414,10 @@ static int modbus_send(modbus_param_t *mb_param, uint8_t *query,
                 ret = send(mb_param->fd, query, query_length, 0);
 
         /* Return the number of bytes written (0 to n)
-           or PORT_SOCKET_FAILURE on error */
+           or SOCKET_FAILURE on error */
         if ((ret == -1) || (ret != query_length)) {
-                ret = PORT_SOCKET_FAILURE;
-                error_treat(mb_param, ret, "Write port/socket failure");
+                ret = SOCKET_FAILURE;
+                error_treat(mb_param, ret, "Write socket failure");
         }
 
         return ret;
@@ -455,7 +475,7 @@ static int compute_query_length_data(modbus_param_t *mb_param, uint8_t *msg)
                                                                                    \
     if (select_ret == 0) {                                                         \
             /* Call to error_treat is done later to manage exceptions */           \
-            return COMM_TIME_OUT;                                                  \
+            return SELECT_TIMEOUT;                                                 \
     }                                                                              \
 }
 
@@ -534,9 +554,9 @@ static int receive_msg(modbus_param_t *mb_param,
                         return CONNECTION_CLOSED;
                 } else if (read_ret < 0) {
                         /* The only negative possible value is -1 */
-                        error_treat(mb_param, PORT_SOCKET_FAILURE,
-                                    "Read port/socket failure");
-                        return PORT_SOCKET_FAILURE;
+                        error_treat(mb_param, SOCKET_FAILURE,
+                                    "Read socket failure");
+                        return SOCKET_FAILURE;
                 }
 
                 /* Sums bytes received */
@@ -568,8 +588,8 @@ static int receive_msg(modbus_param_t *mb_param,
                                 length_to_read = compute_query_length_data(mb_param, msg);
                                 msg_length_computed += length_to_read;
                                 if (msg_length_computed > TAB_MAX_ADU_LENGTH[mb_param->type_com]) {
-                                     error_treat(mb_param, TOO_MANY_DATA, "Too many data");
-                                     return TOO_MANY_DATA;
+                                     error_treat(mb_param, INVALID_DATA, "Too many data");
+                                     return INVALID_DATA;
                                 }
                                 state = COMPLETE;
                                 break;
@@ -692,13 +712,13 @@ static int modbus_receive(modbus_param_t *mb_param,
                         ret = response_nb_value;
                 } else {
                         char *s_error = malloc(64 * sizeof(char));
-                        sprintf(s_error, "Quantity (%d) not corresponding to the query (%d)",
+                        sprintf(s_error, "Quantity not corresponding to the query (%d != %d)",
                                 response_nb_value, query_nb_value);
-                        ret = ILLEGAL_DATA_VALUE;
-                        error_treat(mb_param, ILLEGAL_DATA_VALUE, s_error);
+                        ret = INVALID_DATA;
+                        error_treat(mb_param, ret, s_error);
                         free(s_error);
                 }
-        } else if (ret == COMM_TIME_OUT) {
+        } else if (ret == SELECT_TIMEOUT) {
 
                 if (response_length == (offset + 2 + TAB_CHECKSUM_LENGTH[mb_param->type_com])) {
                         /* EXCEPTION CODE RECEIVED */
@@ -745,8 +765,7 @@ static int modbus_receive(modbus_param_t *mb_param,
                            TIME OUT here */
                 }
 
-                /* COMMUNICATION TIME OUT */
-                error_treat(mb_param, ret, "Communication time out");
+                error_treat(mb_param, ret, "Select timeout");
                 return ret;
         }
 
@@ -1046,7 +1065,7 @@ int read_coil_status(modbus_param_t *mb_param, int start_addr,
         if (nb > MAX_STATUS) {
                 printf("ERROR Too many coils status requested (%d > %d)\n",
                        nb, MAX_STATUS);
-                return TOO_MANY_DATA;
+                return INVALID_DATA;
         }
 
         status = read_io_status(mb_param, FC_READ_COIL_STATUS,
@@ -1068,7 +1087,7 @@ int read_input_status(modbus_param_t *mb_param, int start_addr,
         if (nb > MAX_STATUS) {
                 printf("ERROR Too many input status requested (%d > %d)\n",
                        nb, MAX_STATUS);
-                return TOO_MANY_DATA;
+                return INVALID_DATA;
         }
 
         status = read_io_status(mb_param, FC_READ_INPUT_STATUS,
@@ -1092,7 +1111,7 @@ static int read_registers(modbus_param_t *mb_param, int function,
         if (nb > MAX_REGISTERS) {
                 printf("EROOR Too many holding registers requested (%d > %d)\n",
                        nb, MAX_REGISTERS);
-                return TOO_MANY_DATA;
+                return INVALID_DATA;
         }
 
         query_length = build_query_basis(mb_param, function,
@@ -1128,7 +1147,7 @@ int read_holding_registers(modbus_param_t *mb_param,
         if (nb > MAX_REGISTERS) {
                 printf("ERROR Too many holding registers requested (%d > %d)\n",
                        nb, MAX_REGISTERS);
-                return TOO_MANY_DATA;
+                return INVALID_DATA;
         }
 
         status = read_registers(mb_param, FC_READ_HOLDING_REGISTERS,
@@ -1146,7 +1165,7 @@ int read_input_registers(modbus_param_t *mb_param, int start_addr, int nb,
         if (nb > MAX_REGISTERS) {
                 printf("ERROR Too many input registers requested (%d > %d)\n",
                        nb, MAX_REGISTERS);
-                return TOO_MANY_DATA;
+                return INVALID_DATA;
         }
 
         status = read_registers(mb_param, FC_READ_INPUT_REGISTERS,
@@ -1219,7 +1238,7 @@ int force_multiple_coils(modbus_param_t *mb_param, int start_addr, int nb,
         if (nb > MAX_STATUS) {
                 printf("ERROR Writing to too many coils (%d > %d)\n",
                        nb, MAX_STATUS);
-                return TOO_MANY_DATA;
+                return INVALID_DATA;
         }
 
         query_length = build_query_basis(mb_param, FC_FORCE_MULTIPLE_COILS,
@@ -1268,7 +1287,7 @@ int preset_multiple_registers(modbus_param_t *mb_param, int start_addr, int nb,
         if (nb > MAX_REGISTERS) {
                 printf("ERROR Trying to write to too many registers (%d > %d)\n",
                        nb, MAX_REGISTERS);
-                return TOO_MANY_DATA;
+                return INVALID_DATA;
         }
 
         query_length = build_query_basis(mb_param, FC_PRESET_MULTIPLE_REGISTERS,
@@ -1344,7 +1363,7 @@ void modbus_init_rtu(modbus_param_t *mb_param, const char *device,
         mb_param->data_bit = data_bit;
         mb_param->stop_bit = stop_bit;
         mb_param->type_com = RTU;
-        mb_param->error_handling = FLUSH_OR_RECONNECT_ON_ERROR;
+        mb_param->error_handling = FLUSH_OR_CONNECT_ON_ERROR;
         mb_param->slave = slave;
 }
 
@@ -1363,16 +1382,15 @@ void modbus_init_tcp(modbus_param_t *mb_param, const char *ip, int port, int sla
         strncpy(mb_param->ip, ip, sizeof(char)*16);
         mb_param->port = port;
         mb_param->type_com = TCP;
-        mb_param->error_handling = FLUSH_OR_RECONNECT_ON_ERROR;
+        mb_param->error_handling = FLUSH_OR_CONNECT_ON_ERROR;
         mb_param->slave = slave;
 }
 
-/* By default, the error handling mode used is FLUSH_OR_RECONNECT_ON_ERROR.
+/* By default, the error handling mode used is FLUSH_OR_CONNECT_ON_ERROR.
 
-   With FLUSH_OR_RECONNECT_ON_ERROR, the library will flush to I/O
-   port in RTU mode or attempt an immediate reconnection which may
-   hang for several seconds if the network to the remote target unit
-   is down in TCP mode.
+   With FLUSH_OR_CONNECT_ON_ERROR, the library will attempt an immediate
+   reconnection which may hang for several seconds if the network to
+   the remote target unit is down.
 
    With NOP_ON_ERROR, it is expected that the application will
    check for error returns and deal with them as necessary.
@@ -1380,7 +1398,7 @@ void modbus_init_tcp(modbus_param_t *mb_param, const char *ip, int port, int sla
 void modbus_set_error_handling(modbus_param_t *mb_param,
                                error_handling_t error_handling)
 {
-        if (error_handling == FLUSH_OR_RECONNECT_ON_ERROR ||
+        if (error_handling == FLUSH_OR_CONNECT_ON_ERROR ||
             error_handling == NOP_ON_ERROR) {
                 mb_param->error_handling = error_handling;
         } else {
