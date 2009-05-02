@@ -832,7 +832,8 @@ void modbus_slave_manage(modbus_param_t *mb_param, const uint8_t *query,
 	if (slave != mb_param->slave && slave != MODBUS_BROADCAST_ADDRESS) {
                 // Ignores the query (not for me)
                 if (mb_param->debug) {
-                        printf("Dropped request from slave %d (!= %d)\n", slave, mb_param->slave);
+                        printf("Request for slave %d ignored (not %d)\n",
+                               slave, mb_param->slave);
                 }
 		return;
 	}
