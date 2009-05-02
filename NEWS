@@ -5,6 +5,7 @@ libmodbus 2.2.0 (2009-05-01)
 - Slave only replies to broadcast queries or queries with its slave ID
 - Improved Modbus protocol conformance
 - modbus_param_t is smaller (2 int removed)
+- Better error management
 - Faster
 
 libmodbus 2.0.3 (2009-03-22)
