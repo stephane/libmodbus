@@ -7,6 +7,8 @@ libmodbus 2.2.0 (2009-05-01)
 - modbus_param_t is smaller (2 int removed)
 - Better error management
 - Faster
+- Fix #333455 reported by Jeff Laughlin
+  Cygwin IPTOS_LOWDELAY not supported on cygwin
 
 libmodbus 2.0.3 (2009-03-22)
 ============================

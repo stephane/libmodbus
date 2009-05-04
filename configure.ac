@@ -4,6 +4,7 @@
 AC_PREREQ(2.59)
 AC_INIT(libmodbus, 2.0.3, stephane.raimbault@gmail.com)
 AC_CONFIG_SRCDIR([src/modbus.c])
+AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE
 AM_DISABLE_STATIC
 
@@ -25,6 +26,9 @@ AC_HEADER_TIME
 AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT8_T
+AC_CHECK_DECLS([IPTOS_LOWDELAY],
+               [have_iptos_lowdelay=yes], [have_iptos_lowdelay=no],
+               [#include <netinet/ip.h>])
 
 # Checks for library functions.
 AC_FUNC_FORK

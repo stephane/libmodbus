@@ -28,6 +28,7 @@
    http://copyleft.free.fr/wordpress/index.php/libmodbus/
 */
 
+#include <config.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -1685,6 +1686,7 @@ static int modbus_connect_tcp(modbus_param_t *mb_param)
                 return ret;
         }
 
+#ifdef HAVE_DECL_IPTOS_LOWDELAY
         /* Set the IP low delay option */
         option = IPTOS_LOWDELAY;
         ret = setsockopt(mb_param->fd, IPPROTO_TCP, IP_TOS,
@@ -1694,6 +1696,7 @@ static int modbus_connect_tcp(modbus_param_t *mb_param)
                 close(mb_param->fd);
                 return ret;
         }
+#endif
 
         if (mb_param->debug) {
                 printf("Connecting to %s\n", mb_param->ip);
