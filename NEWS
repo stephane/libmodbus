@@ -50,8 +50,6 @@ libmodbus 2.0.0 (2008-05-18)
   https://blueprints.launchpad.net/libmodbus/+spec/waf-support
 - MacOS X support by Matthew Butch
   https://blueprints.launchpad.net/libmodbus/+spec/macosx-support
-- No more glib dependency
-  https://blueprints.launchpad.net/libmodbus/+spec/glib-dependency
 - Unit testing (unit-test-slave and unit-test-master)
 - Port number is now defined at initialisation by Dirk Reusch
 - Better memory management (uint8_t *data and packing of
