@@ -34,6 +34,8 @@ int modbus_slave_receive(modbus_param_t *mb_param, int sockfd,
      - HEADER_LENGTH_RTU           0 -> 1
      - HEADER_LENGTH_TCP           6 -> 7
 
+6 - modbus_mapping_new returns 0 on success and -1 on failure.
+
 
 =============================================
 Migration notes from the 1.2 series (for 2.0)

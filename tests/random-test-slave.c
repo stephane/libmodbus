@@ -34,7 +34,7 @@ int main(void)
         /* modbus_set_debug(&mb_param, TRUE); */
 
         ret = modbus_mapping_new(&mb_mapping, 500, 500, 500, 500);
-        if (ret == FALSE) {
+        if (ret < 0) {
                 printf("Memory allocation failed\n");
                 exit(1);
         }

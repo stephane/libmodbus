@@ -651,7 +651,7 @@ static int receive_msg(modbus_param_t *mb_param,
    internal one of modbus_param_t.
 
    Returns:
-   - 0 if OK, or a negative error number if the request fails
+   - 0 on success, or a negative error number if the request fails
    - query, message received
    - query_length, length in bytes of the message */
 int modbus_slave_receive(modbus_param_t *mb_param, int sockfd,
@@ -1740,7 +1740,7 @@ static int modbus_connect_tcp(modbus_param_t *mb_param)
 }
 
 /* Establishes a modbus connexion.
-   Returns -1 if an error occured. */
+   Returns 0 on success or -1 on failure. */
 int modbus_connect(modbus_param_t *mb_param)
 {
         int ret;
@@ -1787,7 +1787,7 @@ void modbus_set_debug(modbus_param_t *mb_param, int boolean)
 /* Allocates 4 arrays to store coils, input status, input registers and
    holding registers. The pointers are stored in modbus_mapping structure.
 
-   Returns: TRUE if ok, FALSE on failure
+   Returns 0 on success and -1 on failure.
 */
 int modbus_mapping_new(modbus_mapping_t *mb_mapping,
                        int nb_coil_status, int nb_input_status,
@@ -1800,7 +1800,7 @@ int modbus_mapping_new(modbus_mapping_t *mb_mapping,
         memset(mb_mapping->tab_coil_status, 0,
                nb_coil_status * sizeof(uint8_t));
         if (mb_mapping->tab_coil_status == NULL)
-                return FALSE;
+                return -1;
 
         /* 1X */
         mb_mapping->nb_input_status = nb_input_status;
@@ -1810,7 +1810,7 @@ int modbus_mapping_new(modbus_mapping_t *mb_mapping,
                nb_input_status * sizeof(uint8_t));
         if (mb_mapping->tab_input_status == NULL) {
                 free(mb_mapping->tab_coil_status);
-                return FALSE;
+                return -1;
         }
 
         /* 4X */
@@ -1822,7 +1822,7 @@ int modbus_mapping_new(modbus_mapping_t *mb_mapping,
         if (mb_mapping->tab_holding_registers == NULL) {
                 free(mb_mapping->tab_coil_status);
                 free(mb_mapping->tab_input_status);
-                return FALSE;
+                return -1;
         }
 
         /* 3X */
@@ -1835,10 +1835,10 @@ int modbus_mapping_new(modbus_mapping_t *mb_mapping,
                 free(mb_mapping->tab_coil_status);
                 free(mb_mapping->tab_input_status);
                 free(mb_mapping->tab_holding_registers);
-                return FALSE;
+                return -1;
         }
 
-        return TRUE;
+        return 0;
 }
 
 /* Frees the 4 arrays */

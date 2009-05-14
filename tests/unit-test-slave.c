@@ -39,7 +39,7 @@ int main(void)
                                  UT_INPUT_STATUS_ADDRESS + UT_INPUT_STATUS_NB_POINTS,
                                  UT_HOLDING_REGISTERS_ADDRESS + UT_HOLDING_REGISTERS_NB_POINTS,
                                  UT_INPUT_REGISTERS_ADDRESS + UT_INPUT_REGISTERS_NB_POINTS);
-        if (ret == FALSE) {
+        if (ret < 0) {
                 printf("Memory allocation failed\n");
                 exit(1);
         }

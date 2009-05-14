@@ -265,7 +265,7 @@ void modbus_init_tcp(modbus_param_t *mb_param, const char *ip_address, int port,
 void modbus_set_error_handling(modbus_param_t *mb_param, error_handling_t error_handling);
 
 /* Establishes a modbus connexion.
-   Returns -1 if an error occured. */
+   Returns 0 on success or -1 on failure. */
 int modbus_connect(modbus_param_t *mb_param);
 
 /* Closes a modbus connection */
@@ -284,7 +284,7 @@ void modbus_set_debug(modbus_param_t *mb_param, int boolean);
 /* Allocates 4 arrays to store coils, input status, input registers and
    holding registers. The pointers are stored in modbus_mapping structure.
 
-   Returns: TRUE if ok, FALSE on failure
+   Returns 0 on success and -1 on failure
  */
 int modbus_mapping_new(modbus_mapping_t *mb_mapping,
                        int nb_coil_status, int nb_input_status,
@@ -306,7 +306,7 @@ int modbus_slave_accept_tcp(modbus_param_t *mb_param, int *socket);
    descriptor etablished with the master device in argument.
 
    Returns:
-   - 0 if OK, or a negative error number if the request fails
+   - 0 on success, or a negative error number if the request fails
    - query, message received
    - query_length, length in bytes of the message
 */
