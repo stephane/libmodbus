@@ -286,7 +286,7 @@ static int build_query_basis(modbus_param_t *mb_param,
                              int nb, uint8_t *query)
 {
         if (mb_param->type_com == RTU)
-                return build_query_basis_rtu(mb_param->slave, function, 
+                return build_query_basis_rtu(mb_param->slave, function,
                                              start_addr, nb, query);
         else
                 return build_query_basis_tcp(mb_param->slave, function,
@@ -829,15 +829,15 @@ void modbus_slave_manage(modbus_param_t *mb_param, const uint8_t *query,
         uint8_t response[MAX_MESSAGE_LENGTH];
         int resp_length = 0;
         sft_t sft;
-        
-	if (slave != mb_param->slave && slave != MODBUS_BROADCAST_ADDRESS) {
+
+        if (slave != mb_param->slave && slave != MODBUS_BROADCAST_ADDRESS) {
                 // Ignores the query (not for me)
                 if (mb_param->debug) {
                         printf("Request for slave %d ignored (not %d)\n",
                                slave, mb_param->slave);
                 }
-		return;
-	}
+                return;
+        }
 
         sft.slave = slave;
         sft.function = function;

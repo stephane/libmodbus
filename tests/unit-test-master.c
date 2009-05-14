@@ -433,7 +433,7 @@ int main(void)
                 printf("FAILED\n");
                 goto close;
         }
- 
+
         mb_param.slave = MODBUS_BROADCAST_ADDRESS;
         ret = read_holding_registers(&mb_param,
                                      UT_HOLDING_REGISTERS_ADDRESS,
