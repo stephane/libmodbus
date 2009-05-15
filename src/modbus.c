@@ -152,23 +152,6 @@ static const int TAB_MAX_ADU_LENGTH[2] = {
         MAX_ADU_LENGTH_TCP,
 };
 
-void modbus_flush(modbus_param_t *mb_param)
-{
-        if (mb_param->type_com == RTU) {
-                tcflush(mb_param->fd, TCIOFLUSH);
-        } else {
-                int ret;
-                do {
-                        /* Extract the garbage from the socket */
-                        char devnull[MAX_ADU_LENGTH_TCP];
-                        ret = recv(mb_param->fd, devnull, MAX_ADU_LENGTH_TCP, MSG_DONTWAIT);
-                        if (mb_param->debug && ret > 0) {
-                                printf("%d bytes flushed\n", ret);
-                        }
-                } while (ret > 0);
-        }
-}
-
 /* Treats errors and flush or close connection if necessary */
 static void error_treat(modbus_param_t *mb_param, int code, const char *string)
 {
@@ -191,6 +174,42 @@ static void error_treat(modbus_param_t *mb_param, int code, const char *string)
                         /* NOP */
                         break;
                 }
+        }
+}
+
+void modbus_flush(modbus_param_t *mb_param)
+{
+        if (mb_param->type_com == RTU) {
+                tcflush(mb_param->fd, TCIOFLUSH);
+        } else {
+                int ret;
+                do {
+                        /* Extract the garbage from the socket */
+                        char devnull[MAX_ADU_LENGTH_TCP];
+#if (!HAVE_DECL___CYGWIN__)
+                        ret = recv(mb_param->fd, devnull, MAX_ADU_LENGTH_TCP, MSG_DONTWAIT);
+#else
+                        /* On Cygwin, it's a bit more complicated to not wait */
+                        fd_set rfds;
+                        struct timeval tv;
+
+                        tv.tv_sec = 0;
+                        tv.tv_usec = 0;
+                        FD_ZERO(&rfds);
+                        FD_SET(mb_param->fd, &rfds);
+                        ret = select(mb_param->fd+1, &rfds, NULL, NULL, &tv);
+                        if (ret > 0) {
+                                ret = recv(mb_param->fd, devnull, MAX_ADU_LENGTH_TCP, 0);
+                        } else if (ret == -1) {
+                                /* error_treat() doesn't call modbus_flush() in
+                                   this case (avoid infinite loop) */
+                                error_treat(mb_param, SELECT_FAILURE, "Select failure");
+                        }
+#endif
+                        if (mb_param->debug && ret > 0) {
+                                printf("%d bytes flushed\n", ret);
+                        }
+                } while (ret > 0);
         }
 }
 
@@ -1686,7 +1705,11 @@ static int modbus_connect_tcp(modbus_param_t *mb_param)
                 return ret;
         }
 
-#ifdef HAVE_DECL_IPTOS_LOWDELAY
+#if (!HAVE_DECL___CYGWIN__)
+        /**
+         * Cygwin defines IPTOS_LOWDELAY but can't handle that flag so it's
+         * necessary to workaround that problem.
+         **/
         /* Set the IP low delay option */
         option = IPTOS_LOWDELAY;
         ret = setsockopt(mb_param->fd, IPPROTO_TCP, IP_TOS,

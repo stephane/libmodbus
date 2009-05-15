@@ -26,9 +26,10 @@ AC_HEADER_TIME
 AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT8_T
-AC_CHECK_DECLS([IPTOS_LOWDELAY],
-               [have_iptos_lowdelay=yes], [have_iptos_lowdelay=no],
-               [#include <netinet/ip.h>])
+
+# Cygwin defines IPTOS_LOWDELAY but can't handle that flag so it's necessary to
+# workaround that problem and Cygwin doesn't define MSG_DONTWAIT.
+AC_CHECK_DECLS([__CYGWIN__])
 
 # Checks for library functions.
 AC_FUNC_FORK

@@ -7,8 +7,10 @@ libmodbus 2.2.0 (2009-05-01)
 - modbus_param_t is smaller (2 int removed)
 - Better error management
 - Faster
-- Fix #333455 reported by Jeff Laughlin
+- Fix #333455 reported by Jeff Laughlin and Yishin Li.
   Cygwin IPTOS_LOWDELAY not supported on cygwin
+- Fix #375926 - modbus.c:164: error: `MSG_DONTWAIT' undeclared
+  Reported and tested by Yishin Li.
 
 libmodbus 2.0.3 (2009-03-22)
 ============================
