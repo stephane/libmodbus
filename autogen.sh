@@ -1,3 +1,3 @@
 #! /bin/sh
-autoreconf -v --install || exit 1
+autoreconf -v --force --install || exit 1
 ./configure "$@"

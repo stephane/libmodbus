@@ -22,9 +22,10 @@ AC_CHECK_HEADERS([termios.h sys/time.h unistd.h errno.h limits.h fcntl.h sys/typ
 AC_C_CONST
 AC_TYPE_SIZE_T
 AC_HEADER_TIME
-AC_TYPE_UINT16_T
-AC_TYPE_UINT32_T
-AC_TYPE_UINT8_T
+# AC_TYPE_UINT*_T: not supported by autoconf-2.59 of CentOS 5.3
+# AC_TYPE_UINT16_T
+# AC_TYPE_UINT32_T
+# AC_TYPE_UINT8_T
 
 # Cygwin defines IPTOS_LOWDELAY but can't handle that flag so it's necessary to
 # workaround that problem and Cygwin doesn't define MSG_DONTWAIT.
