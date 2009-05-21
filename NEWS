@@ -1,4 +1,4 @@
-libmodbus 2.2.0 (2009-05-01)
+libmodbus 2.2.0 (2009-06-01)
 ============================
 - New API for slave server (see MIGRATION)
 - New slave server able to handle multiple connections
@@ -7,10 +7,12 @@ libmodbus 2.2.0 (2009-05-01)
 - modbus_param_t is smaller (2 int removed)
 - Better error management
 - Faster
-- Fix #333455 reported by Jeff Laughlin and Yishin Li.
-  Cygwin IPTOS_LOWDELAY not supported on cygwin
+- Fix #333455 - Cygwin IPTOS_LOWDELAY not supported on cygwin
+  Reported by Jeff Laughlin and Yishin Li.
 - Fix #375926 - modbus.c:164: error: `MSG_DONTWAIT' undeclared
   Reported and tested by Yishin Li.
+- Fix #378981 - CRC error on RTU response doesn't return negative value
+  Reported by Henrik Munktell.
 
 libmodbus 2.0.3 (2009-03-22)
 ============================

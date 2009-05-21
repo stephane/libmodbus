@@ -639,11 +639,11 @@ static int receive_msg(modbus_param_t *mb_param,
                 printf("\n");
 
         if (mb_param->type_com == RTU) {
-                check_crc16(mb_param, msg, (*p_msg_length));
+                return check_crc16(mb_param, msg, (*p_msg_length));
+        } else {
+                /* OK */
+                return 0;
         }
-
-        /* OK */
-        return 0;
 }
 
 /* Listens for any query from a modbus master in TCP, requires the socket file
