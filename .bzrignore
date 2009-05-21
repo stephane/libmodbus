@@ -28,3 +28,4 @@ src/modbus.lo
 tests/.deps
 tests/.libs
 modbus/libmodbus.la
+INSTALL
