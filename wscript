@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-VERSION='2.0.3'
-APPNAME='libmodbus'
+VERSION = '2.2.0'
+APPNAME = 'libmodbus'
 
 # these variables are mandatory ('/' are converted automatically)
 srcdir = '.'
@@ -40,8 +40,7 @@ def configure(conf):
 
      conf.define('VERSION', VERSION)
      conf.define('PACKAGE', 'libmodbus')
-
-     conf.write_config_header()
+     conf.write_config_header('config.h')
 
 def build(bld):
      import misc

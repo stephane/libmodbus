@@ -28,7 +28,6 @@
    http://copyleft.free.fr/wordpress/index.php/libmodbus/
 */
 
-#include <config.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -49,6 +48,7 @@
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 
+#include "config.h"
 #include "modbus.h"
 
 #define UNKNOWN_ERROR_MSG "Not defined in modbus specification"
