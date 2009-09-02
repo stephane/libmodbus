@@ -1407,6 +1407,13 @@ void modbus_init_tcp(modbus_param_t *mb_param, const char *ip, int port, int sla
         mb_param->slave = slave;
 }
 
+/* Define the slave number.
+   The special value MODBUS_BROADCAST_ADDRESS can be used. */
+void modbus_set_slave(modbus_param_t *mb_param, int slave)
+{
+        mb_param->slave = slave;
+}
+
 /* By default, the error handling mode used is FLUSH_OR_CONNECT_ON_ERROR.
 
    With FLUSH_OR_CONNECT_ON_ERROR, the library will attempt an immediate

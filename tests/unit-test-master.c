@@ -420,8 +420,7 @@ int main(void)
 
         /** SLAVE REPLY **/
         printf("\nTEST SLAVE REPLY:\n");
-
-        mb_param.slave = 0x12;
+        modbus_set_slave(&mb_param, 18);
         ret = read_holding_registers(&mb_param,
                                      UT_HOLDING_REGISTERS_ADDRESS+1,
                                      UT_HOLDING_REGISTERS_NB_POINTS,
@@ -434,7 +433,7 @@ int main(void)
                 goto close;
         }
 
-        mb_param.slave = MODBUS_BROADCAST_ADDRESS;
+        modbus_set_slave(&mb_param, MODBUS_BROADCAST_ADDRESS);
         ret = read_holding_registers(&mb_param,
                                      UT_HOLDING_REGISTERS_ADDRESS,
                                      UT_HOLDING_REGISTERS_NB_POINTS,

@@ -5,8 +5,9 @@ Migration notes from the 2.0 series (for 2.2)
 1 - modbus_init_rtu/tcp takes a new argument: the slave and it is only required
     in that function (eg. read_coil_status doesn't receive the slave ID in
     argument anymore). If you need to use different slaves with the same
-    connection (eg. RS485), you can copy modbus_param_t or set
-    modbus_param_t.slave to a different value when required.
+    connection (eg. RS485), you can copy modbus_param_t, use modbus_set_slave()
+    function or directly set modbus_param_t.slave to a different value when
+    required.
 
 2 - modbus_init_listen_tcp() has been renamed to modbus_slave_listen_tcp() and
     requires a new argument, the maximal number of connections:

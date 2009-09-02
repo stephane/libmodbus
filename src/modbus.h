@@ -251,6 +251,10 @@ void modbus_init_rtu(modbus_param_t *mb_param, const char *device,
 void modbus_init_tcp(modbus_param_t *mb_param, const char *ip_address, int port,
                      int slave);
 
+/* Define the slave number.
+   The special value MODBUS_BROADCAST_ADDRESS can be used. */
+void modbus_set_slave(modbus_param_t *mb_param, int slave);
+
 /* By default, the error handling mode used is CONNECT_ON_ERROR.
 
    With FLUSH_OR_CONNECT_ON_ERROR, the library will attempt an immediate
