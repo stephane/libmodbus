@@ -427,7 +427,7 @@ int main(void)
                                      tab_rp_registers);
         printf("1/2 No reply from slave %d: ", mb_param.slave);
         if (ret == SELECT_TIMEOUT) {
-                printf("OK\n", ret);
+                printf("OK\n");
         } else {
                 printf("FAILED\n");
                 goto close;
@@ -440,7 +440,7 @@ int main(void)
                                      tab_rp_registers);
         printf("2/2 Reply after a broadcast query: ");
         if (ret == UT_HOLDING_REGISTERS_NB_POINTS) {
-                printf("OK\n", ret);
+                printf("OK\n");
         } else {
                 goto close;
                 printf("FAILED\n");
