@@ -239,6 +239,8 @@ static unsigned int compute_response_length(modbus_param_t *mb_param,
         case FC_READ_EXCEPTION_STATUS:
                 length = 3;
                 break;
+        case FC_REPORT_SLAVE_ID:
+                return MSG_LENGTH_UNDEFINED;
         default:
                 length = 5;
         }
@@ -456,6 +458,8 @@ static uint8_t compute_query_length_header(int function)
                  function == FC_PRESET_MULTIPLE_REGISTERS)
                 /* Multiple write */
                 length = 5;
+        else if (function == FC_REPORT_SLAVE_ID)
+                length = 1;
         else
                 length = 0;
 
@@ -471,6 +475,8 @@ static int compute_query_length_data(modbus_param_t *mb_param, uint8_t *msg)
         if (function == FC_FORCE_MULTIPLE_COILS ||
             function == FC_PRESET_MULTIPLE_REGISTERS)
                 length = msg[TAB_HEADER_LENGTH[mb_param->type_com] + 5];
+        else if (function == FC_REPORT_SLAVE_ID)
+                length = msg[TAB_HEADER_LENGTH[mb_param->type_com] + 1];
         else
                 length = 0;
 
