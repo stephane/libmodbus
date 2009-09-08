@@ -1964,3 +1964,24 @@ uint8_t get_byte_from_bits(const uint8_t *src, int address, int nb_bits)
 
         return value;
 }
+
+/* Read a float from 4 bytes in Modbus format */
+float modbus_read_float(const uint16_t *src)
+{
+        float real;
+        uint32_t ireal = (src[1] << 16) + src[0];
+        real = *((float *)&ireal);
+
+        return real;
+}
+
+/* Write a float to 4 bytes in Modbus format */
+void modbus_write_float(float real, uint16_t *dest)
+{
+        uint32_t ireal;
+
+        ireal = *((uint32_t *)&real);
+        /* Implicit mask 0xFFFF */
+        dest[0] = ireal;
+        dest[1] = ireal >> 16;
+}

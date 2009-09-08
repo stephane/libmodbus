@@ -1,5 +1,6 @@
-libmodbus 2.2.0 (2009-06-01)
+libmodbus 2.2.0 (2009-XX-01)
 ============================
+- New API to read and write float values
 - New API for slave server (see MIGRATION)
 - New slave server able to handle multiple connections
 - Slave only replies to broadcast queries or queries with its slave ID

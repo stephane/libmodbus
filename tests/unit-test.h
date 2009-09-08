@@ -42,4 +42,7 @@ const uint16_t UT_INPUT_REGISTERS_ADDRESS = 0x08;
 const uint16_t UT_INPUT_REGISTERS_NB_POINTS = 0x1;
 const uint16_t UT_INPUT_REGISTERS_TAB[] = { 0x000A };
 
+const float UT_REAL = 916.540649;
+const uint32_t UT_IREAL = 0x4465229a;
+
 #endif /* _UNIT_TEST_H_ */

@@ -36,6 +36,7 @@ int main(void)
         int address;
         int nb_points;
         int ret;
+        float real;
 
         /* RTU parity : none, even, odd */
 /*      modbus_init_rtu(&mb_param, "/dev/ttyS0", 19200, "none", 8, 1, SLAVE); */
@@ -253,6 +254,30 @@ int main(void)
         printf("OK\n");
 
 
+        printf("\nTEST FLOATS\n");
+        /** FLOAT **/
+        printf("1/2 Write float: ");
+        modbus_write_float(UT_REAL, tab_rp_registers);
+        if (tab_rp_registers[1] == (UT_IREAL >> 16) &&
+            tab_rp_registers[0] == (UT_IREAL & 0xFFFF)) {
+                printf("OK\n");
+        } else {
+                printf("FAILED (%x != %x)\n",
+                       *((uint32_t *)tab_rp_registers), UT_IREAL);
+                goto close;
+        }
+
+        printf("2/2 Read float: ");
+        real = modbus_read_float(tab_rp_registers);
+        if (real == UT_REAL) {
+                printf("OK\n");
+        } else {
+                printf("FAILED (%f != %f)\n", real, UT_REAL);
+                goto close;
+        }
+
+        printf("\nAt this point, error messages doesn't mean the test has failed\n");
+
         /** ILLEGAL DATA ADDRESS **/
         printf("\nTEST ILLEGAL DATA ADDRESS:\n");
 
@@ -464,6 +489,8 @@ int main(void)
                 goto close;
         }
         free(tab_rp_registers_bad);
+
+        printf("\nALL TESTS PASS WITH SUCCESS.\n");
 
 close:
         /* Free the memory */

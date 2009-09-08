@@ -344,6 +344,12 @@ void set_bits_from_bytes(uint8_t *dest, int address, int nb_bits,
    To obtain a full byte, set nb_bits to 8. */
 uint8_t get_byte_from_bits(const uint8_t *src, int address, int nb_bits);
 
+/* Read a float from 4 bytes in Modbus format */
+float modbus_read_float(const uint16_t *src);
+
+/* Write a float to 4 bytes in Modbus format */
+void modbus_write_float(float real, uint16_t *dest);
+
 #ifdef __cplusplus
 }
 #endif
