@@ -532,6 +532,10 @@ static int receive_msg(modbus_param_t *mb_param,
         enum { FUNCTION, BYTE, COMPLETE };
         int state;
 
+        /* Initialize the return length before a call to WAIT_DATA because a
+         * time out can quit the function. */
+        (*p_msg_length) = 0;
+
         if (mb_param->debug) {
                 if (msg_length_computed == MSG_LENGTH_UNDEFINED)
                         printf("Waiting for a message...\n");
@@ -566,10 +570,7 @@ static int receive_msg(modbus_param_t *mb_param,
         select_ret = 0;
         WAIT_DATA();
 
-        /* Initialize the readin the message */
-        (*p_msg_length) = 0;
         p_msg = msg;
-
         while (select_ret) {
                 if (mb_param->type_com == RTU)
                         read_ret = read(mb_param->fd, p_msg, length_to_read);

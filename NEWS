@@ -14,6 +14,11 @@ libmodbus 2.2.0 (2009-XX-01)
   Reported and tested by Yishin Li.
 - Fix #378981 - CRC error on RTU response doesn't return negative value
   Reported by Henrik Munktell.
+- Fix report slave ID request
+  Patch (bzr) provided by Paul Fertser .
+- Fix #425604 - Conditional jump or move depends on uninitialised value(s)
+  Occurs on first occurence of slave timeout.
+  Reported by Henrik Munktell.
 
 libmodbus 2.0.3 (2009-03-22)
 ============================
@@ -63,7 +68,7 @@ libmodbus 2.0.0 (2008-05-18)
 - Declare many static functions and const arrays
 - Enhance an integer division
 - The GNU licences LGPL and GPL are in version 3
-- Debian and RPM packages (#224496) 
+- Debian and RPM packages (#224496)
 - Many cleanups
 - Fix #159443 reported by Stefan Bisanz
   Index of incoming data in force multiple coils function
