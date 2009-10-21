@@ -33,7 +33,6 @@ AC_CHECK_DECLS([__CYGWIN__])
 
 # Checks for library functions.
 AC_FUNC_FORK
-AC_FUNC_MALLOC
 AC_FUNC_SELECT_ARGTYPES
 AC_TYPE_SIGNAL
 AC_CHECK_FUNCS([gettimeofday inet_ntoa memset select socket strerror])
