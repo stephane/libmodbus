@@ -326,6 +326,8 @@ int modbus_slave_receive(modbus_param_t *mb_param, int sockfd,
 void modbus_slave_manage(modbus_param_t *mb_param, const uint8_t *query,
                          int query_length, modbus_mapping_t *mb_mapping);
 
+/* Closes a TCP socket */
+void modbus_slave_close_tcp(int socket);
 
 /**
  * UTILS FUNCTIONS

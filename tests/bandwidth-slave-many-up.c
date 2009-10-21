@@ -32,11 +32,10 @@ modbus_mapping_t mb_mapping;
 
 static void close_sigint(int dummy)
 {
-        shutdown(slave_socket, SHUT_RDWR);
-        close(slave_socket);
+        modbus_slave_close_tcp(slave_socket);
         modbus_mapping_free(&mb_mapping);
 
-	exit(dummy);
+        exit(dummy);
 }
 
 int main(void)
@@ -115,8 +114,7 @@ int main(void)
                                         } else {
                                                 /* Connection closed by the client, end of server */
                                                 printf("Connection closed on socket %d\n", master_socket);
-                                                shutdown(master_socket, SHUT_RDWR);
-                                                close(master_socket);
+                                                modbus_slave_close_tcp(master_socket);
 
                                                 /* Remove from reference set */
                                                 FD_CLR(master_socket, &refset);

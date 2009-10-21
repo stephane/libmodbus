@@ -1460,7 +1460,7 @@ static int modbus_connect_rtu(modbus_param_t *mb_param)
 
            Timeouts are ignored in canonical input mode or when the
            NDELAY option is set on the file via open or fcntl */
-        mb_param->fd = open(mb_param->device, O_RDWR | O_NOCTTY | O_NDELAY);
+        mb_param->fd = open(mb_param->device, O_RDWR | O_NOCTTY | O_NDELAY | O_EXCL);
         if (mb_param->fd < 0) {
                 perror("open");
                 printf("ERROR Can't open the device %s (%s)\n",
@@ -1922,6 +1922,13 @@ int modbus_slave_accept_tcp(modbus_param_t *mb_param, int *socket)
         }
 
         return mb_param->fd;
+}
+
+/* Closes a TCP socket */
+void modbus_slave_close_tcp(int socket)
+{
+        shutdown(socket, SHUT_RDWR);
+        close(socket);
 }
 
 /** Utils **/
