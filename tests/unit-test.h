@@ -18,13 +18,18 @@
 #ifndef _UNIT_TEST_H_
 #define _UNIT_TEST_H_
 
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h>
+#endif
+#ifdef HAVE_STDINT_H
 #include <stdint.h>
+#endif
 
 #define SLAVE 0x11
 
 const uint16_t UT_COIL_STATUS_ADDRESS = 0x13;
 const uint16_t UT_COIL_STATUS_NB_POINTS = 0x25;
-const uint8_t UT_COIL_STATUS_TAB[] = { 0xCD, 0x6B, 0xB2, 0x0E, 0x1B }; 
+const uint8_t UT_COIL_STATUS_TAB[] = { 0xCD, 0x6B, 0xB2, 0x0E, 0x1B };
 
 const uint16_t UT_INPUT_STATUS_ADDRESS = 0xC4;
 const uint16_t UT_INPUT_STATUS_NB_POINTS = 0x16;

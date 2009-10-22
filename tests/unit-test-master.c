@@ -30,6 +30,7 @@ int main(void)
 {
         uint8_t *tab_rp_status;
         uint16_t *tab_rp_registers;
+        uint16_t *tab_rp_registers_bad;
         modbus_param_t mb_param;
         int i;
         uint8_t value;
@@ -475,7 +476,7 @@ int main(void)
         printf("\nTEST BAD RESPONSE ERROR:\n");
 
         /* Allocate only the required space */
-        uint16_t *tab_rp_registers_bad = (uint16_t *) malloc(
+        tab_rp_registers_bad = (uint16_t *) malloc(
                 UT_HOLDING_REGISTERS_NB_POINTS_SPECIAL * sizeof(uint16_t));
         ret = read_holding_registers(&mb_param,
                                      UT_HOLDING_REGISTERS_ADDRESS,

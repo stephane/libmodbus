@@ -18,8 +18,19 @@
 #ifndef _MODBUS_H_
 #define _MODBUS_H_
 
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h>
+#endif
+#ifdef HAVE_STDINT_H
 #include <stdint.h>
+#endif
 #include <termios.h>
+#if defined(__FreeBSD__ ) && __FreeBSD__ < 5
+#include <netinet/in_systm.h>
+#endif
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <netinet/tcp.h>
 #include <arpa/inet.h>
 
 #ifdef __cplusplus

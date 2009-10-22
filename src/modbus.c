@@ -31,7 +31,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h>
+#endif
+#ifdef HAVE_STDINT_H
 #include <stdint.h>
+#endif
 #include <termios.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -43,10 +48,17 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
+#if defined(__FreeBSD__ ) && __FreeBSD__ < 5
+#include <netinet/in_systm.h>
+#endif
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
+
+#if !defined(UINT16_MAX)
+#define UINT16_MAX 0xFFFF
+#endif
 
 #include "config.h"
 #include "modbus.h"
@@ -1714,7 +1726,7 @@ static int modbus_connect_tcp(modbus_param_t *mb_param)
         ret = setsockopt(mb_param->fd, IPPROTO_TCP, TCP_NODELAY,
                          (const void *)&option, sizeof(int));
         if (ret < 0) {
-                perror("setsockopt");
+                perror("setsockopt TCP_NODELAY");
                 close(mb_param->fd);
                 return ret;
         }
@@ -1726,10 +1738,10 @@ static int modbus_connect_tcp(modbus_param_t *mb_param)
          **/
         /* Set the IP low delay option */
         option = IPTOS_LOWDELAY;
-        ret = setsockopt(mb_param->fd, IPPROTO_TCP, IP_TOS,
+        ret = setsockopt(mb_param->fd, IPPROTO_IP, IP_TOS,
                          (const void *)&option, sizeof(int));
         if (ret < 0) {
-                perror("setsockopt");
+                perror("setsockopt IP_TOS");
                 close(mb_param->fd);
                 return ret;
         }
