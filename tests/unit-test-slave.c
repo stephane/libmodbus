@@ -63,10 +63,9 @@ int main(void)
 
         while (1) {
                 uint8_t query[MAX_MESSAGE_LENGTH];
-                int query_size;
 
-                ret = modbus_slave_receive(&mb_param, -1, query, &query_size);
-                if (ret == 0) {
+                ret = modbus_slave_receive(&mb_param, -1, query);
+                if (ret >= 0) {
                         if (((query[HEADER_LENGTH_TCP + 3] << 8) + query[HEADER_LENGTH_TCP + 4])
                             == UT_HOLDING_REGISTERS_NB_POINTS_SPECIAL) {
                                 /* Change the number of values (offset
@@ -75,7 +74,7 @@ int main(void)
                                 query[HEADER_LENGTH_TCP + 4] = UT_HOLDING_REGISTERS_NB_POINTS;
                         }
 
-                        modbus_slave_manage(&mb_param, query, query_size, &mb_mapping);
+                        modbus_slave_manage(&mb_param, query, ret, &mb_mapping);
                 } else if (ret == CONNECTION_CLOSED) {
                         /* Connection closed by the client, end of server */
                         break;

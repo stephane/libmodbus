@@ -1,5 +1,5 @@
 /*
- * Copyright © 2001-2009 Stéphane Raimbault <stephane.raimbault@gmail.com>
+ * Copyright © 2001-2010 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser Public License as published by
@@ -72,6 +72,8 @@ extern "C" {
 /* Kept for compatibility reasons (deprecated) */
 #define MAX_MESSAGE_LENGTH        260
 
+#define EXCEPTION_RESPONSE_LENGTH_RTU  5
+
 /* Modbus_Application_Protocol_V1_1b.pdf (chapter 6 section 1 page 12)
  * Quantity of Coils (2 bytes): 1 to 2000 (0x7D0)
  */
@@ -139,6 +141,7 @@ extern "C" {
 #define SELECT_FAILURE          -0x14
 #define SOCKET_FAILURE          -0x15
 #define CONNECTION_CLOSED       -0x16
+#define MB_EXCEPTION             -0x17
 
 /* Internal using */
 #define MSG_LENGTH_UNDEFINED -1
@@ -318,15 +321,15 @@ int modbus_slave_listen_tcp(modbus_param_t *mb_param, int nb_connection);
 int modbus_slave_accept_tcp(modbus_param_t *mb_param, int *socket);
 
 /* Listens for any query from a modbus master in TCP, requires the socket file
-   descriptor etablished with the master device in argument.
+   descriptor etablished with the master device in argument or -1 to use the
+   internal one of modbus_param_t.
 
    Returns:
-   - 0 on success, or a negative error number if the request fails
+   - byte length of the message on success, or a negative error number if the
+     request fails
    - query, message received
-   - query_length, length in bytes of the message
 */
-int modbus_slave_receive(modbus_param_t *mb_param, int sockfd,
-                         uint8_t *query, int *query_length);
+int modbus_slave_receive(modbus_param_t *mb_param, int sockfd, uint8_t *query);
 
 /* Manages the received query.
    Analyses the query and constructs a response.

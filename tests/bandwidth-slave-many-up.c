@@ -106,11 +106,10 @@ int main(void)
                                 } else {
                                         /* An already connected master has sent a new query */
                                         uint8_t query[MAX_MESSAGE_LENGTH];
-                                        int query_size;
 
-                                        ret = modbus_slave_receive(&mb_param, master_socket, query, &query_size);
-                                        if (ret == 0) {
-                                                modbus_slave_manage(&mb_param, query, query_size, &mb_mapping);
+                                        ret = modbus_slave_receive(&mb_param, master_socket, query);
+                                        if (ret >= 0) {
+                                                modbus_slave_manage(&mb_param, query, ret, &mb_mapping);
                                         } else {
                                                 /* Connection closed by the client, end of server */
                                                 printf("Connection closed on socket %d\n", master_socket);

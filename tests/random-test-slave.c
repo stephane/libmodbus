@@ -44,11 +44,12 @@ int main(void)
 
         while (1) {
                 uint8_t query[MAX_MESSAGE_LENGTH];
-                int query_size;
+                int ret;
 
-                ret = modbus_slave_receive(&mb_param, -1, query, &query_size);
-                if (ret == 0) {
-                        modbus_slave_manage(&mb_param, query, query_size, &mb_mapping);
+                ret = modbus_slave_receive(&mb_param, -1, query);
+                if (ret >= 0) {
+                        /* ret is the query size */
+                        modbus_slave_manage(&mb_param, query, ret, &mb_mapping);
                 } else if (ret == CONNECTION_CLOSED) {
                         /* Connection closed by the client, end of server */
                         break;
