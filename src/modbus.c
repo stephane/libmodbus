@@ -1988,20 +1988,20 @@ uint8_t get_byte_from_bits(const uint8_t *src, int address, int nb_bits)
 /* Read a float from 4 bytes in Modbus format */
 float modbus_read_float(const uint16_t *src)
 {
-        float real;
-        uint32_t ireal = (src[1] << 16) + src[0];
-        real = *((float *)&ireal);
+        float r = 0.0f;
+        uint32_t i;
 
-        return real;
+        i = (((uint32_t) src[1]) << 16) + src[0];
+        memcpy (&r, &i, sizeof (r));
+        return (r);
 }
 
 /* Write a float to 4 bytes in Modbus format */
 void modbus_write_float(float real, uint16_t *dest)
 {
-        uint32_t ireal;
+        uint32_t i = 0;
 
-        ireal = *((uint32_t *)&real);
-        /* Implicit mask 0xFFFF */
-        dest[0] = ireal;
-        dest[1] = ireal >> 16;
+        memcpy (&i, &real, sizeof (i));
+        dest[0] = (uint16_t) i;
+        dest[1] = (uint16_t) (i >> 16);
 }
