@@ -447,7 +447,7 @@ static int modbus_send(modbus_param_t *mb_param, uint8_t *query,
         if (mb_param->type_com == RTU)
                 ret = write(mb_param->fd, query, query_length);
         else
-                ret = send(mb_param->fd, query, query_length, 0);
+                ret = send(mb_param->fd, query, query_length, MSG_NOSIGNAL);
 
         /* Return the number of bytes written (0 to n)
            or SOCKET_FAILURE on error */
