@@ -1,12 +1,14 @@
 libmodbus 2.2.0 (2009-XX-01)
 ============================
-- New API to read and write float values
+
+- New API to read and write float values by Stéphane Raimbault and Florian
+  Forster.
 - New API for slave server (see MIGRATION)
 - New slave server able to handle multiple connections
 - Slave only replies to broadcast queries or queries with its slave ID
 - Improved Modbus protocol conformance
 - modbus_param_t is smaller (2 int removed)
-- Better error management
+- Better error management and SIGPIPE signal is blocked
 - Faster
 - Fix #333455 - Cygwin IPTOS_LOWDELAY not supported on cygwin
   Reported by Jeff Laughlin and Yishin Li.
@@ -21,6 +23,12 @@ libmodbus 2.2.0 (2009-XX-01)
   Reported by Henrik Munktell.
 - Fix #457200 - FreeBSD support
   Patch provided by Norbert Koch.
+
+Other changes:
+
+- The code is now published and developed on
+  http://github.com/stephane/libmodbus
+- Waf support has been removed
 
 libmodbus 2.0.3 (2009-03-22)
 ============================

@@ -16,7 +16,8 @@ Schneider at www.schneiderautomation.com.
 The license of libmodbus is LGPL v3.
 The licence of programs in the tests directory is GPL v3.
 
-https://launchpad.net/libmodbus
+http://github.com/stephane/libmodbus
+(the old project page was https://launchpad.net/libmodbus)
 http://copyleft.free.fr/wordpress/index.php/libmodbus/
 
 Installation
