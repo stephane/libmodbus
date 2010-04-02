@@ -5,7 +5,6 @@ includedir=@includedir@
 
 Name: modbus
 Description: Modbus library
-Requires:
 Version: @VERSION@
 Libs: -L${libdir} -lmodbus
 Cflags: -I${includedir}
