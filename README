@@ -19,28 +19,10 @@ The licence of programs in the tests directory is GPL v3.
 https://launchpad.net/libmodbus
 http://copyleft.free.fr/wordpress/index.php/libmodbus/
 
-
 Installation
 ============
 
-WARNING, don't use the two build systems at the same time.
-
-With autotools
---------------
 The shell commands are './configure; make; make install'.
-
-With Waf
---------
-The build system is Waf (http://code.google.com/p/waf), the shell commandes are:
-  $ ./waf configure
-  $ ./waf build
-  $ sudo ./waf install
-
-or 'waf' if you use a global Waf script.
-
-The sources are built in the 'build' directory at the root of the
-project source files.
-
 
 Testing
 =======

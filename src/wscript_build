@@ -1,8 +1,0 @@
-obj = bld.new_task_gen(
-    features='cc cshlib',
-    source='modbus.c',
-    target='modbus',
-    vnum=VERSION,
-    includes='. ..')
-
-bld.install_files('${PREFIX}/include/modbus', 'modbus.h')
