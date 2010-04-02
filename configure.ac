@@ -3,9 +3,9 @@
 
 AC_PREREQ(2.63)
 AC_INIT([libmodbus],[2.1.0],[stephane.raimbault@gmail.com])
-AC_CONFIG_SRCDIR([src/modbus.c])
+AC_CONFIG_SRCDIR([modbus/modbus.c])
 AC_CONFIG_HEADERS([config.h])
-AM_INIT_AUTOMAKE([1.11])
+AM_INIT_AUTOMAKE([1.11 foreign])
 # enable nice build output on automake1.11
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
@@ -38,7 +38,7 @@ AC_CHECK_FUNCS([gettimeofday inet_ntoa memset select socket strerror])
 
 AC_CONFIG_FILES([
         Makefile
-        src/Makefile
+        modbus/Makefile
         tests/Makefile
         modbus.pc
 ])
