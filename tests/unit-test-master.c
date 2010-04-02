@@ -1,5 +1,5 @@
 /*
- * Copyright © 2008 Stéphane Raimbault <stephane.raimbault@gmail.com>
+ * Copyright © 2008-2010 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "modbus.h"
+#include <modbus/modbus.h>
 #include "unit-test.h"
 
 /* Tests based on PI-MBUS-300 documentation */

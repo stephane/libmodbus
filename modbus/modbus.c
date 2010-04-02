@@ -60,8 +60,8 @@
 #define UINT16_MAX 0xFFFF
 #endif
 
-#include "config.h"
-#include "modbus.h"
+#include <config.h>
+#include <modbus/modbus.h>
 
 #define UNKNOWN_ERROR_MSG "Not defined in modbus specification"
 
