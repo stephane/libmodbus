@@ -1991,9 +1991,9 @@ float modbus_read_float(const uint16_t *src)
         float r = 0.0f;
         uint32_t i;
 
-        i = (((uint32_t) src[1]) << 16) + src[0];
-        memcpy (&r, &i, sizeof (r));
-        return (r);
+        i = (((uint32_t)src[1]) << 16) + src[0];
+        memcpy(&r, &i, sizeof (r));
+        return r;
 }
 
 /* Write a float to 4 bytes in Modbus format */
@@ -2001,7 +2001,7 @@ void modbus_write_float(float real, uint16_t *dest)
 {
         uint32_t i = 0;
 
-        memcpy (&i, &real, sizeof (i));
-        dest[0] = (uint16_t) i;
-        dest[1] = (uint16_t) (i >> 16);
+        memcpy(&i, &real, sizeof (i));
+        dest[0] = (uint16_t)i;
+        dest[1] = (uint16_t)(i >> 16);
 }
