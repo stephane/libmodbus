@@ -25,8 +25,14 @@ By default, this program sends some queries with the values defined in
 unit-test.h and checks the responses. These programs are useful to
 test the protocol implementation.
 
-bench-bandwidth-slave
-bench-bandwidth-master
-----------------------
+bandwidth-slave-one
+bandwidth-slave-many-up
+bandwidth-master
+-----------------------
 It returns some very useful informations about the performance of
 transfert rate between the slave and the master.
+
+- bandwidth-slave-one: it can handles only one connection with a master.
+- bandwidth-slave-many-up: it opens a connection each time a new master asks
+  for, but the number of connection is limited. The same slave process handles
+  all the connections.
