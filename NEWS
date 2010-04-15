@@ -1,4 +1,11 @@
-libmodbus 2.2.0 (2009-XX-01)
+libmodbus 2.1.1 (2010-XX-XX)
+============================
+
+- Versioning infrastructure.
+  Inspired by the Clutter project and the work done by Florian Forster.
+- Renamed src directory to modbus
+
+libmodbus 2.1.0 (2010-03-24)
 ============================
 
 - New API to read and write float values by Stéphane Raimbault and Florian

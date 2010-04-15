@@ -33,6 +33,8 @@
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 
+#include <modbus/version.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

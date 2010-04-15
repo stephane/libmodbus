@@ -7,7 +7,8 @@ noinst_PROGRAMS = \
 	unit-test-master \
 	bandwidth-slave-one \
 	bandwidth-slave-many-up \
-	bandwidth-master
+	bandwidth-master \
+	version
 
 common_ldflags = \
 	$(top_builddir)/modbus/libmodbus.la
@@ -32,6 +33,9 @@ bandwidth_slave_many_up_LDADD = $(common_ldflags)
 
 bandwidth_master_SOURCES = bandwidth-master.c
 bandwidth_master_LDADD = $(common_ldflags)
+
+version_SOURCES = version.c
+version_LDADD = $(common_ldflags)
 
 INCLUDES = -I$(top_srcdir)
 CLEANFILES = *~
