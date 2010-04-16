@@ -1,11 +1,11 @@
-Summary: A Modbus library in C, which supports RTU communication over a serial line or a TCP link. 
+Summary: A Modbus library in C, which supports RTU communication over a serial line or a TCP link.
 Name: libmodbus
 Version: 2.0.3
 Release: 1
 License: LGPL V3+
-Packager: Some random Internet user
+Packager: Stéphane Raimbault
 URL: https://launchpad.net/libmodbus/
-Group: Applications/System          
+Group: Applications/System
 Provides: libmodbus=2.0.3
 Requires: ,/bin/sh
 
@@ -15,9 +15,8 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: autoconf, automake
 
 %description
-A Modbus library for Linux (and OSX) wrote in C and which supports 
+A Modbus library for Linux (and OSX) wrote in C and which supports
 RTU communication over a serial line or a TCP link. Clean and fast!
-Supports controling an RTU and being an RTU.
 
 %prep
 %setup -q
@@ -25,7 +24,7 @@ Supports controling an RTU and being an RTU.
 autoreconf
 
 %build
-%configure 
+%configure
 
 make
 
