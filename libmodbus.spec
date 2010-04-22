@@ -51,7 +51,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_libdir}/libmodbus.so
 %attr(0755,root,root) %{_libdir}/libmodbus.so.2.0.3
 %attr(0755,root,root) %{_libdir}/libmodbus.la
-%attr(0644,root,root) %{_libdir}/pkgconfig/modbus.pc
+%attr(0644,root,root) %{_libdir}/pkgconfig/libmodbus.pc
 %attr(0644,root,root) %{_includedir}/modbus/modbus.h
 %doc AUTHORS ChangeLog INSTALL NEWS COPYING* README
 
