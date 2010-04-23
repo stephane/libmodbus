@@ -4,7 +4,7 @@ Compilation
 After installation, you can use pkg-config to compile these tests.
 For example, to compile random-test-slave run:
 
-gcc random-test-slave.c -o random-test-slave `pkg-config --libs --cflags modbus`
+gcc random-test-slave.c -o random-test-slave `pkg-config --libs --cflags libmodbus`
 
 random-test-slave
 -----------------
