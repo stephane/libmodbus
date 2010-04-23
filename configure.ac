@@ -8,8 +8,8 @@
 # After the release:
 # - increase mb_version_minor to the next odd number
 #
-# mb_version_ld increases at each new minor version because minor versions
-# are used to change API/ABI
+# Take care to update the libtool versioning when required (MB_LD_*).
+# http://www.gnu.org/software/libtool/manual/html_node/Libtool-versioning.html
 #
 m4_define([mb_version_major], [2])
 m4_define([mb_version_minor], [1])
@@ -20,7 +20,6 @@ m4_define([mb_release_status],
                [release])])
 
 m4_define([mb_version], [mb_version_major.mb_version_minor.mb_version_micro])
-m4_define([mb_version_ld], [m4_eval(mb_version_major + mb_version_minor)])
 
 AC_PREREQ(2.63)
 AC_INIT([libmodbus],[mb_version],[stephane.raimbault@gmail.com])
@@ -39,8 +38,11 @@ AC_SUBST(MB_VERSION_MINOR)
 AC_SUBST(MB_VERSION_MICRO)
 AC_SUBST(MB_VERSION)
 
-MB_VERSION_LD=mb_version_ld
-MB_LT_LDFLAGS="-version-info $MB_VERSION_LD:0:0"
+# ABI version
+MB_LD_CURRENT=3
+MB_LD_REVISION=0
+MB_LD_AGE=0
+MB_LT_LDFLAGS="-version-info $MB_LD_CURRENT:$MB_LD_REVISION:$MB_LD_AGE"
 AC_SUBST(MB_LT_LDFLAGS)
 
 # Checks for programs.
