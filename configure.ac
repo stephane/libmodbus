@@ -26,7 +26,7 @@ AC_PREREQ(2.63)
 AC_INIT([libmodbus],[mb_version],[stephane.raimbault@gmail.com])
 AC_CONFIG_SRCDIR([modbus/modbus.c])
 AC_CONFIG_HEADERS([config.h])
-AM_INIT_AUTOMAKE([1.11 foreign])
+AM_INIT_AUTOMAKE([foreign])
 # enable nice build output on automake1.11
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
