@@ -55,7 +55,6 @@ int main(void)
         /* TCP */
         modbus_init_tcp(&mb_param, "127.0.0.1", 1502, SLAVE);
         if (modbus_connect(&mb_param) == -1) {
-                printf("ERROR Connection failed\n");
                 exit(1);
         }
 

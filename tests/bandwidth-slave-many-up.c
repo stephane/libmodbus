@@ -53,7 +53,7 @@ int main(void)
 
         ret = modbus_mapping_new(&mb_mapping,  MAX_STATUS, 0, MAX_REGISTERS, 0);
         if (ret < 0) {
-                printf("Memory allocation failure\n");
+                fprintf(stderr, "Memory allocation failure\n");
                 exit(1);
         }
 

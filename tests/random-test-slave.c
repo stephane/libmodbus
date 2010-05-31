@@ -35,7 +35,7 @@ int main(void)
 
         ret = modbus_mapping_new(&mb_mapping, 500, 500, 500, 500);
         if (ret < 0) {
-                printf("Memory allocation failed\n");
+                fprintf(stderr, "Memory allocation failed\n");
                 exit(1);
         }
 
@@ -54,7 +54,7 @@ int main(void)
                         /* Connection closed by the client, end of server */
                         break;
                 } else {
-                        printf("Error in modbus_listen (%d)\n", ret);
+                        fprintf(stderr, "Error in modbus_listen (%d)\n", ret);
                 }
         }
 

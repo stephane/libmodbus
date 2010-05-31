@@ -47,7 +47,6 @@ int main(void)
 /*        modbus_set_debug(&mb_param, TRUE); */
 
         if (modbus_connect(&mb_param) == -1) {
-                printf("ERROR Connection failed\n");
                 exit(1);
         }
 

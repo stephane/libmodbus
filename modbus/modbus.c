@@ -172,7 +172,7 @@ static const int TAB_MAX_ADU_LENGTH[2] = {
 /* Treats errors and flush or close connection if necessary */
 static void error_treat(modbus_param_t *mb_param, int code, const char *string)
 {
-        printf("\nERROR %s (%0X)\n", string, -code);
+        fprintf(stderr, "\nERROR %s (%0X)\n", string, -code);
 
         if (mb_param->error_handling == FLUSH_OR_CONNECT_ON_ERROR) {
                 switch (code) {
@@ -508,7 +508,7 @@ static int compute_query_length_data(modbus_param_t *mb_param, uint8_t *msg)
 {                                                                                  \
     while ((select_ret = select(mb_param->fd+1, &rfds, NULL, NULL, &tv)) == -1) {  \
             if (errno == EINTR) {                                                  \
-                    printf("A non blocked signal was caught\n");                   \
+                    fprintf(stderr, "A non blocked signal was caught\n");          \
                     /* Necessary after an error */                                 \
                     FD_ZERO(&rfds);                                                \
                     FD_SET(mb_param->fd, &rfds);                                   \
@@ -1102,8 +1102,9 @@ int read_coil_status(modbus_param_t *mb_param, int start_addr,
         int status;
 
         if (nb > MAX_STATUS) {
-                printf("ERROR Too many coils status requested (%d > %d)\n",
-                       nb, MAX_STATUS);
+                fprintf(stderr,
+                        "ERROR Too many coils status requested (%d > %d)\n",
+                        nb, MAX_STATUS);
                 return INVALID_DATA;
         }
 
@@ -1124,7 +1125,8 @@ int read_input_status(modbus_param_t *mb_param, int start_addr,
         int status;
 
         if (nb > MAX_STATUS) {
-                printf("ERROR Too many input status requested (%d > %d)\n",
+                fprintf(stderr,
+                        "ERROR Too many input status requested (%d > %d)\n",
                        nb, MAX_STATUS);
                 return INVALID_DATA;
         }
@@ -1148,8 +1150,9 @@ static int read_registers(modbus_param_t *mb_param, int function,
         uint8_t response[MAX_MESSAGE_LENGTH];
 
         if (nb > MAX_REGISTERS) {
-                printf("ERROR Too many holding registers requested (%d > %d)\n",
-                       nb, MAX_REGISTERS);
+                fprintf(stderr,
+                        "ERROR Too many holding registers requested (%d > %d)\n",
+                        nb, MAX_REGISTERS);
                 return INVALID_DATA;
         }
 
@@ -1184,8 +1187,9 @@ int read_holding_registers(modbus_param_t *mb_param,
         int status;
 
         if (nb > MAX_REGISTERS) {
-                printf("ERROR Too many holding registers requested (%d > %d)\n",
-                       nb, MAX_REGISTERS);
+                fprintf(stderr,
+                        "ERROR Too many holding registers requested (%d > %d)\n",
+                        nb, MAX_REGISTERS);
                 return INVALID_DATA;
         }
 
@@ -1202,8 +1206,9 @@ int read_input_registers(modbus_param_t *mb_param, int start_addr, int nb,
         int status;
 
         if (nb > MAX_REGISTERS) {
-                printf("ERROR Too many input registers requested (%d > %d)\n",
-                       nb, MAX_REGISTERS);
+                fprintf(stderr,
+                        "ERROR Too many input registers requested (%d > %d)\n",
+                        nb, MAX_REGISTERS);
                 return INVALID_DATA;
         }
 
@@ -1275,8 +1280,8 @@ int force_multiple_coils(modbus_param_t *mb_param, int start_addr, int nb,
         uint8_t query[MAX_MESSAGE_LENGTH];
 
         if (nb > MAX_STATUS) {
-                printf("ERROR Writing to too many coils (%d > %d)\n",
-                       nb, MAX_STATUS);
+                fprintf(stderr, "ERROR Writing to too many coils (%d > %d)\n",
+                        nb, MAX_STATUS);
                 return INVALID_DATA;
         }
 
@@ -1324,8 +1329,9 @@ int preset_multiple_registers(modbus_param_t *mb_param, int start_addr, int nb,
         uint8_t query[MAX_MESSAGE_LENGTH];
 
         if (nb > MAX_REGISTERS) {
-                printf("ERROR Trying to write to too many registers (%d > %d)\n",
-                       nb, MAX_REGISTERS);
+                fprintf(stderr,
+                        "ERROR Trying to write to too many registers (%d > %d)\n",
+                        nb, MAX_REGISTERS);
                 return INVALID_DATA;
         }
 
@@ -1448,7 +1454,8 @@ void modbus_set_error_handling(modbus_param_t *mb_param,
             error_handling == NOP_ON_ERROR) {
                 mb_param->error_handling = error_handling;
         } else {
-                printf("Invalid setting for error handling (not changed)\n");
+                fprintf(stderr,
+                        "Invalid setting for error handling (not changed)\n");
         }
 }
 
@@ -1460,8 +1467,8 @@ static int modbus_connect_rtu(modbus_param_t *mb_param)
         speed_t speed;
 
         if (mb_param->debug) {
-                printf("Opening %s at %d bauds (%s)\n",
-                       mb_param->device, mb_param->baud, mb_param->parity);
+                fprintf(stderr, "Opening %s at %d bauds (%s)\n",
+                        mb_param->device, mb_param->baud, mb_param->parity);
         }
 
         /* The O_NOCTTY flag tells UNIX that this program doesn't want
@@ -1473,9 +1480,8 @@ static int modbus_connect_rtu(modbus_param_t *mb_param)
            NDELAY option is set on the file via open or fcntl */
         mb_param->fd = open(mb_param->device, O_RDWR | O_NOCTTY | O_NDELAY | O_EXCL);
         if (mb_param->fd < 0) {
-                perror("open");
-                printf("ERROR Can't open the device %s (%s)\n",
-                       mb_param->device, strerror(errno));
+                fprintf(stderr, "ERROR Can't open the device %s (%s)\n",
+                        mb_param->device, strerror(errno));
                 return -1;
         }
 
@@ -1523,8 +1529,9 @@ static int modbus_connect_rtu(modbus_param_t *mb_param)
                 break;
         default:
                 speed = B9600;
-                printf("WARNING Unknown baud rate %d for %s (B9600 used)\n",
-                       mb_param->baud, mb_param->device);
+                fprintf(stderr,
+                        "WARNING Unknown baud rate %d for %s (B9600 used)\n",
+                        mb_param->baud, mb_param->device);
         }
 
         /* Set the baud rate */
@@ -1979,7 +1986,7 @@ uint8_t get_byte_from_bits(const uint8_t *src, int address, int nb_bits)
         uint8_t value = 0;
 
         if (nb_bits > 8) {
-                printf("Error: nb_bits is too big\n");
+                fprintf(stderr, "ERROR nb_bits is too big\n");
                 nb_bits = 8;
         }
 
