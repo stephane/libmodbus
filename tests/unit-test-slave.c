@@ -79,7 +79,7 @@ int main(void)
                         /* Connection closed by the client, end of server */
                         break;
                 } else {
-                        sprintf(stderr, "Error in modbus_listen (%d)\n", ret);
+                        fprintf(stderr, "Error in modbus_listen (%d)\n", ret);
                 }
         }
 
