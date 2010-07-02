@@ -19,6 +19,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include <modbus/modbus.h>
 
@@ -45,7 +46,7 @@
  */
 int main(void)
 {
-        int ret;
+        int rc;
         int nb_fail;
         int nb_loop;
         int addr;
@@ -63,7 +64,9 @@ int main(void)
         modbus_init_tcp(&mb_param, "127.0.0.1", 1502, SLAVE);
         modbus_set_debug(&mb_param, TRUE);
         if (modbus_connect(&mb_param) == -1) {
-                exit(1);
+                fprintf(stderr, "Connection failed: %s\n",
+                        modbus_strerror(errno));
+                return -1;
         }
 
         /* Allocate and initialize the different memory spaces */
@@ -94,16 +97,16 @@ int main(void)
                         nb = ADDRESS_END - addr;
 
                         /* SINGLE COIL */
-                        ret = force_single_coil(&mb_param, addr, tab_rq_status[0]);
-                        if (ret != 1) {
-                                printf("ERROR force_single_coil (%d)\n", ret);
+                        rc = force_single_coil(&mb_param, addr, tab_rq_status[0]);
+                        if (rc != 1) {
+                                printf("ERROR force_single_coil (%d)\n", rc);
                                 printf("Slave = %d, address = %d, value = %d\n",
                                        SLAVE, addr, tab_rq_status[0]);
                                 nb_fail++;
                         } else {
-                                ret = read_coil_status(&mb_param, addr, 1, tab_rp_status);
-                                if (ret != 1 || tab_rq_status[0] != tab_rp_status[0]) {
-                                        printf("ERROR read_coil_status single (%d)\n", ret);
+                                rc = read_coil_status(&mb_param, addr, 1, tab_rp_status);
+                                if (rc != 1 || tab_rq_status[0] != tab_rp_status[0]) {
+                                        printf("ERROR read_coil_status single (%d)\n", rc);
                                         printf("Slave = %d, address = %d\n",
                                                SLAVE, addr);
                                         nb_fail++;
@@ -111,15 +114,15 @@ int main(void)
                         }
 
                         /* MULTIPLE COILS */
-                        ret = force_multiple_coils(&mb_param, addr, nb, tab_rq_status);
-                        if (ret != nb) {
-                                printf("ERROR force_multiple_coils (%d)\n", ret);
+                        rc = force_multiple_coils(&mb_param, addr, nb, tab_rq_status);
+                        if (rc != nb) {
+                                printf("ERROR force_multiple_coils (%d)\n", rc);
                                 printf("Slave = %d, address = %d, nb = %d\n",
                                        SLAVE, addr, nb);
                                 nb_fail++;
                         } else {
-                                ret = read_coil_status(&mb_param, addr, nb, tab_rp_status);
-                                if (ret != nb) {
+                                rc = read_coil_status(&mb_param, addr, nb, tab_rp_status);
+                                if (rc != nb) {
                                         printf("ERROR read_coil_status\n");
                                         printf("Slave = %d, address = %d, nb = %d\n",
                                                SLAVE, addr, nb);
@@ -139,16 +142,16 @@ int main(void)
                         }
 
                         /* SINGLE REGISTER */
-                        ret = preset_single_register(&mb_param, addr, tab_rq_registers[0]);
-                        if (ret != 1) {
-                                printf("ERROR preset_single_register (%d)\n", ret);
+                        rc = preset_single_register(&mb_param, addr, tab_rq_registers[0]);
+                        if (rc != 1) {
+                                printf("ERROR preset_single_register (%d)\n", rc);
                                 printf("Slave = %d, address = %d, value = %d (0x%X)\n",
                                        SLAVE, addr, tab_rq_registers[0], tab_rq_registers[0]);
                                 nb_fail++;
                         } else {
-                                ret = read_holding_registers(&mb_param, addr, 1, tab_rp_registers);
-                                if (ret != 1) {
-                                        printf("ERROR read_holding_registers single (%d)\n", ret);
+                                rc = read_holding_registers(&mb_param, addr, 1, tab_rp_registers);
+                                if (rc != 1) {
+                                        printf("ERROR read_holding_registers single (%d)\n", rc);
                                         printf("Slave = %d, address = %d\n",
                                                SLAVE, addr);
                                         nb_fail++;
@@ -165,18 +168,18 @@ int main(void)
                         }
 
                         /* MULTIPLE REGISTERS */
-                        ret = preset_multiple_registers(&mb_param, addr, nb,
+                        rc = preset_multiple_registers(&mb_param, addr, nb,
                                                         tab_rq_registers);
-                        if (ret != nb) {
-                                printf("ERROR preset_multiple_registers (%d)\n", ret);
+                        if (rc != nb) {
+                                printf("ERROR preset_multiple_registers (%d)\n", rc);
                                 printf("Slave = %d, address = %d, nb = %d\n",
                                                SLAVE, addr, nb);
                                 nb_fail++;
                         } else {
-                                ret = read_holding_registers(&mb_param, addr, nb,
+                                rc = read_holding_registers(&mb_param, addr, nb,
                                                              tab_rp_registers);
-                                if (ret != nb) {
-                                        printf("ERROR read_holding_registers (%d)\n", ret);
+                                if (rc != nb) {
+                                        printf("ERROR read_holding_registers (%d)\n", rc);
                                         printf("Slave = %d, address = %d, nb = %d\n",
                                                SLAVE, addr, nb);
                                         nb_fail++;

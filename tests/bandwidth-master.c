@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <sys/time.h>
+#include <errno.h>
 
 #include <modbus/modbus.h>
 
@@ -44,18 +45,21 @@ int main(void)
         uint16_t *tab_rp_registers;
         modbus_param_t mb_param;
         int i;
-        int ret;
         int nb_points;
         double elapsed;
         uint32_t start;
         uint32_t end;
         uint32_t bytes;
         uint32_t rate;
+        int rc;
 
         /* TCP */
         modbus_init_tcp(&mb_param, "127.0.0.1", 1502, SLAVE);
-        if (modbus_connect(&mb_param) == -1) {
-                exit(1);
+        rc = modbus_connect(&mb_param);
+        if (rc == -1) {
+                fprintf(stderr, "Connexion failed: %s\n",
+                        modbus_strerror(errno));
+                return -1;
         }
 
         /* Allocate and initialize the memory to store the status */
@@ -71,7 +75,11 @@ int main(void)
         nb_points = MAX_STATUS;
         start = gettime_ms();
         for (i=0; i<NB_LOOPS; i++) {
-                ret = read_coil_status(&mb_param, 0, nb_points, tab_rp_status);
+                rc = read_coil_status(&mb_param, 0, nb_points, tab_rp_status);
+                if (rc == -1) {
+                        fprintf(stderr, modbus_strerror(errno));
+                        return -1;
+                }
         }
         end = gettime_ms();
         elapsed = end - start;
@@ -104,7 +112,11 @@ int main(void)
         nb_points = MAX_REGISTERS;
         start = gettime_ms();
         for (i=0; i<NB_LOOPS; i++) {
-                ret = read_holding_registers(&mb_param, 0, nb_points, tab_rp_registers);
+                rc = read_holding_registers(&mb_param, 0, nb_points, tab_rp_registers);
+                if (rc == -1) {
+                        fprintf(stderr, modbus_strerror(errno));
+                        return -1;
+                }
         }
         end = gettime_ms();
         elapsed = end - start;

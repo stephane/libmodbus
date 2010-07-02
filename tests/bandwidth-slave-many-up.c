@@ -42,7 +42,7 @@ int main(void)
 {
         int master_socket;
         modbus_param_t mb_param;
-        int ret;
+        int rc;
         fd_set refset;
         fd_set rdset;
 
@@ -51,10 +51,11 @@ int main(void)
 
         modbus_init_tcp(&mb_param, "127.0.0.1", 1502, SLAVE);
 
-        ret = modbus_mapping_new(&mb_mapping,  MAX_STATUS, 0, MAX_REGISTERS, 0);
-        if (ret < 0) {
-                fprintf(stderr, "Memory allocation failure\n");
-                exit(1);
+        rc = modbus_mapping_new(&mb_mapping,  MAX_STATUS, 0, MAX_REGISTERS, 0);
+        if (rc == -1) {
+                fprintf(stderr, "Failed to allocate the mapping: %s\n",
+                        modbus_strerror(errno));
+                return -1;
         }
 
         slave_socket = modbus_slave_listen_tcp(&mb_param, NB_CONNECTION);
@@ -107,9 +108,9 @@ int main(void)
                                         /* An already connected master has sent a new query */
                                         uint8_t query[MAX_MESSAGE_LENGTH];
 
-                                        ret = modbus_slave_receive(&mb_param, master_socket, query);
-                                        if (ret >= 0) {
-                                                modbus_slave_manage(&mb_param, query, ret, &mb_mapping);
+                                        rc = modbus_slave_receive(&mb_param, master_socket, query);
+                                        if (rc != -1) {
+                                                modbus_slave_manage(&mb_param, query, rc, &mb_mapping);
                                         } else {
                                                 /* Connection closed by the client, end of server */
                                                 printf("Connection closed on socket %d\n", master_socket);

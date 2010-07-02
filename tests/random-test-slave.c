@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include <modbus/modbus.h>
 
@@ -28,35 +29,36 @@ int main(void)
         int socket;
         modbus_param_t mb_param;
         modbus_mapping_t mb_mapping;
-        int ret;
+        int rc;
 
         modbus_init_tcp(&mb_param, "127.0.0.1", 1502, SLAVE);
         /* modbus_set_debug(&mb_param, TRUE); */
 
-        ret = modbus_mapping_new(&mb_mapping, 500, 500, 500, 500);
-        if (ret < 0) {
-                fprintf(stderr, "Memory allocation failed\n");
-                exit(1);
+        rc = modbus_mapping_new(&mb_mapping, 500, 500, 500, 500);
+        if (rc == -1) {
+                fprintf(stderr, "Failed to allocate the mapping: %s\n",
+                        modbus_strerror(errno));
+                return -1;
         }
 
         socket = modbus_slave_listen_tcp(&mb_param, 1);
         modbus_slave_accept_tcp(&mb_param, &socket);
 
-        while (1) {
+        for (;;) {
                 uint8_t query[MAX_MESSAGE_LENGTH];
-                int ret;
+                int rc;
 
-                ret = modbus_slave_receive(&mb_param, -1, query);
-                if (ret >= 0) {
-                        /* ret is the query size */
-                        modbus_slave_manage(&mb_param, query, ret, &mb_mapping);
-                } else if (ret == CONNECTION_CLOSED) {
-                        /* Connection closed by the client, end of server */
-                        break;
+                rc = modbus_slave_receive(&mb_param, -1, query);
+                if (rc != -1) {
+                        /* rc is the query size */
+                        modbus_slave_manage(&mb_param, query, rc, &mb_mapping);
                 } else {
-                        fprintf(stderr, "Error in modbus_listen (%d)\n", ret);
+                        /* Connection closed by the client or error */
+                        break;
                 }
         }
+
+        printf("Quit the loop: %s\n", modbus_strerror(errno));
 
         close(socket);
         modbus_mapping_free(&mb_mapping);

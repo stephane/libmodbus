@@ -19,6 +19,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include <modbus/modbus.h>
 #include "unit-test.h"
@@ -28,20 +29,22 @@ int main(void)
         int socket;
         modbus_param_t mb_param;
         modbus_mapping_t mb_mapping;
-        int ret;
+        int rc;
         int i;
 
         modbus_init_tcp(&mb_param, "127.0.0.1", 1502, SLAVE);
         modbus_set_debug(&mb_param, TRUE);
+        modbus_set_error_recovery(&mb_param, TRUE);
 
-        ret = modbus_mapping_new(&mb_mapping,
+        rc = modbus_mapping_new(&mb_mapping,
                                  UT_COIL_STATUS_ADDRESS + UT_COIL_STATUS_NB_POINTS,
                                  UT_INPUT_STATUS_ADDRESS + UT_INPUT_STATUS_NB_POINTS,
                                  UT_HOLDING_REGISTERS_ADDRESS + UT_HOLDING_REGISTERS_NB_POINTS,
                                  UT_INPUT_REGISTERS_ADDRESS + UT_INPUT_REGISTERS_NB_POINTS);
-        if (ret < 0) {
-                printf("Memory allocation failed\n");
-                exit(1);
+        if (rc == -1) {
+                fprintf(stderr, "Failed to allocate the mapping: %s\n",
+                        modbus_strerror(errno));
+                return -1;
         }
 
         /* Examples from PI_MODBUS_300.pdf.
@@ -61,11 +64,11 @@ int main(void)
         socket = modbus_slave_listen_tcp(&mb_param, 1);
         modbus_slave_accept_tcp(&mb_param, &socket);
 
-        while (1) {
+        for (;;) {
                 uint8_t query[MAX_MESSAGE_LENGTH];
 
-                ret = modbus_slave_receive(&mb_param, -1, query);
-                if (ret >= 0) {
+                rc = modbus_slave_receive(&mb_param, -1, query);
+                if (rc > 0) {
                         if (((query[HEADER_LENGTH_TCP + 3] << 8) + query[HEADER_LENGTH_TCP + 4])
                             == UT_HOLDING_REGISTERS_NB_POINTS_SPECIAL) {
                                 /* Change the number of values (offset
@@ -74,14 +77,17 @@ int main(void)
                                 query[HEADER_LENGTH_TCP + 4] = UT_HOLDING_REGISTERS_NB_POINTS;
                         }
 
-                        modbus_slave_manage(&mb_param, query, ret, &mb_mapping);
-                } else if (ret == CONNECTION_CLOSED) {
-                        /* Connection closed by the client, end of server */
-                        break;
+                        rc = modbus_slave_manage(&mb_param, query, rc, &mb_mapping);
+                        if (rc == -1) {
+                                return -1;
+                        }
                 } else {
-                        fprintf(stderr, "Error in modbus_listen (%d)\n", ret);
+                        /* Connection closed by the client or error */
+                        break;
                 }
         }
+
+        printf("Quit the loop: %s\n", modbus_strerror(errno));
 
         close(socket);
         modbus_mapping_free(&mb_mapping);
