@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include <modbus/modbus.h>
+#include <modbus.h>
 
 #define SLAVE 0x11
 

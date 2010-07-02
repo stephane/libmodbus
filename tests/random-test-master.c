@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include <modbus/modbus.h>
+#include <modbus.h>
 
 /* The goal of this program is to check all major functions of
    libmodbus:

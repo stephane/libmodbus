@@ -62,8 +62,7 @@
 #endif
 
 #include <config.h>
-
-#include <modbus/modbus.h>
+#include "modbus.h"
 
 /* Exported version */
 const unsigned int mb_version_major = MB_VERSION_MAJOR;

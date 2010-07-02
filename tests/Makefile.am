@@ -11,7 +11,7 @@ noinst_PROGRAMS = \
 	version
 
 common_ldflags = \
-	$(top_builddir)/modbus/libmodbus.la
+	$(top_builddir)/src/libmodbus.la
 
 random_test_slave_SOURCES = random-test-slave.c
 random_test_slave_LDADD = $(common_ldflags)
@@ -37,5 +37,5 @@ bandwidth_master_LDADD = $(common_ldflags)
 version_SOURCES = version.c
 version_LDADD = $(common_ldflags)
 
-INCLUDES = -I$(top_srcdir)
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
 CLEANFILES = *~

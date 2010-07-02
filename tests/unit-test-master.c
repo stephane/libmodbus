@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include <modbus/modbus.h>
+#include <modbus.h>
 #include "unit-test.h"
 
 /* Tests based on PI-MBUS-300 documentation */

@@ -23,7 +23,7 @@ m4_define([mb_version], [mb_version_major.mb_version_minor.mb_version_micro])
 
 AC_PREREQ(2.63)
 AC_INIT([libmodbus],[mb_version],[stephane.raimbault@gmail.com])
-AC_CONFIG_SRCDIR([modbus/modbus.c])
+AC_CONFIG_SRCDIR([src/modbus.c])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([foreign])
 # enable nice build output on automake1.11
@@ -74,8 +74,8 @@ AC_CHECK_FUNCS([gettimeofday inet_ntoa memset select socket strerror])
 
 AC_CONFIG_FILES([
         Makefile
-        modbus/Makefile
-        modbus/version.h
+        src/Makefile
+        src/version.h
         tests/Makefile
         libmodbus.pc
 ])
