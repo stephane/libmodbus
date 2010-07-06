@@ -65,9 +65,9 @@
 #include "modbus.h"
 
 /* Exported version */
-const unsigned int mb_version_major = MB_VERSION_MAJOR;
-const unsigned int mb_version_minor = MB_VERSION_MINOR;
-const unsigned int mb_version_micro = MB_VERSION_MICRO;
+const unsigned int libmodbus_version_major = LIBMODBUS_VERSION_MAJOR;
+const unsigned int libmodbus_version_minor = LIBMODBUS_VERSION_MINOR;
+const unsigned int libmodbus_version_micro = LIBMODBUS_VERSION_MICRO;
 
 /* This structure reduces the number of params in functions and so
  * optimizes the speed of execution (~ 37%). */
