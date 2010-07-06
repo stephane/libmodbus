@@ -25,7 +25,8 @@
 #include <stdint.h>
 #endif
 
-#define SLAVE 0x11
+#define CLIENT_ID 15
+#define SERVER_ID 17
 
 const uint16_t UT_COIL_STATUS_ADDRESS = 0x13;
 const uint16_t UT_COIL_STATUS_NB_POINTS = 0x25;

@@ -20,8 +20,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
-
 #include <modbus.h>
+
 #include "unit-test.h"
 
 int main(void)
@@ -32,7 +32,7 @@ int main(void)
         int rc;
         int i;
 
-        modbus_init_tcp(&mb_param, "127.0.0.1", 1502, SLAVE);
+        modbus_init_tcp(&mb_param, "127.0.0.1", 1502, SERVER_ID);
         modbus_set_debug(&mb_param, TRUE);
         modbus_set_error_recovery(&mb_param, TRUE);
 

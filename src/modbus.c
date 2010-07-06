@@ -324,15 +324,15 @@ static int build_query_basis_tcp(int slave, int function,
         return PRESET_QUERY_LENGTH_TCP;
 }
 
-static int build_query_basis(modbus_param_t *mb_param,
+static int build_query_basis(modbus_param_t *mb_param, int slave,
                              int function, int start_addr,
                              int nb, uint8_t *query)
 {
         if (mb_param->type_com == RTU)
-                return build_query_basis_rtu(mb_param->slave, function,
+                return build_query_basis_rtu(slave, function,
                                              start_addr, nb, query);
         else
-                return build_query_basis_tcp(mb_param->slave, function,
+                return build_query_basis_tcp(slave, function,
                                              start_addr, nb, query);
 }
 
@@ -1114,7 +1114,7 @@ int modbus_slave_manage(modbus_param_t *mb_param, const uint8_t *query,
 }
 
 /* Reads IO status */
-static int read_io_status(modbus_param_t *mb_param, int function,
+static int read_io_status(modbus_param_t *mb_param, int slave, int function,
                           int start_addr, int nb, uint8_t *data_dest)
 {
         int rc;
@@ -1123,7 +1123,7 @@ static int read_io_status(modbus_param_t *mb_param, int function,
         uint8_t query[MIN_QUERY_LENGTH];
         uint8_t response[MAX_MESSAGE_LENGTH];
 
-        query_length = build_query_basis(mb_param, function,
+        query_length = build_query_basis(mb_param, slave, function,
                                          start_addr, nb, query);
 
         rc = modbus_send(mb_param, query, query_length);
@@ -1156,7 +1156,7 @@ static int read_io_status(modbus_param_t *mb_param, int function,
 
 /* Reads the boolean status of coils and sets the array elements
    in the destination to TRUE or FALSE. */
-int read_coil_status(modbus_param_t *mb_param, int start_addr,
+int read_coil_status(modbus_param_t *mb_param, int slave, int start_addr,
                      int nb, uint8_t *data_dest)
 {
         int rc;
@@ -1171,8 +1171,8 @@ int read_coil_status(modbus_param_t *mb_param, int start_addr,
                 return -1;
         }
 
-        rc = read_io_status(mb_param, FC_READ_COIL_STATUS, start_addr, nb,
-                            data_dest);
+        rc = read_io_status(mb_param, slave, FC_READ_COIL_STATUS, start_addr,
+                            nb, data_dest);
 
         if (rc == -1)
                 return -1;
@@ -1182,7 +1182,7 @@ int read_coil_status(modbus_param_t *mb_param, int start_addr,
 
 
 /* Same as read_coil_status but reads the slaves input table */
-int read_input_status(modbus_param_t *mb_param, int start_addr,
+int read_input_status(modbus_param_t *mb_param, int slave, int start_addr,
                       int nb, uint8_t *data_dest)
 {
         int rc;
@@ -1197,7 +1197,7 @@ int read_input_status(modbus_param_t *mb_param, int start_addr,
                 return -1;
         }
 
-        rc = read_io_status(mb_param, FC_READ_INPUT_STATUS, start_addr,
+        rc = read_io_status(mb_param, slave, FC_READ_INPUT_STATUS, start_addr,
                             nb, data_dest);
 
         if (rc == -1)
@@ -1207,7 +1207,7 @@ int read_input_status(modbus_param_t *mb_param, int start_addr,
 }
 
 /* Reads the data from a modbus slave and put that data into an array */
-static int read_registers(modbus_param_t *mb_param, int function,
+static int read_registers(modbus_param_t *mb_param, int slave, int function,
                           int start_addr, int nb, uint16_t *data_dest)
 {
         int rc;
@@ -1225,7 +1225,7 @@ static int read_registers(modbus_param_t *mb_param, int function,
                 return -1;
         }
 
-        query_length = build_query_basis(mb_param, function,
+        query_length = build_query_basis(mb_param, slave, function,
                                          start_addr, nb, query);
 
         rc = modbus_send(mb_param, query, query_length);
@@ -1250,7 +1250,7 @@ static int read_registers(modbus_param_t *mb_param, int function,
 
 /* Reads the holding registers in a slave and put the data into an
    array */
-int read_holding_registers(modbus_param_t *mb_param,
+int read_holding_registers(modbus_param_t *mb_param, int slave,
                            int start_addr, int nb, uint16_t *data_dest)
 {
         int status;
@@ -1265,15 +1265,15 @@ int read_holding_registers(modbus_param_t *mb_param,
                 return -1;
         }
 
-        status = read_registers(mb_param, FC_READ_HOLDING_REGISTERS,
+        status = read_registers(mb_param, slave, FC_READ_HOLDING_REGISTERS,
                                 start_addr, nb, data_dest);
         return status;
 }
 
 /* Reads the input registers in a slave and put the data into
    an array */
-int read_input_registers(modbus_param_t *mb_param, int start_addr, int nb,
-                         uint16_t *data_dest)
+int read_input_registers(modbus_param_t *mb_param, int slave, int start_addr,
+                         int nb, uint16_t *data_dest)
 {
         int status;
 
@@ -1285,7 +1285,7 @@ int read_input_registers(modbus_param_t *mb_param, int start_addr, int nb,
                 return -1;
         }
 
-        status = read_registers(mb_param, FC_READ_INPUT_REGISTERS,
+        status = read_registers(mb_param, slave, FC_READ_INPUT_REGISTERS,
                                 start_addr, nb, data_dest);
 
         return status;
@@ -1293,14 +1293,14 @@ int read_input_registers(modbus_param_t *mb_param, int start_addr, int nb,
 
 /* Sends a value to a register in a slave.
    Used by force_single_coil and preset_single_register */
-static int set_single(modbus_param_t *mb_param, int function,
+static int set_single(modbus_param_t *mb_param, int slave, int function,
                       int addr, int value)
 {
         int rc;
         int query_length;
         uint8_t query[MIN_QUERY_LENGTH];
 
-        query_length = build_query_basis(mb_param, function,
+        query_length = build_query_basis(mb_param, slave, function,
                                          addr, value, query);
 
         rc = modbus_send(mb_param, query, query_length);
@@ -1315,33 +1315,34 @@ static int set_single(modbus_param_t *mb_param, int function,
 }
 
 /* Turns ON or OFF a single coil in the slave device */
-int force_single_coil(modbus_param_t *mb_param, int coil_addr, int state)
+int force_single_coil(modbus_param_t *mb_param, int slave, int coil_addr, int state)
 {
         int status;
 
         if (state)
                 state = 0xFF00;
 
-        status = set_single(mb_param, FC_FORCE_SINGLE_COIL,
+        status = set_single(mb_param, slave, FC_FORCE_SINGLE_COIL,
                             coil_addr, state);
 
         return status;
 }
 
 /* Sets a value in one holding register in the slave device */
-int preset_single_register(modbus_param_t *mb_param, int reg_addr, int value)
+int preset_single_register(modbus_param_t *mb_param, int slave, int reg_addr,
+                           int value)
 {
         int status;
 
-        status = set_single(mb_param, FC_PRESET_SINGLE_REGISTER,
+        status = set_single(mb_param, slave, FC_PRESET_SINGLE_REGISTER,
                             reg_addr, value);
 
         return status;
 }
 
 /* Sets/resets the coils in the slave from an array in argument */
-int force_multiple_coils(modbus_param_t *mb_param, int start_addr, int nb,
-                         const uint8_t *data_src)
+int force_multiple_coils(modbus_param_t *mb_param, int slave, int start_addr,
+                         int nb, const uint8_t *data_src)
 {
         int rc;
         int i;
@@ -1361,7 +1362,7 @@ int force_multiple_coils(modbus_param_t *mb_param, int start_addr, int nb,
                 return -1;
         }
 
-        query_length = build_query_basis(mb_param, FC_FORCE_MULTIPLE_COILS,
+        query_length = build_query_basis(mb_param, slave, FC_FORCE_MULTIPLE_COILS,
                                          start_addr, nb, query);
         byte_count = (nb / 8) + ((nb % 8) ? 1 : 0);
         query[query_length++] = byte_count;
@@ -1394,8 +1395,8 @@ int force_multiple_coils(modbus_param_t *mb_param, int start_addr, int nb,
 }
 
 /* Copies the values in the slave from the array given in argument */
-int preset_multiple_registers(modbus_param_t *mb_param, int start_addr, int nb,
-                              const uint16_t *data_src)
+int preset_multiple_registers(modbus_param_t *mb_param, int slave, int start_addr,
+                              int nb, const uint16_t *data_src)
 {
         int rc;
         int i;
@@ -1414,7 +1415,7 @@ int preset_multiple_registers(modbus_param_t *mb_param, int start_addr, int nb,
                 return -1;
         }
 
-        query_length = build_query_basis(mb_param, FC_PRESET_MULTIPLE_REGISTERS,
+        query_length = build_query_basis(mb_param, slave, FC_PRESET_MULTIPLE_REGISTERS,
                                          start_addr, nb, query);
         byte_count = nb * 2;
         query[query_length++] = byte_count;
@@ -1433,14 +1434,15 @@ int preset_multiple_registers(modbus_param_t *mb_param, int start_addr, int nb,
         return rc;
 }
 
-/* Returns the slave id! */
-int report_slave_id(modbus_param_t *mb_param, uint8_t *data_dest)
+/* Request the slave ID */
+int report_slave_id(modbus_param_t *mb_param, int slave, uint8_t *data_dest)
 {
         int rc;
         int query_length;
         uint8_t query[MIN_QUERY_LENGTH];
 
-        query_length = build_query_basis(mb_param, FC_REPORT_SLAVE_ID, 0, 0, query);
+        query_length = build_query_basis(mb_param, slave,
+                                         FC_REPORT_SLAVE_ID, 0, 0, query);
 
         /* HACKISH, start_addr and count are not used */
         query_length -= 4;
@@ -1474,6 +1476,7 @@ int report_slave_id(modbus_param_t *mb_param, uint8_t *data_dest)
    - parity: "even", "odd" or "none"
    - data_bits: 5, 6, 7, 8
    - stop_bits: 1, 2
+   - slave: slave number
 */
 void modbus_init_rtu(modbus_param_t *mb_param, const char *device,
                      int baud, const char *parity, int data_bit,
@@ -1510,8 +1513,7 @@ void modbus_init_tcp(modbus_param_t *mb_param, const char *ip, int port, int sla
         mb_param->slave = slave;
 }
 
-/* Define the slave number.
-   The special value MODBUS_BROADCAST_ADDRESS can be used. */
+/* Define the slave number */
 void modbus_set_slave(modbus_param_t *mb_param, int slave)
 {
         mb_param->slave = slave;
@@ -1519,7 +1521,7 @@ void modbus_set_slave(modbus_param_t *mb_param, int slave)
 
 /*
    When disabled (default), it is expected that the application will check for error
-   returns and deal with them as necessary. 
+   returns and deal with them as necessary.
 
    It's not recommanded to enable error recovery for slave/server.
 

@@ -20,12 +20,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
-
 #include <modbus.h>
-#include "unit-test.h"
 
-/* Tests based on PI-MBUS-300 documentation */
-#define SLAVE    0x11
+#include "unit-test.h"
 
 int main(void)
 {
@@ -41,10 +38,13 @@ int main(void)
         float real;
 
         /* RTU parity : none, even, odd */
-/*      modbus_init_rtu(&mb_param, "/dev/ttyS0", 19200, "none", 8, 1, SLAVE); */
+        /*
+        modbus_init_rtu(&mb_param, "/dev/ttyS0", 19200, "none", 8, 1,
+                        CLIENT_ID);
+        */
 
         /* TCP */
-        modbus_init_tcp(&mb_param, "127.0.0.1", 1502, SLAVE);
+        modbus_init_tcp(&mb_param, "127.0.0.1", 1502, CLIENT_ID);
         modbus_set_debug(&mb_param, TRUE);
 
         if (modbus_connect(&mb_param) == -1) {
@@ -73,7 +73,7 @@ int main(void)
         /** COIL STATUS **/
 
         /* Single */
-        rc = force_single_coil(&mb_param, UT_COIL_STATUS_ADDRESS, ON);
+        rc = force_single_coil(&mb_param, SERVER_ID, UT_COIL_STATUS_ADDRESS, ON);
         printf("1/2 force_single_coil: ");
         if (rc == 1) {
                 printf("OK\n");
@@ -82,7 +82,7 @@ int main(void)
                 goto close;
         }
 
-        rc = read_coil_status(&mb_param, UT_COIL_STATUS_ADDRESS, 1,
+        rc = read_coil_status(&mb_param, SERVER_ID, UT_COIL_STATUS_ADDRESS, 1,
                               tab_rp_status);
         printf("2/2 read_coil_status: ");
         if (rc != 1) {
@@ -103,7 +103,7 @@ int main(void)
 
                 set_bits_from_bytes(tab_value, 0, UT_COIL_STATUS_NB_POINTS,
                                     UT_COIL_STATUS_TAB);
-                rc = force_multiple_coils(&mb_param,
+                rc = force_multiple_coils(&mb_param, SERVER_ID,
                                           UT_COIL_STATUS_ADDRESS,
                                           UT_COIL_STATUS_NB_POINTS,
                                           tab_value);
@@ -116,7 +116,7 @@ int main(void)
                 }
         }
 
-        rc = read_coil_status(&mb_param, UT_COIL_STATUS_ADDRESS,
+        rc = read_coil_status(&mb_param, SERVER_ID, UT_COIL_STATUS_ADDRESS,
                               UT_COIL_STATUS_NB_POINTS, tab_rp_status);
         printf("2/2 read_coil_status: ");
         if (rc != UT_COIL_STATUS_NB_POINTS) {
@@ -144,7 +144,7 @@ int main(void)
         /* End of multiple coils */
 
         /** INPUT STATUS **/
-        rc = read_input_status(&mb_param, UT_INPUT_STATUS_ADDRESS,
+        rc = read_input_status(&mb_param, SERVER_ID, UT_INPUT_STATUS_ADDRESS,
                                UT_INPUT_STATUS_NB_POINTS, tab_rp_status);
         printf("1/1 read_input_status: ");
 
@@ -174,7 +174,7 @@ int main(void)
         /** HOLDING REGISTERS **/
 
         /* Single register */
-        rc = preset_single_register(&mb_param,
+        rc = preset_single_register(&mb_param, SERVER_ID,
                                     UT_HOLDING_REGISTERS_ADDRESS, 0x1234);
         printf("1/2 preset_single_register: ");
         if (rc == 1) {
@@ -184,7 +184,7 @@ int main(void)
                 goto close;
         }
 
-        rc = read_holding_registers(&mb_param,
+        rc = read_holding_registers(&mb_param, SERVER_ID,
                                     UT_HOLDING_REGISTERS_ADDRESS,
                                     1, tab_rp_registers);
         printf("2/2 read_holding_registers: ");
@@ -202,7 +202,7 @@ int main(void)
         /* End of single register */
 
         /* Many registers */
-        rc = preset_multiple_registers(&mb_param,
+        rc = preset_multiple_registers(&mb_param, SERVER_ID,
                                        UT_HOLDING_REGISTERS_ADDRESS,
                                        UT_HOLDING_REGISTERS_NB_POINTS,
                                        UT_HOLDING_REGISTERS_TAB);
@@ -214,7 +214,7 @@ int main(void)
                 goto close;
         }
 
-        rc = read_holding_registers(&mb_param,
+        rc = read_holding_registers(&mb_param, SERVER_ID,
                                     UT_HOLDING_REGISTERS_ADDRESS,
                                     UT_HOLDING_REGISTERS_NB_POINTS,
                                     tab_rp_registers);
@@ -237,7 +237,7 @@ int main(void)
 
 
         /** INPUT REGISTERS **/
-        rc = read_input_registers(&mb_param,
+        rc = read_input_registers(&mb_param, SERVER_ID,
                                   UT_INPUT_REGISTERS_ADDRESS,
                                   UT_INPUT_REGISTERS_NB_POINTS,
                                   tab_rp_registers);
@@ -287,7 +287,7 @@ int main(void)
         /* The mapping begins at 0 and ending at address + nb_points so
          * the addresses below are not valid. */
 
-        rc = read_coil_status(&mb_param,
+        rc = read_coil_status(&mb_param, SERVER_ID,
                               UT_COIL_STATUS_ADDRESS,
                               UT_COIL_STATUS_NB_POINTS + 1,
                               tab_rp_status);
@@ -299,7 +299,7 @@ int main(void)
                 goto close;
         }
 
-        rc = read_input_status(&mb_param,
+        rc = read_input_status(&mb_param, SERVER_ID,
                                UT_INPUT_STATUS_ADDRESS,
                                UT_INPUT_STATUS_NB_POINTS + 1,
                                tab_rp_status);
@@ -311,7 +311,7 @@ int main(void)
                 goto close;
         }
 
-        rc = read_holding_registers(&mb_param,
+        rc = read_holding_registers(&mb_param, SERVER_ID,
                                     UT_HOLDING_REGISTERS_ADDRESS,
                                     UT_HOLDING_REGISTERS_NB_POINTS + 1,
                                     tab_rp_registers);
@@ -323,7 +323,7 @@ int main(void)
                 goto close;
         }
 
-        rc = read_input_registers(&mb_param,
+        rc = read_input_registers(&mb_param, SERVER_ID,
                                   UT_INPUT_REGISTERS_ADDRESS,
                                   UT_INPUT_REGISTERS_NB_POINTS + 1,
                                   tab_rp_registers);
@@ -335,7 +335,7 @@ int main(void)
                 goto close;
         }
 
-        rc = force_single_coil(&mb_param,
+        rc = force_single_coil(&mb_param, SERVER_ID,
                                UT_COIL_STATUS_ADDRESS + UT_COIL_STATUS_NB_POINTS,
                                ON);
         printf("* force_single_coil: ");
@@ -346,7 +346,7 @@ int main(void)
                 goto close;
         }
 
-        rc = force_multiple_coils(&mb_param,
+        rc = force_multiple_coils(&mb_param, SERVER_ID,
                                   UT_COIL_STATUS_ADDRESS + UT_COIL_STATUS_NB_POINTS,
                                   UT_COIL_STATUS_NB_POINTS,
                                   tab_rp_status);
@@ -358,7 +358,7 @@ int main(void)
                 goto close;
         }
 
-        rc = preset_multiple_registers(&mb_param,
+        rc = preset_multiple_registers(&mb_param, SERVER_ID,
                                        UT_HOLDING_REGISTERS_ADDRESS + UT_HOLDING_REGISTERS_NB_POINTS,
                                        UT_HOLDING_REGISTERS_NB_POINTS,
                                        tab_rp_registers);
@@ -374,7 +374,7 @@ int main(void)
         /** TOO MANY DATA **/
         printf("\nTEST TOO MANY DATA ERROR:\n");
 
-        rc = read_coil_status(&mb_param,
+        rc = read_coil_status(&mb_param, SERVER_ID,
                               UT_COIL_STATUS_ADDRESS,
                               MAX_STATUS + 1,
                               tab_rp_status);
@@ -386,7 +386,7 @@ int main(void)
                 goto close;
         }
 
-        rc = read_input_status(&mb_param,
+        rc = read_input_status(&mb_param, SERVER_ID,
                                UT_INPUT_STATUS_ADDRESS,
                                MAX_STATUS + 1,
                                tab_rp_status);
@@ -398,7 +398,7 @@ int main(void)
                 goto close;
         }
 
-        rc = read_holding_registers(&mb_param,
+        rc = read_holding_registers(&mb_param, SERVER_ID,
                                     UT_HOLDING_REGISTERS_ADDRESS,
                                     MAX_REGISTERS + 1,
                                     tab_rp_registers);
@@ -410,7 +410,7 @@ int main(void)
                 goto close;
         }
 
-        rc = read_input_registers(&mb_param,
+        rc = read_input_registers(&mb_param, SERVER_ID,
                                   UT_INPUT_REGISTERS_ADDRESS,
                                   MAX_REGISTERS + 1,
                                   tab_rp_registers);
@@ -422,7 +422,7 @@ int main(void)
                 goto close;
         }
 
-        rc = force_multiple_coils(&mb_param,
+        rc = force_multiple_coils(&mb_param, SERVER_ID,
                                   UT_COIL_STATUS_ADDRESS,
                                   MAX_STATUS + 1,
                                   tab_rp_status);
@@ -434,7 +434,7 @@ int main(void)
                 printf("FAILED\n");
         }
 
-        rc = preset_multiple_registers(&mb_param,
+        rc = preset_multiple_registers(&mb_param, SERVER_ID,
                                        UT_HOLDING_REGISTERS_ADDRESS,
                                        MAX_REGISTERS + 1,
                                        tab_rp_registers);
@@ -448,12 +448,11 @@ int main(void)
 
         /** SLAVE REPLY **/
         printf("\nTEST SLAVE REPLY:\n");
-        modbus_set_slave(&mb_param, 18);
-        rc = read_holding_registers(&mb_param,
+        rc = read_holding_registers(&mb_param, 18,
                                     UT_HOLDING_REGISTERS_ADDRESS+1,
                                     UT_HOLDING_REGISTERS_NB_POINTS,
                                     tab_rp_registers);
-        printf("1/2 No reply from slave %d: ", mb_param.slave);
+        printf("1/2 No reply from slave %d: ", 18);
         if (rc == -1 && errno == ETIMEDOUT) {
                 printf("OK\n");
         } else {
@@ -461,8 +460,7 @@ int main(void)
                 goto close;
         }
 
-        modbus_set_slave(&mb_param, MODBUS_BROADCAST_ADDRESS);
-        rc = read_holding_registers(&mb_param,
+        rc = read_holding_registers(&mb_param, MODBUS_BROADCAST_ADDRESS,
                                     UT_HOLDING_REGISTERS_ADDRESS,
                                     UT_HOLDING_REGISTERS_NB_POINTS,
                                     tab_rp_registers);
@@ -480,7 +478,7 @@ int main(void)
         /* Allocate only the required space */
         tab_rp_registers_bad = (uint16_t *) malloc(
                 UT_HOLDING_REGISTERS_NB_POINTS_SPECIAL * sizeof(uint16_t));
-        rc = read_holding_registers(&mb_param,
+        rc = read_holding_registers(&mb_param, SERVER_ID,
                                     UT_HOLDING_REGISTERS_ADDRESS,
                                     UT_HOLDING_REGISTERS_NB_POINTS_SPECIAL,
                                     tab_rp_registers_bad);

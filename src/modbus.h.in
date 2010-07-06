@@ -263,22 +263,23 @@ void modbus_set_debug(modbus_param_t *mb_param, int boolean);
 
 const char *modbus_strerror(int errnum);
 
-int read_coil_status(modbus_param_t *mb_param, int start_addr, int nb,
-                     uint8_t *dest);
-int read_input_status(modbus_param_t *mb_param, int start_addr, int nb,
-                      uint8_t *dest);
-int read_holding_registers(modbus_param_t *mb_param, int start_addr, int nb,
-                           uint16_t *dest);
-int read_input_registers(modbus_param_t *mb_param, int start_addr, int nb,
-                         uint16_t *dest);
-int force_single_coil(modbus_param_t *mb_param, int coil_addr, int state);
-
-int preset_single_register(modbus_param_t *mb_param, int reg_addr, int value);
-int force_multiple_coils(modbus_param_t *mb_param, int start_addr, int nb,
-                         const uint8_t *data);
-int preset_multiple_registers(modbus_param_t *mb_param, int start_addr, int nb,
-                              const uint16_t *data);
-int report_slave_id(modbus_param_t *mb_param, uint8_t *dest);
+int read_coil_status(modbus_param_t *mb_param, int slave, int start_addr,
+                     int nb, uint8_t *dest);
+int read_input_status(modbus_param_t *mb_param, int slave, int start_addr,
+                      int nb, uint8_t *dest);
+int read_holding_registers(modbus_param_t *mb_param, int slave, int start_addr,
+                           int nb, uint16_t *dest);
+int read_input_registers(modbus_param_t *mb_param, int slave, int start_addr,
+                         int nb, uint16_t *dest);
+int force_single_coil(modbus_param_t *mb_param, int slave, int coil_addr,
+                      int state);
+int preset_single_register(modbus_param_t *mb_param, int slave, int reg_addr,
+                           int value);
+int force_multiple_coils(modbus_param_t *mb_param, int slave, int start_addr,
+                         int nb, const uint8_t *data);
+int preset_multiple_registers(modbus_param_t *mb_param, int slave, int start_addr,
+                              int nb, const uint16_t *data);
+int report_slave_id(modbus_param_t *mb_param, int slave, uint8_t *dest);
 
 int modbus_mapping_new(modbus_mapping_t *mb_mapping,
                        int nb_coil_status, int nb_input_status,

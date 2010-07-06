@@ -19,7 +19,8 @@ m4_define([libmodbus_release_status],
             [m4_if(m4_eval(libmodbus_version_minor % 2), [1], [snapshot],
                [release])])
 
-m4_define([libmodbus_version], [libmodbus_version_major.libmodbus_version_minor.libmodbus_version_micro])
+m4_define([libmodbus_version],
+        [libmodbus_version_major.libmodbus_version_minor.libmodbus_version_micro])
 
 AC_PREREQ(2.63)
 AC_INIT([libmodbus],[libmodbus_version],[stephane.raimbault@gmail.com])
@@ -39,7 +40,7 @@ AC_SUBST(LIBMODBUS_VERSION_MICRO)
 AC_SUBST(LIBMODBUS_VERSION)
 
 # ABI version
-LIBMODBUS_LD_CURRENT=3
+LIBMODBUS_LD_CURRENT=4
 LIBMODBUS_LD_REVISION=0
 LIBMODBUS_LD_AGE=0
 LIBMODBUS_LT_LDFLAGS="-version-info $LIBMODBUS_LD_CURRENT:$LIBMODBUS_LD_REVISION:$LIBMODBUS_LD_AGE"

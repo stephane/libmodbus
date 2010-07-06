@@ -23,8 +23,6 @@
 
 #include <modbus.h>
 
-#define SLAVE 0x11
-
 int main(void)
 {
         int socket;
@@ -32,7 +30,7 @@ int main(void)
         modbus_mapping_t mb_mapping;
         int rc;
 
-        modbus_init_tcp(&mb_param, "127.0.0.1", 1502, SLAVE);
+        modbus_init_tcp(&mb_param, "127.0.0.1", 1502, 17);
 
         rc = modbus_mapping_new(&mb_mapping,  MAX_STATUS, 0, MAX_REGISTERS, 0);
         if (rc == -1) {

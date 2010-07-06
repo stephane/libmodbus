@@ -26,7 +26,8 @@
 #include <modbus.h>
 
 /* Tests based on PI-MBUS-300 documentation */
-#define SLAVE     0x11
+#define MY_ID          1
+#define SERVER_ID     17
 #define NB_LOOPS  100000
 
 #define G_MSEC_PER_SEC 1000
@@ -54,7 +55,7 @@ int main(void)
         int rc;
 
         /* TCP */
-        modbus_init_tcp(&mb_param, "127.0.0.1", 1502, SLAVE);
+        modbus_init_tcp(&mb_param, "127.0.0.1", 1502, MY_ID);
         rc = modbus_connect(&mb_param);
         if (rc == -1) {
                 fprintf(stderr, "Connexion failed: %s\n",
@@ -75,9 +76,9 @@ int main(void)
         nb_points = MAX_STATUS;
         start = gettime_ms();
         for (i=0; i<NB_LOOPS; i++) {
-                rc = read_coil_status(&mb_param, 0, nb_points, tab_rp_status);
+                rc = read_coil_status(&mb_param, SERVER_ID, 0, nb_points, tab_rp_status);
                 if (rc == -1) {
-                        fprintf(stderr, modbus_strerror(errno));
+                        fprintf(stderr, "%s\n", modbus_strerror(errno));
                         return -1;
                 }
         }
@@ -112,9 +113,9 @@ int main(void)
         nb_points = MAX_REGISTERS;
         start = gettime_ms();
         for (i=0; i<NB_LOOPS; i++) {
-                rc = read_holding_registers(&mb_param, 0, nb_points, tab_rp_registers);
+                rc = read_holding_registers(&mb_param, SERVER_ID, 0, nb_points, tab_rp_registers);
                 if (rc == -1) {
-                        fprintf(stderr, modbus_strerror(errno));
+                        fprintf(stderr, "%s\n", modbus_strerror(errno));
                         return -1;
                 }
         }
