@@ -38,7 +38,7 @@ extern "C" {
 #endif
 
 #define MODBUS_TCP_DEFAULT_PORT   502
-#define MODBUS_BROADCAST_ADDRESS  255
+#define MODBUS_BROADCAST_ADDRESS    0
 
 /* Slave index */
 #define HEADER_LENGTH_RTU           1

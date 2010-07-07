@@ -6,6 +6,8 @@ libmodbus 2.1.1 (2010-XX-XX)
 - Error conventions of POSIX systems and error recover
 - Versioning infrastructure.
   Inspired by the Clutter project and the work done by Florian Forster.
+- Fix the broadcast constant (255 -> 0)
+  Reported by David Olivari
 
 libmodbus 2.1.0 (2010-03-24)
 ============================
