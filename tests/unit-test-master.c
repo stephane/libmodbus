@@ -451,7 +451,7 @@ int main(void)
         /** SLAVE REPLY **/
         printf("\nTEST SLAVE REPLY:\n");
         rc = read_holding_registers(&mb_param, 18,
-                                    UT_HOLDING_REGISTERS_ADDRESS+1,
+                                    UT_HOLDING_REGISTERS_ADDRESS,
                                     UT_HOLDING_REGISTERS_NB_POINTS,
                                     tab_rp_registers);
         printf("1/3 No reply from slave %d: ", 18);
