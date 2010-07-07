@@ -454,7 +454,7 @@ int main(void)
                                     UT_HOLDING_REGISTERS_ADDRESS+1,
                                     UT_HOLDING_REGISTERS_NB_POINTS,
                                     tab_rp_registers);
-        printf("1/2 No reply from slave %d: ", 18);
+        printf("1/3 No reply from slave %d: ", 18);
         if (rc == -1 && errno == ETIMEDOUT) {
                 printf("OK\n");
         } else {
@@ -466,7 +466,7 @@ int main(void)
                                     UT_HOLDING_REGISTERS_ADDRESS,
                                     UT_HOLDING_REGISTERS_NB_POINTS,
                                     tab_rp_registers);
-        printf("2/2 Reply after a broadcast query: ");
+        printf("2/3 Reply after a broadcast query: ");
         if (rc == UT_HOLDING_REGISTERS_NB_POINTS) {
                 printf("OK\n");
         } else {
