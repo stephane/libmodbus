@@ -615,8 +615,8 @@ static int receive_msg(modbus_param_t *mb_param,
                 state = FUNCTION;
                 msg_length_computed = TAB_HEADER_LENGTH[mb_param->type_com] + 1;
         } else {
-                tv.tv_sec = 0;
-                tv.tv_usec = TIME_OUT_BEGIN_OF_TRAME;
+                tv.tv_sec = mb_param->timeout_begin.tv_sec;
+                tv.tv_usec = mb_param->timeout_begin.tv_usec;
                 state = COMPLETE;
         }
 
@@ -697,8 +697,8 @@ static int receive_msg(modbus_param_t *mb_param,
                 if (length_to_read > 0) {
                         /* If no character at the buffer wait
                            TIME_OUT_END_OF_TRAME before to generate an error. */
-                        tv.tv_sec = 0;
-                        tv.tv_usec = TIME_OUT_END_OF_TRAME;
+                        tv.tv_sec = mb_param->timeout_end.tv_sec;
+                        tv.tv_usec = mb_param->timeout_end.tv_usec;
 
                         WAIT_DATA();
                 } else {
@@ -1466,6 +1466,15 @@ int report_slave_id(modbus_param_t *mb_param, int slave, uint8_t *data_dest)
         return rc;
 }
 
+void init_common(modbus_param_t *mb_param)
+{
+      mb_param->timeout_begin.tv_sec = 0;
+      mb_param->timeout_begin.tv_usec = TIME_OUT_BEGIN_OF_TRAME;
+
+      mb_param->timeout_end.tv_sec = 0;
+      mb_param->timeout_end.tv_usec = TIME_OUT_END_OF_TRAME;
+}
+
 /* Initializes the modbus_param_t structure for RTU
    - device: "/dev/ttyS0"
    - baud:   9600, 19200, 57600, 115200, etc
@@ -1488,6 +1497,8 @@ void modbus_init_rtu(modbus_param_t *mb_param, const char *device,
         mb_param->type_com = RTU;
         mb_param->error_recovery = FALSE;
         mb_param->slave = slave;
+
+        init_common(mb_param);
 }
 
 /* Initializes the modbus_param_t structure for TCP.
@@ -1507,6 +1518,8 @@ void modbus_init_tcp(modbus_param_t *mb_param, const char *ip, int port, int sla
         mb_param->type_com = TCP;
         mb_param->error_recovery = FALSE;
         mb_param->slave = slave;
+
+        init_common(mb_param);
 }
 
 /* Define the slave number */
@@ -1538,6 +1551,30 @@ int modbus_set_error_recovery(modbus_param_t *mb_param, int enabled)
         }
 
         return 0;
+}
+
+/* Get the timeout of begin of trame */
+void modbus_get_timeout_begin(modbus_param_t *mb_param, struct timeval *timeout)
+{
+        *timeout = mb_param->timeout_begin;
+}
+
+/* Set timeout when waiting the beginning of a trame */
+void modbus_set_timeout_begin(modbus_param_t *mb_param, const struct timeval *timeout)
+{
+        mb_param->timeout_begin = *timeout;
+}
+
+/* Get the timeout of end of trame */
+void modbus_get_timeout_end(modbus_param_t *mb_param, struct timeval *timeout)
+{
+        *timeout = mb_param->timeout_end;
+}
+
+/* Set timeout when waiting the end of a trame */
+void modbus_set_timeout_end(modbus_param_t *mb_param, const struct timeval *timeout)
+{
+        mb_param->timeout_end = *timeout;
 }
 
 /* Sets up a serial port for RTU communications */

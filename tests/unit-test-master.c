@@ -36,6 +36,8 @@ int main(void)
         int nb_points;
         int rc;
         float real;
+        struct timeval timeout_begin_old;
+        struct timeval timeout_begin_new;
 
         /* RTU parity : none, even, odd */
         /*
@@ -468,9 +470,32 @@ int main(void)
         if (rc == UT_HOLDING_REGISTERS_NB_POINTS) {
                 printf("OK\n");
         } else {
-                goto close;
                 printf("FAILED\n");
+                goto close;
         }
+
+        /* Save original timeout */
+        modbus_get_timeout_begin(&mb_param, &timeout_begin_old);
+
+        /* Define a new and too short timeout */
+        timeout_begin_new.tv_sec = 0;
+        timeout_begin_new.tv_usec = 0;
+        modbus_set_timeout_begin(&mb_param, &timeout_begin_new);
+
+        rc = read_holding_registers(&mb_param, SERVER_ID,
+                                    UT_HOLDING_REGISTERS_ADDRESS,
+                                    UT_HOLDING_REGISTERS_NB_POINTS,
+                                    tab_rp_registers);
+        printf("3/3 Too short timeout: ");
+        if (rc == -1 && errno == ETIMEDOUT) {
+                printf("OK\n");
+        } else {
+                printf("FAILED\n");
+                goto close;
+        }
+
+        /* Restore original timeout */
+        modbus_set_timeout_begin(&mb_param, &timeout_begin_old);
 
         /** BAD RESPONSE **/
         printf("\nTEST BAD RESPONSE ERROR:\n");

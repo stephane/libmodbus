@@ -234,6 +234,8 @@ typedef struct {
         char ip[16];
         /* Save old termios settings */
         struct termios old_tios;
+        struct timeval timeout_begin;
+        struct timeval timeout_end;
 } modbus_param_t;
 
 typedef struct {
@@ -254,6 +256,12 @@ void modbus_init_tcp(modbus_param_t *mb_param, const char *ip_address, int port,
                      int slave);
 void modbus_set_slave(modbus_param_t *mb_param, int slave);
 int modbus_set_error_recovery(modbus_param_t *mb_param, int enabled);
+
+void modbus_get_timeout_begin(modbus_param_t *mb_param, struct timeval *timeout);
+void modbus_set_timeout_begin(modbus_param_t *mb_param, const struct timeval *timeout);
+
+void modbus_get_timeout_end(modbus_param_t *mb_param, struct timeval *timeout);
+void modbus_set_timeout_end(modbus_param_t *mb_param, const struct timeval *timeout);
 
 int modbus_connect(modbus_param_t *mb_param);
 void modbus_close(modbus_param_t *mb_param);
