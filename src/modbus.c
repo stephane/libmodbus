@@ -232,6 +232,8 @@ int modbus_flush(modbus_param_t *mb_param)
                         }
                 } while (rc > 0);
         }
+
+        return rc;
 }
 
 /* Computes the length of the expected response */
