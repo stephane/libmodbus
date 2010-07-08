@@ -26,7 +26,6 @@
 #include <modbus.h>
 
 /* Tests based on PI-MBUS-300 documentation */
-#define MY_ID          1
 #define SERVER_ID     17
 #define NB_LOOPS  100000
 
@@ -55,7 +54,7 @@ int main(void)
         int rc;
 
         /* TCP */
-        modbus_init_tcp(&mb_param, "127.0.0.1", 1502, MY_ID);
+        modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
         rc = modbus_connect(&mb_param);
         if (rc == -1) {
                 fprintf(stderr, "Connexion failed: %s\n",

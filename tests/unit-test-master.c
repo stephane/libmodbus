@@ -46,7 +46,7 @@ int main(void)
         */
 
         /* TCP */
-        modbus_init_tcp(&mb_param, "127.0.0.1", 1502, CLIENT_ID);
+        modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
         modbus_set_debug(&mb_param, TRUE);
 
         if (modbus_connect(&mb_param) == -1) {
@@ -450,16 +450,28 @@ int main(void)
 
         /** SLAVE REPLY **/
         printf("\nTEST SLAVE REPLY:\n");
+
         rc = read_holding_registers(&mb_param, 18,
                                     UT_HOLDING_REGISTERS_ADDRESS,
                                     UT_HOLDING_REGISTERS_NB_POINTS,
                                     tab_rp_registers);
-        printf("1/3 No reply from slave %d: ", 18);
-        if (rc == -1 && errno == ETIMEDOUT) {
-                printf("OK\n");
+        printf("1/3 No or response from slave %d: ", 18);
+        if (mb_param.type_com == RTU) {
+                /* No response in RTU mode */
+                if (rc == -1 && errno == ETIMEDOUT) {
+                        printf("OK\n");
+                } else {
+                        printf("FAILED\n");
+                        goto close;
+                }
         } else {
-                printf("FAILED\n");
-                goto close;
+                /* Response in TCP mode */
+                if (rc == UT_HOLDING_REGISTERS_NB_POINTS) {
+                        printf("OK\n");
+                } else {
+                        printf("FAILED\n");
+                        goto close;
+                }
         }
 
         rc = read_holding_registers(&mb_param, MODBUS_BROADCAST_ADDRESS,

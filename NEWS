@@ -10,6 +10,8 @@ libmodbus 2.1.1 (2010-XX-XX)
   Reported by David Olivari.
 - Fix #463299 - New functions to define the timeouts of begin and end of trame
   Original patch by Sisyph (eric-paul).
+- Fix #591142 - Slave id check should be disabled in TCP connection
+  Reported by aladdinwu.
 
 libmodbus 2.1.0 (2010-03-24)
 ============================

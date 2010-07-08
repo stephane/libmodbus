@@ -39,6 +39,7 @@ extern "C" {
 
 #define MODBUS_TCP_DEFAULT_PORT   502
 #define MODBUS_BROADCAST_ADDRESS    0
+#define MODBUS_TCP_SLAVE         0xFF
 
 /* Slave index */
 #define HEADER_LENGTH_RTU           1
@@ -249,12 +250,11 @@ typedef struct {
         uint16_t *tab_holding_registers;
 } modbus_mapping_t;
 
-void modbus_init_rtu(modbus_param_t *mb_param, const char *device,
-                     int baud, const char *parity, int data_bit,
-                     int stop_bit, int slave);
-void modbus_init_tcp(modbus_param_t *mb_param, const char *ip_address, int port,
-                     int slave);
-void modbus_set_slave(modbus_param_t *mb_param, int slave);
+int modbus_init_rtu(modbus_param_t *mb_param, const char *device,
+                    int baud, const char *parity, int data_bit,
+                    int stop_bit, int slave);
+int modbus_init_tcp(modbus_param_t *mb_param, const char *ip_address, int port);
+int modbus_set_slave(modbus_param_t *mb_param, int slave);
 int modbus_set_error_recovery(modbus_param_t *mb_param, int enabled);
 
 void modbus_get_timeout_begin(modbus_param_t *mb_param, struct timeval *timeout);

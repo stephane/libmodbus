@@ -32,7 +32,7 @@ int main(void)
         int rc;
         int i;
 
-        modbus_init_tcp(&mb_param, "127.0.0.1", 1502, SERVER_ID);
+        modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
         modbus_set_debug(&mb_param, TRUE);
         modbus_set_error_recovery(&mb_param, TRUE);
 

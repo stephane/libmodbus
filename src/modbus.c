@@ -363,7 +363,7 @@ static int build_response_basis_tcp(sft_t *sft, uint8_t *response)
 
         /* Length will be set later by modbus_send (4 and 5) */
 
-        response[6] = sft->slave;
+        response[6] = 0xFF;
         response[7] = sft->function;
 
         return PRESET_RESPONSE_LENGTH_TCP;
@@ -887,8 +887,10 @@ int modbus_slave_manage(modbus_param_t *mb_param, const uint8_t *query,
         int resp_length = 0;
         sft_t sft;
 
-        if (slave != mb_param->slave && slave != MODBUS_BROADCAST_ADDRESS) {
-                // Ignores the query (not for me)
+        /* Filter on the Modbus unit identifier (slave) in RTU mode */
+        if (mb_param->type_com == RTU &&
+            slave != mb_param->slave && slave != MODBUS_BROADCAST_ADDRESS) {
+            /* Ignores the query (not for me) */
                 if (mb_param->debug) {
                         printf("Request for slave %d ignored (not %d)\n",
                                slave, mb_param->slave);
@@ -1483,7 +1485,7 @@ void init_common(modbus_param_t *mb_param)
    - stop_bits: 1, 2
    - slave: slave number
 */
-void modbus_init_rtu(modbus_param_t *mb_param, const char *device,
+int modbus_init_rtu(modbus_param_t *mb_param, const char *device,
                      int baud, const char *parity, int data_bit,
                      int stop_bit, int slave)
 {
@@ -1496,9 +1498,10 @@ void modbus_init_rtu(modbus_param_t *mb_param, const char *device,
         mb_param->stop_bit = stop_bit;
         mb_param->type_com = RTU;
         mb_param->error_recovery = FALSE;
-        mb_param->slave = slave;
 
         init_common(mb_param);
+
+        return modbus_set_slave(mb_param, slave);
 }
 
 /* Initializes the modbus_param_t structure for TCP.
@@ -1510,35 +1513,48 @@ void modbus_init_rtu(modbus_param_t *mb_param, const char *device,
    to 1024 because it's not necessary to be root to use this port
    number.
 */
-void modbus_init_tcp(modbus_param_t *mb_param, const char *ip, int port, int slave)
+int modbus_init_tcp(modbus_param_t *mb_param, const char *ip, int port)
 {
         memset(mb_param, 0, sizeof(modbus_param_t));
         strncpy(mb_param->ip, ip, sizeof(char)*16);
         mb_param->port = port;
         mb_param->type_com = TCP;
         mb_param->error_recovery = FALSE;
-        mb_param->slave = slave;
+        /* Can be changed after to reach remote serial Modbus device */
+        mb_param->slave = 0xFF;
 
         init_common(mb_param);
+
+        return 0;
 }
 
-/* Define the slave number */
-void modbus_set_slave(modbus_param_t *mb_param, int slave)
+/* Define the slave number, the special value MODBUS_TCP_SLAVE (0xFF) can be
+ * used in TCP mode to restore the default value. */
+int modbus_set_slave(modbus_param_t *mb_param, int slave)
 {
-        mb_param->slave = slave;
+        if (slave >= 1 && slave <= 247) {
+                mb_param->slave = slave;
+        } else if (mb_param->type_com == TCP && slave == MODBUS_TCP_SLAVE) {
+                mb_param->slave = slave;
+        } else {
+                errno = EINVAL;
+                return -1;
+        }
+
+        return 0;
 }
 
 /*
-   When disabled (default), it is expected that the application will check for error
-   returns and deal with them as necessary.
+   When disabled (default), it is expected that the application will check for
+   error returns and deal with them as necessary.
 
    It's not recommanded to enable error recovery for slave/server.
 
    When enabled, the library will attempt an immediate reconnection which may
    hang for several seconds if the network to the remote target unit is down.
    The write will try a infinite close/connect loop until to be successful and
-   the select/read calls will just try to retablish the connection one time
-   then will return an error (if the connecton was down, the values to read are
+   the select/read calls will just try to retablish the connection one time then
+   will return an error (if the connecton was down, the values to read are
    certainly not available anymore after reconnection, except for slave/server).
 */
 int modbus_set_error_recovery(modbus_param_t *mb_param, int enabled)

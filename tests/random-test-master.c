@@ -64,7 +64,7 @@ int main(void)
         */
 
         /* TCP */
-        modbus_init_tcp(&mb_param, "127.0.0.1", 1502, MY_ID);
+        modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
         modbus_set_debug(&mb_param, TRUE);
         if (modbus_connect(&mb_param) == -1) {
                 fprintf(stderr, "Connection failed: %s\n",
