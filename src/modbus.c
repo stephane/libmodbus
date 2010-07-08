@@ -1480,27 +1480,31 @@ void init_common(modbus_param_t *mb_param)
 /* Initializes the modbus_param_t structure for RTU
    - device: "/dev/ttyS0"
    - baud:   9600, 19200, 57600, 115200, etc
-   - parity: "even", "odd" or "none"
+   - parity: 'N' stands for None, 'E' for Even and 'O' for odd
    - data_bits: 5, 6, 7, 8
    - stop_bits: 1, 2
    - slave: slave number
 */
 int modbus_init_rtu(modbus_param_t *mb_param, const char *device,
-                     int baud, const char *parity, int data_bit,
+                     int baud, char parity, int data_bit,
                      int stop_bit, int slave)
 {
         memset(mb_param, 0, sizeof(modbus_param_t));
+        init_common(mb_param);
+
         strcpy(mb_param->device, device);
         mb_param->baud = baud;
-        strcpy(mb_param->parity, parity);
+        if (parity == 'N' || parity == 'E' || parity == 'O') {
+                mb_param->parity = parity;
+        } else {
+                errno = EINVAL;
+                return -1;
+        }
         mb_param->debug = FALSE;
         mb_param->data_bit = data_bit;
         mb_param->stop_bit = stop_bit;
         mb_param->type_com = RTU;
         mb_param->error_recovery = FALSE;
-
-        init_common(mb_param);
-
         return modbus_set_slave(mb_param, slave);
 }
 
@@ -1516,14 +1520,14 @@ int modbus_init_rtu(modbus_param_t *mb_param, const char *device,
 int modbus_init_tcp(modbus_param_t *mb_param, const char *ip, int port)
 {
         memset(mb_param, 0, sizeof(modbus_param_t));
+        init_common(mb_param);
+
         strncpy(mb_param->ip, ip, sizeof(char)*16);
         mb_param->port = port;
         mb_param->type_com = TCP;
         mb_param->error_recovery = FALSE;
         /* Can be changed after to reach remote serial Modbus device */
         mb_param->slave = 0xFF;
-
-        init_common(mb_param);
 
         return 0;
 }
@@ -1600,8 +1604,9 @@ static int modbus_connect_rtu(modbus_param_t *mb_param)
         speed_t speed;
 
         if (mb_param->debug) {
-                printf("Opening %s at %d bauds (%s)\n",
-                       mb_param->device, mb_param->baud, mb_param->parity);
+                printf("Opening %s at %d bauds (%c, %d, %d)\n",
+                       mb_param->device, mb_param->baud, mb_param->parity,
+                       mb_param->data_bit, mb_param->stop_bit);
         }
 
         /* The O_NOCTTY flag tells UNIX that this program doesn't want
@@ -1710,13 +1715,15 @@ static int modbus_connect_rtu(modbus_param_t *mb_param)
 
         /* PARENB       Enable parity bit
            PARODD       Use odd parity instead of even */
-        if (strncmp(mb_param->parity, "none", 4) == 0) {
+        if (mb_param->parity == 'N') {
+                /* None */
                 tios.c_cflag &=~ PARENB;
-        } else if (strncmp(mb_param->parity, "even", 4) == 0) {
+        } else if (mb_param->parity == 'E') {
+                /* Even */
                 tios.c_cflag |= PARENB;
                 tios.c_cflag &=~ PARODD;
         } else {
-                /* odd */
+                /* Odd */
                 tios.c_cflag |= PARENB;
                 tios.c_cflag |= PARODD;
         }
@@ -1778,7 +1785,8 @@ static int modbus_connect_rtu(modbus_param_t *mb_param)
            IUCLC        Map uppercase to lowercase
            IMAXBEL      Echo BEL on input line too long
         */
-        if (strncmp(mb_param->parity, "none", 4) == 0) {
+        if (mb_param->parity == 'N') {
+                /* None */
                 tios.c_iflag &= ~INPCK;
         } else {
                 tios.c_iflag |= INPCK;

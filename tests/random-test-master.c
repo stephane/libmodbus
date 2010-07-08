@@ -58,9 +58,8 @@ int main(void)
         uint16_t *tab_rp_registers;
         modbus_param_t mb_param;
 
-        /* RTU parity : none, even, odd */
         /*
-          modbus_init_rtu(&mb_param, "/dev/ttyS0", 19200, "none", 8, 1, MY_ID);
+          modbus_init_rtu(&mb_param, "/dev/ttyS0", 19200, 'N', 8, 1, MY_ID);
         */
 
         /* TCP */

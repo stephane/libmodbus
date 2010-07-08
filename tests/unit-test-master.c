@@ -39,9 +39,8 @@ int main(void)
         struct timeval timeout_begin_old;
         struct timeval timeout_begin_new;
 
-        /* RTU parity : none, even, odd */
         /*
-        modbus_init_rtu(&mb_param, "/dev/ttyS0", 19200, "none", 8, 1,
+        modbus_init_rtu(&mb_param, "/dev/ttyS0", 19200, 'N', 8, 1,
                         CLIENT_ID);
         */
 
