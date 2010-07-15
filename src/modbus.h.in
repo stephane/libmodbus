@@ -182,7 +182,7 @@ enum {
                                (LIBMODBUS_MICRO_VERSION << 8))
 
 /* Evaluates to True if the version of libmb is greater than @major, @minor and
- * @micro 
+ * @micro
  */
 #define LIBMODBUS_VERSION_CHECK(major,minor,micro) \
         (LIBMODBUS_VERSION_MAJOR > (major) ||      \
