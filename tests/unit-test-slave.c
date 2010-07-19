@@ -26,72 +26,72 @@
 
 int main(void)
 {
-        int socket;
-        modbus_param_t mb_param;
-        modbus_mapping_t mb_mapping;
-        int rc;
-        int i;
+    int socket;
+    modbus_param_t mb_param;
+    modbus_mapping_t mb_mapping;
+    int rc;
+    int i;
 
-        modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
-        modbus_set_debug(&mb_param, TRUE);
-        modbus_set_error_recovery(&mb_param, TRUE);
+    modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
+    modbus_set_debug(&mb_param, TRUE);
+    modbus_set_error_recovery(&mb_param, TRUE);
 
-        rc = modbus_mapping_new(&mb_mapping,
-                                 UT_COIL_STATUS_ADDRESS + UT_COIL_STATUS_NB_POINTS,
-                                 UT_INPUT_STATUS_ADDRESS + UT_INPUT_STATUS_NB_POINTS,
-                                 UT_HOLDING_REGISTERS_ADDRESS + UT_HOLDING_REGISTERS_NB_POINTS,
-                                 UT_INPUT_REGISTERS_ADDRESS + UT_INPUT_REGISTERS_NB_POINTS);
-        if (rc == -1) {
-                fprintf(stderr, "Failed to allocate the mapping: %s\n",
-                        modbus_strerror(errno));
+    rc = modbus_mapping_new(&mb_mapping,
+                            UT_COIL_STATUS_ADDRESS + UT_COIL_STATUS_NB_POINTS,
+                            UT_INPUT_STATUS_ADDRESS + UT_INPUT_STATUS_NB_POINTS,
+                            UT_HOLDING_REGISTERS_ADDRESS + UT_HOLDING_REGISTERS_NB_POINTS,
+                            UT_INPUT_REGISTERS_ADDRESS + UT_INPUT_REGISTERS_NB_POINTS);
+    if (rc == -1) {
+        fprintf(stderr, "Failed to allocate the mapping: %s\n",
+                modbus_strerror(errno));
+        return -1;
+    }
+
+    /* Examples from PI_MODBUS_300.pdf.
+       Only the read-only input values are assigned. */
+
+    /** INPUT STATUS **/
+    set_bits_from_bytes(mb_mapping.tab_input_status,
+                        UT_INPUT_STATUS_ADDRESS, UT_INPUT_STATUS_NB_POINTS,
+                        UT_INPUT_STATUS_TAB);
+
+    /** INPUT REGISTERS **/
+    for (i=0; i < UT_INPUT_REGISTERS_NB_POINTS; i++) {
+        mb_mapping.tab_input_registers[UT_INPUT_REGISTERS_ADDRESS+i] =
+            UT_INPUT_REGISTERS_TAB[i];;
+    }
+
+    socket = modbus_slave_listen_tcp(&mb_param, 1);
+    modbus_slave_accept_tcp(&mb_param, &socket);
+
+    for (;;) {
+        uint8_t query[MAX_MESSAGE_LENGTH];
+
+        rc = modbus_slave_receive(&mb_param, -1, query);
+        if (rc > 0) {
+            if (((query[HEADER_LENGTH_TCP + 3] << 8) + query[HEADER_LENGTH_TCP + 4])
+                == UT_HOLDING_REGISTERS_NB_POINTS_SPECIAL) {
+                /* Change the number of values (offset
+                   TCP = 6) */
+                query[HEADER_LENGTH_TCP + 3] = 0;
+                query[HEADER_LENGTH_TCP + 4] = UT_HOLDING_REGISTERS_NB_POINTS;
+            }
+
+            rc = modbus_slave_manage(&mb_param, query, rc, &mb_mapping);
+            if (rc == -1) {
                 return -1;
+            }
+        } else {
+            /* Connection closed by the client or error */
+            break;
         }
+    }
 
-        /* Examples from PI_MODBUS_300.pdf.
-           Only the read-only input values are assigned. */
+    printf("Quit the loop: %s\n", modbus_strerror(errno));
 
-        /** INPUT STATUS **/
-        set_bits_from_bytes(mb_mapping.tab_input_status,
-                            UT_INPUT_STATUS_ADDRESS, UT_INPUT_STATUS_NB_POINTS,
-                            UT_INPUT_STATUS_TAB);
+    close(socket);
+    modbus_mapping_free(&mb_mapping);
+    modbus_close(&mb_param);
 
-        /** INPUT REGISTERS **/
-        for (i=0; i < UT_INPUT_REGISTERS_NB_POINTS; i++) {
-                mb_mapping.tab_input_registers[UT_INPUT_REGISTERS_ADDRESS+i] =
-                        UT_INPUT_REGISTERS_TAB[i];;
-        }
-
-        socket = modbus_slave_listen_tcp(&mb_param, 1);
-        modbus_slave_accept_tcp(&mb_param, &socket);
-
-        for (;;) {
-                uint8_t query[MAX_MESSAGE_LENGTH];
-
-                rc = modbus_slave_receive(&mb_param, -1, query);
-                if (rc > 0) {
-                        if (((query[HEADER_LENGTH_TCP + 3] << 8) + query[HEADER_LENGTH_TCP + 4])
-                            == UT_HOLDING_REGISTERS_NB_POINTS_SPECIAL) {
-                                /* Change the number of values (offset
-                                   TCP = 6) */
-                                query[HEADER_LENGTH_TCP + 3] = 0;
-                                query[HEADER_LENGTH_TCP + 4] = UT_HOLDING_REGISTERS_NB_POINTS;
-                        }
-
-                        rc = modbus_slave_manage(&mb_param, query, rc, &mb_mapping);
-                        if (rc == -1) {
-                                return -1;
-                        }
-                } else {
-                        /* Connection closed by the client or error */
-                        break;
-                }
-        }
-
-        printf("Quit the loop: %s\n", modbus_strerror(errno));
-
-        close(socket);
-        modbus_mapping_free(&mb_mapping);
-        modbus_close(&mb_param);
-
-        return 0;
+    return 0;
 }

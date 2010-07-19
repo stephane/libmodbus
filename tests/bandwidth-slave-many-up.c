@@ -31,101 +31,101 @@ modbus_mapping_t mb_mapping;
 
 static void close_sigint(int dummy)
 {
-        modbus_slave_close_tcp(slave_socket);
-        modbus_mapping_free(&mb_mapping);
+    modbus_slave_close_tcp(slave_socket);
+    modbus_mapping_free(&mb_mapping);
 
-        exit(dummy);
+    exit(dummy);
 }
 
 int main(void)
 {
-        int master_socket;
-        modbus_param_t mb_param;
-        int rc;
-        fd_set refset;
-        fd_set rdset;
+    int master_socket;
+    modbus_param_t mb_param;
+    int rc;
+    fd_set refset;
+    fd_set rdset;
 
-        /* Maximum file descriptor number */
-        int fdmax;
+    /* Maximum file descriptor number */
+    int fdmax;
 
-        modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
+    modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
 
-        rc = modbus_mapping_new(&mb_mapping, MAX_STATUS, 0, MAX_REGISTERS, 0);
-        if (rc == -1) {
-                fprintf(stderr, "Failed to allocate the mapping: %s\n",
-                        modbus_strerror(errno));
-                return -1;
+    rc = modbus_mapping_new(&mb_mapping, MAX_STATUS, 0, MAX_REGISTERS, 0);
+    if (rc == -1) {
+        fprintf(stderr, "Failed to allocate the mapping: %s\n",
+                modbus_strerror(errno));
+        return -1;
+    }
+
+    slave_socket = modbus_slave_listen_tcp(&mb_param, NB_CONNECTION);
+
+    signal(SIGINT, close_sigint);
+
+    /* Clear the reference set of socket */
+    FD_ZERO(&refset);
+    /* Add the slave socket */
+    FD_SET(slave_socket, &refset);
+
+    /* Keep track of the max file descriptor */
+    fdmax = slave_socket;
+
+    for (;;) {
+        rdset = refset;
+        if (select(fdmax+1, &rdset, NULL, NULL, NULL) == -1) {
+            perror("Slave select() failure.");
+            close_sigint(1);
         }
 
-        slave_socket = modbus_slave_listen_tcp(&mb_param, NB_CONNECTION);
+        /* Run through the existing connections looking for data to be
+         * read */
+        for (master_socket = 0; master_socket <= fdmax; master_socket++) {
 
-        signal(SIGINT, close_sigint);
+            if (FD_ISSET(master_socket, &rdset)) {
+                if (master_socket == slave_socket) {
+                    /* A client is asking a new connection */
+                    socklen_t addrlen;
+                    struct sockaddr_in clientaddr;
+                    int newfd;
 
-        /* Clear the reference set of socket */
-        FD_ZERO(&refset);
-        /* Add the slave socket */
-        FD_SET(slave_socket, &refset);
+                    /* Handle new connections */
+                    addrlen = sizeof(clientaddr);
+                    memset(&clientaddr, 0, sizeof(clientaddr));
+                    newfd = accept(slave_socket, (struct sockaddr *)&clientaddr, &addrlen);
+                    if (newfd == -1) {
+                        perror("Server accept() error");
+                    } else {
+                        FD_SET(newfd, &refset);
 
-        /* Keep track of the max file descriptor */
-        fdmax = slave_socket;
-
-        for (;;) {
-                rdset = refset;
-                if (select(fdmax+1, &rdset, NULL, NULL, NULL) == -1) {
-                        perror("Slave select() failure.");
-                        close_sigint(1);
-                }
-
-                /* Run through the existing connections looking for data to be
-                 * read */
-                for (master_socket = 0; master_socket <= fdmax; master_socket++) {
-
-                        if (FD_ISSET(master_socket, &rdset)) {
-                                if (master_socket == slave_socket) {
-                                        /* A client is asking a new connection */
-                                        socklen_t addrlen;
-                                        struct sockaddr_in clientaddr;
-                                        int newfd;
-
-                                        /* Handle new connections */
-                                        addrlen = sizeof(clientaddr);
-                                        memset(&clientaddr, 0, sizeof(clientaddr));
-                                        newfd = accept(slave_socket, (struct sockaddr *)&clientaddr, &addrlen);
-                                        if (newfd == -1) {
-                                                perror("Server accept() error");
-                                        } else {
-                                                FD_SET(newfd, &refset);
-
-                                                if (newfd > fdmax) {
-                                                        /* Keep track of the maximum */
-                                                        fdmax = newfd;
-                                                }
-                                                printf("New connection from %s:%d on socket %d\n",
-                                                       inet_ntoa(clientaddr.sin_addr), clientaddr.sin_port, newfd);
-                                        }
-                                } else {
-                                        /* An already connected master has sent a new query */
-                                        uint8_t query[MAX_MESSAGE_LENGTH];
-
-                                        rc = modbus_slave_receive(&mb_param, master_socket, query);
-                                        if (rc != -1) {
-                                                modbus_slave_manage(&mb_param, query, rc, &mb_mapping);
-                                        } else {
-                                                /* Connection closed by the client, end of server */
-                                                printf("Connection closed on socket %d\n", master_socket);
-                                                modbus_slave_close_tcp(master_socket);
-
-                                                /* Remove from reference set */
-                                                FD_CLR(master_socket, &refset);
-
-                                                if (master_socket == fdmax) {
-                                                        fdmax--;
-                                                }
-                                        }
-                                }
+                        if (newfd > fdmax) {
+                            /* Keep track of the maximum */
+                            fdmax = newfd;
                         }
-                }
-        }
+                        printf("New connection from %s:%d on socket %d\n",
+                               inet_ntoa(clientaddr.sin_addr), clientaddr.sin_port, newfd);
+                    }
+                } else {
+                    /* An already connected master has sent a new query */
+                    uint8_t query[MAX_MESSAGE_LENGTH];
 
-        return 0;
+                    rc = modbus_slave_receive(&mb_param, master_socket, query);
+                    if (rc != -1) {
+                        modbus_slave_manage(&mb_param, query, rc, &mb_mapping);
+                    } else {
+                        /* Connection closed by the client, end of server */
+                        printf("Connection closed on socket %d\n", master_socket);
+                        modbus_slave_close_tcp(master_socket);
+
+                        /* Remove from reference set */
+                        FD_CLR(master_socket, &refset);
+
+                        if (master_socket == fdmax) {
+                            fdmax--;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return 0;
 }

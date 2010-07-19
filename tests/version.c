@@ -20,12 +20,12 @@
 
 int main(void)
 {
-        printf("Compiled with libmodbus version %s\n", LIBMODBUS_VERSION_STRING);
-        printf("Linked with libmodbus version %d.%d.%d\n",
-               libmodbus_version_major, libmodbus_version_minor, libmodbus_version_micro);
+    printf("Compiled with libmodbus version %s\n", LIBMODBUS_VERSION_STRING);
+    printf("Linked with libmodbus version %d.%d.%d\n",
+           libmodbus_version_major, libmodbus_version_minor, libmodbus_version_micro);
 
-        if (LIBMODBUS_VERSION_CHECK(2, 1, 0)) {
-                printf("The functions to read/write float values are available.\n");
-        }
-        return 0;
+    if (LIBMODBUS_VERSION_CHECK(2, 1, 0)) {
+        printf("The functions to read/write float values are available.\n");
+    }
+    return 0;
 }

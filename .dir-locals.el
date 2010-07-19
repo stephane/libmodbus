@@ -1,4 +1,4 @@
 ((nil . ((indent-tabs-mode . nil)
-         (c-basic-offset . 8)
+         (c-basic-offset . 4)
          (fill-column . 80))))
 

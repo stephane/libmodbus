@@ -24,43 +24,43 @@
 
 int main(void)
 {
-        int socket;
-        modbus_param_t mb_param;
-        modbus_mapping_t mb_mapping;
+    int socket;
+    modbus_param_t mb_param;
+    modbus_mapping_t mb_mapping;
+    int rc;
+
+    modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
+    /* modbus_set_debug(&mb_param, TRUE); */
+
+    rc = modbus_mapping_new(&mb_mapping, 500, 500, 500, 500);
+    if (rc == -1) {
+        fprintf(stderr, "Failed to allocate the mapping: %s\n",
+                modbus_strerror(errno));
+        return -1;
+    }
+
+    socket = modbus_slave_listen_tcp(&mb_param, 1);
+    modbus_slave_accept_tcp(&mb_param, &socket);
+
+    for (;;) {
+        uint8_t query[MAX_MESSAGE_LENGTH];
         int rc;
 
-        modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
-        /* modbus_set_debug(&mb_param, TRUE); */
-
-        rc = modbus_mapping_new(&mb_mapping, 500, 500, 500, 500);
-        if (rc == -1) {
-                fprintf(stderr, "Failed to allocate the mapping: %s\n",
-                        modbus_strerror(errno));
-                return -1;
+        rc = modbus_slave_receive(&mb_param, -1, query);
+        if (rc != -1) {
+            /* rc is the query size */
+            modbus_slave_manage(&mb_param, query, rc, &mb_mapping);
+        } else {
+            /* Connection closed by the client or error */
+            break;
         }
+    }
 
-        socket = modbus_slave_listen_tcp(&mb_param, 1);
-        modbus_slave_accept_tcp(&mb_param, &socket);
+    printf("Quit the loop: %s\n", modbus_strerror(errno));
 
-        for (;;) {
-                uint8_t query[MAX_MESSAGE_LENGTH];
-                int rc;
+    close(socket);
+    modbus_mapping_free(&mb_mapping);
+    modbus_close(&mb_param);
 
-                rc = modbus_slave_receive(&mb_param, -1, query);
-                if (rc != -1) {
-                        /* rc is the query size */
-                        modbus_slave_manage(&mb_param, query, rc, &mb_mapping);
-                } else {
-                        /* Connection closed by the client or error */
-                        break;
-                }
-        }
-
-        printf("Quit the loop: %s\n", modbus_strerror(errno));
-
-        close(socket);
-        modbus_mapping_free(&mb_mapping);
-        modbus_close(&mb_param);
-
-        return 0;
+    return 0;
 }

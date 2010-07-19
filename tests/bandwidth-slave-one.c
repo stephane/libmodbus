@@ -25,40 +25,40 @@
 
 int main(void)
 {
-        int socket;
-        modbus_param_t mb_param;
-        modbus_mapping_t mb_mapping;
-        int rc;
+    int socket;
+    modbus_param_t mb_param;
+    modbus_mapping_t mb_mapping;
+    int rc;
 
-        modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
+    modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
 
-        rc = modbus_mapping_new(&mb_mapping,  MAX_STATUS, 0, MAX_REGISTERS, 0);
-        if (rc == -1) {
-                fprintf(stderr, "Failed to allocate the mapping: %s\n",
-                        modbus_strerror(errno));
-                return -1;
+    rc = modbus_mapping_new(&mb_mapping,  MAX_STATUS, 0, MAX_REGISTERS, 0);
+    if (rc == -1) {
+        fprintf(stderr, "Failed to allocate the mapping: %s\n",
+                modbus_strerror(errno));
+        return -1;
+    }
+
+    socket = modbus_slave_listen_tcp(&mb_param, 1);
+    modbus_slave_accept_tcp(&mb_param, &socket);
+
+    for(;;) {
+        uint8_t query[MAX_MESSAGE_LENGTH];
+
+        rc = modbus_slave_receive(&mb_param, -1, query);
+        if (rc >= 0) {
+            modbus_slave_manage(&mb_param, query, rc, &mb_mapping);
+        } else {
+            /* Connection closed by the client or server */
+            break;
         }
+    }
 
-        socket = modbus_slave_listen_tcp(&mb_param, 1);
-        modbus_slave_accept_tcp(&mb_param, &socket);
+    printf("Quit the loop: %s\n", modbus_strerror(errno));
 
-        for(;;) {
-                uint8_t query[MAX_MESSAGE_LENGTH];
+    close(socket);
+    modbus_mapping_free(&mb_mapping);
+    modbus_close(&mb_param);
 
-                rc = modbus_slave_receive(&mb_param, -1, query);
-                if (rc >= 0) {
-                        modbus_slave_manage(&mb_param, query, rc, &mb_mapping);
-                } else {
-                        /* Connection closed by the client or server */
-                        break;
-                }
-        }
-
-        printf("Quit the loop: %s\n", modbus_strerror(errno));
-
-        close(socket);
-        modbus_mapping_free(&mb_mapping);
-        modbus_close(&mb_param);
-
-        return 0;
+    return 0;
 }

@@ -59,7 +59,7 @@ extern "C" {
  * Maximum between :
  * - HEADER_LENGTH_TCP (7) + function (1) + address (2) + number (2)
  * - HEADER_LENGTH_RTU (1) + function (1) + address (2) + number (2) + CRC (2)
-*/
+ */
 #define MIN_QUERY_LENGTH           12
 
 /* Modbus_Application_Protocol_V1_1b.pdf Chapter 4 Section 1 Page 5:
@@ -123,20 +123,20 @@ extern "C" {
 #define MODBUS_ENOBASE 112345678
 
 /* Protocol exceptions */
-enum {
-        MODBUS_EXCEPTION_ILLEGAL_FUNCTION = 0x01,
-        MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS,
-        MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE,
-        MODBUS_EXCEPTION_SLAVE_OR_SERVER_FAILURE,
-        MODBUS_EXCEPTION_ACKNOWLEDGE,
-        MODBUS_EXCEPTION_SLAVE_OR_SERVER_BUSY,
-        MODBUS_EXCEPTION_NEGATIVE_ACKNOWLEDGE,
-        MODBUS_EXCEPTION_MEMORY_PARITY,
-        MODBUS_EXCEPTION_NOT_DEFINED,
-        MODBUS_EXCEPTION_GATEWAY_PATH,
-        MODBUS_EXCEPTION_GATEWAY_TARGET,
-        MODBUS_EXCEPTION_MAX
-};
+typedef enum {
+    MODBUS_EXCEPTION_ILLEGAL_FUNCTION = 0x01,
+    MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS,
+    MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE,
+    MODBUS_EXCEPTION_SLAVE_OR_SERVER_FAILURE,
+    MODBUS_EXCEPTION_ACKNOWLEDGE,
+    MODBUS_EXCEPTION_SLAVE_OR_SERVER_BUSY,
+    MODBUS_EXCEPTION_NEGATIVE_ACKNOWLEDGE,
+    MODBUS_EXCEPTION_MEMORY_PARITY,
+    MODBUS_EXCEPTION_NOT_DEFINED,
+    MODBUS_EXCEPTION_GATEWAY_PATH,
+    MODBUS_EXCEPTION_GATEWAY_TARGET,
+    MODBUS_EXCEPTION_MAX
+} modbus_exception_t;
 
 #define EMBXILFUN  (MODBUS_ENOBASE + MODBUS_EXCEPTION_ILLEGAL_FUNCTION)
 #define EMBXILADD  (MODBUS_ENOBASE + MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS)
@@ -177,20 +177,20 @@ enum {
 #define LIBMODBUS_VERSION_STRING "@LIBMODBUS_VERSION@"
 
 /* Numerically encoded version libmb, like 0x010203 */
-#define LIBMODBUS_VERSION_HEX ((LIBMODBUS_MAJOR_VERSION << 24) | \
-                               (LIBMODBUS_MINOR_VERSION << 16) | \
+#define LIBMODBUS_VERSION_HEX ((LIBMODBUS_MAJOR_VERSION << 24) |        \
+                               (LIBMODBUS_MINOR_VERSION << 16) |        \
                                (LIBMODBUS_MICRO_VERSION << 8))
 
 /* Evaluates to True if the version of libmb is greater than @major, @minor and
  * @micro
  */
-#define LIBMODBUS_VERSION_CHECK(major,minor,micro) \
-        (LIBMODBUS_VERSION_MAJOR > (major) ||      \
-        (LIBMODBUS_VERSION_MAJOR == (major) &&     \
-         LIBMODBUS_VERSION_MINOR > (minor)) ||     \
-        (LIBMODBUS_VERSION_MAJOR == (major) &&     \
-         LIBMODBUS_VERSION_MINOR == (minor) &&     \
-         LIBMODBUS_VERSION_MICRO >= (micro)))
+#define LIBMODBUS_VERSION_CHECK(major,minor,micro)      \
+    (LIBMODBUS_VERSION_MAJOR > (major) ||               \
+     (LIBMODBUS_VERSION_MAJOR == (major) &&             \
+      LIBMODBUS_VERSION_MINOR > (minor)) ||             \
+     (LIBMODBUS_VERSION_MAJOR == (major) &&             \
+      LIBMODBUS_VERSION_MINOR == (minor) &&             \
+      LIBMODBUS_VERSION_MICRO >= (micro)))
 
 extern const unsigned int libmodbus_version_major;
 extern const unsigned int libmodbus_version_minor;
@@ -200,54 +200,53 @@ typedef enum { RTU=0, TCP } type_com_t;
 
 /* This structure is byte-aligned */
 typedef struct {
-        /* Slave address */
-        int slave;
-        /* Descriptor (tty or socket) */
-        int fd;
-        /* Communication mode: RTU or TCP */
-        type_com_t type_com;
-        /* Flag debug */
-        int debug;
-        /* TCP port */
-        int port;
-        /* Device: "/dev/ttyS0", "/dev/ttyUSB0" or "/dev/tty.USA19*"
-           on Mac OS X for KeySpan USB<->Serial adapters this string
-           had to be made bigger on OS X as the directory+file name
-           was bigger than 19 bytes. Making it 67 bytes for now, but
-           OS X does support 256 byte file names. May become a problem
-           in the future. */
+    /* Slave address */
+    int slave;
+    /* Descriptor (tty or socket) */
+    int fd;
+    /* Communication mode: RTU or TCP */
+    type_com_t type_com;
+    /* Flag debug */
+    int debug;
+    /* TCP port */
+    int port;
+    /* Device: "/dev/ttyS0", "/dev/ttyUSB0" or "/dev/tty.USA19*" on Mac OS X for
+       KeySpan USB<->Serial adapters this string had to be made bigger on OS X
+       as the directory+file name was bigger than 19 bytes. Making it 67 bytes
+       for now, but OS X does support 256 byte file names. May become a problem
+       in the future. */
 #ifdef __APPLE_CC__
-        char device[64];
+    char device[64];
 #else
-        char device[16];
+    char device[16];
 #endif
-        /* Bauds: 9600, 19200, 57600, 115200, etc */
-        int baud;
-        /* Data bit */
-        uint8_t data_bit;
-        /* Stop bit */
-        uint8_t stop_bit;
-        /* Parity: 'N', 'O', 'E' */
-        char parity;
-        /* In error_treat with TCP, do a reconnect or just dump the error */
-        uint8_t error_recovery;
+    /* Bauds: 9600, 19200, 57600, 115200, etc */
+    int baud;
+    /* Data bit */
+    uint8_t data_bit;
+    /* Stop bit */
+    uint8_t stop_bit;
+    /* Parity: 'N', 'O', 'E' */
+    char parity;
+    /* In error_treat with TCP, do a reconnect or just dump the error */
+    uint8_t error_recovery;
         /* IP address */
-        char ip[16];
-        /* Save old termios settings */
-        struct termios old_tios;
-        struct timeval timeout_begin;
-        struct timeval timeout_end;
+    char ip[16];
+    /* Save old termios settings */
+    struct termios old_tios;
+    struct timeval timeout_begin;
+    struct timeval timeout_end;
 } modbus_param_t;
 
 typedef struct {
-        int nb_coil_status;
-        int nb_input_status;
-        int nb_input_registers;
-        int nb_holding_registers;
-        uint8_t *tab_coil_status;
-        uint8_t *tab_input_status;
-        uint16_t *tab_input_registers;
-        uint16_t *tab_holding_registers;
+    int nb_coil_status;
+    int nb_input_status;
+    int nb_input_registers;
+    int nb_holding_registers;
+    uint8_t *tab_coil_status;
+    uint8_t *tab_input_status;
+    uint16_t *tab_input_registers;
+    uint16_t *tab_holding_registers;
 } modbus_mapping_t;
 
 int modbus_init_rtu(modbus_param_t *mb_param, const char *device,

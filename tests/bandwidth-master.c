@@ -33,123 +33,123 @@
 
 uint32_t gettime_ms(void)
 {
-        struct timeval tv;
-        gettimeofday (&tv, NULL);
+    struct timeval tv;
+    gettimeofday (&tv, NULL);
 
-        return (uint32_t) tv.tv_sec * 1000 + tv.tv_usec / 1000;
+    return (uint32_t) tv.tv_sec * 1000 + tv.tv_usec / 1000;
 }
 
 int main(void)
 {
-        uint8_t *tab_rp_status;
-        uint16_t *tab_rp_registers;
-        modbus_param_t mb_param;
-        int i;
-        int nb_points;
-        double elapsed;
-        uint32_t start;
-        uint32_t end;
-        uint32_t bytes;
-        uint32_t rate;
-        int rc;
+    uint8_t *tab_rp_status;
+    uint16_t *tab_rp_registers;
+    modbus_param_t mb_param;
+    int i;
+    int nb_points;
+    double elapsed;
+    uint32_t start;
+    uint32_t end;
+    uint32_t bytes;
+    uint32_t rate;
+    int rc;
 
-        /* TCP */
-        modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
-        rc = modbus_connect(&mb_param);
+    /* TCP */
+    modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
+    rc = modbus_connect(&mb_param);
+    if (rc == -1) {
+        fprintf(stderr, "Connexion failed: %s\n",
+                modbus_strerror(errno));
+        return -1;
+    }
+
+    /* Allocate and initialize the memory to store the status */
+    tab_rp_status = (uint8_t *) malloc(MAX_STATUS * sizeof(uint8_t));
+    memset(tab_rp_status, 0, MAX_STATUS * sizeof(uint8_t));
+
+    /* Allocate and initialize the memory to store the registers */
+    tab_rp_registers = (uint16_t *) malloc(MAX_REGISTERS * sizeof(uint16_t));
+    memset(tab_rp_registers, 0, MAX_REGISTERS * sizeof(uint16_t));
+
+    printf("READ COIL STATUS\n\n");
+
+    nb_points = MAX_STATUS;
+    start = gettime_ms();
+    for (i=0; i<NB_LOOPS; i++) {
+        rc = read_coil_status(&mb_param, SERVER_ID, 0, nb_points, tab_rp_status);
         if (rc == -1) {
-                fprintf(stderr, "Connexion failed: %s\n",
-                        modbus_strerror(errno));
-                return -1;
+            fprintf(stderr, "%s\n", modbus_strerror(errno));
+            return -1;
         }
+    }
+    end = gettime_ms();
+    elapsed = end - start;
 
-        /* Allocate and initialize the memory to store the status */
-        tab_rp_status = (uint8_t *) malloc(MAX_STATUS * sizeof(uint8_t));
-        memset(tab_rp_status, 0, MAX_STATUS * sizeof(uint8_t));
+    rate = (NB_LOOPS * nb_points) * G_MSEC_PER_SEC / (end - start);
+    printf("Transfert rate in points/seconds:\n");
+    printf("* %'d points/s\n", rate);
+    printf("\n");
 
-        /* Allocate and initialize the memory to store the registers */
-        tab_rp_registers = (uint16_t *) malloc(MAX_REGISTERS * sizeof(uint16_t));
-        memset(tab_rp_registers, 0, MAX_REGISTERS * sizeof(uint16_t));
+    bytes = NB_LOOPS * (nb_points / 8) + ((nb_points % 8) ? 1 : 0);
+    rate = bytes / 1024 * G_MSEC_PER_SEC / (end - start);
+    printf("Values:\n");
+    printf("* %d x %d values\n", NB_LOOPS, nb_points);
+    printf("* %.3f ms for %d bytes\n", elapsed, bytes);
+    printf("* %'d KiB/s\n", rate);
+    printf("\n");
 
-        printf("READ COIL STATUS\n\n");
+    /* TCP: Query and reponse header and values */
+    bytes = 12 + 9 + (nb_points / 8) + ((nb_points % 8) ? 1 : 0);
+    printf("Values and TCP Modbus overhead:\n");
+    printf("* %d x %d bytes\n", NB_LOOPS, bytes);
+    bytes = NB_LOOPS * bytes;
+    rate = bytes / 1024 * G_MSEC_PER_SEC / (end - start);
+    printf("* %.3f ms for %d bytes\n", elapsed, bytes);
+    printf("* %'d KiB/s\n", rate);
+    printf("\n\n");
 
-        nb_points = MAX_STATUS;
-        start = gettime_ms();
-        for (i=0; i<NB_LOOPS; i++) {
-                rc = read_coil_status(&mb_param, SERVER_ID, 0, nb_points, tab_rp_status);
-                if (rc == -1) {
-                        fprintf(stderr, "%s\n", modbus_strerror(errno));
-                        return -1;
-                }
+    printf("READ HOLDING REGISTERS\n\n");
+
+    nb_points = MAX_REGISTERS;
+    start = gettime_ms();
+    for (i=0; i<NB_LOOPS; i++) {
+        rc = read_holding_registers(&mb_param, SERVER_ID, 0, nb_points, tab_rp_registers);
+        if (rc == -1) {
+            fprintf(stderr, "%s\n", modbus_strerror(errno));
+            return -1;
         }
-        end = gettime_ms();
-        elapsed = end - start;
+    }
+    end = gettime_ms();
+    elapsed = end - start;
 
-        rate = (NB_LOOPS * nb_points) * G_MSEC_PER_SEC / (end - start);
-        printf("Transfert rate in points/seconds:\n");
-        printf("* %'d points/s\n", rate);
-        printf("\n");
+    rate = (NB_LOOPS * nb_points) * G_MSEC_PER_SEC / (end - start);
+    printf("Transfert rate in points/seconds:\n");
+    printf("* %'d registers/s\n", rate);
+    printf("\n");
 
-        bytes = NB_LOOPS * (nb_points / 8) + ((nb_points % 8) ? 1 : 0);
-        rate = bytes / 1024 * G_MSEC_PER_SEC / (end - start);
-        printf("Values:\n");
-        printf("* %d x %d values\n", NB_LOOPS, nb_points);
-        printf("* %.3f ms for %d bytes\n", elapsed, bytes);
-        printf("* %'d KiB/s\n", rate);
-        printf("\n");
+    bytes = NB_LOOPS * nb_points * sizeof(uint16_t);
+    rate = bytes / 1024 * G_MSEC_PER_SEC / (end - start);
+    printf("Values:\n");
+    printf("* %d x %d values\n", NB_LOOPS, nb_points);
+    printf("* %.3f ms for %d bytes\n", elapsed, bytes);
+    printf("* %'d KiB/s\n", rate);
+    printf("\n");
 
-        /* TCP: Query and reponse header and values */
-        bytes = 12 + 9 + (nb_points / 8) + ((nb_points % 8) ? 1 : 0);
-        printf("Values and TCP Modbus overhead:\n");
-        printf("* %d x %d bytes\n", NB_LOOPS, bytes);
-        bytes = NB_LOOPS * bytes;
-        rate = bytes / 1024 * G_MSEC_PER_SEC / (end - start);
-        printf("* %.3f ms for %d bytes\n", elapsed, bytes);
-        printf("* %'d KiB/s\n", rate);
-        printf("\n\n");
+    /* TCP:Query and reponse header and values */
+    bytes = 12 + 9 + (nb_points * sizeof(uint16_t));
+    printf("Values and TCP Modbus overhead:\n");
+    printf("* %d x %d bytes\n", NB_LOOPS, bytes);
+    bytes = NB_LOOPS * bytes;
+    rate = bytes / 1024 * G_MSEC_PER_SEC / (end - start);
+    printf("* %.3f ms for %d bytes\n", elapsed, bytes);
+    printf("* %'d KiB/s\n", rate);
+    printf("\n");
 
-        printf("READ HOLDING REGISTERS\n\n");
+    /* Free the memory */
+    free(tab_rp_status);
+    free(tab_rp_registers);
 
-        nb_points = MAX_REGISTERS;
-        start = gettime_ms();
-        for (i=0; i<NB_LOOPS; i++) {
-                rc = read_holding_registers(&mb_param, SERVER_ID, 0, nb_points, tab_rp_registers);
-                if (rc == -1) {
-                        fprintf(stderr, "%s\n", modbus_strerror(errno));
-                        return -1;
-                }
-        }
-        end = gettime_ms();
-        elapsed = end - start;
+    /* Close the connection */
+    modbus_close(&mb_param);
 
-        rate = (NB_LOOPS * nb_points) * G_MSEC_PER_SEC / (end - start);
-        printf("Transfert rate in points/seconds:\n");
-        printf("* %'d registers/s\n", rate);
-        printf("\n");
-
-        bytes = NB_LOOPS * nb_points * sizeof(uint16_t);
-        rate = bytes / 1024 * G_MSEC_PER_SEC / (end - start);
-        printf("Values:\n");
-        printf("* %d x %d values\n", NB_LOOPS, nb_points);
-        printf("* %.3f ms for %d bytes\n", elapsed, bytes);
-        printf("* %'d KiB/s\n", rate);
-        printf("\n");
-
-        /* TCP:Query and reponse header and values */
-        bytes = 12 + 9 + (nb_points * sizeof(uint16_t));
-        printf("Values and TCP Modbus overhead:\n");
-        printf("* %d x %d bytes\n", NB_LOOPS, bytes);
-        bytes = NB_LOOPS * bytes;
-        rate = bytes / 1024 * G_MSEC_PER_SEC / (end - start);
-        printf("* %.3f ms for %d bytes\n", elapsed, bytes);
-        printf("* %'d KiB/s\n", rate);
-        printf("\n");
-
-        /* Free the memory */
-        free(tab_rp_status);
-        free(tab_rp_registers);
-
-        /* Close the connection */
-        modbus_close(&mb_param);
-
-        return 0;
+    return 0;
 }
