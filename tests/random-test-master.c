@@ -25,13 +25,13 @@
 
 /* The goal of this program is to check all major functions of
    libmodbus:
-   - force_single_coil
-   - read_coil_status
-   - force_multiple_coils
-   - preset_single_register
-   - read_holding_registers
-   - preset_multiple_registers
-   - read_holding_registers
+   - write_coil
+   - read_bits
+   - write_coils
+   - write_register
+   - read_registers
+   - write_registers
+   - read_registers
 
    All these functions are called with random values on a address
    range defined by the following defines.
@@ -47,38 +47,40 @@
  */
 int main(void)
 {
+    modbus_t *ctx;
     int rc;
     int nb_fail;
     int nb_loop;
     int addr;
     int nb;
-    uint8_t *tab_rq_status;
-    uint8_t *tab_rp_status;
+    uint8_t *tab_rq_bits;
+    uint8_t *tab_rp_bits;
     uint16_t *tab_rq_registers;
     uint16_t *tab_rp_registers;
-    modbus_param_t mb_param;
 
     /*
-      modbus_init_rtu(&mb_param, "/dev/ttyS0", 19200, 'N', 8, 1, MY_ID);
+    ctx = modbus_new_rtu("/dev/ttyS0", 19200, 'N', 8, 1, MY_ID);
+    modbus_set_slave(ctx, SERVER_ID);
     */
 
     /* TCP */
-    modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
-    modbus_set_debug(&mb_param, TRUE);
-    if (modbus_connect(&mb_param) == -1) {
+    ctx = modbus_new_tcp("127.0.0.1", 1502);
+    modbus_set_debug(ctx, TRUE);
+    if (modbus_connect(ctx) == -1) {
         fprintf(stderr, "Connection failed: %s\n",
                 modbus_strerror(errno));
+        modbus_free(ctx);
         return -1;
     }
 
     /* Allocate and initialize the different memory spaces */
     nb = ADDRESS_END - ADDRESS_START;
 
-    tab_rq_status = (uint8_t *) malloc(nb * sizeof(uint8_t));
-    memset(tab_rq_status, 0, nb * sizeof(uint8_t));
+    tab_rq_bits = (uint8_t *) malloc(nb * sizeof(uint8_t));
+    memset(tab_rq_bits, 0, nb * sizeof(uint8_t));
 
-    tab_rp_status = (uint8_t *) malloc(nb * sizeof(uint8_t));
-    memset(tab_rp_status, 0, nb * sizeof(uint8_t));
+    tab_rp_bits = (uint8_t *) malloc(nb * sizeof(uint8_t));
+    memset(tab_rp_bits, 0, nb * sizeof(uint8_t));
 
     tab_rq_registers = (uint16_t *) malloc(nb * sizeof(uint16_t));
     memset(tab_rq_registers, 0, nb * sizeof(uint16_t));
@@ -94,49 +96,44 @@ int main(void)
             /* Random numbers (short) */
             for (i=0; i<nb; i++) {
                 tab_rq_registers[i] = (uint16_t) (65535.0*rand() / (RAND_MAX + 1.0));
-                tab_rq_status[i] = tab_rq_registers[i] % 2;
+                tab_rq_bits[i] = tab_rq_registers[i] % 2;
             }
             nb = ADDRESS_END - addr;
 
-            /* SINGLE COIL */
-            rc = force_single_coil(&mb_param, SERVER_ID, addr, tab_rq_status[0]);
+            /* WRITE BIT */
+            rc = modbus_write_bit(ctx, addr, tab_rq_bits[0]);
             if (rc != 1) {
-                printf("ERROR force_single_coil (%d)\n", rc);
-                printf("Slave = %d, address = %d, value = %d\n",
-                       SERVER_ID, addr, tab_rq_status[0]);
+                printf("ERROR modbus_write_bit (%d)\n", rc);
+                printf("Address = %d, value = %d\n", addr, tab_rq_bits[0]);
                 nb_fail++;
             } else {
-                rc = read_coil_status(&mb_param, SERVER_ID, addr, 1, tab_rp_status);
-                if (rc != 1 || tab_rq_status[0] != tab_rp_status[0]) {
-                    printf("ERROR read_coil_status single (%d)\n", rc);
-                    printf("Slave = %d, address = %d\n",
-                           SERVER_ID, addr);
+                rc = modbus_read_bits(ctx, addr, 1, tab_rp_bits);
+                if (rc != 1 || tab_rq_bits[0] != tab_rp_bits[0]) {
+                    printf("ERROR modbus_read_bits single (%d)\n", rc);
+                    printf("address = %d\n", addr);
                     nb_fail++;
                 }
             }
 
-            /* MULTIPLE COILS */
-            rc = force_multiple_coils(&mb_param, SERVER_ID, addr, nb, tab_rq_status);
+            /* MULTIPLE BITS */
+            rc = modbus_write_bits(ctx, addr, nb, tab_rq_bits);
             if (rc != nb) {
-                printf("ERROR force_multiple_coils (%d)\n", rc);
-                printf("Slave = %d, address = %d, nb = %d\n",
-                       SERVER_ID, addr, nb);
+                printf("ERROR modbus_write_bits (%d)\n", rc);
+                printf("Address = %d, nb = %d\n", addr, nb);
                 nb_fail++;
             } else {
-                rc = read_coil_status(&mb_param, SERVER_ID, addr, nb, tab_rp_status);
+                rc = modbus_read_bits(ctx, addr, nb, tab_rp_bits);
                 if (rc != nb) {
-                    printf("ERROR read_coil_status\n");
-                    printf("Slave = %d, address = %d, nb = %d\n",
-                           SERVER_ID, addr, nb);
+                    printf("ERROR modbus_read_bits\n");
+                    printf("Address = %d, nb = %d\n", addr, nb);
                     nb_fail++;
                 } else {
                     for (i=0; i<nb; i++) {
-                        if (tab_rp_status[i] != tab_rq_status[i]) {
-                            printf("ERROR read_coil_status\n");
-                            printf("Slave = %d, address = %d, value %d (0x%X) != %d (0x%X)\n",
-                                   SERVER_ID, addr,
-                                   tab_rq_status[i], tab_rq_status[i],
-                                   tab_rp_status[i], tab_rp_status[i]);
+                        if (tab_rp_bits[i] != tab_rq_bits[i]) {
+                            printf("ERROR modbus_read_bits\n");
+                            printf("Address = %d, value %d (0x%X) != %d (0x%X)\n",
+                                   addr, tab_rq_bits[i], tab_rq_bits[i],
+                                   tab_rp_bits[i], tab_rp_bits[i]);
                             nb_fail++;
                         }
                     }
@@ -144,25 +141,23 @@ int main(void)
             }
 
             /* SINGLE REGISTER */
-            rc = preset_single_register(&mb_param, SERVER_ID, addr, tab_rq_registers[0]);
+            rc = modbus_write_register(ctx, addr, tab_rq_registers[0]);
             if (rc != 1) {
-                printf("ERROR preset_single_register (%d)\n", rc);
-                printf("Slave = %d, address = %d, value = %d (0x%X)\n",
-                       SERVER_ID, addr, tab_rq_registers[0], tab_rq_registers[0]);
+                printf("ERROR modbus_write_register (%d)\n", rc);
+                printf("Address = %d, value = %d (0x%X)\n",
+                       addr, tab_rq_registers[0], tab_rq_registers[0]);
                 nb_fail++;
             } else {
-                rc = read_holding_registers(&mb_param, SERVER_ID, addr, 1, tab_rp_registers);
+                rc = modbus_read_registers(ctx, addr, 1, tab_rp_registers);
                 if (rc != 1) {
-                    printf("ERROR read_holding_registers single (%d)\n", rc);
-                    printf("Slave = %d, address = %d\n",
-                           SERVER_ID, addr);
+                    printf("ERROR modbus_read_registers single (%d)\n", rc);
+                    printf("Address = %d\n", addr);
                     nb_fail++;
                 } else {
                     if (tab_rq_registers[0] != tab_rp_registers[0]) {
-                        printf("ERROR read_holding_registers single\n");
-                        printf("Slave = %d, address = %d, value = %d (0x%X) != %d (0x%X)\n",
-                               SERVER_ID, addr,
-                               tab_rq_registers[0], tab_rq_registers[0],
+                        printf("ERROR modbus_read_registers single\n");
+                        printf("Address = %d, value = %d (0x%X) != %d (0x%X)\n",
+                               addr, tab_rq_registers[0], tab_rq_registers[0],
                                tab_rp_registers[0], tab_rp_registers[0]);
                         nb_fail++;
                     }
@@ -170,28 +165,23 @@ int main(void)
             }
 
             /* MULTIPLE REGISTERS */
-            rc = preset_multiple_registers(&mb_param, SERVER_ID, addr, nb,
-                                           tab_rq_registers);
+            rc = modbus_write_registers(ctx, addr, nb, tab_rq_registers);
             if (rc != nb) {
-                printf("ERROR preset_multiple_registers (%d)\n", rc);
-                printf("Slave = %d, address = %d, nb = %d\n",
-                       SERVER_ID, addr, nb);
+                printf("ERROR modbus_write_registers (%d)\n", rc);
+                printf("Address = %d, nb = %d\n", addr, nb);
                 nb_fail++;
             } else {
-                rc = read_holding_registers(&mb_param, SERVER_ID, addr, nb,
-                                            tab_rp_registers);
+                rc = modbus_read_registers(ctx, addr, nb, tab_rp_registers);
                 if (rc != nb) {
-                    printf("ERROR read_holding_registers (%d)\n", rc);
-                    printf("Slave = %d, address = %d, nb = %d\n",
-                           SERVER_ID, addr, nb);
+                    printf("ERROR modbus_read_registers (%d)\n", rc);
+                    printf("Address = %d, nb = %d\n", addr, nb);
                     nb_fail++;
                 } else {
                     for (i=0; i<nb; i++) {
                         if (tab_rq_registers[i] != tab_rp_registers[i]) {
-                            printf("ERROR read_holding_registers\n");
-                            printf("Slave = %d, address = %d, value %d (0x%X) != %d (0x%X)\n",
-                                   SERVER_ID, addr,
-                                   tab_rq_registers[i], tab_rq_registers[i],
+                            printf("ERROR modbus_read_registers\n");
+                            printf("Address = %d, value %d (0x%X) != %d (0x%X)\n",
+                                   addr, tab_rq_registers[i], tab_rq_registers[i],
                                    tab_rp_registers[i], tab_rp_registers[i]);
                             nb_fail++;
                         }
@@ -209,13 +199,14 @@ int main(void)
     }
 
     /* Free the memory */
-    free(tab_rq_status);
-    free(tab_rp_status);
+    free(tab_rq_bits);
+    free(tab_rp_bits);
     free(tab_rq_registers);
     free(tab_rp_registers);
 
     /* Close the connection */
-    modbus_close(&mb_param);
+    modbus_close(ctx);
+    modbus_free(ctx);
 
     return 0;
 }

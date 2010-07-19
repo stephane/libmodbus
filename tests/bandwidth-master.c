@@ -26,7 +26,6 @@
 #include <modbus.h>
 
 /* Tests based on PI-MBUS-300 documentation */
-#define SERVER_ID     17
 #define NB_LOOPS  100000
 
 #define G_MSEC_PER_SEC 1000
@@ -41,9 +40,9 @@ uint32_t gettime_ms(void)
 
 int main(void)
 {
-    uint8_t *tab_rp_status;
-    uint16_t *tab_rp_registers;
-    modbus_param_t mb_param;
+    uint8_t *tab_bit;
+    uint16_t *tab_reg;
+    modbus_t *ctx;
     int i;
     int nb_points;
     double elapsed;
@@ -54,28 +53,28 @@ int main(void)
     int rc;
 
     /* TCP */
-    modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
-    rc = modbus_connect(&mb_param);
-    if (rc == -1) {
+    ctx = modbus_new_tcp("127.0.0.1", 1502);
+    if (modbus_connect(ctx) == -1) {
         fprintf(stderr, "Connexion failed: %s\n",
                 modbus_strerror(errno));
+        modbus_free(ctx);
         return -1;
     }
 
     /* Allocate and initialize the memory to store the status */
-    tab_rp_status = (uint8_t *) malloc(MAX_STATUS * sizeof(uint8_t));
-    memset(tab_rp_status, 0, MAX_STATUS * sizeof(uint8_t));
+    tab_bit = (uint8_t *) malloc(MODBUS_MAX_BITS * sizeof(uint8_t));
+    memset(tab_bit, 0, MODBUS_MAX_BITS * sizeof(uint8_t));
 
     /* Allocate and initialize the memory to store the registers */
-    tab_rp_registers = (uint16_t *) malloc(MAX_REGISTERS * sizeof(uint16_t));
-    memset(tab_rp_registers, 0, MAX_REGISTERS * sizeof(uint16_t));
+    tab_reg = (uint16_t *) malloc(MODBUS_MAX_REGISTERS * sizeof(uint16_t));
+    memset(tab_reg, 0, MODBUS_MAX_REGISTERS * sizeof(uint16_t));
 
-    printf("READ COIL STATUS\n\n");
+    printf("READ BITS\n\n");
 
-    nb_points = MAX_STATUS;
+    nb_points = MODBUS_MAX_BITS;
     start = gettime_ms();
     for (i=0; i<NB_LOOPS; i++) {
-        rc = read_coil_status(&mb_param, SERVER_ID, 0, nb_points, tab_rp_status);
+        rc = modbus_read_bits(ctx, 0, nb_points, tab_bit);
         if (rc == -1) {
             fprintf(stderr, "%s\n", modbus_strerror(errno));
             return -1;
@@ -107,12 +106,12 @@ int main(void)
     printf("* %'d KiB/s\n", rate);
     printf("\n\n");
 
-    printf("READ HOLDING REGISTERS\n\n");
+    printf("READ REGISTERS\n\n");
 
-    nb_points = MAX_REGISTERS;
+    nb_points = MODBUS_MAX_REGISTERS;
     start = gettime_ms();
     for (i=0; i<NB_LOOPS; i++) {
-        rc = read_holding_registers(&mb_param, SERVER_ID, 0, nb_points, tab_rp_registers);
+        rc = modbus_read_registers(ctx, 0, nb_points, tab_reg);
         if (rc == -1) {
             fprintf(stderr, "%s\n", modbus_strerror(errno));
             return -1;
@@ -145,11 +144,12 @@ int main(void)
     printf("\n");
 
     /* Free the memory */
-    free(tab_rp_status);
-    free(tab_rp_registers);
+    free(tab_bit);
+    free(tab_reg);
 
     /* Close the connection */
-    modbus_close(&mb_param);
+    modbus_close(ctx);
+    modbus_free(ctx);
 
     return 0;
 }

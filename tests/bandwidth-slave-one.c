@@ -26,28 +26,30 @@
 int main(void)
 {
     int socket;
-    modbus_param_t mb_param;
-    modbus_mapping_t mb_mapping;
+    modbus_t *ctx;
+    modbus_mapping_t *mb_mapping;
     int rc;
 
-    modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
+    ctx = modbus_new_tcp("127.0.0.1", 1502);
 
-    rc = modbus_mapping_new(&mb_mapping,  MAX_STATUS, 0, MAX_REGISTERS, 0);
-    if (rc == -1) {
+    mb_mapping = modbus_mapping_new(MODBUS_MAX_BITS, 0,
+                                    MODBUS_MAX_REGISTERS, 0);
+    if (mb_mapping == NULL) {
         fprintf(stderr, "Failed to allocate the mapping: %s\n",
                 modbus_strerror(errno));
+        modbus_free(ctx);
         return -1;
     }
 
-    socket = modbus_slave_listen_tcp(&mb_param, 1);
-    modbus_slave_accept_tcp(&mb_param, &socket);
+    socket = modbus_listen(ctx, 1);
+    modbus_accept(ctx, &socket);
 
     for(;;) {
-        uint8_t query[MAX_MESSAGE_LENGTH];
+        uint8_t query[MODBUS_MAX_ADU_LENGTH_TCP];
 
-        rc = modbus_slave_receive(&mb_param, -1, query);
+        rc = modbus_receive(ctx, -1, query);
         if (rc >= 0) {
-            modbus_slave_manage(&mb_param, query, rc, &mb_mapping);
+            modbus_reply(ctx, query, rc, mb_mapping);
         } else {
             /* Connection closed by the client or server */
             break;
@@ -56,9 +58,9 @@ int main(void)
 
     printf("Quit the loop: %s\n", modbus_strerror(errno));
 
+    modbus_mapping_free(mb_mapping);
     close(socket);
-    modbus_mapping_free(&mb_mapping);
-    modbus_close(&mb_param);
+    modbus_free(ctx);
 
     return 0;
 }

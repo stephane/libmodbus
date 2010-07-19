@@ -2,37 +2,27 @@
 Migration notes from the 2.0 series (for 2.2)
 =============================================
 
-1 - modbus_init_rtu/tcp takes a new argument, the slave number of the device
-    which established the connection.
+The 2.2 release use a brand new API and this document covers only the general
+changes:
 
-2 - modbus_init_listen_tcp() has been renamed to modbus_slave_listen_tcp() and
-    requires a new argument, the maximal number of connections:
+- the structure modbus_param_t is gone and is replaced by a new opaque and
+dynamically allocated structure modbus_t.
 
-int modbus_slave_init_tcp(modbus_param_t *mb_param, int nb_connection);
+- the slave argument is no more an argument of the Modbus functions, you need to
+  call modbus_set_slave first.
 
+- the public header file is smaller so some internal defines aren't accessible
+  anymore.
 
-3 - New function modbus_slave_accept_tcp() to etablish a new connection
-    (previously in modbus_init_listen_tcp()):
+- all function and constants are respectively prefixed by modbus_ or MODBUS_.
 
-int modbus_slave_accept_tcp(modbus_param_t *mb_param, int *socket);
+- the POSIX error conventions are used (if an error occured, -1 or NULL is
+  returned and errno is set accordingly).
 
+- coil status and discretes inputs are just bits and force/preset actions have
+  been renamed to write actions.
 
-4 - modbus_listen() has been renamed to modbus_slave_receive() and requires a
-    new argument, the socket file descriptor to listen on. If the sockfd is -1,
-    the internal fd of modbus_param_t is used:
-
-int modbus_slave_receive(modbus_param_t *mb_param, int sockfd,
-                         uint8_t *query, int *query_length);
-
-
-5 - If you use the HEADER_LENGTH_ defines, their values have been incremented by
-    1 to reflect the PDU and ADU of the Modbus protocol and to reduce the CPU
-    consumption:
-     - HEADER_LENGTH_RTU           0 -> 1
-     - HEADER_LENGTH_TCP           6 -> 7
-
-6 - modbus_mapping_new returns 0 on success and -1 on failure.
-
+We hope you'll enjoy the new API to accept the migration burden!
 
 =============================================
 Migration notes from the 1.2 series (for 2.0)

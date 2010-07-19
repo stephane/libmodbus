@@ -25,7 +25,12 @@ int main(void)
            libmodbus_version_major, libmodbus_version_minor, libmodbus_version_micro);
 
     if (LIBMODBUS_VERSION_CHECK(2, 1, 0)) {
-        printf("The functions to read/write float values are available.\n");
+        printf("The functions to read/write float values are available (2.1.0).\n");
     }
+
+    if (LIBMODBUS_VERSION_CHECK(2, 1, 1)) {
+        printf("Oh gosh, brand new API (2.1.1)!\n");
+    }
+
     return 0;
 }

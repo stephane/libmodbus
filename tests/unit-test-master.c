@@ -26,10 +26,11 @@
 
 int main(void)
 {
-    uint8_t *tab_rp_status;
+    uint8_t *tab_rp_bits;
     uint16_t *tab_rp_registers;
     uint16_t *tab_rp_registers_bad;
-    modbus_param_t mb_param;
+    modbus_t *ctx;
+    int is_mode_rtu = FALSE;
     int i;
     uint8_t value;
     int address;
@@ -40,30 +41,32 @@ int main(void)
     struct timeval timeout_begin_new;
 
     /*
-      modbus_init_rtu(&mb_param, "/dev/ttyS0", 19200, 'N', 8, 1,
-      CLIENT_ID);
+      ctx = modbus_new_rtu("/dev/ttyS0", 19200, 'N', 8, 1, CLIENT_ID);
+      modbus_set_slave(ctx, SERVER_ID);
+      is_mode_rtu = TRUE;
     */
 
     /* TCP */
-    modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
-    modbus_set_debug(&mb_param, TRUE);
+    ctx = modbus_new_tcp("127.0.0.1", 1502);
+    modbus_set_debug(ctx, TRUE);
 
-    if (modbus_connect(&mb_param) == -1) {
+    if (modbus_connect(ctx) == -1) {
         fprintf(stderr, "Connection failed: %s\n",
                 modbus_strerror(errno));
+        modbus_free(ctx);
         return -1;
     }
 
-    /* Allocate and initialize the memory to store the status */
-    nb_points = (UT_COIL_STATUS_NB_POINTS > UT_INPUT_STATUS_NB_POINTS) ?
-        UT_COIL_STATUS_NB_POINTS : UT_INPUT_STATUS_NB_POINTS;
-    tab_rp_status = (uint8_t *) malloc(nb_points * sizeof(uint8_t));
-    memset(tab_rp_status, 0, nb_points * sizeof(uint8_t));
+    /* Allocate and initialize the memory to store the bits */
+    nb_points = (UT_BITS_NB_POINTS > UT_INPUT_BITS_NB_POINTS) ?
+        UT_BITS_NB_POINTS : UT_INPUT_BITS_NB_POINTS;
+    tab_rp_bits = (uint8_t *) malloc(nb_points * sizeof(uint8_t));
+    memset(tab_rp_bits, 0, nb_points * sizeof(uint8_t));
 
     /* Allocate and initialize the memory to store the registers */
-    nb_points = (UT_HOLDING_REGISTERS_NB_POINTS >
+    nb_points = (UT_REGISTERS_NB_POINTS >
                  UT_INPUT_REGISTERS_NB_POINTS) ?
-        UT_HOLDING_REGISTERS_NB_POINTS : UT_INPUT_REGISTERS_NB_POINTS;
+        UT_REGISTERS_NB_POINTS : UT_INPUT_REGISTERS_NB_POINTS;
     tab_rp_registers = (uint16_t *) malloc(nb_points * sizeof(uint16_t));
     memset(tab_rp_registers, 0, nb_points * sizeof(uint16_t));
 
@@ -71,11 +74,11 @@ int main(void)
 
     printf("\nTEST WRITE/READ:\n");
 
-    /** COIL STATUS **/
+    /** COIL BITS **/
 
     /* Single */
-    rc = force_single_coil(&mb_param, SERVER_ID, UT_COIL_STATUS_ADDRESS, ON);
-    printf("1/2 force_single_coil: ");
+    rc = modbus_write_bit(ctx, UT_BITS_ADDRESS, ON);
+    printf("1/2 modbus_write_bit: ");
     if (rc == 1) {
         printf("OK\n");
     } else {
@@ -83,33 +86,30 @@ int main(void)
         goto close;
     }
 
-    rc = read_coil_status(&mb_param, SERVER_ID, UT_COIL_STATUS_ADDRESS, 1,
-                          tab_rp_status);
-    printf("2/2 read_coil_status: ");
+    rc = modbus_read_bits(ctx, UT_BITS_ADDRESS, 1, tab_rp_bits);
+    printf("2/2 modbus_read_bits: ");
     if (rc != 1) {
         printf("FAILED (nb points %d)\n", rc);
         goto close;
     }
 
-    if (tab_rp_status[0] != ON) {
-        printf("FAILED (%0X = != %0X)\n", tab_rp_status[0], ON);
+    if (tab_rp_bits[0] != ON) {
+        printf("FAILED (%0X = != %0X)\n", tab_rp_bits[0], ON);
         goto close;
     }
     printf("OK\n");
     /* End single */
 
-    /* Multiple coils */
+    /* Multiple bits */
     {
-        uint8_t tab_value[UT_COIL_STATUS_NB_POINTS];
+        uint8_t tab_value[UT_BITS_NB_POINTS];
 
-        set_bits_from_bytes(tab_value, 0, UT_COIL_STATUS_NB_POINTS,
-                            UT_COIL_STATUS_TAB);
-        rc = force_multiple_coils(&mb_param, SERVER_ID,
-                                  UT_COIL_STATUS_ADDRESS,
-                                  UT_COIL_STATUS_NB_POINTS,
-                                  tab_value);
-        printf("1/2 force_multiple_coils: ");
-        if (rc == UT_COIL_STATUS_NB_POINTS) {
+        modbus_set_bits_from_bytes(tab_value, 0, UT_BITS_NB_POINTS,
+                                   UT_BITS_TAB);
+        rc = modbus_write_bits(ctx, UT_BITS_ADDRESS,
+                               UT_BITS_NB_POINTS, tab_value);
+        printf("1/2 modbus_write_bits: ");
+        if (rc == UT_BITS_NB_POINTS) {
             printf("OK\n");
         } else {
             printf("FAILED\n");
@@ -117,24 +117,24 @@ int main(void)
         }
     }
 
-    rc = read_coil_status(&mb_param, SERVER_ID, UT_COIL_STATUS_ADDRESS,
-                          UT_COIL_STATUS_NB_POINTS, tab_rp_status);
-    printf("2/2 read_coil_status: ");
-    if (rc != UT_COIL_STATUS_NB_POINTS) {
+    rc = modbus_read_bits(ctx, UT_BITS_ADDRESS,
+                          UT_BITS_NB_POINTS, tab_rp_bits);
+    printf("2/2 modbus_read_bits: ");
+    if (rc != UT_BITS_NB_POINTS) {
         printf("FAILED (nb points %d)\n", rc);
         goto close;
     }
 
     i = 0;
-    address = UT_COIL_STATUS_ADDRESS;
-    nb_points = UT_COIL_STATUS_NB_POINTS;
+    address = UT_BITS_ADDRESS;
+    nb_points = UT_BITS_NB_POINTS;
     while (nb_points > 0) {
         int nb_bits = (nb_points > 8) ? 8 : nb_points;
 
-        value = get_byte_from_bits(tab_rp_status, i*8, nb_bits);
-        if (value != UT_COIL_STATUS_TAB[i]) {
+        value = modbus_get_byte_from_bits(tab_rp_bits, i*8, nb_bits);
+        if (value != UT_BITS_TAB[i]) {
             printf("FAILED (%0X != %0X)\n",
-                   value, UT_COIL_STATUS_TAB[i]);
+                   value, UT_BITS_TAB[i]);
             goto close;
         }
 
@@ -142,28 +142,28 @@ int main(void)
         i++;
     }
     printf("OK\n");
-    /* End of multiple coils */
+    /* End of multiple bits */
 
-    /** INPUT STATUS **/
-    rc = read_input_status(&mb_param, SERVER_ID, UT_INPUT_STATUS_ADDRESS,
-                           UT_INPUT_STATUS_NB_POINTS, tab_rp_status);
-    printf("1/1 read_input_status: ");
+    /** DISCRETE INPUTS **/
+    rc = modbus_read_input_bits(ctx, UT_INPUT_BITS_ADDRESS,
+                                UT_INPUT_BITS_NB_POINTS, tab_rp_bits);
+    printf("1/1 modbus_read_input_bits: ");
 
-    if (rc != UT_INPUT_STATUS_NB_POINTS) {
+    if (rc != UT_INPUT_BITS_NB_POINTS) {
         printf("FAILED (nb points %d)\n", rc);
         goto close;
     }
 
     i = 0;
-    address = UT_INPUT_STATUS_ADDRESS;
-    nb_points = UT_INPUT_STATUS_NB_POINTS;
+    address = UT_INPUT_BITS_ADDRESS;
+    nb_points = UT_INPUT_BITS_NB_POINTS;
     while (nb_points > 0) {
         int nb_bits = (nb_points > 8) ? 8 : nb_points;
 
-        value = get_byte_from_bits(tab_rp_status, i*8, nb_bits);
-        if (value != UT_INPUT_STATUS_TAB[i]) {
+        value = modbus_get_byte_from_bits(tab_rp_bits, i*8, nb_bits);
+        if (value != UT_INPUT_BITS_TAB[i]) {
             printf("FAILED (%0X != %0X)\n",
-                   value, UT_INPUT_STATUS_TAB[i]);
+                   value, UT_INPUT_BITS_TAB[i]);
             goto close;
         }
 
@@ -175,9 +175,8 @@ int main(void)
     /** HOLDING REGISTERS **/
 
     /* Single register */
-    rc = preset_single_register(&mb_param, SERVER_ID,
-                                UT_HOLDING_REGISTERS_ADDRESS, 0x1234);
-    printf("1/2 preset_single_register: ");
+    rc = modbus_write_register(ctx, UT_REGISTERS_ADDRESS, 0x1234);
+    printf("1/2 modbus_write_register: ");
     if (rc == 1) {
         printf("OK\n");
     } else {
@@ -185,10 +184,9 @@ int main(void)
         goto close;
     }
 
-    rc = read_holding_registers(&mb_param, SERVER_ID,
-                                UT_HOLDING_REGISTERS_ADDRESS,
-                                1, tab_rp_registers);
-    printf("2/2 read_holding_registers: ");
+    rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
+                               1, tab_rp_registers);
+    printf("2/2 modbus_read_registers: ");
     if (rc != 1) {
         printf("FAILED (nb points %d)\n", rc);
         goto close;
@@ -203,33 +201,31 @@ int main(void)
     /* End of single register */
 
     /* Many registers */
-    rc = preset_multiple_registers(&mb_param, SERVER_ID,
-                                   UT_HOLDING_REGISTERS_ADDRESS,
-                                   UT_HOLDING_REGISTERS_NB_POINTS,
-                                   UT_HOLDING_REGISTERS_TAB);
-    printf("1/2 preset_multiple_registers: ");
-    if (rc == UT_HOLDING_REGISTERS_NB_POINTS) {
+    rc = modbus_write_registers(ctx, UT_REGISTERS_ADDRESS,
+                                UT_REGISTERS_NB_POINTS,
+                                UT_REGISTERS_TAB);
+    printf("1/2 modbus_write_registers: ");
+    if (rc == UT_REGISTERS_NB_POINTS) {
         printf("OK\n");
     } else {
         printf("FAILED\n");
         goto close;
     }
 
-    rc = read_holding_registers(&mb_param, SERVER_ID,
-                                UT_HOLDING_REGISTERS_ADDRESS,
-                                UT_HOLDING_REGISTERS_NB_POINTS,
-                                tab_rp_registers);
-    printf("2/2 read_holding_registers: ");
-    if (rc != UT_HOLDING_REGISTERS_NB_POINTS) {
+    rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
+                               UT_REGISTERS_NB_POINTS,
+                               tab_rp_registers);
+    printf("2/2 modbus_read_registers: ");
+    if (rc != UT_REGISTERS_NB_POINTS) {
         printf("FAILED (nb points %d)\n", rc);
         goto close;
     }
 
-    for (i=0; i < UT_HOLDING_REGISTERS_NB_POINTS; i++) {
-        if (tab_rp_registers[i] != UT_HOLDING_REGISTERS_TAB[i]) {
+    for (i=0; i < UT_REGISTERS_NB_POINTS; i++) {
+        if (tab_rp_registers[i] != UT_REGISTERS_TAB[i]) {
             printf("FAILED (%0X != %0X)\n",
                    tab_rp_registers[i],
-                   UT_HOLDING_REGISTERS_TAB[i]);
+                   UT_REGISTERS_TAB[i]);
             goto close;
         }
     }
@@ -238,11 +234,10 @@ int main(void)
 
 
     /** INPUT REGISTERS **/
-    rc = read_input_registers(&mb_param, SERVER_ID,
-                              UT_INPUT_REGISTERS_ADDRESS,
-                              UT_INPUT_REGISTERS_NB_POINTS,
-                              tab_rp_registers);
-    printf("1/1 read_input_registers: ");
+    rc = modbus_read_input_registers(ctx, UT_INPUT_REGISTERS_ADDRESS,
+                                     UT_INPUT_REGISTERS_NB_POINTS,
+                                     tab_rp_registers);
+    printf("1/1 modbus_read_input_registers: ");
     if (rc != UT_INPUT_REGISTERS_NB_POINTS) {
         printf("FAILED (nb points %d)\n", rc);
         goto close;
@@ -257,11 +252,10 @@ int main(void)
     }
     printf("OK\n");
 
-
     printf("\nTEST FLOATS\n");
     /** FLOAT **/
-    printf("1/2 Write float: ");
-    modbus_write_float(UT_REAL, tab_rp_registers);
+    printf("1/2 Set float: ");
+    modbus_set_float(UT_REAL, tab_rp_registers);
     if (tab_rp_registers[1] == (UT_IREAL >> 16) &&
         tab_rp_registers[0] == (UT_IREAL & 0xFFFF)) {
         printf("OK\n");
@@ -271,8 +265,8 @@ int main(void)
         goto close;
     }
 
-    printf("2/2 Read float: ");
-    real = modbus_read_float(tab_rp_registers);
+    printf("2/2 Get float: ");
+    real = modbus_get_float(tab_rp_registers);
     if (real == UT_REAL) {
         printf("OK\n");
     } else {
@@ -288,11 +282,21 @@ int main(void)
     /* The mapping begins at 0 and ending at address + nb_points so
      * the addresses below are not valid. */
 
-    rc = read_coil_status(&mb_param, SERVER_ID,
-                          UT_COIL_STATUS_ADDRESS,
-                          UT_COIL_STATUS_NB_POINTS + 1,
-                          tab_rp_status);
-    printf("* read_coil_status: ");
+    rc = modbus_read_bits(ctx, UT_BITS_ADDRESS,
+                          UT_BITS_NB_POINTS + 1,
+                          tab_rp_bits);
+    printf("* modbus_read_bits: ");
+    if (rc == -1 && errno == EMBXILADD) {
+        printf("OK\n");
+    } else {
+        printf("FAILED\n");
+        goto close;
+    }
+
+    rc = modbus_read_input_bits(ctx, UT_INPUT_BITS_ADDRESS,
+                                UT_INPUT_BITS_NB_POINTS + 1,
+                                tab_rp_bits);
+    printf("* modbus_read_input_bits: ");
     if (rc == -1 && errno == EMBXILADD)
         printf("OK\n");
     else {
@@ -300,11 +304,10 @@ int main(void)
         goto close;
     }
 
-    rc = read_input_status(&mb_param, SERVER_ID,
-                           UT_INPUT_STATUS_ADDRESS,
-                           UT_INPUT_STATUS_NB_POINTS + 1,
-                           tab_rp_status);
-    printf("* read_input_status: ");
+    rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
+                               UT_REGISTERS_NB_POINTS + 1,
+                               tab_rp_registers);
+    printf("* modbus_read_registers: ");
     if (rc == -1 && errno == EMBXILADD)
         printf("OK\n");
     else {
@@ -312,58 +315,42 @@ int main(void)
         goto close;
     }
 
-    rc = read_holding_registers(&mb_param, SERVER_ID,
-                                UT_HOLDING_REGISTERS_ADDRESS,
-                                UT_HOLDING_REGISTERS_NB_POINTS + 1,
+    rc = modbus_read_input_registers(ctx, UT_INPUT_REGISTERS_ADDRESS,
+                                     UT_INPUT_REGISTERS_NB_POINTS + 1,
+                                     tab_rp_registers);
+    printf("* modbus_read_input_registers: ");
+    if (rc == -1 && errno == EMBXILADD)
+        printf("OK\n");
+    else {
+        printf("FAILED\n");
+        goto close;
+    }
+
+    rc = modbus_write_bit(ctx, UT_BITS_ADDRESS + UT_BITS_NB_POINTS, ON);
+    printf("* modbus_write_bit: ");
+    if (rc == -1 && errno == EMBXILADD) {
+        printf("OK\n");
+    } else {
+        printf("FAILED\n");
+        goto close;
+    }
+
+    rc = modbus_write_bits(ctx, UT_BITS_ADDRESS + UT_BITS_NB_POINTS,
+                           UT_BITS_NB_POINTS,
+                           tab_rp_bits);
+    printf("* modbus_write_coils: ");
+    if (rc == -1 && errno == EMBXILADD) {
+        printf("OK\n");
+    } else {
+        printf("FAILED\n");
+        goto close;
+    }
+
+    rc = modbus_write_registers(ctx, UT_REGISTERS_ADDRESS +
+                                UT_REGISTERS_NB_POINTS,
+                                UT_REGISTERS_NB_POINTS,
                                 tab_rp_registers);
-    printf("* read_holding_registers: ");
-    if (rc == -1 && errno == EMBXILADD)
-        printf("OK\n");
-    else {
-        printf("FAILED\n");
-        goto close;
-    }
-
-    rc = read_input_registers(&mb_param, SERVER_ID,
-                              UT_INPUT_REGISTERS_ADDRESS,
-                              UT_INPUT_REGISTERS_NB_POINTS + 1,
-                              tab_rp_registers);
-    printf("* read_input_registers: ");
-    if (rc == -1 && errno == EMBXILADD)
-        printf("OK\n");
-    else {
-        printf("FAILED\n");
-        goto close;
-    }
-
-    rc = force_single_coil(&mb_param, SERVER_ID,
-                           UT_COIL_STATUS_ADDRESS + UT_COIL_STATUS_NB_POINTS,
-                           ON);
-    printf("* force_single_coil: ");
-    if (rc == -1 && errno == EMBXILADD) {
-        printf("OK\n");
-    } else {
-        printf("FAILED\n");
-        goto close;
-    }
-
-    rc = force_multiple_coils(&mb_param, SERVER_ID,
-                              UT_COIL_STATUS_ADDRESS + UT_COIL_STATUS_NB_POINTS,
-                              UT_COIL_STATUS_NB_POINTS,
-                              tab_rp_status);
-    printf("* force_multiple_coils: ");
-    if (rc == -1 && errno == EMBXILADD) {
-        printf("OK\n");
-    } else {
-        printf("FAILED\n");
-        goto close;
-    }
-
-    rc = preset_multiple_registers(&mb_param, SERVER_ID,
-                                   UT_HOLDING_REGISTERS_ADDRESS + UT_HOLDING_REGISTERS_NB_POINTS,
-                                   UT_HOLDING_REGISTERS_NB_POINTS,
-                                   tab_rp_registers);
-    printf("* preset_multiple_registers: ");
+    printf("* modbus_write_registers: ");
     if (rc == -1 && errno == EMBXILADD) {
         printf("OK\n");
     } else {
@@ -375,11 +362,9 @@ int main(void)
     /** TOO MANY DATA **/
     printf("\nTEST TOO MANY DATA ERROR:\n");
 
-    rc = read_coil_status(&mb_param, SERVER_ID,
-                          UT_COIL_STATUS_ADDRESS,
-                          MAX_STATUS + 1,
-                          tab_rp_status);
-    printf("* read_coil_status: ");
+    rc = modbus_read_bits(ctx, UT_BITS_ADDRESS, MODBUS_MAX_BITS + 1,
+                          tab_rp_bits);
+    printf("* modbus_read_bits: ");
     if (rc == -1 && errno == EMBMDATA) {
         printf("OK\n");
     } else {
@@ -387,11 +372,10 @@ int main(void)
         goto close;
     }
 
-    rc = read_input_status(&mb_param, SERVER_ID,
-                           UT_INPUT_STATUS_ADDRESS,
-                           MAX_STATUS + 1,
-                           tab_rp_status);
-    printf("* read_input_status: ");
+    rc = modbus_read_input_bits(ctx, UT_INPUT_BITS_ADDRESS,
+                                MODBUS_MAX_BITS + 1,
+                                tab_rp_bits);
+    printf("* modbus_read_input_bits: ");
     if (rc == -1 && errno == EMBMDATA) {
         printf("OK\n");
     } else {
@@ -399,47 +383,43 @@ int main(void)
         goto close;
     }
 
-    rc = read_holding_registers(&mb_param, SERVER_ID,
-                                UT_HOLDING_REGISTERS_ADDRESS,
-                                MAX_REGISTERS + 1,
+    rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
+                               MODBUS_MAX_REGISTERS + 1,
+                               tab_rp_registers);
+    printf("* modbus_read_registers: ");
+    if (rc == -1 && errno == EMBMDATA) {
+        printf("OK\n");
+    } else {
+        printf("FAILED\n");
+        goto close;
+    }
+
+    rc = modbus_read_input_registers(ctx, UT_INPUT_REGISTERS_ADDRESS,
+                                     MODBUS_MAX_REGISTERS + 1,
+                                     tab_rp_registers);
+    printf("* modbus_read_input_registers: ");
+    if (rc == -1 && errno == EMBMDATA) {
+        printf("OK\n");
+    } else {
+        printf("FAILED\n");
+        goto close;
+    }
+
+    rc = modbus_write_bits(ctx, UT_BITS_ADDRESS,
+                           MODBUS_MAX_BITS + 1,
+                           tab_rp_bits);
+    printf("* modbus_write_bits: ");
+    if (rc == -1 && errno == EMBMDATA) {
+        printf("OK\n");
+    } else {
+        goto close;
+        printf("FAILED\n");
+    }
+
+    rc = modbus_write_registers(ctx, UT_REGISTERS_ADDRESS,
+                                MODBUS_MAX_REGISTERS + 1,
                                 tab_rp_registers);
-    printf("* read_holding_registers: ");
-    if (rc == -1 && errno == EMBMDATA) {
-        printf("OK\n");
-    } else {
-        printf("FAILED\n");
-        goto close;
-    }
-
-    rc = read_input_registers(&mb_param, SERVER_ID,
-                              UT_INPUT_REGISTERS_ADDRESS,
-                              MAX_REGISTERS + 1,
-                              tab_rp_registers);
-    printf("* read_input_registers: ");
-    if (rc == -1 && errno == EMBMDATA) {
-        printf("OK\n");
-    } else {
-        printf("FAILED\n");
-        goto close;
-    }
-
-    rc = force_multiple_coils(&mb_param, SERVER_ID,
-                              UT_COIL_STATUS_ADDRESS,
-                              MAX_STATUS + 1,
-                              tab_rp_status);
-    printf("* force_multiple_coils: ");
-    if (rc == -1 && errno == EMBMDATA) {
-        printf("OK\n");
-    } else {
-        goto close;
-        printf("FAILED\n");
-    }
-
-    rc = preset_multiple_registers(&mb_param, SERVER_ID,
-                                   UT_HOLDING_REGISTERS_ADDRESS,
-                                   MAX_REGISTERS + 1,
-                                   tab_rp_registers);
-    printf("* preset_multiple_registers: ");
+    printf("* modbus_write_registers: ");
     if (rc == -1 && errno == EMBMDATA) {
         printf("OK\n");
     } else {
@@ -449,13 +429,12 @@ int main(void)
 
     /** SLAVE REPLY **/
     printf("\nTEST SLAVE REPLY:\n");
-
-    rc = read_holding_registers(&mb_param, 18,
-                                UT_HOLDING_REGISTERS_ADDRESS,
-                                UT_HOLDING_REGISTERS_NB_POINTS,
-                                tab_rp_registers);
+    modbus_set_slave(ctx, 18);
+    rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
+                               UT_REGISTERS_NB_POINTS,
+                               tab_rp_registers);
     printf("1/3 No or response from slave %d: ", 18);
-    if (mb_param.type_com == RTU) {
+    if (is_mode_rtu) {
         /* No response in RTU mode */
         if (rc == -1 && errno == ETIMEDOUT) {
             printf("OK\n");
@@ -465,7 +444,7 @@ int main(void)
         }
     } else {
         /* Response in TCP mode */
-        if (rc == UT_HOLDING_REGISTERS_NB_POINTS) {
+        if (rc == UT_REGISTERS_NB_POINTS) {
             printf("OK\n");
         } else {
             printf("FAILED\n");
@@ -473,30 +452,36 @@ int main(void)
         }
     }
 
-    rc = read_holding_registers(&mb_param, MODBUS_BROADCAST_ADDRESS,
-                                UT_HOLDING_REGISTERS_ADDRESS,
-                                UT_HOLDING_REGISTERS_NB_POINTS,
-                                tab_rp_registers);
+    modbus_set_slave(ctx, MODBUS_BROADCAST_ADDRESS);
+    rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
+                               UT_REGISTERS_NB_POINTS,
+                               tab_rp_registers);
     printf("2/3 Reply after a broadcast query: ");
-    if (rc == UT_HOLDING_REGISTERS_NB_POINTS) {
+    if (rc == UT_REGISTERS_NB_POINTS) {
         printf("OK\n");
     } else {
         printf("FAILED\n");
         goto close;
     }
 
+    /* Restore slave */
+    if (is_mode_rtu) {
+        modbus_set_slave(ctx, SERVER_ID);
+    } else {
+        modbus_set_slave(ctx, MODBUS_TCP_SLAVE);
+    }
+
     /* Save original timeout */
-    modbus_get_timeout_begin(&mb_param, &timeout_begin_old);
+    modbus_get_timeout_begin(ctx, &timeout_begin_old);
 
     /* Define a new and too short timeout */
     timeout_begin_new.tv_sec = 0;
     timeout_begin_new.tv_usec = 0;
-    modbus_set_timeout_begin(&mb_param, &timeout_begin_new);
+    modbus_set_timeout_begin(ctx, &timeout_begin_new);
 
-    rc = read_holding_registers(&mb_param, SERVER_ID,
-                                UT_HOLDING_REGISTERS_ADDRESS,
-                                UT_HOLDING_REGISTERS_NB_POINTS,
-                                tab_rp_registers);
+    rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
+                               UT_REGISTERS_NB_POINTS,
+                               tab_rp_registers);
     printf("3/3 Too short timeout: ");
     if (rc == -1 && errno == ETIMEDOUT) {
         printf("OK\n");
@@ -506,19 +491,18 @@ int main(void)
     }
 
     /* Restore original timeout */
-    modbus_set_timeout_begin(&mb_param, &timeout_begin_old);
+    modbus_set_timeout_begin(ctx, &timeout_begin_old);
 
     /** BAD RESPONSE **/
     printf("\nTEST BAD RESPONSE ERROR:\n");
 
     /* Allocate only the required space */
     tab_rp_registers_bad = (uint16_t *) malloc(
-        UT_HOLDING_REGISTERS_NB_POINTS_SPECIAL * sizeof(uint16_t));
-    rc = read_holding_registers(&mb_param, SERVER_ID,
-                                UT_HOLDING_REGISTERS_ADDRESS,
-                                UT_HOLDING_REGISTERS_NB_POINTS_SPECIAL,
-                                tab_rp_registers_bad);
-    printf("* read_holding_registers: ");
+        UT_REGISTERS_NB_POINTS_SPECIAL * sizeof(uint16_t));
+    rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
+                               UT_REGISTERS_NB_POINTS_SPECIAL,
+                               tab_rp_registers_bad);
+    printf("* modbus_read_registers: ");
     if (rc == -1 && errno == EMBBADDATA) {
         printf("OK\n");
     } else {
@@ -531,11 +515,12 @@ int main(void)
 
 close:
     /* Free the memory */
-    free(tab_rp_status);
+    free(tab_rp_bits);
     free(tab_rp_registers);
 
     /* Close the connection */
-    modbus_close(&mb_param);
+    modbus_close(ctx);
+    modbus_free(ctx);
 
     return 0;
 }

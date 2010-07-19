@@ -26,13 +26,15 @@
 
 #define NB_CONNECTION    5
 
+modbus_t *ctx = NULL;
 int slave_socket;
-modbus_mapping_t mb_mapping;
+modbus_mapping_t *mb_mapping;
 
 static void close_sigint(int dummy)
 {
-    modbus_slave_close_tcp(slave_socket);
-    modbus_mapping_free(&mb_mapping);
+    close(slave_socket);
+    modbus_free(ctx);
+    modbus_mapping_free(mb_mapping);
 
     exit(dummy);
 }
@@ -40,7 +42,6 @@ static void close_sigint(int dummy)
 int main(void)
 {
     int master_socket;
-    modbus_param_t mb_param;
     int rc;
     fd_set refset;
     fd_set rdset;
@@ -48,16 +49,18 @@ int main(void)
     /* Maximum file descriptor number */
     int fdmax;
 
-    modbus_init_tcp(&mb_param, "127.0.0.1", 1502);
+    ctx = modbus_new_tcp("127.0.0.1", 1502);
 
-    rc = modbus_mapping_new(&mb_mapping, MAX_STATUS, 0, MAX_REGISTERS, 0);
-    if (rc == -1) {
+    mb_mapping = modbus_mapping_new(MODBUS_MAX_BITS, 0,
+                                    MODBUS_MAX_REGISTERS, 0);
+    if (mb_mapping == NULL) {
         fprintf(stderr, "Failed to allocate the mapping: %s\n",
                 modbus_strerror(errno));
+        modbus_free(ctx);
         return -1;
     }
 
-    slave_socket = modbus_slave_listen_tcp(&mb_param, NB_CONNECTION);
+    slave_socket = modbus_listen(ctx, NB_CONNECTION);
 
     signal(SIGINT, close_sigint);
 
@@ -105,15 +108,15 @@ int main(void)
                     }
                 } else {
                     /* An already connected master has sent a new query */
-                    uint8_t query[MAX_MESSAGE_LENGTH];
+                    uint8_t query[MODBUS_MAX_ADU_LENGTH_TCP];
 
-                    rc = modbus_slave_receive(&mb_param, master_socket, query);
+                    rc = modbus_receive(ctx, master_socket, query);
                     if (rc != -1) {
-                        modbus_slave_manage(&mb_param, query, rc, &mb_mapping);
+                        modbus_reply(ctx, query, rc, mb_mapping);
                     } else {
                         /* Connection closed by the client, end of server */
                         printf("Connection closed on socket %d\n", master_socket);
-                        modbus_slave_close_tcp(master_socket);
+                        close(master_socket);
 
                         /* Remove from reference set */
                         FD_CLR(master_socket, &refset);
