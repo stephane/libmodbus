@@ -2,37 +2,37 @@ Compilation
 -----------
 
 After installation, you can use pkg-config to compile these tests.
-For example, to compile random-test-slave run:
+For example, to compile random-test-server run:
 
-gcc random-test-slave.c -o random-test-slave `pkg-config --libs --cflags libmodbus`
+gcc random-test-server.c -o random-test-server `pkg-config --libs --cflags libmodbus`
 
-random-test-slave
+random-test-server
 -----------------
-It's necessary to launch this server before run random-test-master. By
+It's necessary to launch this server before run random-test-client. By
 default, it receives and responses to Modbus query on the localhost
 and port 1502.
 
-random-test-master
+random-test-client
 ------------------
 This programm sends many different queries to a large range of
-addresses and values to test the communication between the master and
-the slave.
+addresses and values to test the communication between the client and
+the server.
 
-unit-test-slave
-unit-test-master
+unit-test-server
+unit-test-client
 ----------------
 By default, this program sends some queries with the values defined in
 unit-test.h and checks the responses. These programs are useful to
 test the protocol implementation.
 
-bandwidth-slave-one
-bandwidth-slave-many-up
-bandwidth-master
+bandwidth-server-one
+bandwidth-server-many-up
+bandwidth-client
 -----------------------
 It returns some very useful informations about the performance of
-transfert rate between the slave and the master.
+transfert rate between the server and the client.
 
-- bandwidth-slave-one: it can handles only one connection with a master.
-- bandwidth-slave-many-up: it opens a connection each time a new master asks
-  for, but the number of connection is limited. The same slave process handles
+- bandwidth-server-one: it can handles only one connection with a client.
+- bandwidth-server-many-up: it opens a connection each time a new client asks
+  for, but the number of connection is limited. The same server process handles
   all the connections.

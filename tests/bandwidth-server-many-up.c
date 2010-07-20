@@ -27,12 +27,12 @@
 #define NB_CONNECTION    5
 
 modbus_t *ctx = NULL;
-int slave_socket;
+int server_socket;
 modbus_mapping_t *mb_mapping;
 
 static void close_sigint(int dummy)
 {
-    close(slave_socket);
+    close(server_socket);
     modbus_free(ctx);
     modbus_mapping_free(mb_mapping);
 
@@ -60,22 +60,22 @@ int main(void)
         return -1;
     }
 
-    slave_socket = modbus_listen(ctx, NB_CONNECTION);
+    server_socket = modbus_listen(ctx, NB_CONNECTION);
 
     signal(SIGINT, close_sigint);
 
     /* Clear the reference set of socket */
     FD_ZERO(&refset);
-    /* Add the slave socket */
-    FD_SET(slave_socket, &refset);
+    /* Add the server socket */
+    FD_SET(server_socket, &refset);
 
     /* Keep track of the max file descriptor */
-    fdmax = slave_socket;
+    fdmax = server_socket;
 
     for (;;) {
         rdset = refset;
         if (select(fdmax+1, &rdset, NULL, NULL, NULL) == -1) {
-            perror("Slave select() failure.");
+            perror("Server select() failure.");
             close_sigint(1);
         }
 
@@ -84,7 +84,7 @@ int main(void)
         for (master_socket = 0; master_socket <= fdmax; master_socket++) {
 
             if (FD_ISSET(master_socket, &rdset)) {
-                if (master_socket == slave_socket) {
+                if (master_socket == server_socket) {
                     /* A client is asking a new connection */
                     socklen_t addrlen;
                     struct sockaddr_in clientaddr;
@@ -93,7 +93,7 @@ int main(void)
                     /* Handle new connections */
                     addrlen = sizeof(clientaddr);
                     memset(&clientaddr, 0, sizeof(clientaddr));
-                    newfd = accept(slave_socket, (struct sockaddr *)&clientaddr, &addrlen);
+                    newfd = accept(server_socket, (struct sockaddr *)&clientaddr, &addrlen);
                     if (newfd == -1) {
                         perror("Server accept() error");
                     } else {
