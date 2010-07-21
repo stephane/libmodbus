@@ -204,7 +204,7 @@ int main(void)
     rc = modbus_write_registers(ctx, UT_REGISTERS_ADDRESS,
                                 UT_REGISTERS_NB_POINTS,
                                 UT_REGISTERS_TAB);
-    printf("1/2 modbus_write_registers: ");
+    printf("1/3 modbus_write_registers: ");
     if (rc == UT_REGISTERS_NB_POINTS) {
         printf("OK\n");
     } else {
@@ -215,7 +215,7 @@ int main(void)
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
                                UT_REGISTERS_NB_POINTS,
                                tab_rp_registers);
-    printf("2/2 modbus_read_registers: ");
+    printf("2/3 modbus_read_registers: ");
     if (rc != UT_REGISTERS_NB_POINTS) {
         printf("FAILED (nb points %d)\n", rc);
         goto close;
@@ -230,6 +230,16 @@ int main(void)
         }
     }
     printf("OK\n");
+
+    rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
+                               0, tab_rp_registers);
+    printf("3/3 modbus_read_registers (0): ");
+    if (rc != 0) {
+        printf("FAILED (nb points %d)\n", rc);
+        goto close;
+    }
+    printf("OK\n");
+
     /* End of many registers */
 
 
