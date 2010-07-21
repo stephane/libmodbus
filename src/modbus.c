@@ -479,7 +479,7 @@ static int send_msg(modbus_t *ctx, uint8_t *req, int req_length)
 }
 
 /* Computes the length of the header following the function code */
-static uint8_t compute_req_length_header(int function)
+static uint8_t compute_request_length_header(int function)
 {
     int length;
 
@@ -500,7 +500,7 @@ static uint8_t compute_req_length_header(int function)
 }
 
 /* Computes the length of the data to write in the request */
-static int compute_req_length_data(modbus_t *ctx, uint8_t *msg)
+static int compute_request_length_data(modbus_t *ctx, uint8_t *msg)
 {
     int function = msg[TAB_HEADER_LENGTH[ctx->type_com]];
     int length;
@@ -558,7 +558,7 @@ static int compute_req_length_data(modbus_t *ctx, uint8_t *msg)
         }                                                               \
     }
 
-/* Waits a reply from a modbus server or a request from a modbus client.
+/* Waits a response from a modbus server or a request from a modbus client.
    This function blocks if there is no replies (3 timeouts).
 
    The argument msg_length_computed must be set to MSG_LENGTH_UNDEFINED if
@@ -581,7 +581,7 @@ static int receive_msg(modbus_t *ctx, int msg_length_computed, uint8_t *msg)
     struct timeval tv;
     int length_to_read;
     uint8_t *p_msg;
-    enum { FUNCTION, BYTE, COMPLETE };
+    enum { FUNCTION, DATA, COMPLETE };
     int state;
     int msg_length = 0;
 
@@ -604,7 +604,8 @@ static int receive_msg(modbus_t *ctx, int msg_length_computed, uint8_t *msg)
 
         /* The message length is undefined (request receiving) so we need to
          * analyse the message step by step.  At the first step, we want to
-         * reach the function code because all packets have that information. */
+         * reach the function code because all packets contains this
+         * information. */
         state = FUNCTION;
         msg_length_computed = TAB_HEADER_LENGTH[ctx->type_com] + 1;
     } else {
@@ -660,16 +661,16 @@ static int receive_msg(modbus_t *ctx, int msg_length_computed, uint8_t *msg)
             switch (state) {
             case FUNCTION:
                 /* Function code position */
-                length_to_read = compute_req_length_header(
+                length_to_read = compute_request_length_header(
                     msg[TAB_HEADER_LENGTH[ctx->type_com]]);
                 msg_length_computed += length_to_read;
                 /* It's useless to check the value of
                    msg_length_computed in this case (only
                    defined values are used). */
-                state = BYTE;
+                state = DATA;
                 break;
-            case BYTE:
-                length_to_read = compute_req_length_data(ctx, msg);
+            case DATA:
+                length_to_read = compute_request_length_data(ctx, msg);
                 msg_length_computed += length_to_read;
                 if (msg_length_computed > TAB_MAX_ADU_LENGTH[ctx->type_com]) {
                     errno = EMBBADDATA;
@@ -717,8 +718,8 @@ static int receive_msg(modbus_t *ctx, int msg_length_computed, uint8_t *msg)
    etablished with the master device in argument or -1 to use the internal one
    of modbus_t.
 
-   The receive_msg_req function shall return the request received and its
-   byte length if successul. Otherwise, it shall return -1 and errno is set. */
+   The function shall return the request received and its byte length if
+   successul. Otherwise, it shall return -1 and errno is set. */
 int modbus_receive(modbus_t *ctx, int sockfd, uint8_t *req)
 {
     if (sockfd != -1) {
@@ -1438,7 +1439,7 @@ int modbus_report_slave_id(modbus_t *ctx, uint8_t *data_dest)
            additional data */
         rc = receive_msg_req(ctx, req, rsp);
         if (rc == -1)
-            return rc;
+            return -1;
 
         offset = TAB_HEADER_LENGTH[ctx->type_com] - 1;
         offset_end = offset + rc;
