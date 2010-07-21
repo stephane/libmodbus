@@ -443,7 +443,7 @@ int main(void)
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
                                UT_REGISTERS_NB_POINTS,
                                tab_rp_registers);
-    printf("1/3 No or response from slave %d: ", 18);
+    printf("1/4 No or response from slave %d: ", 18);
     if (is_mode_rtu) {
         /* No response in RTU mode */
         if (rc == -1 && errno == ETIMEDOUT) {
@@ -466,7 +466,7 @@ int main(void)
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
                                UT_REGISTERS_NB_POINTS,
                                tab_rp_registers);
-    printf("2/3 Reply after a broadcast query: ");
+    printf("2/4 Reply after a broadcast query: ");
     if (rc == UT_REGISTERS_NB_POINTS) {
         printf("OK\n");
     } else {
@@ -481,6 +481,22 @@ int main(void)
         modbus_set_slave(ctx, MODBUS_TCP_SLAVE);
     }
 
+    printf("3/4 Report slave ID: \n");
+    /* tab_rp_bits is used to store bytes */
+    rc = modbus_report_slave_id(ctx, tab_rp_bits);
+    if (rc == -1) {
+        printf("FAILED\n");
+        goto close;
+    }
+
+    if ((is_mode_rtu && tab_rp_bits[0] == SERVER_ID)
+        || tab_rp_bits[0] == 0xFF) {
+        printf("OK\n");
+    } else {
+        printf("FAILED\n");
+        goto close;
+    }
+
     /* Save original timeout */
     modbus_get_timeout_begin(ctx, &timeout_begin_old);
 
@@ -492,7 +508,7 @@ int main(void)
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
                                UT_REGISTERS_NB_POINTS,
                                tab_rp_registers);
-    printf("3/3 Too short timeout: ");
+    printf("4/4 Too short timeout: ");
     if (rc == -1 && errno == ETIMEDOUT) {
         printf("OK\n");
     } else {

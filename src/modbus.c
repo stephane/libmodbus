@@ -479,7 +479,7 @@ static int send_msg(modbus_t *ctx, uint8_t *req, int req_length)
 }
 
 /* Computes the length of the header following the function code */
-static uint8_t compute_request_length_header(int function)
+static uint8_t compute_indication_length_header(int function)
 {
     int length;
 
@@ -492,6 +492,28 @@ static uint8_t compute_request_length_header(int function)
         /* Multiple write */
         length = 5;
     else if (function == FC_REPORT_SLAVE_ID)
+        length = 0;
+    else
+        length = 0;
+
+    return length;
+}
+
+/* Computes the length of the header following the function code */
+static uint8_t compute_confirmation_length_header(int function)
+{
+    int length;
+
+    if (function <= FC_WRITE_SINGLE_COIL ||
+        function == FC_WRITE_SINGLE_REGISTER)
+        /* Read and single write */
+        length = 4;
+    else if (function == FC_WRITE_MULTIPLE_COILS ||
+             function == FC_WRITE_MULTIPLE_REGISTERS)
+        /* Multiple write */
+        length = 5;
+    else if (function == FC_REPORT_SLAVE_ID)
+        /* Report slave_ID */
         length = 1;
     else
         length = 0;
@@ -500,17 +522,17 @@ static uint8_t compute_request_length_header(int function)
 }
 
 /* Computes the length of the data to write in the request */
-static int compute_request_length_data(modbus_t *ctx, uint8_t *msg)
+static int compute_msg_length_data(modbus_t *ctx, uint8_t *msg)
 {
     int function = msg[TAB_HEADER_LENGTH[ctx->type_com]];
     int length;
 
     if (function == FC_WRITE_MULTIPLE_COILS ||
-        function == FC_WRITE_MULTIPLE_REGISTERS)
+        function == FC_WRITE_MULTIPLE_REGISTERS) {
         length = msg[TAB_HEADER_LENGTH[ctx->type_com] + 5];
-    else if (function == FC_REPORT_SLAVE_ID)
+    } else if (function == FC_REPORT_SLAVE_ID) {
         length = msg[TAB_HEADER_LENGTH[ctx->type_com] + 1];
-    else
+    } else
         length = 0;
 
     length += TAB_CHECKSUM_LENGTH[ctx->type_com];
@@ -573,7 +595,14 @@ static int compute_request_length_data(modbus_t *ctx, uint8_t *msg)
    - ETIMEDOUT
    - read() or recv() error codes
 */
-static int receive_msg(modbus_t *ctx, int msg_length_computed, uint8_t *msg)
+enum {
+    /* Request message on the server side */
+    MSG_INDICATION,
+    /* Request message on the client side */
+    MSG_CONFIRMATION
+};
+
+static int receive_msg(modbus_t *ctx, int msg_length_computed, uint8_t *msg, int type)
 {
     int s_rc;
     int read_rc;
@@ -586,11 +615,16 @@ static int receive_msg(modbus_t *ctx, int msg_length_computed, uint8_t *msg)
     int msg_length = 0;
 
     if (ctx->debug) {
+        if (type == MSG_INDICATION) {
+            printf("Waiting for a indication");
+        } else {
+            printf("Waiting for a confirmation");
+        }
+
         if (msg_length_computed == MSG_LENGTH_UNDEFINED)
-            printf("Waiting for a message...\n");
+            printf("...\n");
         else
-            printf("Waiting for a message (%d bytes)...\n",
-                   msg_length_computed);
+            printf("(%d bytes)...\n", msg_length_computed);
     }
 
     /* Add a file descriptor to the set */
@@ -661,8 +695,13 @@ static int receive_msg(modbus_t *ctx, int msg_length_computed, uint8_t *msg)
             switch (state) {
             case FUNCTION:
                 /* Function code position */
-                length_to_read = compute_request_length_header(
-                    msg[TAB_HEADER_LENGTH[ctx->type_com]]);
+                if (type == MSG_INDICATION) {
+                    length_to_read = compute_indication_length_header(
+                        msg[TAB_HEADER_LENGTH[ctx->type_com]]);
+                } else {
+                    length_to_read = compute_confirmation_length_header(
+                        msg[TAB_HEADER_LENGTH[ctx->type_com]]);
+                }
                 msg_length_computed += length_to_read;
                 /* It's useless to check the value of
                    msg_length_computed in this case (only
@@ -670,7 +709,7 @@ static int receive_msg(modbus_t *ctx, int msg_length_computed, uint8_t *msg)
                 state = DATA;
                 break;
             case DATA:
-                length_to_read = compute_request_length_data(ctx, msg);
+                length_to_read = compute_msg_length_data(ctx, msg);
                 msg_length_computed += length_to_read;
                 if (msg_length_computed > TAB_MAX_ADU_LENGTH[ctx->type_com]) {
                     errno = EMBBADDATA;
@@ -727,7 +766,7 @@ int modbus_receive(modbus_t *ctx, int sockfd, uint8_t *req)
     }
 
     /* The length of the request to receive isn't known. */
-    return receive_msg(ctx, MSG_LENGTH_UNDEFINED, req);
+    return receive_msg(ctx, MSG_LENGTH_UNDEFINED, req, MSG_INDICATION);
 }
 
 /* Receives the response and checks values (and checksum in RTU).
@@ -744,7 +783,7 @@ static int receive_msg_req(modbus_t *ctx, uint8_t *req, uint8_t *rsp)
     int offset = TAB_HEADER_LENGTH[ctx->type_com];
 
     rsp_length_computed = compute_response_length(ctx, req);
-    rc = receive_msg(ctx, rsp_length_computed, rsp);
+    rc = receive_msg(ctx, rsp_length_computed, rsp, MSG_CONFIRMATION);
     if (rc != -1) {
         /* GOOD RESPONSE */
         int req_nb_value;
@@ -776,7 +815,7 @@ static int receive_msg_req(modbus_t *ctx, uint8_t *req, uint8_t *rsp)
             break;
         case FC_REPORT_SLAVE_ID:
             /* Report slave ID (bytes received) */
-            req_nb_value = rsp_nb_value = rc;
+            req_nb_value = rsp_nb_value = rsp[offset + 1];
             break;
         default:
             /* 1 Write functions & others */
@@ -1088,8 +1127,15 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         }
     }
         break;
-    case FC_READ_EXCEPTION_STATUS:
     case FC_REPORT_SLAVE_ID:
+        resp_length = build_response_basis(ctx, &sft, rsp);
+        /* 2 bytes */
+        rsp[resp_length++] = 2;
+        rsp[resp_length++] = ctx->slave;
+        /* Slave is ON */
+        rsp[resp_length++] = 0xFF;
+        break;
+    case FC_READ_EXCEPTION_STATUS:
         if (ctx->debug) {
             fprintf(stderr, "FIXME Not implemented\n");
         }
@@ -1127,11 +1173,11 @@ static int read_io_status(modbus_t *ctx, int function,
         if (rc == -1)
             return -1;
 
-        offset = TAB_HEADER_LENGTH[ctx->type_com];
+        offset = TAB_HEADER_LENGTH[ctx->type_com] + 2;
         offset_end = offset + rc;
         for (i = offset; i < offset_end; i++) {
             /* Shift reg hi_byte to temp */
-            temp = rsp[i + 2];
+            temp = rsp[i];
 
             for (bit = 0x01; (bit & 0xff) && (pos < nb);) {
                 data_dest[pos++] = (temp & bit) ? TRUE : FALSE;
@@ -1410,18 +1456,12 @@ int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *data
 }
 
 /* Send a request to get the slave ID of the device (only available in serial
- * communication) */
+ * communication). */
 int modbus_report_slave_id(modbus_t *ctx, uint8_t *data_dest)
 {
     int rc;
     int req_length;
     uint8_t req[MIN_REQ_LENGTH];
-
-    if (ctx->type_com != RTU) {
-        /* Only for serial communications */
-        errno = EINVAL;
-        return -1;
-    }
 
     req_length = build_request_basis(ctx, FC_REPORT_SLAVE_ID, 0, 0, req);
 
@@ -1432,7 +1472,6 @@ int modbus_report_slave_id(modbus_t *ctx, uint8_t *data_dest)
     if (rc > 0) {
         int i;
         int offset;
-        int offset_end;
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
         /* Byte count, slave id, run indicator status,
@@ -1441,11 +1480,11 @@ int modbus_report_slave_id(modbus_t *ctx, uint8_t *data_dest)
         if (rc == -1)
             return -1;
 
-        offset = TAB_HEADER_LENGTH[ctx->type_com] - 1;
-        offset_end = offset + rc;
+        offset = TAB_HEADER_LENGTH[ctx->type_com] + 2;
 
-        for (i = offset; i < offset_end; i++)
-            data_dest[i] = rsp[i];
+        for (i=0; i < rc; i++) {
+            data_dest[i] = rsp[offset + i];
+        }
     }
 
     return rc;

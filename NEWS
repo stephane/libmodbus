@@ -1,6 +1,7 @@
 libmodbus 2.1.1 (2010-XX-XX)
 ============================
 
+- New API
 - Remove the internal function set_message_length_tcp
 - Restore slave ID (server ID) argument in functions
 - Error conventions of POSIX systems and error recover
@@ -13,6 +14,7 @@ libmodbus 2.1.1 (2010-XX-XX)
 - Fix #591142 - Slave id check should be disabled in TCP connection
   Reported by aladdinwu.
 - Parity setting is now a single char ('N', 'E' or 'O')
+- Report slave ID server side
 
 libmodbus 2.1.0 (2010-03-24)
 ============================

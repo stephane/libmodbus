@@ -39,10 +39,11 @@ int main(void)
     modbus_set_debug(ctx, TRUE);
     modbus_set_error_recovery(ctx, TRUE);
 
-    mb_mapping = modbus_mapping_new(UT_BITS_ADDRESS + UT_BITS_NB_POINTS,
-                                    UT_INPUT_BITS_ADDRESS + UT_INPUT_BITS_NB_POINTS,
-                                    UT_REGISTERS_ADDRESS + UT_REGISTERS_NB_POINTS,
-                                    UT_INPUT_REGISTERS_ADDRESS + UT_INPUT_REGISTERS_NB_POINTS);
+    mb_mapping = modbus_mapping_new(
+        UT_BITS_ADDRESS + UT_BITS_NB_POINTS,
+        UT_INPUT_BITS_ADDRESS + UT_INPUT_BITS_NB_POINTS,
+        UT_REGISTERS_ADDRESS + UT_REGISTERS_NB_POINTS,
+        UT_INPUT_REGISTERS_ADDRESS + UT_INPUT_REGISTERS_NB_POINTS);
     if (mb_mapping == NULL) {
         fprintf(stderr, "Failed to allocate the mapping: %s\n",
                 modbus_strerror(errno));
@@ -72,7 +73,8 @@ int main(void)
 
         rc = modbus_receive(ctx, -1, query);
         if (rc > 0) {
-            if (((query[HEADER_LENGTH_TCP + 3] << 8) + query[HEADER_LENGTH_TCP + 4])
+            if (((query[HEADER_LENGTH_TCP + 3] << 8) +
+                 query[HEADER_LENGTH_TCP + 4])
                 == UT_REGISTERS_NB_POINTS_SPECIAL) {
                 /* Change the number of values (offset
                    TCP = 6) */
