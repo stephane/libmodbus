@@ -624,7 +624,7 @@ static int receive_msg(modbus_t *ctx, int msg_length_computed, uint8_t *msg, int
         if (msg_length_computed == MSG_LENGTH_UNDEFINED)
             printf("...\n");
         else
-            printf("(%d bytes)...\n", msg_length_computed);
+            printf(" (%d bytes)...\n", msg_length_computed);
     }
 
     /* Add a file descriptor to the set */
