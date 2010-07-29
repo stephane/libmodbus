@@ -45,11 +45,16 @@
 #include <limits.h>
 #include <fcntl.h>
 
+/* Add this for macros that defined unix flavor */
+#if (defined(__unix__) || defined(unix)) && !defined(USG)
+#include <sys/param.h>
+#endif
+
 /* TCP */
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
-#if defined(__FreeBSD__ ) && __FreeBSD__ < 5
+#if (defined OpenBSD) || (defined(__FreeBSD__ ) && __FreeBSD__ < 5)
 #include <netinet/in_systm.h>
 #endif
 #include <netinet/in.h>
@@ -1527,8 +1532,11 @@ modbus_t* modbus_new_rtu(const char *device,
 
     ctx->com = (modbus_rtu_t *) malloc(sizeof(modbus_rtu_t));
     ctx_rtu = (modbus_rtu_t *)ctx->com;
-
+#if defined(OpenBSD)
+    strlcpy(ctx_rtu->device, device, sizeof(ctx_rtu->device));
+#else
     strcpy(ctx_rtu->device, device);
+#endif
     ctx_rtu->baud = baud;
     if (parity == 'N' || parity == 'E' || parity == 'O') {
         ctx_rtu->parity = parity;

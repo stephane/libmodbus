@@ -15,6 +15,7 @@ libmodbus 2.1.1 (2010-XX-XX)
   Reported by aladdinwu.
 - Parity setting is now a single char ('N', 'E' or 'O')
 - Report slave ID server side
+- OpenBSD support by Anibal Limón.
 
 libmodbus 2.1.0 (2010-03-24)
 ============================
