@@ -76,7 +76,7 @@ AC_CHECK_FUNCS([gettimeofday inet_ntoa memset select socket strerror])
 AC_CONFIG_FILES([
         Makefile
         src/Makefile
-        src/modbus.h
+        src/modbus-version.h
         tests/Makefile
         libmodbus.pc
 ])

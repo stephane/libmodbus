@@ -38,6 +38,8 @@
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 
+#include "modbus-version.h"
+
 #ifdef  __cplusplus
 # define MODBUS_BEGIN_DECLS  extern "C" {
 # define MODBUS_END_DECLS    }
@@ -121,37 +123,6 @@ enum {
 #define EMBBADEXC  (EMBXGTAR + 3)
 #define EMBUNKEXC  (EMBXGTAR + 4)
 #define EMBMDATA   (EMBXGTAR + 5)
-
-/* The major version, (1, if %LIBMODBUS_VERSION is 1.2.3) */
-#define LIBMODBUS_VERSION_MAJOR (@LIBMODBUS_VERSION_MAJOR@)
-
-/* The minor version (2, if %LIBMODBUS_VERSION is 1.2.3) */
-#define LIBMODBUS_VERSION_MINOR (@LIBMODBUS_VERSION_MINOR@)
-
-/* The micro version (3, if %LIBMODBUS_VERSION is 1.2.3) */
-#define LIBMODBUS_VERSION_MICRO (@LIBMODBUS_VERSION_MICRO@)
-
-/* The full version, like 1.2.3 */
-#define LIBMODBUS_VERSION        @LIBMODBUS_VERSION@
-
-/* The full version, in string form (suited for string concatenation)
- */
-#define LIBMODBUS_VERSION_STRING "@LIBMODBUS_VERSION@"
-
-/* Numerically encoded version, like 0x010203 */
-#define LIBMODBUS_VERSION_HEX ((LIBMODBUS_MAJOR_VERSION << 24) |        \
-                               (LIBMODBUS_MINOR_VERSION << 16) |        \
-                               (LIBMODBUS_MICRO_VERSION << 8))
-
-/* Evaluates to True if the version is greater than @major, @minor and @micro
- */
-#define LIBMODBUS_VERSION_CHECK(major,minor,micro)      \
-    (LIBMODBUS_VERSION_MAJOR > (major) ||               \
-     (LIBMODBUS_VERSION_MAJOR == (major) &&             \
-      LIBMODBUS_VERSION_MINOR > (minor)) ||             \
-     (LIBMODBUS_VERSION_MAJOR == (major) &&             \
-      LIBMODBUS_VERSION_MINOR == (minor) &&             \
-      LIBMODBUS_VERSION_MICRO >= (micro)))
 
 extern const unsigned int libmodbus_version_major;
 extern const unsigned int libmodbus_version_minor;

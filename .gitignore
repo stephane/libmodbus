@@ -20,7 +20,7 @@ libtool
 ltmain.sh
 missing
 libmodbus.pc
-modbus.h
+modbus-version.h
 .deps
 .libs
 *.la
