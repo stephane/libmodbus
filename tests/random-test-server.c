@@ -43,7 +43,7 @@ int main(void)
     modbus_accept(ctx, &socket);
 
     for (;;) {
-        uint8_t query[MODBUS_MAX_ADU_LENGTH_TCP];
+        uint8_t query[MODBUS_TCP_MAX_ADU_LENGTH];
         int rc;
 
         rc = modbus_receive(ctx, -1, query);

@@ -108,7 +108,7 @@ int main(void)
                     }
                 } else {
                     /* An already connected master has sent a new query */
-                    uint8_t query[MODBUS_MAX_ADU_LENGTH_TCP];
+                    uint8_t query[MODBUS_TCP_MAX_ADU_LENGTH];
 
                     rc = modbus_receive(ctx, master_socket, query);
                     if (rc != -1) {

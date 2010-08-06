@@ -22,17 +22,6 @@
 
 MODBUS_BEGIN_DECLS
 
-#define HEADER_LENGTH_RTU      1
-#define PRESET_REQ_LENGTH_RTU  6
-#define PRESET_RSP_LENGTH_RTU  2
-
-#define HEADER_LENGTH_TCP      7
-#define PRESET_REQ_LENGTH_TCP 12
-#define PRESET_RSP_LENGTH_TCP  8
-
-#define CHECKSUM_LENGTH_RTU    2
-#define CHECKSUM_LENGTH_TCP    0
-
 /* It's not really the minimal length (the real one is report slave ID
  * in RTU (4 bytes)) but it's a convenient size to use in RTU or TCP
  * communications to read many values or write a single one.
@@ -40,34 +29,66 @@ MODBUS_BEGIN_DECLS
  * - HEADER_LENGTH_TCP (7) + function (1) + address (2) + number (2)
  * - HEADER_LENGTH_RTU (1) + function (1) + address (2) + number (2) + CRC (2)
  */
-#define MIN_REQ_LENGTH           12
+#define _MIN_REQ_LENGTH           12
 
-#define EXCEPTION_RSP_LENGTH_RTU  5
+#define _REPORT_SLAVE_ID_LENGTH   75
 
-#define REPORT_SLAVE_ID_LENGTH   75
+#define _MODBUS_EXCEPTION_RSP_LENGTH  5
 
 /* Time out between trames in microsecond */
-#define TIME_OUT_BEGIN_OF_TRAME    500000
-#define TIME_OUT_END_OF_TRAME      500000
+#define _TIME_OUT_BEGIN_OF_TRAME    500000
+#define _TIME_OUT_END_OF_TRAME      500000
 
 /* Function codes */
-#define FC_READ_COILS                0x01
-#define FC_READ_DISCRETE_INPUTS      0x02
-#define FC_READ_HOLDING_REGISTERS    0x03
-#define FC_READ_INPUT_REGISTERS      0x04
-#define FC_WRITE_SINGLE_COIL         0x05
-#define FC_WRITE_SINGLE_REGISTER     0x06
-#define FC_READ_EXCEPTION_STATUS     0x07
-#define FC_WRITE_MULTIPLE_COILS      0x0F
-#define FC_WRITE_MULTIPLE_REGISTERS  0x10
-#define FC_REPORT_SLAVE_ID           0x11
-#define FC_READ_AND_WRITE_REGISTERS  0x17
+#define _FC_READ_COILS                0x01
+#define _FC_READ_DISCRETE_INPUTS      0x02
+#define _FC_READ_HOLDING_REGISTERS    0x03
+#define _FC_READ_INPUT_REGISTERS      0x04
+#define _FC_WRITE_SINGLE_COIL         0x05
+#define _FC_WRITE_SINGLE_REGISTER     0x06
+#define _FC_READ_EXCEPTION_STATUS     0x07
+#define _FC_WRITE_MULTIPLE_COILS      0x0F
+#define _FC_WRITE_MULTIPLE_REGISTERS  0x10
+#define _FC_REPORT_SLAVE_ID           0x11
+#define _FC_READ_AND_WRITE_REGISTERS  0x17
 
-typedef enum { RTU=0, TCP } type_com_t;
+typedef enum {
+    _MODBUS_BACKEND_TYPE_RTU=0,
+    _MODBUS_BACKEND_TYPE_TCP
+} modbus_bakend_type_t;
+
+/* This structure reduces the number of params in functions and so
+ * optimizes the speed of execution (~ 37%). */
+typedef struct _sft {
+    int slave;
+    int function;
+    int t_id;
+} sft_t;
+
+typedef struct _modbus_backend {
+    unsigned int backend_type;
+    unsigned int header_length;
+    unsigned int checksum_length;
+    unsigned int max_adu_length;
+    int (*set_slave) (modbus_t *ctx, int slave);
+    int (*build_request_basis) (modbus_t *ctx, int function, int addr,
+                                int nb, uint8_t *req);
+    int (*build_response_basis) (sft_t *sft, uint8_t *rsp);
+    int (*prepare_response_tid) (const uint8_t *req, int *req_length);
+    int (*send_msg_pre) (uint8_t *req, int req_length);
+    ssize_t (*send) (int s, const uint8_t *req, int req_length);
+    ssize_t (*recv) (int s, uint8_t *rsp, int rsp_length);
+    int (*check_integrity) (modbus_t *ctx, uint8_t *msg,
+                            const int msg_length);
+    int (*connect) (modbus_t *ctx);
+    void (*close) (modbus_t *ctx);
+    int (*flush) (modbus_t *ctx);
+    int (*listen) (modbus_t *ctx, int nb_connection);
+    int (*accept) (modbus_t *ctx, int *socket);
+    int (*filter_request) (modbus_t *ctx, int slave);
+} modbus_backend_t;
 
 struct _modbus {
-    /* Communication mode: RTU or TCP */
-    type_com_t type_com;
     /* Slave address */
     int slave;
     /* Socket or file descriptor */
@@ -76,38 +97,11 @@ struct _modbus {
     int error_recovery;
     struct timeval timeout_begin;
     struct timeval timeout_end;
-    void *com;
+    const modbus_backend_t *backend;
+    void *backend_data;
 };
 
-typedef struct _modbus_rtu {
-    /* Device: "/dev/ttyS0", "/dev/ttyUSB0" or "/dev/tty.USA19*" on Mac OS X for
-       KeySpan USB<->Serial adapters this string had to be made bigger on OS X
-       as the directory+file name was bigger than 19 bytes. Making it 67 bytes
-       for now, but OS X does support 256 byte file names. May become a problem
-       in the future. */
-#ifdef __APPLE_CC__
-    char device[64];
-#else
-    char device[16];
-#endif
-    /* Bauds: 9600, 19200, 57600, 115200, etc */
-    int baud;
-    /* Data bit */
-    uint8_t data_bit;
-    /* Stop bit */
-    uint8_t stop_bit;
-    /* Parity: 'N', 'O', 'E' */
-    char parity;
-    /* Save old termios settings */
-    struct termios old_tios;
-} modbus_rtu_t;
-
-typedef struct _modbus_tcp {
-    /* TCP port */
-    int port;
-    /* IP address */
-    char ip[16];
-} modbus_tcp_t;
+void _modbus_init_common(modbus_t *ctx);
 
 MODBUS_END_DECLS
 

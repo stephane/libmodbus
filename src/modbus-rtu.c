@@ -1,0 +1,566 @@
+/*
+ * Copyright © 2001-2010 Stéphane Raimbault <stephane.raimbault@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <termios.h>
+#include <fcntl.h>
+#include <string.h>
+
+#include "modbus.h"
+#include "modbus-private.h"
+
+#include "modbus-rtu.h"
+#include "modbus-rtu-private.h"
+
+/* Table of CRC values for high-order byte */
+static const uint8_t table_crc_hi[] = {
+    0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0,
+    0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41,
+    0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0,
+    0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40,
+    0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1,
+    0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41,
+    0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1,
+    0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41,
+    0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0,
+    0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40,
+    0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1,
+    0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40,
+    0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0,
+    0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40,
+    0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0,
+    0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40,
+    0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0,
+    0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41,
+    0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0,
+    0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41,
+    0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0,
+    0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40,
+    0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1,
+    0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41,
+    0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0,
+    0x80, 0x41, 0x00, 0xC1, 0x81, 0x40
+};
+
+/* Table of CRC values for low-order byte */
+static const uint8_t table_crc_lo[] = {
+    0x00, 0xC0, 0xC1, 0x01, 0xC3, 0x03, 0x02, 0xC2, 0xC6, 0x06,
+    0x07, 0xC7, 0x05, 0xC5, 0xC4, 0x04, 0xCC, 0x0C, 0x0D, 0xCD,
+    0x0F, 0xCF, 0xCE, 0x0E, 0x0A, 0xCA, 0xCB, 0x0B, 0xC9, 0x09,
+    0x08, 0xC8, 0xD8, 0x18, 0x19, 0xD9, 0x1B, 0xDB, 0xDA, 0x1A,
+    0x1E, 0xDE, 0xDF, 0x1F, 0xDD, 0x1D, 0x1C, 0xDC, 0x14, 0xD4,
+    0xD5, 0x15, 0xD7, 0x17, 0x16, 0xD6, 0xD2, 0x12, 0x13, 0xD3,
+    0x11, 0xD1, 0xD0, 0x10, 0xF0, 0x30, 0x31, 0xF1, 0x33, 0xF3,
+    0xF2, 0x32, 0x36, 0xF6, 0xF7, 0x37, 0xF5, 0x35, 0x34, 0xF4,
+    0x3C, 0xFC, 0xFD, 0x3D, 0xFF, 0x3F, 0x3E, 0xFE, 0xFA, 0x3A,
+    0x3B, 0xFB, 0x39, 0xF9, 0xF8, 0x38, 0x28, 0xE8, 0xE9, 0x29,
+    0xEB, 0x2B, 0x2A, 0xEA, 0xEE, 0x2E, 0x2F, 0xEF, 0x2D, 0xED,
+    0xEC, 0x2C, 0xE4, 0x24, 0x25, 0xE5, 0x27, 0xE7, 0xE6, 0x26,
+    0x22, 0xE2, 0xE3, 0x23, 0xE1, 0x21, 0x20, 0xE0, 0xA0, 0x60,
+    0x61, 0xA1, 0x63, 0xA3, 0xA2, 0x62, 0x66, 0xA6, 0xA7, 0x67,
+    0xA5, 0x65, 0x64, 0xA4, 0x6C, 0xAC, 0xAD, 0x6D, 0xAF, 0x6F,
+    0x6E, 0xAE, 0xAA, 0x6A, 0x6B, 0xAB, 0x69, 0xA9, 0xA8, 0x68,
+    0x78, 0xB8, 0xB9, 0x79, 0xBB, 0x7B, 0x7A, 0xBA, 0xBE, 0x7E,
+    0x7F, 0xBF, 0x7D, 0xBD, 0xBC, 0x7C, 0xB4, 0x74, 0x75, 0xB5,
+    0x77, 0xB7, 0xB6, 0x76, 0x72, 0xB2, 0xB3, 0x73, 0xB1, 0x71,
+    0x70, 0xB0, 0x50, 0x90, 0x91, 0x51, 0x93, 0x53, 0x52, 0x92,
+    0x96, 0x56, 0x57, 0x97, 0x55, 0x95, 0x94, 0x54, 0x9C, 0x5C,
+    0x5D, 0x9D, 0x5F, 0x9F, 0x9E, 0x5E, 0x5A, 0x9A, 0x9B, 0x5B,
+    0x99, 0x59, 0x58, 0x98, 0x88, 0x48, 0x49, 0x89, 0x4B, 0x8B,
+    0x8A, 0x4A, 0x4E, 0x8E, 0x8F, 0x4F, 0x8D, 0x4D, 0x4C, 0x8C,
+    0x44, 0x84, 0x85, 0x45, 0x87, 0x47, 0x46, 0x86, 0x82, 0x42,
+    0x43, 0x83, 0x41, 0x81, 0x80, 0x40
+};
+
+static int _modbus_set_slave(modbus_t *ctx, int slave)
+{
+    if (slave >= 1 && slave <= 247) {
+        ctx->slave = slave;
+    } else {
+        errno = EINVAL;
+        return -1;
+    }
+
+    return 0;
+}
+
+/* Builds a RTU request header */
+static int _modbus_rtu_build_request_basis(modbus_t *ctx, int function,
+                                           int addr, int nb,
+                                           uint8_t *req)
+{
+    req[0] = ctx->slave;
+    req[1] = function;
+    req[2] = addr >> 8;
+    req[3] = addr & 0x00ff;
+    req[4] = nb >> 8;
+    req[5] = nb & 0x00ff;
+
+    return _MODBUS_RTU_PRESET_REQ_LENGTH;
+}
+
+/* Builds a RTU response header */
+static int _modbus_rtu_build_response_basis(sft_t *sft, uint8_t *rsp)
+{
+    rsp[0] = sft->slave;
+    rsp[1] = sft->function;
+
+    return _MODBUS_RTU_PRESET_RSP_LENGTH;
+}
+
+static uint16_t crc16(uint8_t *buffer, uint16_t buffer_length)
+{
+    uint8_t crc_hi = 0xFF; /* high CRC byte initialized */
+    uint8_t crc_lo = 0xFF; /* low CRC byte initialized */
+    unsigned int i; /* will index into CRC lookup */
+
+    /* pass through message buffer */
+    while (buffer_length--) {
+        i = crc_hi ^ *buffer++; /* calculate the CRC  */
+        crc_hi = crc_lo ^ table_crc_hi[i];
+        crc_lo = table_crc_lo[i];
+    }
+
+    return (crc_hi << 8 | crc_lo);
+}
+
+int _modbus_rtu_prepare_response_tid(const uint8_t *req, int *req_length)
+{
+    (*req_length) -= _MODBUS_RTU_CHECKSUM_LENGTH;
+    /* No TID */
+    return 0;
+}
+
+int _modbus_rtu_send_msg_pre(uint8_t *req, int req_length)
+{
+    uint16_t crc = crc16(req, req_length);
+    req[req_length++] = crc >> 8;
+    req[req_length++] = crc & 0x00FF;
+
+    return req_length;
+}
+
+ssize_t _modbus_rtu_send(int s, const uint8_t *req, int req_length)
+{
+    return write(s, req, req_length);
+}
+
+ssize_t _modbus_rtu_recv(int s, uint8_t *rsp, int rsp_length)
+{
+    return read(s, rsp, rsp_length);
+}
+
+/* The check_crc16 function shall return the message length if the CRC is
+   valid. Otherwise it shall return -1 and set errno to EMBADCRC. */
+int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
+                                const int msg_length)
+{
+    uint16_t crc_calculated;
+    uint16_t crc_received;
+
+    crc_calculated = crc16(msg, msg_length - 2);
+    crc_received = (msg[msg_length - 2] << 8) | msg[msg_length - 1];
+
+    /* Check CRC of msg */
+    if (crc_calculated == crc_received) {
+        return msg_length;
+    } else {
+        if (ctx->debug) {
+            fprintf(stderr, "ERROR CRC received %0X != CRC calculated %0X\n",
+                    crc_received, crc_calculated);
+        }
+        if (ctx->error_recovery) {
+            _modbus_rtu_flush(ctx);
+        }
+        errno = EMBBADCRC;
+        return -1;
+    }
+}
+
+/* Sets up a serial port for RTU communications */
+static int _modbus_rtu_connect(modbus_t *ctx)
+{
+    struct termios tios;
+    speed_t speed;
+    modbus_rtu_t *ctx_rtu = ctx->backend_data;
+
+    if (ctx->debug) {
+        printf("Opening %s at %d bauds (%c, %d, %d)\n",
+               ctx_rtu->device, ctx_rtu->baud, ctx_rtu->parity,
+               ctx_rtu->data_bit, ctx_rtu->stop_bit);
+    }
+
+    /* The O_NOCTTY flag tells UNIX that this program doesn't want
+       to be the "controlling terminal" for that port. If you
+       don't specify this then any input (such as keyboard abort
+       signals and so forth) will affect your process
+
+       Timeouts are ignored in canonical input mode or when the
+       NDELAY option is set on the file via open or fcntl */
+    ctx->s = open(ctx_rtu->device, O_RDWR | O_NOCTTY | O_NDELAY | O_EXCL);
+    if (ctx->s == -1) {
+        fprintf(stderr, "ERROR Can't open the device %s (%s)\n",
+                ctx_rtu->device, strerror(errno));
+        return -1;
+    }
+
+    /* Save */
+    tcgetattr(ctx->s, &(ctx_rtu->old_tios));
+
+    memset(&tios, 0, sizeof(struct termios));
+
+    /* C_ISPEED     Input baud (new interface)
+       C_OSPEED     Output baud (new interface)
+    */
+    switch (ctx_rtu->baud) {
+    case 110:
+        speed = B110;
+        break;
+    case 300:
+        speed = B300;
+        break;
+    case 600:
+        speed = B600;
+        break;
+    case 1200:
+        speed = B1200;
+        break;
+    case 2400:
+        speed = B2400;
+        break;
+    case 4800:
+        speed = B4800;
+        break;
+    case 9600:
+        speed = B9600;
+        break;
+    case 19200:
+        speed = B19200;
+        break;
+    case 38400:
+        speed = B38400;
+        break;
+    case 57600:
+        speed = B57600;
+        break;
+    case 115200:
+        speed = B115200;
+        break;
+    default:
+        speed = B9600;
+        if (ctx->debug) {
+            fprintf(stderr,
+                    "WARNING Unknown baud rate %d for %s (B9600 used)\n",
+                    ctx_rtu->baud, ctx_rtu->device);
+        }
+    }
+
+    /* Set the baud rate */
+    if ((cfsetispeed(&tios, speed) < 0) ||
+        (cfsetospeed(&tios, speed) < 0)) {
+        return -1;
+    }
+
+    /* C_CFLAG      Control options
+       CLOCAL       Local line - do not change "owner" of port
+       CREAD        Enable receiver
+    */
+    tios.c_cflag |= (CREAD | CLOCAL);
+    /* CSIZE, HUPCL, CRTSCTS (hardware flow control) */
+
+    /* Set data bits (5, 6, 7, 8 bits)
+       CSIZE        Bit mask for data bits
+    */
+    tios.c_cflag &= ~CSIZE;
+    switch (ctx_rtu->data_bit) {
+    case 5:
+        tios.c_cflag |= CS5;
+        break;
+    case 6:
+        tios.c_cflag |= CS6;
+        break;
+    case 7:
+        tios.c_cflag |= CS7;
+        break;
+    case 8:
+    default:
+        tios.c_cflag |= CS8;
+        break;
+    }
+
+    /* Stop bit (1 or 2) */
+    if (ctx_rtu->stop_bit == 1)
+        tios.c_cflag &=~ CSTOPB;
+    else /* 2 */
+        tios.c_cflag |= CSTOPB;
+
+    /* PARENB       Enable parity bit
+       PARODD       Use odd parity instead of even */
+    if (ctx_rtu->parity == 'N') {
+        /* None */
+        tios.c_cflag &=~ PARENB;
+    } else if (ctx_rtu->parity == 'E') {
+        /* Even */
+        tios.c_cflag |= PARENB;
+        tios.c_cflag &=~ PARODD;
+    } else {
+        /* Odd */
+        tios.c_cflag |= PARENB;
+        tios.c_cflag |= PARODD;
+    }
+
+    /* Read the man page of termios if you need more information. */
+
+    /* This field isn't used on POSIX systems
+       tios.c_line = 0;
+    */
+
+    /* C_LFLAG      Line options
+
+       ISIG Enable SIGINTR, SIGSUSP, SIGDSUSP, and SIGQUIT signals
+       ICANON       Enable canonical input (else raw)
+       XCASE        Map uppercase \lowercase (obsolete)
+       ECHO Enable echoing of input characters
+       ECHOE        Echo erase character as BS-SP-BS
+       ECHOK        Echo NL after kill character
+       ECHONL       Echo NL
+       NOFLSH       Disable flushing of input buffers after
+       interrupt or quit characters
+       IEXTEN       Enable extended functions
+       ECHOCTL      Echo control characters as ^char and delete as ~?
+       ECHOPRT      Echo erased character as character erased
+       ECHOKE       BS-SP-BS entire line on line kill
+       FLUSHO       Output being flushed
+       PENDIN       Retype pending input at next read or input char
+       TOSTOP       Send SIGTTOU for background output
+
+       Canonical input is line-oriented. Input characters are put
+       into a buffer which can be edited interactively by the user
+       until a CR (carriage return) or LF (line feed) character is
+       received.
+
+       Raw input is unprocessed. Input characters are passed
+       through exactly as they are received, when they are
+       received. Generally you'll deselect the ICANON, ECHO,
+       ECHOE, and ISIG options when using raw input
+    */
+
+    /* Raw input */
+    tios.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+
+    /* C_IFLAG      Input options
+
+       Constant     Description
+       INPCK        Enable parity check
+       IGNPAR       Ignore parity errors
+       PARMRK       Mark parity errors
+       ISTRIP       Strip parity bits
+       IXON Enable software flow control (outgoing)
+       IXOFF        Enable software flow control (incoming)
+       IXANY        Allow any character to start flow again
+       IGNBRK       Ignore break condition
+       BRKINT       Send a SIGINT when a break condition is detected
+       INLCR        Map NL to CR
+       IGNCR        Ignore CR
+       ICRNL        Map CR to NL
+       IUCLC        Map uppercase to lowercase
+       IMAXBEL      Echo BEL on input line too long
+    */
+    if (ctx_rtu->parity == 'N') {
+        /* None */
+        tios.c_iflag &= ~INPCK;
+    } else {
+        tios.c_iflag |= INPCK;
+    }
+
+    /* Software flow control is disabled */
+    tios.c_iflag &= ~(IXON | IXOFF | IXANY);
+
+    /* C_OFLAG      Output options
+       OPOST        Postprocess output (not set = raw output)
+       ONLCR        Map NL to CR-NL
+
+       ONCLR ant others needs OPOST to be enabled
+    */
+
+    /* Raw ouput */
+    tios.c_oflag &=~ OPOST;
+
+    /* C_CC         Control characters
+       VMIN         Minimum number of characters to read
+       VTIME        Time to wait for data (tenths of seconds)
+
+       UNIX serial interface drivers provide the ability to
+       specify character and packet timeouts. Two elements of the
+       c_cc array are used for timeouts: VMIN and VTIME. Timeouts
+       are ignored in canonical input mode or when the NDELAY
+       option is set on the file via open or fcntl.
+
+       VMIN specifies the minimum number of characters to read. If
+       it is set to 0, then the VTIME value specifies the time to
+       wait for every character read. Note that this does not mean
+       that a read call for N bytes will wait for N characters to
+       come in. Rather, the timeout will apply to the first
+       character and the read call will return the number of
+       characters immediately available (up to the number you
+       request).
+
+       If VMIN is non-zero, VTIME specifies the time to wait for
+       the first character read. If a character is read within the
+       time given, any read will block (wait) until all VMIN
+       characters are read. That is, once the first character is
+       read, the serial interface driver expects to receive an
+       entire packet of characters (VMIN bytes total). If no
+       character is read within the time allowed, then the call to
+       read returns 0. This method allows you to tell the serial
+       driver you need exactly N bytes and any read call will
+       return 0 or N bytes. However, the timeout only applies to
+       the first character read, so if for some reason the driver
+       misses one character inside the N byte packet then the read
+       call could block forever waiting for additional input
+       characters.
+
+       VTIME specifies the amount of time to wait for incoming
+       characters in tenths of seconds. If VTIME is set to 0 (the
+       default), reads will block (wait) indefinitely unless the
+       NDELAY option is set on the port with open or fcntl.
+    */
+    /* Unused because we use open with the NDELAY option */
+    tios.c_cc[VMIN] = 0;
+    tios.c_cc[VTIME] = 0;
+
+    if (tcsetattr(ctx->s, TCSANOW, &tios) < 0) {
+        return -1;
+    }
+
+    return 0;
+}
+
+void _modbus_rtu_close(modbus_t *ctx)
+{
+    /* Closes the file descriptor in RTU mode */
+    modbus_rtu_t *ctx_rtu = ctx->backend_data;
+
+    tcsetattr(ctx->s, TCSANOW, &(ctx_rtu->old_tios));
+    close(ctx->s);
+}
+
+int _modbus_rtu_flush(modbus_t *ctx)
+{
+    return tcflush(ctx->s, TCIOFLUSH);
+}
+
+int _modbus_rtu_listen(modbus_t *ctx, int nb_connection)
+{
+    if (ctx->debug) {
+        fprintf(stderr, "Not implemented");
+    }
+
+    errno = EINVAL;
+    return -1;
+}
+
+int _modbus_rtu_accept(modbus_t *ctx, int *socket)
+{
+    if (ctx->debug) {
+        fprintf(stderr, "Not implemented");
+    }
+
+    errno = EINVAL;
+    return -1;
+}
+
+int _modbus_rtu_filter_request(modbus_t *ctx, int slave)
+{
+    /* Filter on the Modbus unit identifier (slave) in RTU mode */
+    if (slave != ctx->slave && slave != MODBUS_BROADCAST_ADDRESS) {
+        /* Ignores the request (not for me) */
+        if (ctx->debug) {
+            printf("Request for slave %d ignored (not %d)\n",
+                   slave, ctx->slave);
+        }
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+const modbus_backend_t _modbus_rtu_backend = {
+    _MODBUS_BACKEND_TYPE_RTU,
+    _MODBUS_RTU_HEADER_LENGTH,
+    _MODBUS_RTU_CHECKSUM_LENGTH,
+    MODBUS_RTU_MAX_ADU_LENGTH,
+    _modbus_set_slave,
+    _modbus_rtu_build_request_basis,
+    _modbus_rtu_build_response_basis,
+    _modbus_rtu_prepare_response_tid,
+    _modbus_rtu_send_msg_pre,
+    _modbus_rtu_send,
+    _modbus_rtu_recv,
+    _modbus_rtu_check_integrity,
+    _modbus_rtu_connect,
+    _modbus_rtu_close,
+    _modbus_rtu_flush,
+    _modbus_rtu_listen,
+    _modbus_rtu_accept,
+    _modbus_rtu_filter_request
+};
+
+/* Allocate and initialize the modbus_t structure for RTU
+   - device: "/dev/ttyS0"
+   - baud:   9600, 19200, 57600, 115200, etc
+   - parity: 'N' stands for None, 'E' for Even and 'O' for odd
+   - data_bits: 5, 6, 7, 8
+   - stop_bits: 1, 2
+   - slave: slave number of the caller
+*/
+modbus_t* modbus_new_rtu(const char *device,
+                         int baud, char parity, int data_bit,
+                         int stop_bit, int slave)
+{
+    modbus_t *ctx;
+    modbus_rtu_t *ctx_rtu;
+
+    ctx = (modbus_t *) malloc(sizeof(modbus_t));
+    _modbus_init_common(ctx);
+    if (modbus_set_slave(ctx, slave) == -1) {
+        return NULL;
+    }
+
+    ctx->backend = &_modbus_rtu_backend;
+
+    ctx->backend_data = (modbus_rtu_t *) malloc(sizeof(modbus_rtu_t));
+    ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
+#if defined(OpenBSD)
+    strlcpy(ctx_rtu->device, device, sizeof(ctx_rtu->device));
+#else
+    strcpy(ctx_rtu->device, device);
+#endif
+    ctx_rtu->baud = baud;
+    if (parity == 'N' || parity == 'E' || parity == 'O') {
+        ctx_rtu->parity = parity;
+    } else {
+        errno = EINVAL;
+        return NULL;
+    }
+    ctx_rtu->data_bit = data_bit;
+    ctx_rtu->stop_bit = stop_bit;
+
+    return ctx;
+}

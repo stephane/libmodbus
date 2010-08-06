@@ -22,15 +22,9 @@
 #if (defined(__unix__) || defined(unix)) && !defined(USG)
 #include <sys/param.h>
 #endif
-
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
-#ifdef HAVE_STDINT_H
 #include <stdint.h>
-#endif
 #include <termios.h>
-#if defined(OpenBSD) || (defined(__FreeBSD__ ) && __FreeBSD__ < 5)
+#if defined(OpenBSD) || (defined(__FreeBSD__) && __FreeBSD__ < 5)
 #include <netinet/in_systm.h>
 #endif
 #include <netinet/in.h>
@@ -67,16 +61,7 @@ MODBUS_BEGIN_DECLS
 #define ON 1
 #endif
 
-#define MODBUS_TCP_DEFAULT_PORT   502
 #define MODBUS_BROADCAST_ADDRESS    0
-#define MODBUS_TCP_SLAVE         0xFF
-
-/* Modbus_Application_Protocol_V1_1b.pdf Chapter 4 Section 1 Page 5:
- *  - RS232 / RS485 ADU = 253 bytes + slave (1 byte) + CRC (2 bytes) = 256 bytes
- *  - TCP MODBUS ADU = 253 bytes + MBAP (7 bytes) = 260 bytes
- */
-#define MODBUS_MAX_ADU_LENGTH_RTU  256
-#define MODBUS_MAX_ADU_LENGTH_TCP  260
 
 /* Modbus_Application_Protocol_V1_1b.pdf (chapter 6 section 1 page 12)
  * Quantity of Coils to read (2 bytes): 1 to 2000 (0x7D0)
@@ -151,11 +136,7 @@ typedef struct {
     uint16_t *tab_registers;
 } modbus_mapping_t;
 
-modbus_t* modbus_new_rtu(const char *device, int baud, char parity, int data_bit,
-                          int stop_bit, int slave);
 int modbus_set_slave(modbus_t* ctx, int slave);
-
-modbus_t* modbus_new_tcp(const char *ip_address, int port);
 
 int modbus_set_error_recovery(modbus_t *ctx, int enabled);
 
@@ -213,5 +194,8 @@ float modbus_get_float(const uint16_t *src);
 void modbus_set_float(float real, uint16_t *dest);
 
 MODBUS_END_DECLS
+
+#include "modbus-tcp.h"
+#include "modbus-rtu.h"
 
 #endif  /* _MODBUS_H_ */
