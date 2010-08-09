@@ -483,51 +483,43 @@ static int send_msg(modbus_t *ctx, uint8_t *req, int req_length)
     return rc;
 }
 
-/* Computes the length of the header following the function code */
-static uint8_t compute_indication_length_header(int function)
+/*
+    ---------- Request     Indication ----------
+    | Client | ---------------------->| Server |
+    ---------- Confirmation  Response ----------
+*/
+
+typedef enum {
+    /* Request message on the server side */
+    MSG_INDICATION,
+    /* Request message on the client side */
+    MSG_CONFIRMATION
+} msg_type_t;
+
+/*  Computes the header length (to reach the the function code) */
+static uint8_t compute_header_length(int function, msg_type_t msg_type)
 {
     int length;
 
     if (function <= FC_WRITE_SINGLE_COIL ||
-        function == FC_WRITE_SINGLE_REGISTER)
-        /* Read and single write */
+        function == FC_WRITE_SINGLE_REGISTER) {
         length = 4;
-    else if (function == FC_WRITE_MULTIPLE_COILS ||
-             function == FC_WRITE_MULTIPLE_REGISTERS)
-        /* Multiple write */
+    } else if (function == FC_WRITE_MULTIPLE_COILS ||
+               function == FC_WRITE_MULTIPLE_REGISTERS) {
         length = 5;
-    else if (function == FC_REPORT_SLAVE_ID)
+    } else if (function == FC_REPORT_SLAVE_ID) {
+        if (msg_type == MSG_INDICATION)
+            length = 0;
+        else
+            length = 1;
+    } else {
         length = 0;
-    else
-        length = 0;
-
-    return length;
-}
-
-/* Computes the length of the header following the function code */
-static uint8_t compute_confirmation_length_header(int function)
-{
-    int length;
-
-    if (function <= FC_WRITE_SINGLE_COIL ||
-        function == FC_WRITE_SINGLE_REGISTER)
-        /* Read and single write */
-        length = 4;
-    else if (function == FC_WRITE_MULTIPLE_COILS ||
-             function == FC_WRITE_MULTIPLE_REGISTERS)
-        /* Multiple write */
-        length = 5;
-    else if (function == FC_REPORT_SLAVE_ID)
-        /* Report slave_ID */
-        length = 1;
-    else
-        length = 0;
-
+    }
     return length;
 }
 
 /* Computes the length of the data to write in the request */
-static int compute_msg_length_data(modbus_t *ctx, uint8_t *msg)
+static int compute_data_length(modbus_t *ctx, uint8_t *msg)
 {
     int function = msg[TAB_HEADER_LENGTH[ctx->type_com]];
     int length;
@@ -600,14 +592,9 @@ static int compute_msg_length_data(modbus_t *ctx, uint8_t *msg)
    - ETIMEDOUT
    - read() or recv() error codes
 */
-enum {
-    /* Request message on the server side */
-    MSG_INDICATION,
-    /* Request message on the client side */
-    MSG_CONFIRMATION
-};
 
-static int receive_msg(modbus_t *ctx, int msg_length_computed, uint8_t *msg, int type)
+static int receive_msg(modbus_t *ctx, int msg_length_computed,
+                       uint8_t *msg, msg_type_t msg_type)
 {
     int s_rc;
     int read_rc;
@@ -620,7 +607,7 @@ static int receive_msg(modbus_t *ctx, int msg_length_computed, uint8_t *msg, int
     int msg_length = 0;
 
     if (ctx->debug) {
-        if (type == MSG_INDICATION) {
+        if (msg_type == MSG_INDICATION) {
             printf("Waiting for a indication");
         } else {
             printf("Waiting for a confirmation");
@@ -700,13 +687,9 @@ static int receive_msg(modbus_t *ctx, int msg_length_computed, uint8_t *msg, int
             switch (state) {
             case FUNCTION:
                 /* Function code position */
-                if (type == MSG_INDICATION) {
-                    length_to_read = compute_indication_length_header(
-                        msg[TAB_HEADER_LENGTH[ctx->type_com]]);
-                } else {
-                    length_to_read = compute_confirmation_length_header(
-                        msg[TAB_HEADER_LENGTH[ctx->type_com]]);
-                }
+                length_to_read = compute_header_length(
+                    msg[TAB_HEADER_LENGTH[ctx->type_com]],
+                    msg_type);
                 msg_length_computed += length_to_read;
                 /* It's useless to check the value of
                    msg_length_computed in this case (only
@@ -714,7 +697,7 @@ static int receive_msg(modbus_t *ctx, int msg_length_computed, uint8_t *msg, int
                 state = DATA;
                 break;
             case DATA:
-                length_to_read = compute_msg_length_data(ctx, msg);
+                length_to_read = compute_data_length(ctx, msg);
                 msg_length_computed += length_to_read;
                 if (msg_length_computed > TAB_MAX_ADU_LENGTH[ctx->type_com]) {
                     errno = EMBBADDATA;
