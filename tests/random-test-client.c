@@ -56,6 +56,7 @@ int main(void)
     uint8_t *tab_rq_bits;
     uint8_t *tab_rp_bits;
     uint16_t *tab_rq_registers;
+    uint16_t *tab_rw_rq_registers;
     uint16_t *tab_rp_registers;
 
     /*
@@ -88,6 +89,9 @@ int main(void)
     tab_rp_registers = (uint16_t *) malloc(nb * sizeof(uint16_t));
     memset(tab_rp_registers, 0, nb * sizeof(uint16_t));
 
+    tab_rw_rq_registers = (uint16_t *) malloc(nb * sizeof(uint16_t));
+    memset(tab_rw_rq_registers, 0, nb * sizeof(uint16_t));
+
     nb_loop = nb_fail = 0;
     while (nb_loop++ < LOOP) {
         for (addr = ADDRESS_START; addr <= ADDRESS_END; addr++) {
@@ -96,6 +100,7 @@ int main(void)
             /* Random numbers (short) */
             for (i=0; i<nb; i++) {
                 tab_rq_registers[i] = (uint16_t) (65535.0*rand() / (RAND_MAX + 1.0));
+                tab_rw_rq_registers[i] = ~tab_rq_registers[i];
                 tab_rq_bits[i] = tab_rq_registers[i] % 2;
             }
             nb = ADDRESS_END - addr;
@@ -188,7 +193,41 @@ int main(void)
                     }
                 }
             }
+            /* R/W MULTIPLE REGISTERS*/
+            rc = modbus_read_and_write_holding_registers(ctx, addr, nb, tab_rp_registers,
+                                                         addr, nb, tab_rw_rq_registers);
+            if (rc != nb) {
+                printf("ERROR modbus_read_and_write_registers (%d)\n", rc);
+                printf("Address = %d, nb = %d\n", addr, nb);
+                nb_fail++;
+            } else {
+                for (i=0; i<nb; i++) {
+                    if (tab_rq_registers[i] != tab_rp_registers[i]) {
+                        printf("ERROR modbus_read_and_write_registers READ\n");
+                        printf("Address = %d, value %d (0x%X) != %d (0x%X)\n",
+                               addr, tab_rq_registers[i], tab_rq_registers[i],
+                               tab_rp_registers[i], tab_rp_registers[i]);
+                        nb_fail++;
+                    }
+                }
 
+                rc = modbus_read_registers(ctx, addr, nb, tab_rp_registers);
+                if (rc != nb) {
+                    printf("ERROR modbus_read_registers (%d)\n", rc);
+                    printf("Address = %d, nb = %d\n", addr, nb);
+                    nb_fail++;
+                } else {
+                    for (i=0; i<nb; i++) {
+                        if (tab_rw_rq_registers[i] != tab_rp_registers[i]) {
+                            printf("ERROR modbus_read_and_write_registers WRITE\n");
+                            printf("Address = %d, value %d (0x%X) != %d (0x%X)\n",
+                                   addr, tab_rw_rq_registers[i], tab_rw_rq_registers[i],
+                                   tab_rp_registers[i], tab_rp_registers[i]);
+                            nb_fail++;
+                        }
+                    }
+                }
+            }
         }
 
         printf("Test: ");

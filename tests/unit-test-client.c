@@ -204,7 +204,7 @@ int main(void)
     rc = modbus_write_registers(ctx, UT_REGISTERS_ADDRESS,
                                 UT_REGISTERS_NB_POINTS,
                                 UT_REGISTERS_TAB);
-    printf("1/3 modbus_write_registers: ");
+    printf("1/5 modbus_write_registers: ");
     if (rc == UT_REGISTERS_NB_POINTS) {
         printf("OK\n");
     } else {
@@ -215,7 +215,7 @@ int main(void)
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
                                UT_REGISTERS_NB_POINTS,
                                tab_rp_registers);
-    printf("2/3 modbus_read_registers: ");
+    printf("2/5 modbus_read_registers: ");
     if (rc != UT_REGISTERS_NB_POINTS) {
         printf("FAILED (nb points %d)\n", rc);
         goto close;
@@ -233,10 +233,59 @@ int main(void)
 
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
                                0, tab_rp_registers);
-    printf("3/3 modbus_read_registers (0): ");
+    printf("3/5 modbus_read_registers (0): ");
     if (rc != 0) {
         printf("FAILED (nb points %d)\n", rc);
         goto close;
+    }
+    printf("OK\n");
+
+    nb_points = (UT_REGISTERS_NB_POINTS >
+                 UT_INPUT_REGISTERS_NB_POINTS) ?
+        UT_REGISTERS_NB_POINTS : UT_INPUT_REGISTERS_NB_POINTS;
+    memset(tab_rp_registers, 0, nb_points * sizeof(uint16_t));
+
+    /* Write registers to zero from tab_rp_registers and read registers to
+       tab_rp_registers.  They should be same as UT_REGISTERS_TAB. */
+    rc = modbus_read_and_write_holding_registers(ctx,
+                                                 UT_REGISTERS_ADDRESS,
+                                                 UT_REGISTERS_NB_POINTS,
+                                                 tab_rp_registers,
+                                                 UT_REGISTERS_ADDRESS,
+                                                 UT_REGISTERS_NB_POINTS,
+                                                 tab_rp_registers);
+    printf("4/5 modbus_read_and_write_registers, read part: ");
+    if (rc != UT_REGISTERS_NB_POINTS) {
+        printf("FAILED (nb points %d)\n", rc);
+        goto close;
+    }
+
+    for (i=0; i < UT_REGISTERS_NB_POINTS; i++) {
+        if (tab_rp_registers[i] != UT_REGISTERS_TAB[i]) {
+            printf("FAILED (%0X != %0X)\n",
+                   tab_rp_registers[i],
+                   UT_REGISTERS_TAB[i]);
+            goto close;
+        }
+    }
+    printf("OK\n");
+
+    rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
+                               UT_REGISTERS_NB_POINTS,
+                               tab_rp_registers);
+    printf("5/5 modbus_read_and_write_registers, write part: ");
+    if (rc != UT_REGISTERS_NB_POINTS) {
+        printf("FAILED (nb points %d)\n", rc);
+        goto close;
+    }
+
+    for (i=0; i < UT_REGISTERS_NB_POINTS; i++) {
+        if (tab_rp_registers[i] != 0) {
+            printf("FAILED (%0X != %0X)\n",
+                   tab_rp_registers[i],
+                   UT_REGISTERS_TAB[i]);
+            goto close;
+        }
     }
     printf("OK\n");
 

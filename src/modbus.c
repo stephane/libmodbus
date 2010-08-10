@@ -264,6 +264,7 @@ static unsigned int compute_response_length(modbus_t *ctx, uint8_t *req)
         length = 2 + (nb / 8) + ((nb % 8) ? 1 : 0);
     }
         break;
+    case FC_READ_AND_WRITE_REGISTERS:
     case FC_READ_HOLDING_REGISTERS:
     case FC_READ_INPUT_REGISTERS:
         /* Header + 2 * nb values */
@@ -512,6 +513,8 @@ static uint8_t compute_header_length(int function, msg_type_t msg_type)
             length = 0;
         else
             length = 1;
+    } else if (function == FC_READ_AND_WRITE_REGISTERS) {
+        length = 9;
     } else {
         length = 0;
     }
@@ -529,6 +532,8 @@ static int compute_data_length(modbus_t *ctx, uint8_t *msg)
         length = msg[TAB_HEADER_LENGTH[ctx->type_com] + 5];
     } else if (function == FC_REPORT_SLAVE_ID) {
         length = msg[TAB_HEADER_LENGTH[ctx->type_com] + 1];
+    } else if (function == FC_READ_AND_WRITE_REGISTERS) {
+        length = msg[TAB_HEADER_LENGTH[ctx->type_com] + 9];
     } else
         length = 0;
 
@@ -789,6 +794,7 @@ static int receive_msg_req(modbus_t *ctx, uint8_t *req, uint8_t *rsp)
             req_nb_value = (req_nb_value / 8) + ((req_nb_value % 8) ? 1 : 0);
             rsp_nb_value = rsp[offset + 1];
             break;
+        case FC_READ_AND_WRITE_REGISTERS:
         case FC_READ_HOLDING_REGISTERS:
         case FC_READ_INPUT_REGISTERS:
             /* Read functions 1 value = 2 bytes */
@@ -1130,6 +1136,40 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         errno = ENOPROTOOPT;
         return -1;
         break;
+
+    case FC_READ_AND_WRITE_REGISTERS: {
+        int nb = (req[offset + 3] << 8) + req[offset + 4];
+        uint16_t address_write = (req[offset + 5] << 8) + req[offset + 6];
+        int nb_write = (req[offset + 7] << 8) + req[offset + 8];
+
+        if ((address + nb) > mb_mapping->nb_registers &&
+            (address_write + nb_write) > mb_mapping->nb_registers) {
+            if (ctx->debug) {
+                fprintf(stderr,
+                        "Illegal data read address %0X or write address %0X in read_and_write_registers\n",
+                        address + nb, address_write + nb_write);
+            }
+            rsp_length = response_exception(ctx, &sft,
+                                            MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
+        } else {
+            int i, j;
+            rsp_length = build_response_basis(ctx, &sft, rsp);
+            rsp[rsp_length++] = nb << 1;
+
+            for (i = address; i < address + nb; i++) {
+                rsp[rsp_length++] = mb_mapping->tab_registers[i] >> 8;
+                rsp[rsp_length++] = mb_mapping->tab_registers[i] & 0xFF;
+            }
+
+            /* 10 and 11 = first value */
+            for (i = address_write, j = 10; i < address_write + nb_write; i++, j += 2) {
+                mb_mapping->tab_registers[i] =
+                    (req[offset + j] << 8) + req[offset + j + 1];
+            }
+        }
+    }
+        break;
+
     default:
         rsp_length = response_exception(ctx, &sft,
                                         MODBUS_EXCEPTION_ILLEGAL_FUNCTION,
@@ -1445,8 +1485,73 @@ int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *data
     return rc;
 }
 
+/* Read multiple registers from remote device to dest array and write multiple
+   registers to remote device from data array. */
+int modbus_read_and_write_holding_registers(modbus_t *ctx,
+                                            int read_addr, int read_nb, uint16_t *dest,
+                                            int write_addr, int write_nb, const uint16_t *data)
+{
+    int rc;
+    int req_length;
+    int i;
+    int byte_count;
+    uint8_t req[MAX_MESSAGE_LENGTH];
+    uint8_t rsp[MAX_MESSAGE_LENGTH];
+
+    if (read_nb > MODBUS_MAX_READ_REGISTERS) {
+        if (ctx->debug) {
+            fprintf(stderr,
+                    "ERROR Too many holding registers requested (%d > %d)\n",
+                    read_nb, MODBUS_MAX_READ_REGISTERS);
+        }
+        errno = EMBMDATA;
+        return -1;
+    }
+
+    if (write_nb > MODBUS_MAX_RW_WRITE_REGISTERS) {
+        if (ctx->debug) {
+            fprintf(stderr,
+                    "ERROR Too many holding registers wrote (%d > %d)\n",
+                    write_nb, MODBUS_MAX_RW_WRITE_REGISTERS);
+        }
+        errno = EMBMDATA;
+        return -1;
+    }
+    req_length = build_request_basis(ctx, FC_READ_AND_WRITE_REGISTERS,
+                                     read_addr, read_nb, req);
+
+    req[req_length++] = write_addr >> 8;
+    req[req_length++] = write_addr & 0x00ff;
+    req[req_length++] = write_nb >> 8;
+    req[req_length++] = write_nb & 0x00ff;
+    byte_count = write_nb * 2;
+    req[req_length++] = byte_count;
+
+    for (i = 0; i < write_nb; i++) {
+        req[req_length++] = data[i] >> 8;
+        req[req_length++] = data[i] & 0x00FF;
+    }
+
+    rc = send_msg(ctx, req, req_length);
+    if (rc > 0) {
+        int offset;
+
+        rc = receive_msg_req(ctx, req, rsp);
+        offset = TAB_HEADER_LENGTH[ctx->type_com];
+
+        /* If rc is negative, the loop is jumped ! */
+        for (i = 0; i < rc; i++) {
+            /* shift reg hi_byte to temp OR with lo_byte */
+            dest[i] = (rsp[offset + 2 + (i << 1)] << 8) |
+                rsp[offset + 3 + (i << 1)];
+        }
+    }
+
+    return rc;
+}
+
 /* Send a request to get the slave ID of the device (only available in serial
- * communication). */
+   communication). */
 int modbus_report_slave_id(modbus_t *ctx, uint8_t *data_dest)
 {
     int rc;

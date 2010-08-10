@@ -143,6 +143,43 @@ int main(void)
     printf("* %'d KiB/s\n", rate);
     printf("\n");
 
+    printf("READ AND WRITE REGISTERS\n\n");
+
+    nb_points = MODBUS_MAX_RW_WRITE_REGISTERS;
+    start = gettime_ms();
+    for (i=0; i<NB_LOOPS; i++) {
+        rc = modbus_read_and_write_holding_registers(ctx, 0, nb_points, tab_reg,0, nb_points, tab_reg);
+        if (rc == -1) {
+            fprintf(stderr, "%s\n", modbus_strerror(errno));
+            return -1;
+        }
+    }
+    end = gettime_ms();
+    elapsed = end - start;
+
+    rate = (NB_LOOPS * nb_points) * G_MSEC_PER_SEC / (end - start);
+    printf("Transfert rate in points/seconds:\n");
+    printf("* %'d registers/s\n", rate);
+    printf("\n");
+
+    bytes = NB_LOOPS * nb_points * sizeof(uint16_t);
+    rate = bytes / 1024 * G_MSEC_PER_SEC / (end - start);
+    printf("Values:\n");
+    printf("* %d x %d values\n", NB_LOOPS, nb_points);
+    printf("* %.3f ms for %d bytes\n", elapsed, bytes);
+    printf("* %'d KiB/s\n", rate);
+    printf("\n");
+
+    /* TCP:Query and reponse header and values */
+    bytes = 12 + 9 + (nb_points * sizeof(uint16_t));
+    printf("Values and TCP Modbus overhead:\n");
+    printf("* %d x %d bytes\n", NB_LOOPS, bytes);
+    bytes = NB_LOOPS * bytes;
+    rate = bytes / 1024 * G_MSEC_PER_SEC / (end - start);
+    printf("* %.3f ms for %d bytes\n", elapsed, bytes);
+    printf("* %'d KiB/s\n", rate);
+    printf("\n");
+
     /* Free the memory */
     free(tab_bit);
     free(tab_reg);

@@ -61,6 +61,7 @@ MODBUS_BEGIN_DECLS
 #define FC_WRITE_MULTIPLE_COILS      0x0F
 #define FC_WRITE_MULTIPLE_REGISTERS  0x10
 #define FC_REPORT_SLAVE_ID           0x11
+#define FC_READ_AND_WRITE_REGISTERS  0x17
 
 typedef enum { RTU=0, TCP } type_com_t;
 
