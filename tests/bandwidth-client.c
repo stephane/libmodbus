@@ -62,16 +62,16 @@ int main(void)
     }
 
     /* Allocate and initialize the memory to store the status */
-    tab_bit = (uint8_t *) malloc(MODBUS_MAX_BITS * sizeof(uint8_t));
-    memset(tab_bit, 0, MODBUS_MAX_BITS * sizeof(uint8_t));
+    tab_bit = (uint8_t *) malloc(MODBUS_MAX_READ_BITS * sizeof(uint8_t));
+    memset(tab_bit, 0, MODBUS_MAX_READ_BITS * sizeof(uint8_t));
 
     /* Allocate and initialize the memory to store the registers */
-    tab_reg = (uint16_t *) malloc(MODBUS_MAX_REGISTERS * sizeof(uint16_t));
-    memset(tab_reg, 0, MODBUS_MAX_REGISTERS * sizeof(uint16_t));
+    tab_reg = (uint16_t *) malloc(MODBUS_MAX_READ_REGISTERS * sizeof(uint16_t));
+    memset(tab_reg, 0, MODBUS_MAX_READ_REGISTERS * sizeof(uint16_t));
 
     printf("READ BITS\n\n");
 
-    nb_points = MODBUS_MAX_BITS;
+    nb_points = MODBUS_MAX_READ_BITS;
     start = gettime_ms();
     for (i=0; i<NB_LOOPS; i++) {
         rc = modbus_read_bits(ctx, 0, nb_points, tab_bit);
@@ -108,7 +108,7 @@ int main(void)
 
     printf("READ REGISTERS\n\n");
 
-    nb_points = MODBUS_MAX_REGISTERS;
+    nb_points = MODBUS_MAX_READ_REGISTERS;
     start = gettime_ms();
     for (i=0; i<NB_LOOPS; i++) {
         rc = modbus_read_registers(ctx, 0, nb_points, tab_reg);

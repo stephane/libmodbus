@@ -78,14 +78,23 @@ MODBUS_BEGIN_DECLS
 #define MODBUS_MAX_ADU_LENGTH_TCP  260
 
 /* Modbus_Application_Protocol_V1_1b.pdf (chapter 6 section 1 page 12)
- * Quantity of Coils (2 bytes): 1 to 2000 (0x7D0)
+ * Quantity of Coils to read (2 bytes): 1 to 2000 (0x7D0)
+ * (chapter 6 section 11 page 29)
+ * Quantity of Coils to write (2 bytes): 1 to 1968 (0x7B0)
  */
-#define MODBUS_MAX_BITS              2000
+#define MODBUS_MAX_READ_BITS              2000
+#define MODBUS_MAX_WRITE_BITS             1968
 
 /* Modbus_Application_Protocol_V1_1b.pdf (chapter 6 section 3 page 15)
- * Quantity of Registers (2 bytes): 1 to 125 (0x7D)
+ * Quantity of Registers to read (2 bytes): 1 to 125 (0x7D)
+ * (chapter 6 section 12 page 31)
+ * Quantity of Registers to write (2 bytes) 1 to 123 (0x7B)
+ * (chapter 6 section 17 page 38)
+ * Quantity of Registers to write in R/W registers (2 bytes) 1 to 121 (0x79)
  */
-#define MODBUS_MAX_REGISTERS          125
+#define MODBUS_MAX_READ_REGISTERS          125
+#define MODBUS_MAX_WRITE_REGISTERS         123
+#define MODBUS_MAX_RW_WRITE_REGISTERS      121
 
 /* Random number to avoid errno conflicts */
 #define MODBUS_ENOBASE 112345678

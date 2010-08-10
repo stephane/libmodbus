@@ -372,7 +372,7 @@ int main(void)
     /** TOO MANY DATA **/
     printf("\nTEST TOO MANY DATA ERROR:\n");
 
-    rc = modbus_read_bits(ctx, UT_BITS_ADDRESS, MODBUS_MAX_BITS + 1,
+    rc = modbus_read_bits(ctx, UT_BITS_ADDRESS, MODBUS_MAX_READ_BITS + 1,
                           tab_rp_bits);
     printf("* modbus_read_bits: ");
     if (rc == -1 && errno == EMBMDATA) {
@@ -383,7 +383,7 @@ int main(void)
     }
 
     rc = modbus_read_input_bits(ctx, UT_INPUT_BITS_ADDRESS,
-                                MODBUS_MAX_BITS + 1,
+                                MODBUS_MAX_READ_BITS + 1,
                                 tab_rp_bits);
     printf("* modbus_read_input_bits: ");
     if (rc == -1 && errno == EMBMDATA) {
@@ -394,7 +394,7 @@ int main(void)
     }
 
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
-                               MODBUS_MAX_REGISTERS + 1,
+                               MODBUS_MAX_READ_REGISTERS + 1,
                                tab_rp_registers);
     printf("* modbus_read_registers: ");
     if (rc == -1 && errno == EMBMDATA) {
@@ -405,7 +405,7 @@ int main(void)
     }
 
     rc = modbus_read_input_registers(ctx, UT_INPUT_REGISTERS_ADDRESS,
-                                     MODBUS_MAX_REGISTERS + 1,
+                                     MODBUS_MAX_READ_REGISTERS + 1,
                                      tab_rp_registers);
     printf("* modbus_read_input_registers: ");
     if (rc == -1 && errno == EMBMDATA) {
@@ -416,7 +416,7 @@ int main(void)
     }
 
     rc = modbus_write_bits(ctx, UT_BITS_ADDRESS,
-                           MODBUS_MAX_BITS + 1,
+                           MODBUS_MAX_WRITE_BITS + 1,
                            tab_rp_bits);
     printf("* modbus_write_bits: ");
     if (rc == -1 && errno == EMBMDATA) {
@@ -427,7 +427,7 @@ int main(void)
     }
 
     rc = modbus_write_registers(ctx, UT_REGISTERS_ADDRESS,
-                                MODBUS_MAX_REGISTERS + 1,
+                                MODBUS_MAX_WRITE_REGISTERS + 1,
                                 tab_rp_registers);
     printf("* modbus_write_registers: ");
     if (rc == -1 && errno == EMBMDATA) {
