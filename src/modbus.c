@@ -1142,7 +1142,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         uint16_t address_write = (req[offset + 5] << 8) + req[offset + 6];
         int nb_write = (req[offset + 7] << 8) + req[offset + 8];
 
-        if ((address + nb) > mb_mapping->nb_registers &&
+        if ((address + nb) > mb_mapping->nb_registers ||
             (address_write + nb_write) > mb_mapping->nb_registers) {
             if (ctx->debug) {
                 fprintf(stderr,
