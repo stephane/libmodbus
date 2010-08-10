@@ -1487,9 +1487,9 @@ int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *data
 
 /* Read multiple registers from remote device to dest array and write multiple
    registers to remote device from data array. */
-int modbus_read_and_write_holding_registers(modbus_t *ctx,
-                                            int read_addr, int read_nb, uint16_t *dest,
-                                            int write_addr, int write_nb, const uint16_t *data)
+int modbus_read_and_write_registers(modbus_t *ctx,
+                                    int read_addr, int read_nb, uint16_t *dest,
+                                    int write_addr, int write_nb, const uint16_t *data)
 {
     int rc;
     int req_length;
@@ -1501,7 +1501,7 @@ int modbus_read_and_write_holding_registers(modbus_t *ctx,
     if (read_nb > MODBUS_MAX_READ_REGISTERS) {
         if (ctx->debug) {
             fprintf(stderr,
-                    "ERROR Too many holding registers requested (%d > %d)\n",
+                    "ERROR Too many registers requested (%d > %d)\n",
                     read_nb, MODBUS_MAX_READ_REGISTERS);
         }
         errno = EMBMDATA;
@@ -1511,7 +1511,7 @@ int modbus_read_and_write_holding_registers(modbus_t *ctx,
     if (write_nb > MODBUS_MAX_RW_WRITE_REGISTERS) {
         if (ctx->debug) {
             fprintf(stderr,
-                    "ERROR Too many holding registers wrote (%d > %d)\n",
+                    "ERROR Too many registers to write (%d > %d)\n",
                     write_nb, MODBUS_MAX_RW_WRITE_REGISTERS);
         }
         errno = EMBMDATA;

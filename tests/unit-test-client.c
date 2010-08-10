@@ -247,13 +247,13 @@ int main(void)
 
     /* Write registers to zero from tab_rp_registers and read registers to
        tab_rp_registers.  They should be same as UT_REGISTERS_TAB. */
-    rc = modbus_read_and_write_holding_registers(ctx,
-                                                 UT_REGISTERS_ADDRESS,
-                                                 UT_REGISTERS_NB_POINTS,
-                                                 tab_rp_registers,
-                                                 UT_REGISTERS_ADDRESS,
-                                                 UT_REGISTERS_NB_POINTS,
-                                                 tab_rp_registers);
+    rc = modbus_read_and_write_registers(ctx,
+                                         UT_REGISTERS_ADDRESS,
+                                         UT_REGISTERS_NB_POINTS,
+                                         tab_rp_registers,
+                                         UT_REGISTERS_ADDRESS,
+                                         UT_REGISTERS_NB_POINTS,
+                                         tab_rp_registers);
     printf("4/5 modbus_read_and_write_registers, read part: ");
     if (rc != UT_REGISTERS_NB_POINTS) {
         printf("FAILED (nb points %d)\n", rc);

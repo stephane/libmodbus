@@ -182,9 +182,9 @@ int modbus_write_bit(modbus_t *ctx, int coil_addr, int state);
 int modbus_write_register(modbus_t *ctx, int reg_addr, int value);
 int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *data);
 int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *data);
-int modbus_read_and_write_holding_registers(modbus_t *ctx, int read_addr,
-                                     int read_nb, uint16_t *dest, int write_addr,
-                                     int write_nb, const uint16_t *data);
+int modbus_read_and_write_registers(modbus_t *ctx, int read_addr,
+                                    int read_nb, uint16_t *dest, int write_addr,
+                                    int write_nb, const uint16_t *data);
 int modbus_report_slave_id(modbus_t *ctx, uint8_t *dest);
 
 modbus_mapping_t* modbus_mapping_new(int nb_coil_status, int nb_input_status,
