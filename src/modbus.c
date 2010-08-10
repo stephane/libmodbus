@@ -268,8 +268,7 @@ static unsigned int compute_response_length(modbus_t *ctx, uint8_t *req)
     case FC_READ_HOLDING_REGISTERS:
     case FC_READ_INPUT_REGISTERS:
         /* Header + 2 * nb values */
-        length = 2 + 2 * (req[offset + 3] << 8 |
-                          req[offset + 4]);
+        length = 2 + 2 * (req[offset + 3] << 8 | req[offset + 4]);
         break;
     case FC_READ_EXCEPTION_STATUS:
         length = 3;
@@ -497,26 +496,32 @@ typedef enum {
     MSG_CONFIRMATION
 } msg_type_t;
 
-/*  Computes the header length (to reach the the function code) */
+/* Computes the header length (to reach the real data) */
 static uint8_t compute_header_length(int function, msg_type_t msg_type)
 {
     int length;
 
-    if (function <= FC_WRITE_SINGLE_COIL ||
-        function == FC_WRITE_SINGLE_REGISTER) {
-        length = 4;
-    } else if (function == FC_WRITE_MULTIPLE_COILS ||
-               function == FC_WRITE_MULTIPLE_REGISTERS) {
-        length = 5;
-    } else if (function == FC_REPORT_SLAVE_ID) {
-        if (msg_type == MSG_INDICATION)
+    if (msg_type == MSG_INDICATION) {
+        if (function == FC_REPORT_SLAVE_ID) {
             length = 0;
-        else
+        } else {
+            /* Should never happen, the other header lengths are precomputed */
+            abort();
+        }
+    } else /* MSG_CONFIRMATION */ {
+        if (function <= FC_WRITE_SINGLE_COIL ||
+            function == FC_WRITE_SINGLE_REGISTER) {
+            length = 4;
+        } else if (function == FC_WRITE_MULTIPLE_COILS ||
+                   function == FC_WRITE_MULTIPLE_REGISTERS) {
+            length = 5;
+        } else if (function == FC_REPORT_SLAVE_ID) {
             length = 1;
-    } else if (function == FC_READ_AND_WRITE_REGISTERS) {
-        length = 9;
-    } else {
-        length = 0;
+        } else if (function == FC_READ_AND_WRITE_REGISTERS) {
+            length = 9;
+        } else {
+            length = 0;
+        }
     }
     return length;
 }
