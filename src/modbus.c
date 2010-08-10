@@ -1295,10 +1295,12 @@ static int read_registers(modbus_t *ctx, int function, int addr, int nb,
         int i;
 
         rc = receive_msg_req(ctx, req, rsp);
+        if (rc == -1) {
+            return -1;
+        }
 
         offset = TAB_HEADER_LENGTH[ctx->type_com];
 
-        /* If rc is negative, the loop is jumped ! */
         for (i = 0; i < rc; i++) {
             /* shift reg hi_byte to temp OR with lo_byte */
             data_dest[i] = (rsp[offset + 2 + (i << 1)] << 8) |
