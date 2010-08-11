@@ -37,6 +37,7 @@
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
+#include <sys/time.h>
 
 #include "modbus-version.h"
 
