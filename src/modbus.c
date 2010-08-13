@@ -500,22 +500,20 @@ static uint8_t compute_header_length(int function, msg_type_t msg_type)
 {
     int length;
 
-    if (msg_type == MSG_INDICATION) {
+    if (msg_type == MSG_CONFIRMATION) {
         if (function == FC_REPORT_SLAVE_ID) {
-            length = 0;
+            length = 1;
         } else {
             /* Should never happen, the other header lengths are precomputed */
             abort();
         }
-    } else /* MSG_CONFIRMATION */ {
+    } else /* MSG_INDICATION */ {
         if (function <= FC_WRITE_SINGLE_COIL ||
             function == FC_WRITE_SINGLE_REGISTER) {
             length = 4;
         } else if (function == FC_WRITE_MULTIPLE_COILS ||
                    function == FC_WRITE_MULTIPLE_REGISTERS) {
             length = 5;
-        } else if (function == FC_REPORT_SLAVE_ID) {
-            length = 1;
         } else if (function == FC_READ_AND_WRITE_REGISTERS) {
             length = 9;
         } else {
