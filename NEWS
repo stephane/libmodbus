@@ -1,7 +1,7 @@
-libmodbus 2.1.1 (2010-XX-XX)
+libmodbus 2.9.1 (2010-08-16)
 ============================
 
-- New API
+- Brand new API (see MIGRATION notes)!
 - Remove the internal function set_message_length_tcp
 - Restore slave ID (server ID) argument in functions
 - Error conventions of POSIX systems and error recover

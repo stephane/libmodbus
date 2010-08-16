@@ -12,7 +12,7 @@
 # http://www.gnu.org/software/libtool/manual/html_node/Libtool-versioning.html
 #
 m4_define([libmodbus_version_major], [2])
-m4_define([libmodbus_version_minor], [1])
+m4_define([libmodbus_version_minor], [9])
 m4_define([libmodbus_version_micro], [1])
 
 m4_define([libmodbus_release_status],
