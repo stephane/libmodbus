@@ -7,4 +7,4 @@ Name: modbus
 Description: Modbus library
 Version: @VERSION@
 Libs: -L${libdir} -lmodbus
-Cflags: -I${includedir}
+Cflags: -I${includedir}/modbus
