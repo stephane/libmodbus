@@ -464,10 +464,21 @@ static int receive_msg_req(modbus_t *ctx, uint8_t *req, uint8_t *rsp)
         /* GOOD RESPONSE */
         int req_nb_value;
         int rsp_nb_value;
+        int function = rsp[offset];
+
+        if (function != req[offset]) {
+            if (ctx->debug) {
+                fprintf(stderr,
+                        "Received function not corresponding to the request (%d != %d)\n",
+                        function, req[offset]);
+            }
+            errno = EMBBADDATA;
+            return -1;
+        }
 
         /* The number of values is returned if it's corresponding
          * to the request */
-        switch (rsp[offset]) {
+        switch (function) {
         case _FC_READ_COILS:
         case _FC_READ_DISCRETE_INPUTS:
             /* Read functions, 8 values in a byte (nb
