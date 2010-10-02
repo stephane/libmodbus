@@ -539,7 +539,7 @@ modbus_t* modbus_new_rtu(const char *device,
 
     ctx = (modbus_t *) malloc(sizeof(modbus_t));
     _modbus_init_common(ctx);
-    if (modbus_set_slave(ctx, slave) == -1) {
+    if (_modbus_set_slave(ctx, slave) == -1) {
         return NULL;
     }
 
