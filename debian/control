@@ -14,10 +14,9 @@ Section: libs
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends}
-Description: A Modbus library in C, which supports RTU communication over a serial line or a TCP link.
- A Modbus library for Linux (and OSX) wrote in C and which supports
- RTU communication over a serial line or a TCP link. Clean and fast!
- Supports controling an RTU and being an RTU.
+Description: A Modbus library written in C, to send/receive data with a
+ device which respects the Modbus protocol. This library can use a
+ serial port or an Ethernet connection.
  .
  This package contains the shared library.
 
@@ -27,10 +26,9 @@ Architecture: any
 Depends: libmodbus (= ${binary:Version}),
          ${shlibs:Depends},
          ${misc:Depends}
-Description: A Modbus library in C, which supports RTU communication over a serial line or a TCP link.
- A Modbus library for Linux (and OSX) wrote in C and which supports
- RTU communication over a serial line or a TCP link. Clean and fast!
- Supports controling an RTU and being an RTU.
+Description: A Modbus library written in C, to send/receive data with a
+ device which respects the Modbus protocol. This library can use a
+ serial port or an Ethernet connection.
  .
  This package contains the development files.
 

@@ -1,22 +1,22 @@
-Summary: A Modbus library in C, which supports RTU communication over a serial line or a TCP link.
+Summary: A Modbus library written in C
 Name: libmodbus
-Version: 2.0.3
+Version: 2.9.2
 Release: 1
 License: LGPL V3+
 Packager: Stéphane Raimbault
-URL: https://launchpad.net/libmodbus/
+URL: http://www.libmodbus.org
 Group: Applications/System
-Provides: libmodbus=2.0.3
+Provides: libmodbus=2.9.2
 Requires: ,/bin/sh
 
-Source0: libmodbus-2.0.3.tar.bz2
+Source0: libmodbus-2.9.2.tar.bz2
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: autoconf, automake
 
 %description
-A Modbus library for Linux (and OSX) wrote in C and which supports
-RTU communication over a serial line or a TCP link. Clean and fast!
+The library is written in C and designed to run on Linux, Mac OS X, FreeBSD and
+QNX and Windows.
 
 %prep
 %setup -q
@@ -47,20 +47,20 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0755,root,root) %dir %{_libdir}/pkgconfig
 %attr(0755,root,root) %dir %{_includedir}
 %attr(0755,root,root) %dir %{_includedir}/modbus/
-%dir %{_libdir}/libmodbus.so.2
+%dir %{_libdir}/libmodbus.so.4
 %dir %{_libdir}/libmodbus.so
-%attr(0755,root,root) %{_libdir}/libmodbus.so.2.0.3
+%attr(0755,root,root) %{_libdir}/libmodbus.so.4.0.0
 %attr(0755,root,root) %{_libdir}/libmodbus.la
 %attr(0644,root,root) %{_libdir}/pkgconfig/libmodbus.pc
 %attr(0644,root,root) %{_includedir}/modbus/modbus.h
-%doc AUTHORS ChangeLog INSTALL NEWS COPYING* README
+%attr(0644,root,root) %{_includedir}/modbus/modbus-rtu.h
+%attr(0644,root,root) %{_includedir}/modbus/modbus-tcp.h
+%attr(0644,root,root) %{_includedir}/modbus/modbus-version.h
+%doc AUTHORS ChangeLog INSTALL NEWS COPYING* README.rst
 
 
 %changelog
-* Sun Mar 22 2009 Stéphane Raimbault <stephane.raimbault@gmail.com> - 2.0.3-1
-- new upstream release
-
-* Sun Aug 10 2008 Stéphane Raimbault <stephane.raimbault@gmail.com> - 2.0.2-1
+* Mon Oct 5 2010 Stéphane Raimbault <stephane.raimbault@gmail.com> - 2.9.2-1
 - new upstream release
 
 * Fri Jul 2 2008 Stéphane Raimbault <stephane.raimbault@gmail.com> - 2.0.1-1
