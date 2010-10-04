@@ -102,6 +102,7 @@ struct _modbus {
 };
 
 void _modbus_init_common(modbus_t *ctx);
+void _error_print(modbus_t *ctx, const char *context);
 
 MODBUS_END_DECLS
 

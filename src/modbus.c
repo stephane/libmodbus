@@ -86,7 +86,7 @@ const char *modbus_strerror(int errnum) {
     }
 }
 
-static void error_print(modbus_t *ctx, const char *context)
+void _error_print(modbus_t *ctx, const char *context)
 {
     if (ctx->debug) {
         fprintf(stderr, "ERROR %s", modbus_strerror(errno));
@@ -158,7 +158,7 @@ static int send_msg(modbus_t *ctx, uint8_t *req, int req_length)
     do {
         rc = ctx->backend->send(ctx->s, req, req_length);
         if (rc == -1) {
-            error_print(ctx, NULL);
+            _error_print(ctx, NULL);
             if (ctx->error_recovery &&
                 (errno == EBADF || errno == ECONNRESET || errno == EPIPE)) {
                 modbus_close(ctx);
@@ -247,7 +247,7 @@ static int compute_data_length(modbus_t *ctx, uint8_t *msg)
             FD_ZERO(&rfds);                                             \
             FD_SET(ctx->s, &rfds);                                      \
         } else {                                                        \
-            error_print(ctx, "select");                                 \
+            _error_print(ctx, "select");                                 \
             if (ctx->error_recovery && (errno == EBADF)) {              \
                 modbus_close(ctx);                                      \
                 modbus_connect(ctx);                                    \
@@ -270,7 +270,7 @@ static int compute_data_length(modbus_t *ctx, uint8_t *msg)
             errno = EMBUNKEXC;                                          \
         } else {                                                        \
             errno = ETIMEDOUT;                                          \
-            error_print(ctx, "select");                                 \
+            _error_print(ctx, "select");                                 \
         }                                                               \
         return -1;                                                      \
     }                                                                   \
@@ -353,7 +353,7 @@ static int receive_msg(modbus_t *ctx, int msg_length_computed,
         }
 
         if (read_rc == -1) {
-            error_print(ctx, "read");
+            _error_print(ctx, "read");
             if (ctx->error_recovery && (errno == ECONNRESET ||
                                         errno == ECONNREFUSED)) {
                 modbus_close(ctx);
@@ -396,7 +396,7 @@ static int receive_msg(modbus_t *ctx, int msg_length_computed,
                 msg_length_computed += length_to_read;
                 if (msg_length_computed > ctx->backend->max_adu_length) {
                     errno = EMBBADDATA;
-                    error_print(ctx, "too many data");
+                    _error_print(ctx, "too many data");
                     return -1;
                 }
                 state = COMPLETE;
@@ -540,7 +540,7 @@ static int receive_msg_req(modbus_t *ctx, uint8_t *req, uint8_t *rsp)
             } else {
                 errno = EMBBADEXC;
             }
-            error_print(ctx, NULL);
+            _error_print(ctx, NULL);
             return -1;
         }
     }
