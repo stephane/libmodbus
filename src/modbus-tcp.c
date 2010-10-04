@@ -15,17 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "modbus.h"
+#include "modbus-private.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 
 #include <sys/types.h>
+#ifdef NATIVE_WIN32
+#include <ws2tcpip.h>
+#else
 #include <sys/socket.h>
 #include <sys/ioctl.h>
-
-#include "modbus.h"
-#include "modbus-private.h"
+#endif
 
 #include "modbus-tcp.h"
 #include "modbus-tcp-private.h"
@@ -164,7 +168,7 @@ static int _modbus_tcp_connect(modbus_t *ctx)
         return -1;
     }
 
-#if (!HAVE_DECL___CYGWIN__)
+#ifndef NATIVE_WIN32
     /**
      * Cygwin defines IPTOS_LOWDELAY but can't handle that flag so it's
      * necessary to workaround that problem.
@@ -210,10 +214,10 @@ int _modbus_tcp_flush(modbus_t *ctx)
     do {
         /* Extract the garbage from the socket */
         char devnull[MODBUS_TCP_MAX_ADU_LENGTH];
-#if (!HAVE_DECL___CYGWIN__)
+#ifndef NATIVE_WIN32
         rc = recv(ctx->s, devnull, MODBUS_TCP_MAX_ADU_LENGTH, MSG_DONTWAIT);
 #else
-        /* On Cygwin, it's a bit more complicated to not wait */
+        /* On Win32, it's a bit more complicated to not wait */
         fd_set rfds;
         struct timeval tv;
 

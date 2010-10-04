@@ -155,14 +155,87 @@ int _modbus_rtu_send_msg_pre(uint8_t *req, int req_length)
     return req_length;
 }
 
+#ifdef NATIVE_WIN32
+/* This simple implementation is sort of a substitute of the select() call, working
+ * this way: the win32_ser_select() call tries to read some data from the serial port,
+ * setting the timeout as the select() call would. Data read is stored into the
+ * receive buffer, that is then consumed by the win32_ser_read() call.
+ * So win32_ser_select() does both the event waiting and the reading,
+ * while win32_ser_read() only consumes the receive buffer.
+ */
+
+static void win32_ser_init(struct win32_ser *ws) {
+    /* Clear everything */
+    memset(ws,0x00,sizeof(struct win32_ser));
+    /* Set file handle to invalid */
+    ws->fd = INVALID_HANDLE_VALUE;
+}
+
+static int win32_ser_select(struct win32_ser *ws, int max_len, struct timeval *tv) {
+    COMMTIMEOUTS comm_to; unsigned int msec = 0;
+    /* Check if some data still in the buffer to be consumed */
+    if (ws->n_bytes> 0) {
+        return 1;
+    }
+    /* Setup timeouts like select() would do */
+    msec = tv->tv_sec * 1000 + tv->tv_usec / 1000;
+    if (msec < 1) msec = 1;
+    comm_to.ReadIntervalTimeout = msec;
+    comm_to.ReadTotalTimeoutMultiplier = 0;
+    comm_to.ReadTotalTimeoutConstant = msec;
+    comm_to.WriteTotalTimeoutMultiplier = 0;
+    comm_to.WriteTotalTimeoutConstant = 1000;
+    SetCommTimeouts(ws->fd,&comm_to);
+    /* Read some bytes */
+    if ((max_len > PY_BUF_SIZE) || (max_len < 0)) {
+        max_len = PY_BUF_SIZE;
+    }
+    if (ReadFile(ws->fd, &ws->buf, max_len, &ws->n_bytes, NULL)) {
+        /* Check if some bytes available */
+        if (ws->n_bytes > 0) {
+            /* Some bytes read */
+            return 1;
+        } else {
+            /* Just timed out */
+            return 0;
+        }
+    } else {
+        /* Some kind of error */
+        return -1;
+    }
+}
+
+static int win32_ser_read(struct win32_ser *ws, uint8_t *p_msg, unsigned int max_len) {
+    unsigned int n = ws->n_bytes;
+    if (max_len < n) {
+        n = max_len;
+    }
+    if (n > 0) {
+        memcpy(p_msg,ws->buf,n);
+    }
+    ws->n_bytes -= n;
+    return(n);
+}
+#endif
+
 ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
 {
+#ifdef NATIVE_WIN32
+    modbus_rtu_t *ctx_rtu = ctx->backend_data;
+    DWORD n_bytes = 0;
+    return (WriteFile(ctx_rtu->w_ser.fd, req, req_length, &n_bytes, NULL)) ? n_bytes : -1;
+#else
     return write(ctx->s, req, req_length);
+#endif
 }
 
 ssize_t _modbus_rtu_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length)
 {
+#ifdef NATIVE_WIN32
+    return win32_ser_read(&((modbus_rtu_t *)ctx->backend_data)->w_ser, rsp, rsp_length);
+#else
     return read(ctx->s, rsp, rsp_length);
+#endif
 }
 
 /* The check_crc16 function shall return the message length if the CRC is
@@ -195,8 +268,12 @@ int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
 /* Sets up a serial port for RTU communications */
 static int _modbus_rtu_connect(modbus_t *ctx)
 {
+#ifdef NATIVE_WIN32
+    DCB dcb;
+#else
     struct termios tios;
     speed_t speed;
+#endif
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
 
     if (ctx->debug) {
@@ -205,6 +282,138 @@ static int _modbus_rtu_connect(modbus_t *ctx)
                ctx_rtu->data_bit, ctx_rtu->stop_bit);
     }
 
+#ifdef NATIVE_WIN32
+    /* Some references here:
+     * http://msdn.microsoft.com/en-us/library/aa450602.aspx
+     */
+    win32_ser_init(&ctx_rtu->w_ser);
+
+    /* ctx_rtu->device should contain a string like "COMxx:" xx being a decimal number */
+    ctx_rtu->w_ser.fd = CreateFileA(ctx_rtu->device,
+                                        GENERIC_READ | GENERIC_WRITE,
+                                        0,
+                                        NULL,
+                                        OPEN_EXISTING,
+                                        0,
+                                        NULL);
+
+    /* Error checking */
+    if (ctx_rtu->w_ser.fd == INVALID_HANDLE_VALUE) {
+        fprintf(stderr, "ERROR Can't open the device %s (%s)\n",
+                ctx_rtu->device, strerror(errno));
+        return -1;
+    }
+
+    /* Save params */
+    ctx_rtu->old_dcb.DCBlength = sizeof(DCB);
+    if (!GetCommState(ctx_rtu->w_ser.fd, &ctx_rtu->old_dcb)) {
+        fprintf(stderr, "ERROR Error getting configuration (LastError %d)\n",
+                (int)GetLastError());
+        return -1;
+    }
+
+    /* Build new configuration (starting from current settings) */
+    dcb = ctx_rtu->old_dcb;
+
+    /* Speed setting */
+    switch (ctx_rtu->baud) {
+        case 110:
+            dcb.BaudRate = CBR_110;
+            break;
+        case 300:
+            dcb.BaudRate = CBR_300;
+            break;
+        case 600:
+            dcb.BaudRate = CBR_600;
+            break;
+        case 1200:
+            dcb.BaudRate = CBR_1200;
+            break;
+        case 2400:
+            dcb.BaudRate = CBR_2400;
+            break;
+        case 4800:
+            dcb.BaudRate = CBR_4800;
+            break;
+        case 9600:
+            dcb.BaudRate = CBR_9600;
+            break;
+        case 19200:
+            dcb.BaudRate = CBR_19200;
+            break;
+        case 38400:
+            dcb.BaudRate = CBR_38400;
+            break;
+        case 57600:
+            dcb.BaudRate = CBR_57600;
+            break;
+        case 115200:
+            dcb.BaudRate = CBR_115200;
+            break;
+        default:
+            dcb.BaudRate = CBR_9600;
+            printf("WARNING Unknown baud rate %d for %s (B9600 used)\n",
+                    ctx_rtu->baud, ctx_rtu->device);
+        }
+
+        /* Data bits */
+        switch (ctx_rtu->data_bit) {
+            case 5:
+                dcb.ByteSize = 5;
+                break;
+            case 6:
+                dcb.ByteSize = 6;
+                break;
+            case 7:
+                dcb.ByteSize = 7;
+                break;
+            case 8:
+            default:
+                dcb.ByteSize = 8;
+                break;
+        }
+
+        /* Stop bits */
+        if (ctx_rtu->stop_bit == 1)
+            dcb.StopBits = ONESTOPBIT;
+        else /* 2 */
+            dcb.StopBits = TWOSTOPBITS;
+
+        /* Parity */
+        if (ctx_rtu->parity == 'N') {
+            dcb.Parity = NOPARITY;
+            dcb.fParity = FALSE;
+        } else if (ctx_rtu->parity == 'E') {
+            dcb.Parity = EVENPARITY;
+            dcb.fParity = TRUE;
+        } else {
+            /* odd */
+            dcb.Parity = ODDPARITY;
+            dcb.fParity = TRUE;
+        }
+
+        /* Hardware handshaking left as default settings retrieved */
+
+        /* No software handshaking */
+        dcb.fTXContinueOnXoff = TRUE;
+        dcb.fOutX = FALSE;
+        dcb.fInX = FALSE;
+
+        /* Binary mode (it's the only supported on Windows anyway) */
+        dcb.fBinary = TRUE;
+
+        /* Don't want errors to be blocking */
+        dcb.fAbortOnError = FALSE;
+
+        /* TODO: any other flags !? */
+
+        /* Setup port */
+        if (!SetCommState(ctx_rtu->w_ser.fd, &dcb)) {
+            fprintf(stderr, "ERROR Error setting new configuration (LastError %d)\n",
+                    (int)GetLastError());
+            return -1;
+        }
+#else
     /* The O_NOCTTY flag tells UNIX that this program doesn't want
        to be the "controlling terminal" for that port. If you
        don't specify this then any input (such as keyboard abort
@@ -447,6 +656,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     if (tcsetattr(ctx->s, TCSANOW, &tios) < 0) {
         return -1;
     }
+#endif
 
     return 0;
 }
@@ -456,13 +666,30 @@ void _modbus_rtu_close(modbus_t *ctx)
     /* Closes the file descriptor in RTU mode */
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
 
+#ifdef NATIVE_WIN32
+    /* Revert settings */
+    if (!SetCommState(ctx_rtu->w_ser.fd, &ctx_rtu->old_dcb))
+        fprintf(stderr, "ERROR Couldn't revert to configuration (LastError %d)\n",
+                (int)GetLastError());
+
+    if (!CloseHandle(ctx_rtu->w_ser.fd))
+        fprintf(stderr, "ERROR Error while closing handle (LastError %d)\n",
+                (int)GetLastError());
+#else
     tcsetattr(ctx->s, TCSANOW, &(ctx_rtu->old_tios));
     close(ctx->s);
+#endif
 }
 
 int _modbus_rtu_flush(modbus_t *ctx)
 {
+#ifdef NATIVE_WIN32
+    modbus_rtu_t *ctx_rtu = ctx->backend_data;
+    ctx_rtu->w_ser.n_bytes = 0;
+    return ( FlushFileBuffers(ctx_rtu->w_ser.fd) == FALSE );
+#else
     return tcflush(ctx->s, TCIOFLUSH);
+#endif
 }
 
 int _modbus_rtu_listen(modbus_t *ctx, int nb_connection)
@@ -488,6 +715,25 @@ int _modbus_rtu_accept(modbus_t *ctx, int *socket)
 int _modbus_rtu_select(modbus_t *ctx, fd_set *rfds, struct timeval *tv, int msg_length_computed, int msg_length)
 {
     int s_rc;
+#ifdef NATIVE_WIN32
+    s_rc = win32_ser_select(&(((modbus_rtu_t*)ctx->backend_data)->w_ser), msg_length_computed, tv);
+    if (s_rc == 0) {
+        errno = ETIMEDOUT;
+        return -1;
+    }
+
+    if (s_rc < 0) {
+        _error_print(ctx, "select");
+        if (ctx->error_recovery && (errno == EBADF)) {
+            modbus_close(ctx);
+            modbus_connect(ctx);
+            errno = EBADF;
+            return -1;
+        } else {
+            return -1;
+        }
+    }
+#else
     while ((s_rc = select(ctx->s+1, rfds, NULL, NULL, tv)) == -1) {
         if (errno == EINTR) {
             if (ctx->debug) {
@@ -524,6 +770,7 @@ int _modbus_rtu_select(modbus_t *ctx, fd_set *rfds, struct timeval *tv, int msg_
         }
         return -1;
     }
+#endif
 
     return s_rc;
 }

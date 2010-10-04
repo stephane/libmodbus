@@ -24,6 +24,10 @@
 
 #include <modbus.h>
 
+#ifdef NATIVE_WIN32
+#include <ws2tcpip.h>
+#endif
+
 #define NB_CONNECTION    5
 
 modbus_t *ctx = NULL;
