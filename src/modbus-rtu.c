@@ -485,6 +485,49 @@ int _modbus_rtu_accept(modbus_t *ctx, int *socket)
     return -1;
 }
 
+int _modbus_rtu_select(modbus_t *ctx, fd_set *rfds, struct timeval *tv, int msg_length_computed, int msg_length)
+{
+    int s_rc;
+    while ((s_rc = select(ctx->s+1, rfds, NULL, NULL, tv)) == -1) {
+        if (errno == EINTR) {
+            if (ctx->debug) {
+                fprintf(stderr, "A non blocked signal was caught\n");
+            }
+            /* Necessary after an error */
+            FD_ZERO(rfds);
+            FD_SET(ctx->s, rfds);
+        } else {
+            _error_print(ctx, "select");
+            if (ctx->error_recovery && (errno == EBADF)) {
+                modbus_close(ctx);
+                modbus_connect(ctx);
+                errno = EBADF;
+                return -1;
+            } else {
+                return -1;
+            }
+        }
+    }
+
+    if (s_rc == 0) {
+        /* Timeout */
+        if (msg_length == (ctx->backend->header_length + 2 +
+                           ctx->backend->checksum_length)) {
+            /* Optimization allowed because exception response is
+               the smallest trame in modbus protocol (3) so always
+               raise a timeout error.
+               Temporary error before exception analyze. */
+            errno = EMBUNKEXC;
+        } else {
+            errno = ETIMEDOUT;
+            _error_print(ctx, "select");
+        }
+        return -1;
+    }
+
+    return s_rc;
+}
+
 int _modbus_rtu_filter_request(modbus_t *ctx, int slave)
 {
     /* Filter on the Modbus unit identifier (slave) in RTU mode */
@@ -518,6 +561,7 @@ const modbus_backend_t _modbus_rtu_backend = {
     _modbus_rtu_flush,
     _modbus_rtu_listen,
     _modbus_rtu_accept,
+    _modbus_rtu_select,
     _modbus_rtu_filter_request
 };
 

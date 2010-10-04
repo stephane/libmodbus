@@ -226,44 +226,6 @@ static int compute_data_length(modbus_t *ctx, uint8_t *msg)
     return length;
 }
 
-#define WAIT_DATA() {                                                   \
-    while ((s_rc = select(ctx->s+1, &rfds, NULL, NULL, &tv)) == -1) {   \
-        if (errno == EINTR) {                                           \
-            if (ctx->debug) {                                           \
-                fprintf(stderr, "A non blocked signal was caught\n");   \
-            }                                                           \
-            /* Necessary after an error */                              \
-            FD_ZERO(&rfds);                                             \
-            FD_SET(ctx->s, &rfds);                                      \
-        } else {                                                        \
-            _error_print(ctx, "select");                                 \
-            if (ctx->error_recovery && (errno == EBADF)) {              \
-                modbus_close(ctx);                                      \
-                modbus_connect(ctx);                                    \
-                errno = EBADF;                                          \
-                return -1;                                              \
-            } else {                                                    \
-                return -1;                                              \
-            }                                                           \
-        }                                                               \
-    }                                                                   \
-                                                                        \
-    if (s_rc == 0) {                                                    \
-        /* Timeout */                                                   \
-        if (msg_length == (ctx->backend->header_length + 2 +            \
-                           ctx->backend->checksum_length)) {            \
-            /* Optimization allowed because exception response is       \
-               the smallest trame in modbus protocol (3) so always      \
-               raise a timeout error.                                   \
-               Temporary error before exception analyze. */             \
-            errno = EMBUNKEXC;                                          \
-        } else {                                                        \
-            errno = ETIMEDOUT;                                          \
-            _error_print(ctx, "select");                                 \
-        }                                                               \
-        return -1;                                                      \
-    }                                                                   \
-}
 
 /* Waits a response from a modbus server or a request from a modbus client.
    This function blocks if there is no replies (3 timeouts).
@@ -330,8 +292,10 @@ static int receive_msg(modbus_t *ctx, int msg_length_computed,
 
     length_to_read = msg_length_computed;
 
-    s_rc = 0;
-    WAIT_DATA();
+    s_rc = ctx->backend->select(ctx, &rfds, &tv, msg_length_computed, msg_length);
+    if (s_rc == -1) {
+        return -1;
+    }
 
     p_msg = msg;
     while (s_rc) {
@@ -405,7 +369,10 @@ static int receive_msg(modbus_t *ctx, int msg_length_computed,
             tv.tv_sec = ctx->timeout_end.tv_sec;
             tv.tv_usec = ctx->timeout_end.tv_usec;
 
-            WAIT_DATA();
+            s_rc = ctx->backend->select(ctx, &rfds, &tv, msg_length_computed, msg_length);
+            if (s_rc == -1) {
+                return -1;
+            }
         } else {
             /* All chars are received */
             s_rc = FALSE;
