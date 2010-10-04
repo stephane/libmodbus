@@ -34,6 +34,26 @@
 #include "modbus-tcp.h"
 #include "modbus-tcp-private.h"
 
+static int _modbus_tcp_init()
+{
+#ifdef NATIVE_WIN32
+    // Initialise Win32 Socket API
+    WORD wVersionRequested;
+    WSADATA wsaData;
+
+    wVersionRequested = MAKEWORD(2, 0);
+    if (WSAStartup(wVersionRequested, &wsaData) != 0)
+    {
+        fprintf (stderr, "WSAStartup() returned error code %d\n",
+                 GetLastError());
+        errno = EIO;
+        return -1;
+    }
+#endif
+
+    return 0;
+}
+
 static int _modbus_set_slave(modbus_t *ctx, int slave)
 {
     if (slave >= 1 && slave <= 247) {
@@ -153,6 +173,10 @@ static int _modbus_tcp_connect(modbus_t *ctx)
     struct sockaddr_in addr;
     modbus_tcp_t *ctx_tcp = ctx->backend_data;
 
+    if (_modbus_tcp_init() == -1) {
+        return -1;
+    }
+
     ctx->s = socket(PF_INET, SOCK_STREAM, 0);
     if (ctx->s == -1) {
         return -1;
@@ -247,6 +271,8 @@ int _modbus_tcp_listen(modbus_t *ctx, int nb_connection)
     int yes;
     struct sockaddr_in addr;
     modbus_tcp_t *ctx_tcp = ctx->backend_data;
+
+    _modbus_tcp_init();
 
     new_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (new_socket == -1) {
