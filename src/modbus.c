@@ -22,20 +22,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdint.h>
-#include <termios.h>
 #include <unistd.h>
 #include <errno.h>
 #include <limits.h>
-
-/* Add this for macros that defined unix flavor */
-#if (defined(__unix__) || defined(unix)) && !defined(USG)
-#include <sys/param.h>
-#endif
-
-#if !defined(UINT16_MAX)
-#define UINT16_MAX 0xFFFF
-#endif
 
 #include "modbus.h"
 #include "modbus-private.h"

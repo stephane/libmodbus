@@ -23,13 +23,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
-#if (defined OpenBSD) || (defined(__FreeBSD__ ) && __FreeBSD__ < 5)
-#include <netinet/in_systm.h>
-#endif
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
 
 #include "modbus.h"
 #include "modbus-private.h"
