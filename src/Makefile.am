@@ -11,7 +11,11 @@ libmodbus_la_SOURCES = \
         modbus-tcp.h \
         modbus-tcp-private.h \
         modbus-version.h
-libmodbus_la_LDFLAGS = $(AM_LDFLAGS) -version-info $(LIBMODBUS_LT_VERSION_INFO)
+if BUILD_WIN32
+libmodbus_la_LIBADD = -lwsock32
+endif
+
+libmodbus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined -version-info $(LIBMODBUS_LT_VERSION_INFO)
 
 # Header files to install
 libmodbusincludedir = $(includedir)/modbus

@@ -46,9 +46,22 @@ LIBMODBUS_LD_AGE=0
 LIBMODBUS_LT_VERSION_INFO=$LIBMODBUS_LD_CURRENT:$LIBMODBUS_LD_REVISION:$LIBMODBUS_LD_AGE
 AC_SUBST(LIBMODBUS_LT_VERSION_INFO)
 
+# Check whether we are building for Win32
+build_win32="false"
+case "${host}" in
+      *mingw32)
+		AC_DEFINE([BUILD_WIN32], [], [Build libmodbus for Win32])
+		build_win32="true"
+	;;
+esac
+
+AM_CONDITIONAL(BUILD_WIN32, test "$build_win32" = "true")
+
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_CXX
+AC_LIBTOOL_WIN32_DLL
+AC_PROG_LIBTOOL
 AC_PROG_MAKE_SET
 LT_INIT([disable-static])
 
