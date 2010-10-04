@@ -100,7 +100,7 @@ void _error_print(modbus_t *ctx, const char *context)
 
 int modbus_flush(modbus_t *ctx)
 {
-    ctx->backend->flush(ctx);
+    return ctx->backend->flush(ctx);
 }
 
 /* Computes the length of the expected response */
