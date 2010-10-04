@@ -156,14 +156,14 @@ int _modbus_rtu_send_msg_pre(uint8_t *req, int req_length)
     return req_length;
 }
 
-ssize_t _modbus_rtu_send(int s, const uint8_t *req, int req_length)
+ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
 {
-    return write(s, req, req_length);
+    return write(ctx->s, req, req_length);
 }
 
-ssize_t _modbus_rtu_recv(int s, uint8_t *rsp, int rsp_length)
+ssize_t _modbus_rtu_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length)
 {
-    return read(s, rsp, rsp_length);
+    return read(ctx->s, rsp, rsp_length);
 }
 
 /* The check_crc16 function shall return the message length if the CRC is

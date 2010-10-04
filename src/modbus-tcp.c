@@ -130,17 +130,17 @@ int _modbus_tcp_send_msg_pre(uint8_t *req, int req_length)
     return req_length;
 }
 
-ssize_t _modbus_tcp_send(int s, const uint8_t *req, int req_length)
+ssize_t _modbus_tcp_send(modbus_t *ctx, const uint8_t *req, int req_length)
 {
     /* MSG_NOSIGNAL
        Requests not to send SIGPIPE on errors on stream oriented
        sockets when the other end breaks the connection.  The EPIPE
        error is still returned. */
-    return send(s, req, req_length, MSG_NOSIGNAL);
+    return send(ctx->s, req, req_length, MSG_NOSIGNAL);
 }
 
-ssize_t _modbus_tcp_recv(int s, uint8_t *rsp, int rsp_length) {
-    return recv(s, rsp, rsp_length, 0);
+ssize_t _modbus_tcp_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length) {
+    return recv(ctx->s, rsp, rsp_length, 0);
 }
 
 int _modbus_tcp_check_integrity(modbus_t *ctx, uint8_t *msg, const int msg_length)
