@@ -129,11 +129,11 @@ ssize_t _modbus_tcp_send(modbus_t *ctx, const uint8_t *req, int req_length)
        Requests not to send SIGPIPE on errors on stream oriented
        sockets when the other end breaks the connection.  The EPIPE
        error is still returned. */
-    return send(ctx->s, req, req_length, MSG_NOSIGNAL);
+    return send(ctx->s, (const char*)req, req_length, MSG_NOSIGNAL);
 }
 
 ssize_t _modbus_tcp_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length) {
-    return recv(ctx->s, rsp, rsp_length, 0);
+    return recv(ctx->s, (char *)rsp, rsp_length, 0);
 }
 
 int _modbus_tcp_check_integrity(modbus_t *ctx, uint8_t *msg, const int msg_length)
