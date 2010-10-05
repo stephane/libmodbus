@@ -1358,8 +1358,8 @@ modbus_mapping_t* modbus_mapping_new(int nb_bits, int nb_input_bits,
         mb_mapping->tab_input_bits =
             (uint8_t *) malloc(nb_input_bits * sizeof(uint8_t));
         if (mb_mapping->tab_input_bits == NULL) {
-            free(mb_mapping);
             free(mb_mapping->tab_bits);
+            free(mb_mapping);
             return NULL;
         }
         memset(mb_mapping->tab_input_bits, 0, nb_input_bits * sizeof(uint8_t));
@@ -1373,9 +1373,9 @@ modbus_mapping_t* modbus_mapping_new(int nb_bits, int nb_input_bits,
         mb_mapping->tab_registers =
             (uint16_t *) malloc(nb_registers * sizeof(uint16_t));
         if (mb_mapping->tab_registers == NULL) {
-            free(mb_mapping);
-            free(mb_mapping->tab_bits);
             free(mb_mapping->tab_input_bits);
+            free(mb_mapping->tab_bits);
+            free(mb_mapping);
             return NULL;
         }
         memset(mb_mapping->tab_registers, 0, nb_registers * sizeof(uint16_t));
@@ -1389,10 +1389,10 @@ modbus_mapping_t* modbus_mapping_new(int nb_bits, int nb_input_bits,
         mb_mapping->tab_input_registers =
             (uint16_t *) malloc(nb_input_registers * sizeof(uint16_t));
         if (mb_mapping->tab_input_registers == NULL) {
-            free(mb_mapping);
-            free(mb_mapping->tab_bits);
-            free(mb_mapping->tab_input_bits);
             free(mb_mapping->tab_registers);
+            free(mb_mapping->tab_input_bits);
+            free(mb_mapping->tab_bits);
+            free(mb_mapping);
             return NULL;
         }
         memset(mb_mapping->tab_input_registers, 0,
@@ -1405,10 +1405,10 @@ modbus_mapping_t* modbus_mapping_new(int nb_bits, int nb_input_bits,
 /* Frees the 4 arrays */
 void modbus_mapping_free(modbus_mapping_t *mb_mapping)
 {
-    free(mb_mapping->tab_bits);
-    free(mb_mapping->tab_input_bits);
-    free(mb_mapping->tab_registers);
     free(mb_mapping->tab_input_registers);
+    free(mb_mapping->tab_registers);
+    free(mb_mapping->tab_input_bits);
+    free(mb_mapping->tab_bits);
     free(mb_mapping);
 }
 
