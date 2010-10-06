@@ -274,7 +274,9 @@ int _modbus_tcp_listen(modbus_t *ctx, int nb_connection)
     modbus_tcp_t *ctx_tcp = ctx->backend_data;
 
 #ifdef NATIVE_WIN32
-    _modbus_tcp_init_win32();
+    if (_modbus_tcp_init_win32() == -1) {
+        return -1;
+    }
 #endif
 
     new_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
