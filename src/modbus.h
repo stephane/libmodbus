@@ -24,11 +24,11 @@
 #if defined(WIN32) && !defined(__CYGWIN__)
 #define NATIVE_WIN32
 #define MSG_NOSIGNAL 0
-#define ECONNRESET WSAECONNRESET
+#define ECONNRESET   WSAECONNRESET
 #define ECONNREFUSED WSAECONNREFUSED
-#define ETIMEDOUT WSAETIMEDOUT
-#define ENOPROTOOPT WSAENOPROTOOPT
-#define SHUT_RDWR 2
+#define ETIMEDOUT    WSAETIMEDOUT
+#define ENOPROTOOPT  WSAENOPROTOOPT
+#define SHUT_RDWR    2
 #include <winsock2.h>
 #endif /* win32 and no cygwin */
 
