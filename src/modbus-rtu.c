@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "modbus.h"
 #include "modbus-private.h"
@@ -249,6 +250,8 @@ ssize_t _modbus_rtu_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length)
     return read(ctx->s, rsp, rsp_length);
 #endif
 }
+
+int _modbus_rtu_flush(modbus_t *);
 
 /* The check_crc16 function shall return the message length if the CRC is
    valid. Otherwise it shall return -1 and set errno to EMBADCRC. */
