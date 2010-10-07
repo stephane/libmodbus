@@ -85,7 +85,7 @@ int main(void)
 
     rate = (NB_LOOPS * nb_points) * G_MSEC_PER_SEC / (end - start);
     printf("Transfert rate in points/seconds:\n");
-    printf("* %'d points/s\n", rate);
+    printf("* %d points/s\n", rate);
     printf("\n");
 
     bytes = NB_LOOPS * (nb_points / 8) + ((nb_points % 8) ? 1 : 0);
@@ -93,7 +93,7 @@ int main(void)
     printf("Values:\n");
     printf("* %d x %d values\n", NB_LOOPS, nb_points);
     printf("* %.3f ms for %d bytes\n", elapsed, bytes);
-    printf("* %'d KiB/s\n", rate);
+    printf("* %d KiB/s\n", rate);
     printf("\n");
 
     /* TCP: Query and reponse header and values */
@@ -103,7 +103,7 @@ int main(void)
     bytes = NB_LOOPS * bytes;
     rate = bytes / 1024 * G_MSEC_PER_SEC / (end - start);
     printf("* %.3f ms for %d bytes\n", elapsed, bytes);
-    printf("* %'d KiB/s\n", rate);
+    printf("* %d KiB/s\n", rate);
     printf("\n\n");
 
     printf("READ REGISTERS\n\n");
@@ -122,7 +122,7 @@ int main(void)
 
     rate = (NB_LOOPS * nb_points) * G_MSEC_PER_SEC / (end - start);
     printf("Transfert rate in points/seconds:\n");
-    printf("* %'d registers/s\n", rate);
+    printf("* %d registers/s\n", rate);
     printf("\n");
 
     bytes = NB_LOOPS * nb_points * sizeof(uint16_t);
@@ -130,7 +130,7 @@ int main(void)
     printf("Values:\n");
     printf("* %d x %d values\n", NB_LOOPS, nb_points);
     printf("* %.3f ms for %d bytes\n", elapsed, bytes);
-    printf("* %'d KiB/s\n", rate);
+    printf("* %d KiB/s\n", rate);
     printf("\n");
 
     /* TCP:Query and reponse header and values */
@@ -140,7 +140,7 @@ int main(void)
     bytes = NB_LOOPS * bytes;
     rate = bytes / 1024 * G_MSEC_PER_SEC / (end - start);
     printf("* %.3f ms for %d bytes\n", elapsed, bytes);
-    printf("* %'d KiB/s\n", rate);
+    printf("* %d KiB/s\n", rate);
     printf("\n");
 
     printf("READ AND WRITE REGISTERS\n\n");
@@ -161,7 +161,7 @@ int main(void)
 
     rate = (NB_LOOPS * nb_points) * G_MSEC_PER_SEC / (end - start);
     printf("Transfert rate in points/seconds:\n");
-    printf("* %'d registers/s\n", rate);
+    printf("* %d registers/s\n", rate);
     printf("\n");
 
     bytes = NB_LOOPS * nb_points * sizeof(uint16_t);
@@ -169,7 +169,7 @@ int main(void)
     printf("Values:\n");
     printf("* %d x %d values\n", NB_LOOPS, nb_points);
     printf("* %.3f ms for %d bytes\n", elapsed, bytes);
-    printf("* %'d KiB/s\n", rate);
+    printf("* %d KiB/s\n", rate);
     printf("\n");
 
     /* TCP:Query and reponse header and values */
@@ -179,7 +179,7 @@ int main(void)
     bytes = NB_LOOPS * bytes;
     rate = bytes / 1024 * G_MSEC_PER_SEC / (end - start);
     printf("* %.3f ms for %d bytes\n", elapsed, bytes);
-    printf("* %'d KiB/s\n", rate);
+    printf("* %d KiB/s\n", rate);
     printf("\n");
 
     /* Free the memory */
