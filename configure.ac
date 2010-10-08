@@ -13,7 +13,7 @@
 #
 m4_define([libmodbus_version_major], [2])
 m4_define([libmodbus_version_minor], [9])
-m4_define([libmodbus_version_micro], [1])
+m4_define([libmodbus_version_micro], [2])
 
 m4_define([libmodbus_release_status],
             [m4_if(m4_eval(libmodbus_version_minor % 2), [1], [snapshot],
