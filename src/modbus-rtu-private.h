@@ -18,6 +18,9 @@
 #ifndef _MODBUS_RTU_PRIVATE_H_
 #define _MODBUS_RTU_PRIVATE_H_
 
+#include <stdint.h>
+#include <termios.h>
+
 #define _MODBUS_RTU_HEADER_LENGTH      1
 #define _MODBUS_RTU_PRESET_REQ_LENGTH  6
 #define _MODBUS_RTU_PRESET_RSP_LENGTH  2
@@ -61,8 +64,8 @@ typedef struct _modbus_rtu {
     /* Parity: 'N', 'O', 'E' */
     char parity;
 #ifdef NATIVE_WIN32
-	struct win32_ser w_ser;
-	DCB old_dcb;
+    struct win32_ser w_ser;
+    DCB old_dcb;
 #else
     /* Save old termios settings */
     struct termios old_tios;

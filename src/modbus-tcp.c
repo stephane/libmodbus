@@ -25,6 +25,7 @@
 #include <unistd.h>
 
 #include <sys/types.h>
+
 #ifdef NATIVE_WIN32
 #include <ws2tcpip.h>
 #else

@@ -18,6 +18,8 @@
 #ifndef _MODBUS_TCP_H_
 #define _MODBUS_TCP_H_
 
+#include "modbus.h"
+
 #define MODBUS_TCP_DEFAULT_PORT   502
 #define MODBUS_TCP_SLAVE         0xFF
 

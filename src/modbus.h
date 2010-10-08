@@ -38,7 +38,9 @@
 #endif
 #include <stdint.h>
 #ifndef NATIVE_WIN32
+
 #include <termios.h>
+
 #if defined(OpenBSD) || (defined(__FreeBSD__) && __FreeBSD__ < 5)
 #include <netinet/in_systm.h>
 #endif

@@ -18,6 +18,10 @@
 #ifndef _MODBUS_PRIVATE_H_
 #define _MODBUS_PRIVATE_H_
 
+#include <sys/time.h>
+#include <sys/types.h>
+#include <stdint.h>
+
 #include "modbus.h"
 
 MODBUS_BEGIN_DECLS
