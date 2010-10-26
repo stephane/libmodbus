@@ -24,8 +24,10 @@
 
 #include <modbus.h>
 
-#ifdef NATIVE_WIN32
+#if defined(_WIN32)
 #include <ws2tcpip.h>
+#else
+#include <netinet/in.h>
 #endif
 
 #define NB_CONNECTION    5

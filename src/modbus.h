@@ -20,35 +20,12 @@
 
 #include <config.h>
 
-/* If win32 and no cygwin, suppose it's MinGW or any other native windows compiler. */
-#if defined(WIN32) && !defined(__CYGWIN__)
-#define NATIVE_WIN32
-#define MSG_NOSIGNAL 0
-#define ECONNRESET   WSAECONNRESET
-#define ECONNREFUSED WSAECONNREFUSED
-#define ETIMEDOUT    WSAETIMEDOUT
-#define ENOPROTOOPT  WSAENOPROTOOPT
-#define SHUT_RDWR    2
-#include <winsock2.h>
-#endif /* win32 and no cygwin */
-
 /* Add this for macros that defined unix flavor */
 #if (defined(__unix__) || defined(unix)) && !defined(USG)
 #include <sys/param.h>
 #endif
+
 #include <stdint.h>
-#ifndef NATIVE_WIN32
-
-#include <termios.h>
-
-#if defined(OpenBSD) || (defined(__FreeBSD__) && __FreeBSD__ < 5)
-#include <netinet/in_systm.h>
-#endif
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
-#endif
 #include <sys/time.h>
 
 #include "modbus-version.h"

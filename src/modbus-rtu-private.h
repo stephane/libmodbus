@@ -19,7 +19,12 @@
 #define _MODBUS_RTU_PRIVATE_H_
 
 #include <stdint.h>
+
+#if defined(_WIN32)
+#include <windows.h>
+#else
 #include <termios.h>
+#endif
 
 #define _MODBUS_RTU_HEADER_LENGTH      1
 #define _MODBUS_RTU_PRESET_REQ_LENGTH  6
@@ -27,11 +32,7 @@
 
 #define _MODBUS_RTU_CHECKSUM_LENGTH    2
 
-#ifdef NATIVE_WIN32
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
+#if defined(_WIN32)
 /* WIN32: struct containing serial handle and a receive buffer */
 #define PY_BUF_SIZE 512
 struct win32_ser {
@@ -42,7 +43,7 @@ struct win32_ser {
 	/* Received chars */
 	DWORD n_bytes;
 };
-#endif /* NATIVE_WIN32 */
+#endif /* _WIN32 */
 
 typedef struct _modbus_rtu {
     /* Device: "/dev/ttyS0", "/dev/ttyUSB0" or "/dev/tty.USA19*" on Mac OS X for
@@ -50,7 +51,7 @@ typedef struct _modbus_rtu {
        as the directory+file name was bigger than 19 bytes. Making it 67 bytes
        for now, but OS X does support 256 byte file names. May become a problem
        in the future. */
-#ifdef __APPLE_CC__
+#if defined(__APPLE_CC__)
     char device[64];
 #else
     char device[16];
@@ -63,7 +64,7 @@ typedef struct _modbus_rtu {
     uint8_t stop_bit;
     /* Parity: 'N', 'O', 'E' */
     char parity;
-#ifdef NATIVE_WIN32
+#if defined(_WIN32)
     struct win32_ser w_ser;
     DCB old_dcb;
 #else

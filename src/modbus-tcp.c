@@ -15,29 +15,44 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "modbus.h"
-#include "modbus-private.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
-
 #include <sys/types.h>
 
-#ifdef NATIVE_WIN32
-#include <ws2tcpip.h>
+#if defined(_WIN32)
+# define OS_WIN32
+# include <winsock2.h>
+# include <ws2tcpip.h>
+# define SHUT_RDWR 2
 #else
-#include <sys/socket.h>
-#include <sys/ioctl.h>
+# include <sys/socket.h>
+# include <sys/ioctl.h>
+
+#if defined(OpenBSD) || (defined(__FreeBSD__) && __FreeBSD__ < 5)
+# define OS_BSD
+# include <netinet/in_systm.h>
 #endif
+
+# include <netinet/in.h>
+# include <netinet/ip.h>
+# include <netinet/tcp.h>
+# include <arpa/inet.h>
+#endif
+
+#if !defined(MSG_NOSIGNAL)
+#define MSG_NOSIGNAL 0
+#endif
+
+#include "modbus-private.h"
 
 #include "modbus-tcp.h"
 #include "modbus-tcp-private.h"
 
-#ifdef NATIVE_WIN32
-static int _modbus_tcp_init_win32()
+#ifdef OS_WIN32
+static int _modbus_tcp_init_win32(void)
 {
     // Initialise Win32 Socket API
     WORD wVersionRequested;
@@ -174,7 +189,7 @@ static int _modbus_tcp_connect(modbus_t *ctx)
     struct sockaddr_in addr;
     modbus_tcp_t *ctx_tcp = ctx->backend_data;
 
-#ifdef NATIVE_WIN32
+#ifdef OS_WIN32
     if (_modbus_tcp_init_win32() == -1) {
         return -1;
     }
@@ -195,7 +210,7 @@ static int _modbus_tcp_connect(modbus_t *ctx)
         return -1;
     }
 
-#ifndef NATIVE_WIN32
+#ifndef OS_WIN32
     /**
      * Cygwin defines IPTOS_LOWDELAY but can't handle that flag so it's
      * necessary to workaround that problem.
@@ -241,7 +256,7 @@ int _modbus_tcp_flush(modbus_t *ctx)
     do {
         /* Extract the garbage from the socket */
         char devnull[MODBUS_TCP_MAX_ADU_LENGTH];
-#ifndef NATIVE_WIN32
+#ifndef OS_WIN32
         rc = recv(ctx->s, devnull, MODBUS_TCP_MAX_ADU_LENGTH, MSG_DONTWAIT);
 #else
         /* On Win32, it's a bit more complicated to not wait */
@@ -275,7 +290,7 @@ int _modbus_tcp_listen(modbus_t *ctx, int nb_connection)
     struct sockaddr_in addr;
     modbus_tcp_t *ctx_tcp = ctx->backend_data;
 
-#ifdef NATIVE_WIN32
+#ifdef OS_WIN32
     if (_modbus_tcp_init_win32() == -1) {
         return -1;
     }

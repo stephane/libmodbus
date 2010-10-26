@@ -47,15 +47,13 @@ LIBMODBUS_LT_VERSION_INFO=$LIBMODBUS_LD_CURRENT:$LIBMODBUS_LD_REVISION:$LIBMODBU
 AC_SUBST(LIBMODBUS_LT_VERSION_INFO)
 
 # Check whether we are building for Win32
-build_win32="false"
-case "${host}" in
+os_win32="false"
+case "${target}" in
       *mingw32)
-		AC_DEFINE([BUILD_WIN32], [], [Build libmodbus for Win32])
-		build_win32="true"
+		os_win32="true"
 	;;
 esac
-
-AM_CONDITIONAL(BUILD_WIN32, test "$build_win32" = "true")
+AM_CONDITIONAL(OS_WIN32, test "$os_win32" = "true")
 
 # Checks for programs.
 AC_PROG_CC

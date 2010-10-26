@@ -11,7 +11,8 @@ libmodbus_la_SOURCES = \
         modbus-tcp.h \
         modbus-tcp-private.h \
         modbus-version.h
-if BUILD_WIN32
+
+if OS_WIN32
 libmodbus_la_LIBADD = -lwsock32
 endif
 

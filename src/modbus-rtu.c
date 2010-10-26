@@ -22,7 +22,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "modbus.h"
 #include "modbus-private.h"
 
 #include "modbus-rtu.h"
@@ -156,7 +155,7 @@ int _modbus_rtu_send_msg_pre(uint8_t *req, int req_length)
     return req_length;
 }
 
-#ifdef NATIVE_WIN32
+#if defined(_WIN32)
 /* This simple implementation is sort of a substitute of the select() call, working
  * this way: the win32_ser_select() call tries to read some data from the serial port,
  * setting the timeout as the select() call would. Data read is stored into the
@@ -233,7 +232,7 @@ static int win32_ser_read(struct win32_ser *ws, uint8_t *p_msg, unsigned int max
 
 ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
 {
-#ifdef NATIVE_WIN32
+#if defined(_WIN32)
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
     DWORD n_bytes = 0;
     return (WriteFile(ctx_rtu->w_ser.fd, req, req_length, &n_bytes, NULL)) ? n_bytes : -1;
@@ -244,7 +243,7 @@ ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
 
 ssize_t _modbus_rtu_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length)
 {
-#ifdef NATIVE_WIN32
+#if defined(_WIN32)
     return win32_ser_read(&((modbus_rtu_t *)ctx->backend_data)->w_ser, rsp, rsp_length);
 #else
     return read(ctx->s, rsp, rsp_length);
@@ -283,7 +282,7 @@ int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
 /* Sets up a serial port for RTU communications */
 static int _modbus_rtu_connect(modbus_t *ctx)
 {
-#ifdef NATIVE_WIN32
+#if defined(_WIN32)
     DCB dcb;
 #else
     struct termios tios;
@@ -297,7 +296,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
                ctx_rtu->data_bit, ctx_rtu->stop_bit);
     }
 
-#ifdef NATIVE_WIN32
+#if defined(_WIN32)
     /* Some references here:
      * http://msdn.microsoft.com/en-us/library/aa450602.aspx
      */
@@ -681,7 +680,7 @@ void _modbus_rtu_close(modbus_t *ctx)
     /* Closes the file descriptor in RTU mode */
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
 
-#ifdef NATIVE_WIN32
+#if defined(_WIN32)
     /* Revert settings */
     if (!SetCommState(ctx_rtu->w_ser.fd, &ctx_rtu->old_dcb))
         fprintf(stderr, "ERROR Couldn't revert to configuration (LastError %d)\n",
@@ -698,7 +697,7 @@ void _modbus_rtu_close(modbus_t *ctx)
 
 int _modbus_rtu_flush(modbus_t *ctx)
 {
-#ifdef NATIVE_WIN32
+#if defined(_WIN32)
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
     ctx_rtu->w_ser.n_bytes = 0;
     return ( FlushFileBuffers(ctx_rtu->w_ser.fd) == FALSE );
@@ -730,7 +729,7 @@ int _modbus_rtu_accept(modbus_t *ctx, int *socket)
 int _modbus_rtu_select(modbus_t *ctx, fd_set *rfds, struct timeval *tv, int msg_length_computed, int msg_length)
 {
     int s_rc;
-#ifdef NATIVE_WIN32
+#if defined(_WIN32)
     s_rc = win32_ser_select(&(((modbus_rtu_t*)ctx->backend_data)->w_ser), msg_length_computed, tv);
     if (s_rc == 0) {
         errno = ETIMEDOUT;
