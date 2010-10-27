@@ -37,7 +37,6 @@
    range defined by the following defines.
 */
 #define LOOP             1
-#define MY_ID            1
 #define SERVER_ID       17
 #define ADDRESS_START    0
 #define ADDRESS_END     99
@@ -59,14 +58,16 @@ int main(void)
     uint16_t *tab_rw_rq_registers;
     uint16_t *tab_rp_registers;
 
-    /*
-    ctx = modbus_new_rtu("/dev/ttyS0", 19200, 'N', 8, 1, MY_ID);
+    /* RTU */
+/*
+    ctx = modbus_new_rtu("/dev/ttyUSB0", 19200, 'N', 8, 1);
     modbus_set_slave(ctx, SERVER_ID);
-    */
+*/
 
     /* TCP */
     ctx = modbus_new_tcp("127.0.0.1", 1502);
     modbus_set_debug(ctx, TRUE);
+
     if (modbus_connect(ctx) == -1) {
         fprintf(stderr, "Connection failed: %s\n",
                 modbus_strerror(errno));

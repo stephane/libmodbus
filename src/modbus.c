@@ -1225,14 +1225,17 @@ int modbus_report_slave_id(modbus_t *ctx, uint8_t *data_dest)
 
 void _modbus_init_common(modbus_t *ctx)
 {
+    /* Slave is initialized to -1 */
+    ctx->slave = -1;
+
+    ctx->debug = FALSE;
+    ctx->error_recovery = FALSE;
+
     ctx->timeout_begin.tv_sec = 0;
     ctx->timeout_begin.tv_usec = _TIME_OUT_BEGIN_OF_TRAME;
 
     ctx->timeout_end.tv_sec = 0;
     ctx->timeout_end.tv_usec = _TIME_OUT_END_OF_TRAME;
-
-    ctx->error_recovery = FALSE;
-    ctx->debug = FALSE;
 }
 
 /* Define the slave number */

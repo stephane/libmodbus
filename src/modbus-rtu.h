@@ -26,6 +26,6 @@
 #define MODBUS_RTU_MAX_ADU_LENGTH  256
 
 modbus_t* modbus_new_rtu(const char *device, int baud, char parity,
-                         int data_bit, int stop_bit, int slave);
+                         int data_bit, int stop_bit);
 
 #endif /* _MODBUS_RTU_H_ */

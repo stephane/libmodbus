@@ -56,6 +56,7 @@ uint8_t modbus_get_byte_from_bits(const uint8_t *src, int address,
     uint8_t value = 0;
 
     if (nb_bits > 8) {
+        /* Assert is ignored if NDEBUG is set */
         assert(nb_bits < 8);
         nb_bits = 8;
     }

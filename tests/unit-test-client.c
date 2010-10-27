@@ -41,7 +41,7 @@ int main(void)
     struct timeval timeout_begin_new;
 
     /*
-      ctx = modbus_new_rtu("/dev/ttyS0", 19200, 'N', 8, 1, CLIENT_ID);
+      ctx = modbus_new_rtu("/dev/ttyUSB0", 19200, 'N', 8, 1);
       modbus_set_slave(ctx, SERVER_ID);
       is_mode_rtu = TRUE;
     */

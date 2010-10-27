@@ -21,6 +21,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
+#include <assert.h>
 
 #include "modbus-private.h"
 
@@ -87,6 +88,8 @@ static const uint8_t table_crc_lo[] = {
     0x43, 0x83, 0x41, 0x81, 0x80, 0x40
 };
 
+/* Define the slave ID of the remote device to talk in master mode or set the
+ * internal slave ID in slave mode */
 static int _modbus_set_slave(modbus_t *ctx, int slave)
 {
     if (slave >= 1 && slave <= 247) {
@@ -104,6 +107,7 @@ static int _modbus_rtu_build_request_basis(modbus_t *ctx, int function,
                                            int addr, int nb,
                                            uint8_t *req)
 {
+    assert(ctx->slave != -1);
     req[0] = ctx->slave;
     req[1] = function;
     req[2] = addr >> 8;
@@ -117,6 +121,8 @@ static int _modbus_rtu_build_request_basis(modbus_t *ctx, int function,
 /* Builds a RTU response header */
 static int _modbus_rtu_build_response_basis(sft_t *sft, uint8_t *rsp)
 {
+    /* In this case, the slave is certainly valid because a check is already
+     * done in _modbus_rtu_listen */
     rsp[0] = sft->slave;
     rsp[1] = sft->function;
 
@@ -712,6 +718,14 @@ int _modbus_rtu_listen(modbus_t *ctx, int nb_connection)
         fprintf(stderr, "Not implemented");
     }
 
+    if (ctx->slave == -1) {
+        if (ctx->debug) {
+            fprintf(stderr, "The slave ID is not set (you must call modbus_set_slave() first)\n");
+        }
+        errno = EINVAL;
+        return -1;
+    }
+
     errno = EINVAL;
     return -1;
 }
@@ -832,23 +846,18 @@ const modbus_backend_t _modbus_rtu_backend = {
    - parity: 'N' stands for None, 'E' for Even and 'O' for odd
    - data_bits: 5, 6, 7, 8
    - stop_bits: 1, 2
-   - slave: slave number of the caller
 */
 modbus_t* modbus_new_rtu(const char *device,
                          int baud, char parity, int data_bit,
-                         int stop_bit, int slave)
+                         int stop_bit)
 {
     modbus_t *ctx;
     modbus_rtu_t *ctx_rtu;
 
     ctx = (modbus_t *) malloc(sizeof(modbus_t));
     _modbus_init_common(ctx);
-    if (_modbus_set_slave(ctx, slave) == -1) {
-        return NULL;
-    }
 
     ctx->backend = &_modbus_rtu_backend;
-
     ctx->backend_data = (modbus_rtu_t *) malloc(sizeof(modbus_rtu_t));
     ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
 #if defined(OpenBSD)
