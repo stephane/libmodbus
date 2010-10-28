@@ -1,9 +1,10 @@
 libmodbus 2.9.2 (2010-10-XX)
 ============================
 
+- Remove slave argument from modbus_new_rtu()
 - Win32 support by Tobias Doerffel
-- split source code around RTU and TCP (backends)
-- check received function code
+- Split source code around RTU and TCP (backends)
+- Check received function code
 
 libmodbus 2.9.1 (2010-08-16)
 ============================
