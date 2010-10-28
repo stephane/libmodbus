@@ -1225,8 +1225,9 @@ int modbus_report_slave_id(modbus_t *ctx, uint8_t *data_dest)
 
 void _modbus_init_common(modbus_t *ctx)
 {
-    /* Slave is initialized to -1 */
+    /* Slave and socket are initialized to -1 */
     ctx->slave = -1;
+    ctx->s = -1;
 
     ctx->debug = FALSE;
     ctx->error_recovery = FALSE;
