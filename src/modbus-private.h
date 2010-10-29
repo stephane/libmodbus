@@ -109,6 +109,10 @@ struct _modbus {
 void _modbus_init_common(modbus_t *ctx);
 void _error_print(modbus_t *ctx, const char *context);
 
+#ifndef HAVE_STRLCPY
+size_t strlcpy(char *dest, const char *src, size_t dest_size);
+#endif
+
 MODBUS_END_DECLS
 
 #endif  /* _MODBUS_PRIVATE_H_ */

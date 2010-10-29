@@ -853,6 +853,8 @@ modbus_t* modbus_new_rtu(const char *device,
 {
     modbus_t *ctx;
     modbus_rtu_t *ctx_rtu;
+    size_t dest_size;
+    size_t src_size;
 
     ctx = (modbus_t *) malloc(sizeof(modbus_t));
     _modbus_init_common(ctx);
@@ -860,11 +862,23 @@ modbus_t* modbus_new_rtu(const char *device,
     ctx->backend = &_modbus_rtu_backend;
     ctx->backend_data = (modbus_rtu_t *) malloc(sizeof(modbus_rtu_t));
     ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
-#if defined(OpenBSD)
-    strlcpy(ctx_rtu->device, device, sizeof(ctx_rtu->device));
-#else
-    strcpy(ctx_rtu->device, device);
-#endif
+
+    dest_size = sizeof(ctx_rtu->device);
+    src_size = strlcpy(ctx_rtu->device, device, dest_size);
+    if (src_size == 0) {
+        modbus_free(ctx);
+        fprintf(stderr, "The device string is empty\n");
+        errno = EINVAL;
+        return NULL;
+    }
+
+    if (src_size >= dest_size) {
+        modbus_free(ctx);
+        fprintf(stderr, "The device string has been truncated\n");
+        errno = EINVAL;
+        return NULL;
+    }
+
     ctx_rtu->baud = baud;
     if (parity == 'N' || parity == 'E' || parity == 'O') {
         ctx_rtu->parity = parity;

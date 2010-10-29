@@ -81,7 +81,6 @@ AC_CHECK_HEADERS([ \
 # Checks for header files.
 AC_HEADER_STDC
 
-
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_TYPE_SIZE_T
@@ -97,7 +96,7 @@ AC_CHECK_DECLS([__CYGWIN__])
 
 # Checks for library functions.
 AC_FUNC_FORK
-AC_CHECK_FUNCS([gettimeofday inet_ntoa memset select socket strerror])
+AC_CHECK_FUNCS([gettimeofday inet_ntoa memset select socket strerror strlcpy])
 
 AC_CONFIG_FILES([
         Makefile
