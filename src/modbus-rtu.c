@@ -869,6 +869,7 @@ modbus_t* modbus_new_rtu(const char *device,
     if (parity == 'N' || parity == 'E' || parity == 'O') {
         ctx_rtu->parity = parity;
     } else {
+        modbus_free(ctx);
         errno = EINVAL;
         return NULL;
     }
