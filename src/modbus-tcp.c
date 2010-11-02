@@ -72,7 +72,8 @@ static int _modbus_tcp_init_win32(void)
 
 static int _modbus_set_slave(modbus_t *ctx, int slave)
 {
-    if (slave >= 1 && slave <= 247) {
+    /* Broadcast address is 0 (MODBUS_BROADCAST_ADDRESS) */
+    if (slave >= 0 && slave <= 247) {
         ctx->slave = slave;
     } else if (slave == MODBUS_TCP_SLAVE) {
         /* The special value MODBUS_TCP_SLAVE (0xFF) can be used in TCP mode to

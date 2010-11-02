@@ -1,6 +1,7 @@
 libmodbus 2.9.2 (2010-10-XX)
 ============================
 
+- Fix setting of the broadcast address
 - Remove slave argument from modbus_new_rtu()
 - Win32 support by Tobias Doerffel
 - Split source code around RTU and TCP (backends)

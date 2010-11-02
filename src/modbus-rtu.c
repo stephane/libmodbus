@@ -92,7 +92,8 @@ static const uint8_t table_crc_lo[] = {
  * internal slave ID in slave mode */
 static int _modbus_set_slave(modbus_t *ctx, int slave)
 {
-    if (slave >= 1 && slave <= 247) {
+    /* Broadcast address is 0 (MODBUS_BROADCAST_ADDRESS) */
+    if (slave >= 0 && slave <= 247) {
         ctx->slave = slave;
     } else {
         errno = EINVAL;
