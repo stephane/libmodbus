@@ -66,7 +66,7 @@ int main(void)
         return -1;
     }
 
-    server_socket = modbus_listen(ctx, NB_CONNECTION);
+    server_socket = modbus_tcp_listen(ctx, NB_CONNECTION);
 
     signal(SIGINT, close_sigint);
 

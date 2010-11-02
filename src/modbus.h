@@ -168,8 +168,6 @@ modbus_mapping_t* modbus_mapping_new(int nb_coil_status, int nb_input_status,
                                      int nb_holding_registers, int nb_input_registers);
 void modbus_mapping_free(modbus_mapping_t *mb_mapping);
 
-int modbus_listen(modbus_t *ctx, int nb_connection);
-int modbus_accept(modbus_t *ctx, int *socket);
 int modbus_receive(modbus_t *ctx, int sockfd, uint8_t *req);
 int modbus_reply(modbus_t *ctx, const uint8_t *req,
                  int req_length, modbus_mapping_t *mb_mapping);

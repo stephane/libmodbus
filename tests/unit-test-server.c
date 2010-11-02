@@ -27,15 +27,41 @@
 /* Copied from modbus-private.h */
 #define HEADER_LENGTH_TCP 7
 
-int main(void)
+enum {
+    TCP,
+    RTU
+};
+
+int main(int argc, char*argv[])
 {
     int socket;
     modbus_t *ctx;
     modbus_mapping_t *mb_mapping;
     int rc;
     int i;
+    int use_backend;
 
-    ctx = modbus_new_tcp("127.0.0.1", 1502);
+    if (argc > 1) {
+        if (strcmp(argv[1], "tcp") == 0) {
+            use_backend = TCP;
+        } else if (strcmp(argv[1], "rtu") == 0) {
+            use_backend = RTU;
+        } else {
+            printf("Usage:\n  %s [tcp|rtu] - Modbus server for unit testing\n\n");
+            return -1;
+        }
+    } else {
+        /* By default */
+        use_backend = TCP;
+    }
+
+    if (use_backend == TCP) {
+        ctx = modbus_new_tcp("127.0.0.1", 1502);
+    } else {
+        ctx = modbus_new_rtu("/dev/ttyUSB0", 115200, 'N', 8, 1);
+        modbus_set_slave(ctx, SERVER_ID);
+    }
+
     modbus_set_debug(ctx, TRUE);
     modbus_set_error_recovery(ctx, TRUE);
 
@@ -65,8 +91,17 @@ int main(void)
             UT_INPUT_REGISTERS_TAB[i];;
     }
 
-    socket = modbus_listen(ctx, 1);
-    modbus_accept(ctx, &socket);
+    if (use_backend == TCP) {
+        socket = modbus_tcp_listen(ctx, 1);
+        modbus_tcp_accept(ctx, &socket);
+    } else {
+        rc = modbus_connect(ctx);
+        if (rc == -1) {
+            fprintf(stderr, "Unable to connect\n", modbus_strerror(errno));
+            modbus_free(ctx);
+            return -1;
+        }
+    }
 
     for (;;) {
         uint8_t query[MODBUS_TCP_MAX_ADU_LENGTH];
@@ -94,7 +129,9 @@ int main(void)
 
     printf("Quit the loop: %s\n", modbus_strerror(errno));
 
-    close(socket);
+    if (use_backend == TCP) {
+        close(socket);
+    }
     modbus_mapping_free(mb_mapping);
     modbus_free(ctx);
 

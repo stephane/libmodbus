@@ -707,38 +707,10 @@ int _modbus_rtu_flush(modbus_t *ctx)
 #if defined(_WIN32)
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
     ctx_rtu->w_ser.n_bytes = 0;
-    return ( FlushFileBuffers(ctx_rtu->w_ser.fd) == FALSE );
+    return (FlushFileBuffers(ctx_rtu->w_ser.fd) == FALSE);
 #else
     return tcflush(ctx->s, TCIOFLUSH);
 #endif
-}
-
-int _modbus_rtu_listen(modbus_t *ctx, int nb_connection)
-{
-    if (ctx->debug) {
-        fprintf(stderr, "Not implemented");
-    }
-
-    if (ctx->slave == -1) {
-        if (ctx->debug) {
-            fprintf(stderr, "The slave ID is not set (you must call modbus_set_slave() first)\n");
-        }
-        errno = EINVAL;
-        return -1;
-    }
-
-    errno = EINVAL;
-    return -1;
-}
-
-int _modbus_rtu_accept(modbus_t *ctx, int *socket)
-{
-    if (ctx->debug) {
-        fprintf(stderr, "Not implemented");
-    }
-
-    errno = EINVAL;
-    return -1;
 }
 
 int _modbus_rtu_select(modbus_t *ctx, fd_set *rfds, struct timeval *tv, int msg_length_computed, int msg_length)
@@ -835,8 +807,6 @@ const modbus_backend_t _modbus_rtu_backend = {
     _modbus_rtu_connect,
     _modbus_rtu_close,
     _modbus_rtu_flush,
-    _modbus_rtu_listen,
-    _modbus_rtu_accept,
     _modbus_rtu_select,
     _modbus_rtu_filter_request
 };

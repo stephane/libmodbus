@@ -284,7 +284,7 @@ int _modbus_tcp_flush(modbus_t *ctx)
 }
 
 /* Listens for any request from one or many modbus masters in TCP */
-int _modbus_tcp_listen(modbus_t *ctx, int nb_connection)
+int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
 {
     int new_socket;
     int yes;
@@ -330,7 +330,7 @@ int _modbus_tcp_listen(modbus_t *ctx, int nb_connection)
 /* On success, the function return a non-negative integer that is a descriptor
    for the accepted socket. On error, -1 is returned, and errno is set
    appropriately. */
-int _modbus_tcp_accept(modbus_t *ctx, int *socket)
+int modbus_tcp_accept(modbus_t *ctx, int *socket)
 {
     struct sockaddr_in addr;
     socklen_t addrlen;
@@ -414,8 +414,6 @@ const modbus_backend_t _modbus_tcp_backend = {
     _modbus_tcp_connect,
     _modbus_tcp_close,
     _modbus_tcp_flush,
-    _modbus_tcp_listen,
-    _modbus_tcp_accept,
     _modbus_tcp_select,
     _modbus_tcp_filter_request
 };

@@ -1416,16 +1416,6 @@ void modbus_mapping_free(modbus_mapping_t *mb_mapping)
     free(mb_mapping);
 }
 
-int modbus_listen(modbus_t *ctx, int nb_connection)
-{
-    return ctx->backend->listen(ctx, nb_connection);
-}
-
-int modbus_accept(modbus_t *ctx, int *socket)
-{
-    return ctx->backend->accept(ctx, socket);
-}
-
 #ifndef HAVE_STRLCPY
 /*
 /* Function strlcpy was originally developed by

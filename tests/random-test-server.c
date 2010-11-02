@@ -39,8 +39,8 @@ int main(void)
         return -1;
     }
 
-    socket = modbus_listen(ctx, 1);
-    modbus_accept(ctx, &socket);
+    socket = modbus_tcp_listen(ctx, 1);
+    modbus_tcp_accept(ctx, &socket);
 
     for (;;) {
         uint8_t query[MODBUS_TCP_MAX_ADU_LENGTH];

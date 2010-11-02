@@ -25,9 +25,6 @@
 
 #include <modbus.h>
 
-/* Tests based on PI-MBUS-300 documentation */
-#define NB_LOOPS  100000
-
 #define G_MSEC_PER_SEC 1000
 
 uint32_t gettime_ms(void)
@@ -38,7 +35,13 @@ uint32_t gettime_ms(void)
     return (uint32_t) tv.tv_sec * 1000 + tv.tv_usec / 1000;
 }
 
-int main(void)
+enum {
+    TCP,
+    RTU
+};
+
+/* Tests based on PI-MBUS-300 documentation */
+int main(int argc, char *argv[])
 {
     uint8_t *tab_bit;
     uint16_t *tab_reg;
@@ -51,9 +54,32 @@ int main(void)
     uint32_t bytes;
     uint32_t rate;
     int rc;
+    int n_loop;
+    int use_backend;
 
-    /* TCP */
-    ctx = modbus_new_tcp("127.0.0.1", 1502);
+    if (argc > 1) {
+        if (strcmp(argv[1], "tcp") == 0) {
+            use_backend = TCP;
+            n_loop = 100000;
+        } else if (strcmp(argv[1], "rtu") == 0) {
+            use_backend = RTU;
+            n_loop = 100;
+        } else {
+            printf("Usage:\n  %s [tcp|rtu] - Modbus client to measure data bandwith\n\n");
+            exit(1);
+        }
+    } else {
+        /* By default */
+        use_backend = TCP;
+        n_loop = 100000;
+    }
+
+    if (use_backend == TCP) {
+        ctx = modbus_new_tcp("127.0.0.1", 1502);
+    } else {
+        ctx = modbus_new_rtu("/dev/ttyUSB1", 115200, 'N', 8, 1);
+        modbus_set_slave(ctx, 1);
+    }
     if (modbus_connect(ctx) == -1) {
         fprintf(stderr, "Connexion failed: %s\n",
                 modbus_strerror(errno));
@@ -73,7 +99,7 @@ int main(void)
 
     nb_points = MODBUS_MAX_READ_BITS;
     start = gettime_ms();
-    for (i=0; i<NB_LOOPS; i++) {
+    for (i=0; i<n_loop; i++) {
         rc = modbus_read_bits(ctx, 0, nb_points, tab_bit);
         if (rc == -1) {
             fprintf(stderr, "%s\n", modbus_strerror(errno));
@@ -83,15 +109,15 @@ int main(void)
     end = gettime_ms();
     elapsed = end - start;
 
-    rate = (NB_LOOPS * nb_points) * G_MSEC_PER_SEC / (end - start);
+    rate = (n_loop * nb_points) * G_MSEC_PER_SEC / (end - start);
     printf("Transfert rate in points/seconds:\n");
     printf("* %d points/s\n", rate);
     printf("\n");
 
-    bytes = NB_LOOPS * (nb_points / 8) + ((nb_points % 8) ? 1 : 0);
+    bytes = n_loop * (nb_points / 8) + ((nb_points % 8) ? 1 : 0);
     rate = bytes / 1024 * G_MSEC_PER_SEC / (end - start);
     printf("Values:\n");
-    printf("* %d x %d values\n", NB_LOOPS, nb_points);
+    printf("* %d x %d values\n", n_loop, nb_points);
     printf("* %.3f ms for %d bytes\n", elapsed, bytes);
     printf("* %d KiB/s\n", rate);
     printf("\n");
@@ -99,8 +125,8 @@ int main(void)
     /* TCP: Query and reponse header and values */
     bytes = 12 + 9 + (nb_points / 8) + ((nb_points % 8) ? 1 : 0);
     printf("Values and TCP Modbus overhead:\n");
-    printf("* %d x %d bytes\n", NB_LOOPS, bytes);
-    bytes = NB_LOOPS * bytes;
+    printf("* %d x %d bytes\n", n_loop, bytes);
+    bytes = n_loop * bytes;
     rate = bytes / 1024 * G_MSEC_PER_SEC / (end - start);
     printf("* %.3f ms for %d bytes\n", elapsed, bytes);
     printf("* %d KiB/s\n", rate);
@@ -110,7 +136,7 @@ int main(void)
 
     nb_points = MODBUS_MAX_READ_REGISTERS;
     start = gettime_ms();
-    for (i=0; i<NB_LOOPS; i++) {
+    for (i=0; i<n_loop; i++) {
         rc = modbus_read_registers(ctx, 0, nb_points, tab_reg);
         if (rc == -1) {
             fprintf(stderr, "%s\n", modbus_strerror(errno));
@@ -120,15 +146,15 @@ int main(void)
     end = gettime_ms();
     elapsed = end - start;
 
-    rate = (NB_LOOPS * nb_points) * G_MSEC_PER_SEC / (end - start);
+    rate = (n_loop * nb_points) * G_MSEC_PER_SEC / (end - start);
     printf("Transfert rate in points/seconds:\n");
     printf("* %d registers/s\n", rate);
     printf("\n");
 
-    bytes = NB_LOOPS * nb_points * sizeof(uint16_t);
+    bytes = n_loop * nb_points * sizeof(uint16_t);
     rate = bytes / 1024 * G_MSEC_PER_SEC / (end - start);
     printf("Values:\n");
-    printf("* %d x %d values\n", NB_LOOPS, nb_points);
+    printf("* %d x %d values\n", n_loop, nb_points);
     printf("* %.3f ms for %d bytes\n", elapsed, bytes);
     printf("* %d KiB/s\n", rate);
     printf("\n");
@@ -136,8 +162,8 @@ int main(void)
     /* TCP:Query and reponse header and values */
     bytes = 12 + 9 + (nb_points * sizeof(uint16_t));
     printf("Values and TCP Modbus overhead:\n");
-    printf("* %d x %d bytes\n", NB_LOOPS, bytes);
-    bytes = NB_LOOPS * bytes;
+    printf("* %d x %d bytes\n", n_loop, bytes);
+    bytes = n_loop * bytes;
     rate = bytes / 1024 * G_MSEC_PER_SEC / (end - start);
     printf("* %.3f ms for %d bytes\n", elapsed, bytes);
     printf("* %d KiB/s\n", rate);
@@ -147,7 +173,7 @@ int main(void)
 
     nb_points = MODBUS_MAX_RW_WRITE_REGISTERS;
     start = gettime_ms();
-    for (i=0; i<NB_LOOPS; i++) {
+    for (i=0; i<n_loop; i++) {
         rc = modbus_read_and_write_registers(ctx,
                                              0, nb_points, tab_reg,
                                              0, nb_points, tab_reg);
@@ -159,15 +185,15 @@ int main(void)
     end = gettime_ms();
     elapsed = end - start;
 
-    rate = (NB_LOOPS * nb_points) * G_MSEC_PER_SEC / (end - start);
+    rate = (n_loop * nb_points) * G_MSEC_PER_SEC / (end - start);
     printf("Transfert rate in points/seconds:\n");
     printf("* %d registers/s\n", rate);
     printf("\n");
 
-    bytes = NB_LOOPS * nb_points * sizeof(uint16_t);
+    bytes = n_loop * nb_points * sizeof(uint16_t);
     rate = bytes / 1024 * G_MSEC_PER_SEC / (end - start);
     printf("Values:\n");
-    printf("* %d x %d values\n", NB_LOOPS, nb_points);
+    printf("* %d x %d values\n", n_loop, nb_points);
     printf("* %.3f ms for %d bytes\n", elapsed, bytes);
     printf("* %d KiB/s\n", rate);
     printf("\n");
@@ -175,8 +201,8 @@ int main(void)
     /* TCP:Query and reponse header and values */
     bytes = 12 + 9 + (nb_points * sizeof(uint16_t));
     printf("Values and TCP Modbus overhead:\n");
-    printf("* %d x %d bytes\n", NB_LOOPS, bytes);
-    bytes = NB_LOOPS * bytes;
+    printf("* %d x %d bytes\n", n_loop, bytes);
+    bytes = n_loop * bytes;
     rate = bytes / 1024 * G_MSEC_PER_SEC / (end - start);
     printf("* %.3f ms for %d bytes\n", elapsed, bytes);
     printf("* %d KiB/s\n", rate);

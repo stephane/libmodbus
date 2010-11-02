@@ -24,13 +24,17 @@
 
 #include "unit-test.h"
 
-int main(void)
+enum {
+    TCP,
+    RTU
+};
+
+int main(int argc, char *argv[])
 {
     uint8_t *tab_rp_bits;
     uint16_t *tab_rp_registers;
     uint16_t *tab_rp_registers_bad;
     modbus_t *ctx;
-    int is_mode_rtu = FALSE;
     int i;
     uint8_t value;
     int address;
@@ -39,20 +43,36 @@ int main(void)
     float real;
     struct timeval timeout_begin_old;
     struct timeval timeout_begin_new;
+    int use_backend;
 
-    /*
-      ctx = modbus_new_rtu("/dev/ttyUSB0", 19200, 'N', 8, 1);
-      modbus_set_slave(ctx, SERVER_ID);
-      is_mode_rtu = TRUE;
-    */
+    if (argc > 1) {
+        if (strcmp(argv[1], "tcp") == 0) {
+            use_backend = TCP;
+        } else if (strcmp(argv[1], "rtu") == 0) {
+            use_backend = RTU;
+        } else {
+            printf("Usage:\n  %s [tcp|rtu] - Modbus client for unit testing\n\n");
+            exit(1);
+        }
+    } else {
+        /* By default */
+        use_backend = TCP;
+    }
 
-    /* TCP */
-    ctx = modbus_new_tcp("127.0.0.1", 1502);
+    if (use_backend == TCP) {
+        ctx = modbus_new_tcp("127.0.0.1", 1502);
+    } else {
+        ctx = modbus_new_rtu("/dev/ttyUSB1", 115200, 'N', 8, 1);
+    }
     if (ctx == NULL) {
-        fprintf(stderr, "Unable to initialize TCP Modbus\n");
+        fprintf(stderr, "Unable to allocate libmodbus context\n");
         return -1;
     }
     modbus_set_debug(ctx, TRUE);
+
+    if (use_backend == RTU) {
+          modbus_set_slave(ctx, SERVER_ID);
+    }
 
     if (modbus_connect(ctx) == -1) {
         fprintf(stderr, "Connection failed: %s\n",
@@ -496,9 +516,10 @@ int main(void)
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
                                UT_REGISTERS_NB_POINTS,
                                tab_rp_registers);
-    printf("1/4 No or response from slave %d: ", 18);
-    if (is_mode_rtu) {
+    if (use_backend == RTU) {
         /* No response in RTU mode */
+        printf("1/4 No response from slave %d: ", 18);
+
         if (rc == -1 && errno == ETIMEDOUT) {
             printf("OK\n");
         } else {
@@ -507,6 +528,8 @@ int main(void)
         }
     } else {
         /* Response in TCP mode */
+        printf("1/4 Response from slave %d: ", 18);
+
         if (rc == UT_REGISTERS_NB_POINTS) {
             printf("OK\n");
         } else {
@@ -515,7 +538,12 @@ int main(void)
         }
     }
 
-    modbus_set_slave(ctx, MODBUS_BROADCAST_ADDRESS);
+    rc = modbus_set_slave(ctx, MODBUS_BROADCAST_ADDRESS);
+    if (rc == -1) {
+        printf("Invalid broacast address\n");
+        goto close;
+    }
+
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
                                UT_REGISTERS_NB_POINTS,
                                tab_rp_registers);
@@ -528,7 +556,7 @@ int main(void)
     }
 
     /* Restore slave */
-    if (is_mode_rtu) {
+    if (use_backend == RTU) {
         modbus_set_slave(ctx, SERVER_ID);
     } else {
         modbus_set_slave(ctx, MODBUS_TCP_SLAVE);
@@ -542,7 +570,7 @@ int main(void)
         goto close;
     }
 
-    if ((is_mode_rtu && tab_rp_bits[0] == SERVER_ID)
+    if (((use_backend == RTU) && (tab_rp_bits[0] == SERVER_ID))
         || tab_rp_bits[0] == 0xFF) {
         printf("OK\n");
     } else {
