@@ -46,10 +46,12 @@ LIBMODBUS_LD_AGE=0
 LIBMODBUS_LT_VERSION_INFO=$LIBMODBUS_LD_CURRENT:$LIBMODBUS_LD_REVISION:$LIBMODBUS_LD_AGE
 AC_SUBST(LIBMODBUS_LT_VERSION_INFO)
 
+AC_CANONICAL_HOST
+
 # Check whether we are building for Win32
 os_win32="false"
-case "${target}" in
-      *mingw32)
+case "${host_os}" in
+      *mingw32*)
 		os_win32="true"
 	;;
 esac
