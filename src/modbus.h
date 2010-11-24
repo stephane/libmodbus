@@ -18,8 +18,6 @@
 #ifndef _MODBUS_H_
 #define _MODBUS_H_
 
-#include <config.h>
-
 /* Add this for macros that defined unix flavor */
 #if (defined(__unix__) || defined(unix)) && !defined(USG)
 #include <sys/param.h>

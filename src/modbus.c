@@ -26,6 +26,8 @@
 #include <errno.h>
 #include <limits.h>
 
+#include <config.h>
+
 #include "modbus.h"
 #include "modbus-private.h"
 

@@ -18,6 +18,8 @@
 #ifndef _UNIT_TEST_H_
 #define _UNIT_TEST_H_
 
+#include <config.h>
+
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
 #endif
