@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
             use_backend = RTU;
             n_loop = 100;
         } else {
-            printf("Usage:\n  %s [tcp|rtu] - Modbus client to measure data bandwith\n\n");
+            printf("Usage:\n  %s [tcp|rtu] - Modbus client to measure data bandwith\n\n", argv[0]);
             exit(1);
         }
     } else {
