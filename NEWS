@@ -1,6 +1,8 @@
-libmodbus 2.9.2 (2010-12-XX)
+libmodbus 2.9.2 (2010-12-05)
 ============================
 
+- Fix segfault in bandwidth-server-many-up on inet_ntoa() call
+- Fix unit test of report slave ID in RTU
 - Fix GH-3. Remove inclusion of config.h in modbus.h
 - Correctly detect if we are cross-compiling for win32 by Kirill Smelkov.
 - Rename modbus_[listen|accept] to modbus_tcp_[listen|accept]
