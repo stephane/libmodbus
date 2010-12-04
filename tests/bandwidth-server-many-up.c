@@ -28,6 +28,8 @@
 #include <ws2tcpip.h>
 #else
 #include <netinet/in.h>
+/* Required by inet_ntoa() to avoid a segfault! */
+#include <arpa/inet.h>
 #endif
 
 #define NB_CONNECTION    5
