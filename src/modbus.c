@@ -344,8 +344,10 @@ static int receive_msg(modbus_t *ctx, int msg_length_computed,
                 /* It's useless to check the value of
                    msg_length_computed in this case (only
                    defined values are used). */
-                state = DATA;
-                break;
+                if (length_to_read != 0) {
+                    state = DATA;
+                    break;
+                } /* else switch straight to DATA */
             case DATA:
                 length_to_read = compute_data_length(ctx, msg);
                 msg_length_computed += length_to_read;
