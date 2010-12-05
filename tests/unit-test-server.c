@@ -97,7 +97,7 @@ int main(int argc, char*argv[])
     } else {
         rc = modbus_connect(ctx);
         if (rc == -1) {
-            fprintf(stderr, "Unable to connect\n", modbus_strerror(errno));
+            fprintf(stderr, "Unable to connect %s\n", modbus_strerror(errno));
             modbus_free(ctx);
             return -1;
         }
