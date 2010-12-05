@@ -270,7 +270,7 @@ int main(int argc, char *argv[])
     memset(tab_rp_registers, 0, nb_points * sizeof(uint16_t));
 
     /* Write registers to zero from tab_rp_registers and read registers to
-       tab_rp_registers.  They should be same as UT_REGISTERS_TAB. */
+       tab_rp_registers. They should be same as UT_REGISTERS_TAB. */
     rc = modbus_read_and_write_registers(ctx,
                                          UT_REGISTERS_ADDRESS,
                                          UT_REGISTERS_NB_POINTS,
@@ -280,7 +280,7 @@ int main(int argc, char *argv[])
                                          tab_rp_registers);
     printf("4/5 modbus_read_and_write_registers, read part: ");
     if (rc != UT_REGISTERS_NB_POINTS) {
-        printf("FAILED (nb points %d)\n", rc);
+        printf("FAILED (nb points %d != %d)\n", rc, UT_REGISTERS_NB_POINTS);
         goto close;
     }
 
@@ -299,7 +299,7 @@ int main(int argc, char *argv[])
                                tab_rp_registers);
     printf("5/5 modbus_read_and_write_registers, write part: ");
     if (rc != UT_REGISTERS_NB_POINTS) {
-        printf("FAILED (nb points %d)\n", rc);
+        printf("FAILED (nb points %d != %d)\n", rc, UT_REGISTERS_NB_POINTS);
         goto close;
     }
 
@@ -362,8 +362,8 @@ int main(int argc, char *argv[])
     /** ILLEGAL DATA ADDRESS **/
     printf("\nTEST ILLEGAL DATA ADDRESS:\n");
 
-    /* The mapping begins at 0 and ending at address + nb_points so
-     * the addresses below are not valid. */
+    /* The mapping begins at 0 and ends at address + nb_points so
+     * the addresses are not valid. */
 
     rc = modbus_read_bits(ctx, UT_BITS_ADDRESS,
                           UT_BITS_NB_POINTS + 1,

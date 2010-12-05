@@ -179,12 +179,13 @@ static void win32_ser_init(struct win32_ser *ws) {
     ws->fd = INVALID_HANDLE_VALUE;
 }
 
+/* FIXME Try to remove length_to_read -> max_len argument, only used by win32 */
 static int win32_ser_select(struct win32_ser *ws, int max_len, struct timeval *tv) {
     COMMTIMEOUTS comm_to;
     unsigned int msec = 0;
 
     /* Check if some data still in the buffer to be consumed */
-    if (ws->n_bytes> 0) {
+    if (ws->n_bytes > 0) {
         return 1;
     }
 
@@ -713,11 +714,11 @@ int _modbus_rtu_flush(modbus_t *ctx)
 #endif
 }
 
-int _modbus_rtu_select(modbus_t *ctx, fd_set *rfds, struct timeval *tv, int msg_length_computed, int msg_length)
+int _modbus_rtu_select(modbus_t *ctx, fd_set *rfds, struct timeval *tv, int length_to_read)
 {
     int s_rc;
 #if defined(_WIN32)
-    s_rc = win32_ser_select(&(((modbus_rtu_t*)ctx->backend_data)->w_ser), msg_length_computed, tv);
+    s_rc = win32_ser_select(&(((modbus_rtu_t*)ctx->backend_data)->w_ser), length_to_read, tv);
     if (s_rc == 0) {
         errno = ETIMEDOUT;
         return -1;
@@ -758,17 +759,8 @@ int _modbus_rtu_select(modbus_t *ctx, fd_set *rfds, struct timeval *tv, int msg_
 
     if (s_rc == 0) {
         /* Timeout */
-        if (msg_length == (ctx->backend->header_length + 2 +
-                           ctx->backend->checksum_length)) {
-            /* Optimization allowed because exception response is
-               the smallest trame in modbus protocol (3) so always
-               raise a timeout error.
-               Temporary error before exception analyze. */
-            errno = EMBUNKEXC;
-        } else {
-            errno = ETIMEDOUT;
-            _error_print(ctx, "select");
-        }
+        errno = ETIMEDOUT;
+        _error_print(ctx, "select");
         return -1;
     }
 #endif

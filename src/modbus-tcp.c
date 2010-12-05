@@ -350,7 +350,7 @@ int modbus_tcp_accept(modbus_t *ctx, int *socket)
     return ctx->s;
 }
 
-int _modbus_tcp_select(modbus_t *ctx, fd_set *rfds, struct timeval *tv, int msg_length_computed, int msg_length)
+int _modbus_tcp_select(modbus_t *ctx, fd_set *rfds, struct timeval *tv, int length_to_read)
 {
     int s_rc;
     while ((s_rc = select(ctx->s+1, rfds, NULL, NULL, tv)) == -1) {
@@ -375,18 +375,8 @@ int _modbus_tcp_select(modbus_t *ctx, fd_set *rfds, struct timeval *tv, int msg_
     }
 
     if (s_rc == 0) {
-        /* Timeout */
-        if (msg_length == (ctx->backend->header_length + 2 +
-                           ctx->backend->checksum_length)) {
-            /* Optimization allowed because exception response is
-               the smallest trame in modbus protocol (3) so always
-               raise a timeout error.
-               Temporary error before exception analyze. */
-            errno = EMBUNKEXC;
-        } else {
-            errno = ETIMEDOUT;
-            _error_print(ctx, "select");
-        }
+        errno = ETIMEDOUT;
+        _error_print(ctx, "select");
         return -1;
     }
 
