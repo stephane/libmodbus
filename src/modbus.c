@@ -1422,7 +1422,7 @@ void modbus_mapping_free(modbus_mapping_t *mb_mapping)
 
 #ifndef HAVE_STRLCPY
 /*
-/* Function strlcpy was originally developed by
+ * Function strlcpy was originally developed by
  * Todd C. Miller <Todd.Miller@courtesan.com> to simplify writing secure code.
  * See ftp://ftp.openbsd.org/pub/OpenBSD/src/lib/libc/string/strlcpy.3
  * for more information.
