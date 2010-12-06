@@ -24,9 +24,6 @@
 
 #include "unit-test.h"
 
-/* Copied from modbus-private.h */
-#define HEADER_LENGTH_TCP 7
-
 enum {
     TCP,
     RTU
@@ -110,22 +107,23 @@ int main(int argc, char*argv[])
 
     for (;;) {
         rc = modbus_receive(ctx, -1, query);
-        if (rc > 0) {
-            if (((query[header_length + 3] << 8) +
-                 query[header_length + 4])
-                == UT_REGISTERS_NB_POINTS_SPECIAL) {
-                /* Change the number of values (offset
-                   TCP = 6) */
-                query[header_length + 3] = 0;
-                query[header_length + 4] = UT_REGISTERS_NB_POINTS;
-            }
-
-            rc = modbus_reply(ctx, query, rc, mb_mapping);
-            if (rc == -1) {
-                return -1;
-            }
-        } else {
+        if (rc == -1) {
             /* Connection closed by the client or error */
+            break;
+        }
+
+        /* Read holding registers */
+        if (query[header_length] == 0x03) {
+            if (MODBUS_GET_INT16_FROM_INT8(query, header_length + 3)
+                == UT_REGISTERS_NB_POINTS_SPECIAL) {
+                printf("Set an incorrect number of values\n");
+                MODBUS_SET_INT16_TO_INT8(query, header_length + 3,
+                                         UT_REGISTERS_NB_POINTS);
+            }
+        }
+
+        rc = modbus_reply(ctx, query, rc, mb_mapping);
+        if (rc == -1) {
             break;
         }
     }
