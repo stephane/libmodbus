@@ -1294,6 +1294,11 @@ void modbus_set_timeout_end(modbus_t *ctx, const struct timeval *timeout)
     ctx->timeout_end = *timeout;
 }
 
+int modbus_get_header_length(modbus_t *ctx)
+{
+    return ctx->backend->header_length;
+}
+
 int modbus_connect(modbus_t *ctx)
 {
     return ctx->backend->connect(ctx);

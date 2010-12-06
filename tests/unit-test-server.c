@@ -40,6 +40,8 @@ int main(int argc, char*argv[])
     int rc;
     int i;
     int use_backend;
+    uint8_t *query;
+    int header_length;
 
     if (argc > 1) {
         if (strcmp(argv[1], "tcp") == 0) {
@@ -57,10 +59,13 @@ int main(int argc, char*argv[])
 
     if (use_backend == TCP) {
         ctx = modbus_new_tcp("127.0.0.1", 1502);
+        query = malloc(MODBUS_TCP_MAX_ADU_LENGTH);
     } else {
         ctx = modbus_new_rtu("/dev/ttyUSB0", 115200, 'N', 8, 1);
         modbus_set_slave(ctx, SERVER_ID);
+        query = malloc(MODBUS_RTU_MAX_ADU_LENGTH);
     }
+    header_length = modbus_get_header_length(ctx);
 
     modbus_set_debug(ctx, TRUE);
     modbus_set_error_recovery(ctx, TRUE);
@@ -104,17 +109,15 @@ int main(int argc, char*argv[])
     }
 
     for (;;) {
-        uint8_t query[MODBUS_TCP_MAX_ADU_LENGTH];
-
         rc = modbus_receive(ctx, -1, query);
         if (rc > 0) {
-            if (((query[HEADER_LENGTH_TCP + 3] << 8) +
-                 query[HEADER_LENGTH_TCP + 4])
+            if (((query[header_length + 3] << 8) +
+                 query[header_length + 4])
                 == UT_REGISTERS_NB_POINTS_SPECIAL) {
                 /* Change the number of values (offset
                    TCP = 6) */
-                query[HEADER_LENGTH_TCP + 3] = 0;
-                query[HEADER_LENGTH_TCP + 4] = UT_REGISTERS_NB_POINTS;
+                query[header_length + 3] = 0;
+                query[header_length + 4] = UT_REGISTERS_NB_POINTS;
             }
 
             rc = modbus_reply(ctx, query, rc, mb_mapping);
@@ -133,6 +136,7 @@ int main(int argc, char*argv[])
         close(socket);
     }
     modbus_mapping_free(mb_mapping);
+    free(query);
     modbus_free(ctx);
 
     return 0;
