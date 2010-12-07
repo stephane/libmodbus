@@ -497,6 +497,11 @@ static int receive_msg_req(modbus_t *ctx, uint8_t *req, uint8_t *rsp)
         _error_print(ctx, NULL);
         rc = -1;
     } else {
+        if (ctx->debug) {
+            fprintf(stderr,
+                    "Message length not corresponding to the computed length (%d != %d)\n",
+                    rc, rsp_length_computed);
+        }
         errno = EMBBADDATA;
         rc = -1;
     }
