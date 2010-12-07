@@ -618,7 +618,22 @@ int main(int argc, char *argv[])
         printf("FAILED\n");
         goto close;
     }
+
     free(tab_rp_registers_bad);
+
+    /** MANUAL EXCEPTION **/
+    printf("\nTEST MANUAL EXCEPTION:\n");
+
+    rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS_SPECIAL,
+                               UT_REGISTERS_NB_POINTS,
+                               tab_rp_registers);
+    printf("* modbus_read_registers at special address: ");
+    if (rc == -1 && errno == EMBXSBUSY) {
+        printf("OK\n");
+    } else {
+        printf("FAILED\n");
+        goto close;
+    }
 
     printf("\nALL TESTS PASS WITH SUCCESS.\n");
 

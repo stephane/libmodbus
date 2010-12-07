@@ -119,6 +119,11 @@ int main(int argc, char*argv[])
                 printf("Set an incorrect number of values\n");
                 MODBUS_SET_INT16_TO_INT8(query, header_length + 3,
                                          UT_REGISTERS_NB_POINTS);
+            } else if (MODBUS_GET_INT16_FROM_INT8(query, header_length + 1)
+                == UT_REGISTERS_ADDRESS_SPECIAL) {
+                modbus_reply_exception(ctx, query,
+                                       MODBUS_EXCEPTION_SLAVE_OR_SERVER_BUSY);
+                continue;
             }
         }
 

@@ -38,6 +38,8 @@ const uint16_t UT_INPUT_BITS_NB_POINTS = 0x16;
 const uint8_t UT_INPUT_BITS_TAB[] = { 0xAC, 0xDB, 0x35 };
 
 const uint16_t UT_REGISTERS_ADDRESS = 0x6B;
+/* Raise a manual exception when this adress is used for the first byte */
+const uint16_t UT_REGISTERS_ADDRESS_SPECIAL = 0x6C;
 const uint16_t UT_REGISTERS_NB_POINTS = 0x3;
 const uint16_t UT_REGISTERS_TAB[] = { 0x022B, 0x0000, 0x0064 };
 /* If the following value is used, a bad response is sent.

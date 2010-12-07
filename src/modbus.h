@@ -171,6 +171,8 @@ void modbus_mapping_free(modbus_mapping_t *mb_mapping);
 int modbus_receive(modbus_t *ctx, int sockfd, uint8_t *req);
 int modbus_reply(modbus_t *ctx, const uint8_t *req,
                  int req_length, modbus_mapping_t *mb_mapping);
+int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
+                           unsigned int exception_code);
 
 /**
  * UTILS FUNCTIONS
