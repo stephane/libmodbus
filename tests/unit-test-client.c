@@ -600,6 +600,8 @@ int main(int argc, char *argv[])
     /* Restore original timeout */
     modbus_set_timeout_begin(ctx, &timeout_begin_old);
 
+    modbus_flush(ctx);
+
     /** BAD RESPONSE **/
     printf("\nTEST BAD RESPONSE ERROR:\n");
 
