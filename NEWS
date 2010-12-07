@@ -1,3 +1,16 @@
+libmodbus 2.9.3 (2010-12-XX)
+============================
+
+- New function to reply to an indication with an exception message
+  modbus_reply_exception()
+- Fix missing modbus_flush() in unit tests
+- New functions to manipulate data:
+    * MODBUS_GET_INT32_FROM_INT16
+    * MODBUS_GET_INT16_FROM_INT8
+    * MODBUS_SET_INT16_TO_INT8
+- New function modbus_get_header_length(modbus_t *ctx)
+- Rewrite of the message reading (no more timeouts on exception)
+
 libmodbus 2.9.2 (2010-12-05)
 ============================
 
