@@ -42,6 +42,8 @@
 # include <netinet/ip.h>
 # include <netinet/tcp.h>
 # include <arpa/inet.h>
+# include <poll.h>
+# include <netdb.h>
 #endif
 
 #if !defined(MSG_NOSIGNAL)
@@ -185,11 +187,41 @@ int _modbus_tcp_check_integrity(modbus_t *ctx, uint8_t *msg, const int msg_lengt
     return msg_length;
 }
 
+static int _modbus_tcp_set_ipv4_options(int s)
+{
+    int rc;
+    int option;
+
+    /* Set the TCP no delay flag */
+    /* SOL_TCP = IPPROTO_TCP */
+    option = 1;
+    rc = setsockopt(s, IPPROTO_TCP, TCP_NODELAY,
+                    (const void *)&option, sizeof(int));
+    if (rc == -1) {
+        return -1;
+    }
+
+#ifndef OS_WIN32
+    /**
+     * Cygwin defines IPTOS_LOWDELAY but can't handle that flag so it's
+     * necessary to workaround that problem.
+     **/
+    /* Set the IP low delay option */
+    option = IPTOS_LOWDELAY;
+    rc = setsockopt(s, IPPROTO_IP, IP_TOS,
+                    (const void *)&option, sizeof(int));
+    if (rc == -1) {
+        return -1;
+    }
+#endif
+
+    return 0;
+}
+
 /* Establishes a modbus TCP connection with a Modbus server. */
 static int _modbus_tcp_connect(modbus_t *ctx)
 {
     int rc;
-    int option;
     struct sockaddr_in addr;
     modbus_tcp_t *ctx_tcp = ctx->backend_data;
 
@@ -204,30 +236,11 @@ static int _modbus_tcp_connect(modbus_t *ctx)
         return -1;
     }
 
-    /* Set the TCP no delay flag */
-    /* SOL_TCP = IPPROTO_TCP */
-    option = 1;
-    rc = setsockopt(ctx->s, IPPROTO_TCP, TCP_NODELAY,
-                    (const void *)&option, sizeof(int));
+    rc = _modbus_tcp_set_ipv4_options(ctx->s);
     if (rc == -1) {
         close(ctx->s);
         return -1;
     }
-
-#ifndef OS_WIN32
-    /**
-     * Cygwin defines IPTOS_LOWDELAY but can't handle that flag so it's
-     * necessary to workaround that problem.
-     **/
-    /* Set the IP low delay option */
-    option = IPTOS_LOWDELAY;
-    rc = setsockopt(ctx->s, IPPROTO_IP, IP_TOS,
-                    (const void *)&option, sizeof(int));
-    if (rc == -1) {
-        close(ctx->s);
-        return -1;
-    }
-#endif
 
     if (ctx->debug) {
         printf("Connecting to %s\n", ctx_tcp->ip);
@@ -240,6 +253,61 @@ static int _modbus_tcp_connect(modbus_t *ctx)
                  sizeof(struct sockaddr_in));
     if (rc == -1) {
         close(ctx->s);
+        return -1;
+    }
+
+    return 0;
+}
+
+/* Establishes a modbus TCP PI connection with a Modbus server. */
+static int _modbus_tcp_pi_connect(modbus_t *ctx)
+{
+    int rc;
+    struct addrinfo *ai_list;
+    struct addrinfo *ai_ptr;
+    struct addrinfo ai_hints;
+    modbus_tcp_pi_t *ctx_tcp_pi = ctx->backend_data;
+
+    memset(&ai_hints, 0, sizeof(ai_hints));
+#ifdef AI_ADDRCONFIG
+    ai_hints.ai_flags |= AI_ADDRCONFIG;
+#endif
+    ai_hints.ai_family = AF_UNSPEC;
+    ai_hints.ai_socktype = SOCK_STREAM;
+    ai_hints.ai_addr = NULL;
+    ai_hints.ai_canonname = NULL;
+    ai_hints.ai_next = NULL;
+
+    ai_list = NULL;
+    rc = getaddrinfo(ctx_tcp_pi->node, ctx_tcp_pi->service,
+                     &ai_hints, &ai_list);
+    if (rc != 0)
+        return rc;
+
+    for (ai_ptr = ai_list; ai_ptr != NULL; ai_ptr = ai_ptr->ai_next) {
+        int s;
+
+        s = socket(ai_ptr->ai_family, ai_ptr->ai_socktype, ai_ptr->ai_protocol);
+        if (s < 0)
+            continue;
+
+        if (ai_ptr->ai_family == AF_INET)
+            _modbus_tcp_set_ipv4_options(s);
+
+        rc = connect(s, ai_ptr->ai_addr, ai_ptr->ai_addrlen);
+        if (rc != 0) {
+            close(s);
+            continue;
+        }
+
+        ctx->s = s;
+        break;
+    }
+
+    freeaddrinfo(ai_list);
+
+    if (ctx->s < 0) {
+        errno = ENOTCONN;
         return -1;
     }
 
@@ -330,6 +398,98 @@ int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
     return new_socket;
 }
 
+int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
+{
+    int rc;
+    struct addrinfo *ai_list;
+    struct addrinfo *ai_ptr;
+    struct addrinfo ai_hints;
+    const char *node;
+    const char *service;
+    int new_socket;
+    modbus_tcp_pi_t *ctx_tcp_pi = ctx->backend_data;
+
+    if (ctx_tcp_pi->node[0] == 0)
+        node = NULL; /* == any */
+    else
+        node = ctx_tcp_pi->node;
+
+    if (ctx_tcp_pi->service[0] == 0)
+        service = "502";
+    else
+        service = ctx_tcp_pi->service;
+
+    memset(&ai_hints, 0, sizeof (ai_hints));
+    ai_hints.ai_flags |= AI_PASSIVE;
+#ifdef AI_ADDRCONFIG
+    ai_hints.ai_flags |= AI_ADDRCONFIG;
+#endif
+    ai_hints.ai_family = AF_UNSPEC;
+    ai_hints.ai_socktype = SOCK_STREAM;
+    ai_hints.ai_addr = NULL;
+    ai_hints.ai_canonname = NULL;
+    ai_hints.ai_next = NULL;
+
+    ai_list = NULL;
+    rc = getaddrinfo(node, service, &ai_hints, &ai_list);
+    if (rc != 0)
+        return -1;
+
+    new_socket = -1;
+    for (ai_ptr = ai_list; ai_ptr != NULL; ai_ptr = ai_ptr->ai_next) {
+        int s;
+
+        s = socket(ai_ptr->ai_family, ai_ptr->ai_socktype,
+                            ai_ptr->ai_protocol);
+        if (s < 0) {
+            if (ctx->debug) {
+                perror("socket");
+            }
+            continue;
+        } else {
+            int yes = 1;
+            rc = setsockopt(s, SOL_SOCKET, SO_REUSEADDR,
+                            (void *) &yes, sizeof (yes));
+            if (rc != 0) {
+                close(s);
+                if (ctx->debug) {
+                    perror("setsockopt");
+                }
+                continue;
+            }
+        }
+
+        rc = bind(s, ai_ptr->ai_addr, ai_ptr->ai_addrlen);
+        if (rc != 0) {
+            close(s);
+            if (ctx->debug) {
+                perror("bind");
+            }
+            continue;
+        }
+
+        rc = listen(s, nb_connection);
+        if (rc != 0) {
+            close(s);
+            if (ctx->debug) {
+                perror("listen");
+            }
+            continue;
+        }
+
+        new_socket = s;
+        break;
+    }
+    freeaddrinfo(ai_list);
+
+    if (new_socket < 0) {
+        errno = ENOTCONN;
+        return -1;
+    }
+
+    return new_socket;
+}
+
 /* On success, the function return a non-negative integer that is a descriptor
    for the accepted socket. On error, -1 is returned, and errno is set
    appropriately. */
@@ -338,7 +498,7 @@ int modbus_tcp_accept(modbus_t *ctx, int *socket)
     struct sockaddr_in addr;
     socklen_t addrlen;
 
-    addrlen = sizeof(struct sockaddr_in);
+    addrlen = sizeof(addr);
     ctx->s = accept(*socket, (struct sockaddr *)&addr, &addrlen);
     if (ctx->s == -1) {
         close(*socket);
@@ -347,7 +507,27 @@ int modbus_tcp_accept(modbus_t *ctx, int *socket)
     }
 
     if (ctx->debug) {
-        printf("The client %s is connected\n", inet_ntoa(addr.sin_addr));
+        printf("The client connection from %s is accepted\n",
+               inet_ntoa(addr.sin_addr));
+    }
+
+    return ctx->s;
+}
+
+int modbus_tcp_pi_accept(modbus_t *ctx, int *socket)
+{
+    struct sockaddr_storage addr;
+    socklen_t addrlen;
+
+    addrlen = sizeof(addr);
+    ctx->s = accept(*socket, (void *)&addr, &addrlen);
+    if (ctx->s == -1) {
+        close(*socket);
+        *socket = 0;
+    }
+
+    if (ctx->debug) {
+        printf("The client connection is accepted.");
     }
 
     return ctx->s;
@@ -412,9 +592,29 @@ const modbus_backend_t _modbus_tcp_backend = {
 };
 
 
+const modbus_backend_t _modbus_tcp_pi_backend = {
+    _MODBUS_BACKEND_TYPE_TCP,
+    _MODBUS_TCP_HEADER_LENGTH,
+    _MODBUS_TCP_CHECKSUM_LENGTH,
+    MODBUS_TCP_MAX_ADU_LENGTH,
+    _modbus_set_slave,
+    _modbus_tcp_build_request_basis,
+    _modbus_tcp_build_response_basis,
+    _modbus_tcp_prepare_response_tid,
+    _modbus_tcp_send_msg_pre,
+    _modbus_tcp_send,
+    _modbus_tcp_recv,
+    _modbus_tcp_check_integrity,
+    _modbus_tcp_pi_connect,
+    _modbus_tcp_close,
+    _modbus_tcp_flush,
+    _modbus_tcp_select,
+    _modbus_tcp_filter_request
+};
+
 /* Allocates and initializes the modbus_t structure for TCP.
-   - ip : "192.168.0.5"
-   - port : 1099
+   - ip: '192.168.0.5'
+   - port: 1099
 
    Set the port to MODBUS_TCP_DEFAULT_PORT to use the default one
    (502). It's convenient to use a port number greater than or equal
@@ -425,6 +625,8 @@ modbus_t* modbus_new_tcp(const char *ip, int port)
 {
     modbus_t *ctx;
     modbus_tcp_t *ctx_tcp;
+    size_t dest_size;
+    size_t ret_size;
 
 #if defined(OS_BSD)
     /* MSG_NOSIGNAL is unsupported on *BSD so we install an ignore
@@ -450,8 +652,84 @@ modbus_t* modbus_new_tcp(const char *ip, int port)
     ctx->backend_data = (modbus_tcp_t *) malloc(sizeof(modbus_tcp_t));
     ctx_tcp = (modbus_tcp_t *)ctx->backend_data;
 
-    strncpy(ctx_tcp->ip, ip, sizeof(char)*16);
+    dest_size = sizeof(char) * 16;
+    ret_size = strlcpy(ctx_tcp->ip, ip, dest_size);
+    if (ret_size == 0) {
+        fprintf(stderr, "The IP string is empty\n");
+        modbus_free(ctx);
+        errno = EINVAL;
+        return NULL;
+    }
+
+    if (ret_size >= dest_size) {
+        fprintf(stderr, "The IP string has been truncated\n");
+        modbus_free(ctx);
+        errno = EINVAL;
+        return NULL;
+    }
+
     ctx_tcp->port = port;
+
+    return ctx;
+}
+
+/* Allocates and initializes the modbus_t structure for TCP in a protocol
+   indepedent fashin, i.e. IPv4/IPv6 agnostic.
+
+   - node: host name or IP address of the host to connect to, eg. '192.168.0.5'
+     or 'server.com'.
+   - service: service name/port number to connect to. Use NULL for the default
+     port, 502/TCP.
+*/
+modbus_t* modbus_new_tcp_pi(const char *node, const char *service)
+{
+    modbus_t *ctx;
+    modbus_tcp_pi_t *ctx_tcp_pi;
+    size_t dest_size;
+    size_t ret_size;
+
+    ctx = (modbus_t *) malloc(sizeof(modbus_t));
+    _modbus_init_common(ctx);
+
+    /* Could be changed after to reach a remote serial Modbus device */
+    ctx->slave = MODBUS_TCP_SLAVE;
+
+    ctx->backend = &(_modbus_tcp_pi_backend);
+
+    ctx->backend_data = (modbus_tcp_pi_t *) malloc(sizeof(modbus_tcp_pi_t));
+    ctx_tcp_pi = (modbus_tcp_pi_t *)ctx->backend_data;
+
+    dest_size = sizeof(char) * _MODBUS_TCP_PI_NODE_LENGTH;
+    ret_size = strlcpy(ctx_tcp_pi->node, node, dest_size);
+    if (ret_size == 0) {
+        fprintf(stderr, "The node string is empty\n");
+        modbus_free(ctx);
+        errno = EINVAL;
+        return NULL;
+    }
+
+    if (ret_size >= dest_size) {
+        fprintf(stderr, "The node string has been truncated\n");
+        modbus_free(ctx);
+        errno = EINVAL;
+        return NULL;
+    }
+
+    dest_size = sizeof(char) * _MODBUS_TCP_PI_SERVICE_LENGTH;
+    ret_size = strlcpy(ctx_tcp_pi->service, service, dest_size);
+    if (ret_size == 0) {
+        fprintf(stderr, "The service string is empty\n");
+        modbus_free(ctx);
+        errno = EINVAL;
+        return NULL;
+    }
+
+    if (ret_size >= dest_size) {
+        fprintf(stderr, "The service string has been truncated\n");
+        modbus_free(ctx);
+        errno = EINVAL;
+        return NULL;
+    }
 
     return ctx;
 }

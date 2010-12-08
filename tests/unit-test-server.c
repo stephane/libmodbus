@@ -26,6 +26,7 @@
 
 enum {
     TCP,
+    TCP_PI,
     RTU
 };
 
@@ -43,10 +44,12 @@ int main(int argc, char*argv[])
     if (argc > 1) {
         if (strcmp(argv[1], "tcp") == 0) {
             use_backend = TCP;
+        } else if (strcmp(argv[1], "tcppi") == 0) {
+            use_backend = TCP_PI;
         } else if (strcmp(argv[1], "rtu") == 0) {
             use_backend = RTU;
         } else {
-            printf("Usage:\n  %s [tcp|rtu] - Modbus server for unit testing\n\n", argv[0]);
+            printf("Usage:\n  %s [tcp|tcppi|rtu] - Modbus server for unit testing\n\n", argv[0]);
             return -1;
         }
     } else {
@@ -56,6 +59,9 @@ int main(int argc, char*argv[])
 
     if (use_backend == TCP) {
         ctx = modbus_new_tcp("127.0.0.1", 1502);
+        query = malloc(MODBUS_TCP_MAX_ADU_LENGTH);
+    } else if (use_backend == TCP_PI) {
+        ctx = modbus_new_tcp_pi("::0", "1502");
         query = malloc(MODBUS_TCP_MAX_ADU_LENGTH);
     } else {
         ctx = modbus_new_rtu("/dev/ttyUSB0", 115200, 'N', 8, 1);
@@ -96,6 +102,9 @@ int main(int argc, char*argv[])
     if (use_backend == TCP) {
         socket = modbus_tcp_listen(ctx, 1);
         modbus_tcp_accept(ctx, &socket);
+    } else if (use_backend == TCP_PI) {
+        socket = modbus_tcp_pi_listen(ctx, 1);
+        modbus_tcp_pi_accept(ctx, &socket);
     } else {
         rc = modbus_connect(ctx);
         if (rc == -1) {
