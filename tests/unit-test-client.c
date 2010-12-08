@@ -26,6 +26,7 @@
 
 enum {
     TCP,
+    TCP_PI,
     RTU
 };
 
@@ -48,10 +49,12 @@ int main(int argc, char *argv[])
     if (argc > 1) {
         if (strcmp(argv[1], "tcp") == 0) {
             use_backend = TCP;
+        if (strcmp(argv[1], "tcppi") == 0) {
+            use_backend = TCP_PI;
         } else if (strcmp(argv[1], "rtu") == 0) {
             use_backend = RTU;
         } else {
-            printf("Usage:\n  %s [tcp|rtu] - Modbus client for unit testing\n\n", argv[0]);
+            printf("Usage:\n  %s [tcp|tcppi|rtu] - Modbus client for unit testing\n\n", argv[0]);
             exit(1);
         }
     } else {
@@ -61,7 +64,9 @@ int main(int argc, char *argv[])
 
     if (use_backend == TCP) {
         ctx = modbus_new_tcp("127.0.0.1", 1502);
-    } else {
+    } else if (use_backend == TCP_PI) {
+        ctx = modbus_new_tcp_pi("::1", "1502");
+    } else
         ctx = modbus_new_rtu("/dev/ttyUSB1", 115200, 'N', 8, 1);
     }
     if (ctx == NULL) {
