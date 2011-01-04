@@ -141,7 +141,8 @@ int _modbus_tcp_build_response_basis(sft_t *sft, uint8_t *rsp)
 
     /* Length will be set later by send_msg (4 and 5) */
 
-    rsp[6] = 0xFF;
+    /* The slave ID is copied from the indication */
+    rsp[6] = sft->slave;
     rsp[7] = sft->function;
 
     return _MODBUS_TCP_PRESET_RSP_LENGTH;
