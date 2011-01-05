@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     }
 
     if (use_backend == TCP) {
-        ctx = modbus_new_tcp("127.0.0.1", 1502);
+        ctx = modbus_new_tcp("127.0.0.1", "1502");
         socket = modbus_tcp_listen(ctx, 1);
         modbus_tcp_accept(ctx, &socket);
 

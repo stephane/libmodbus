@@ -1,5 +1,6 @@
 /*
  * Copyright © 2001-2010 Stéphane Raimbault <stephane.raimbault@gmail.com>
+ * Copyright © 2010,2011 noris network AG <http://noris.net/>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser Public License as published by
@@ -40,11 +41,16 @@
 # include <netinet/ip.h>
 # include <netinet/tcp.h>
 # include <arpa/inet.h>
+# include <netdb.h>
 #endif
 
 #if !defined(MSG_NOSIGNAL)
 #define MSG_NOSIGNAL 0
 #endif
+
+/* The "MODBUS_LEGACY" define is required so the header file declares
+ * modbus_new_tcp(), which is implemented below. */
+#define MODBUS_LEGACY 1
 
 #include "modbus-private.h"
 
@@ -186,10 +192,15 @@ int _modbus_tcp_check_integrity(modbus_t *ctx, uint8_t *msg, const int msg_lengt
 /* Establishes a modbus TCP connection with a Modbus server. */
 static int _modbus_tcp_connect(modbus_t *ctx)
 {
-    int rc;
-    int option;
-    struct sockaddr_in addr;
     modbus_tcp_t *ctx_tcp = ctx->backend_data;
+    struct addrinfo *ai_list;
+    struct addrinfo *ai_ptr;
+    struct addrinfo  ai_hints;
+    int rc;
+
+    if (ctx_tcp->node == NULL) {
+        return -1;
+    }
 
 #ifdef OS_WIN32
     if (_modbus_tcp_init_win32() == -1) {
@@ -197,48 +208,76 @@ static int _modbus_tcp_connect(modbus_t *ctx)
     }
 #endif
 
-    ctx->s = socket(PF_INET, SOCK_STREAM, 0);
-    if (ctx->s == -1) {
-        return -1;
-    }
+    memset (&ai_hints, 0, sizeof (ai_hints));
+#ifdef AI_ADDRCONFIG
+    ai_hints.ai_flags |= AI_ADDRCONFIG;
+#endif
+    ai_hints.ai_family = AF_UNSPEC;
+    ai_hints.ai_socktype = SOCK_STREAM;
+    ai_hints.ai_protocol = IPPROTO_TCP;
 
-    /* Set the TCP no delay flag */
-    /* SOL_TCP = IPPROTO_TCP */
-    option = 1;
-    rc = setsockopt(ctx->s, IPPROTO_TCP, TCP_NODELAY,
-                    (const void *)&option, sizeof(int));
-    if (rc == -1) {
-        close(ctx->s);
-        return -1;
-    }
+    ai_list = NULL;
+    rc = getaddrinfo (ctx_tcp->node, ctx_tcp->service,
+            &ai_hints, &ai_list);
+    if (rc != 0)
+        return rc;
+
+    ctx->s = -1;
+    for (ai_ptr = ai_list; ai_ptr != NULL; ai_ptr = ai_ptr->ai_next)
+    {
+        int option;
+
+        ctx->s = socket (ai_ptr->ai_family, ai_ptr->ai_socktype, ai_ptr->ai_protocol);
+        if (ctx->s < 0) {
+            continue;
+        }
+
+        /* Set the TCP no delay flag */
+        /* SOL_TCP = IPPROTO_TCP */
+        option = 1;
+        rc = setsockopt(ctx->s, IPPROTO_TCP, TCP_NODELAY,
+                (const void *)&option, sizeof(int));
+        if (rc != 0) {
+            close(ctx->s);
+            ctx->s = -1;
+            continue;
+        }
 
 #ifndef OS_WIN32
-    /**
-     * Cygwin defines IPTOS_LOWDELAY but can't handle that flag so it's
-     * necessary to workaround that problem.
-     **/
-    /* Set the IP low delay option */
-    option = IPTOS_LOWDELAY;
-    rc = setsockopt(ctx->s, IPPROTO_IP, IP_TOS,
-                    (const void *)&option, sizeof(int));
-    if (rc == -1) {
-        close(ctx->s);
-        return -1;
-    }
+        /**
+         * Cygwin defines IPTOS_LOWDELAY but can't handle that flag so it's
+         * necessary to workaround that problem.
+         **/
+        /* Set the IP low delay option */
+        option = IPTOS_LOWDELAY;
+        rc = setsockopt(ctx->s, IPPROTO_IP, IP_TOS,
+                (const void *)&option, sizeof(int));
+        if (rc != 0) {
+            close(ctx->s);
+            ctx->s = -1;
+            continue;
+        }
 #endif
 
-    if (ctx->debug) {
-        printf("Connecting to %s\n", ctx_tcp->ip);
-    }
+        if (ctx->debug) {
+            printf("Connecting to %s:%s\n",
+                    ctx_tcp->node, ctx_tcp->service);
+        }
 
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(ctx_tcp->port);
-    addr.sin_addr.s_addr = inet_addr(ctx_tcp->ip);
-    rc = connect(ctx->s, (struct sockaddr *)&addr,
-                 sizeof(struct sockaddr_in));
-    if (rc == -1) {
-        close(ctx->s);
-        return -1;
+        rc = connect(ctx->s, ai_ptr->ai_addr, ai_ptr->ai_addrlen);
+        if (rc != 0) {
+            close(ctx->s);
+            ctx->s = -1;
+            continue;
+        }
+
+        break;
+    } /* for (ai_list) */
+
+    freeaddrinfo (ai_list);
+
+    if (ctx->s < 0) {
+        return (-1);
     }
 
     return 0;
@@ -287,10 +326,13 @@ int _modbus_tcp_flush(modbus_t *ctx)
 /* Listens for any request from one or many modbus masters in TCP */
 int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
 {
+    modbus_tcp_t *ctx_tcp = ctx->backend_data;
+    struct addrinfo *ai_list;
+    struct addrinfo *ai_ptr;
+    struct addrinfo  ai_hints;
     int new_socket;
     int yes;
-    struct sockaddr_in addr;
-    modbus_tcp_t *ctx_tcp = ctx->backend_data;
+    int status;
 
 #ifdef OS_WIN32
     if (_modbus_tcp_init_win32() == -1) {
@@ -298,30 +340,60 @@ int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
     }
 #endif
 
-    new_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (new_socket == -1) {
+    memset (&ai_hints, 0, sizeof (ai_hints));
+    ai_hints.ai_flags = AI_PASSIVE;
+#ifdef AI_ADDRCONFIG
+    ai_hints.ai_flags |= AI_ADDRCONFIG;
+#endif
+    ai_hints.ai_family = AF_UNSPEC;
+    ai_hints.ai_socktype = SOCK_STREAM;
+    ai_hints.ai_protocol = IPPROTO_TCP;
+
+    ai_list = NULL;
+    status = getaddrinfo (ctx_tcp->node,
+            (ctx_tcp->service != NULL) ? ctx_tcp->service : "502",
+            &ai_hints, &ai_list);
+    if (status != 0) {
         return -1;
     }
 
-    yes = 1;
-    if (setsockopt(new_socket, SOL_SOCKET, SO_REUSEADDR,
-                   (char *) &yes, sizeof(yes)) == -1) {
-        close(new_socket);
-        return -1;
-    }
+    new_socket = -1;
+    for (ai_ptr = ai_list; ai_ptr != NULL; ai_ptr = ai_ptr->ai_next)
+    {
+        new_socket = socket (ai_ptr->ai_family, ai_ptr->ai_socktype, ai_ptr->ai_protocol);
+        if (new_socket < 0) {
+            continue;
+        }
 
-    memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    /* If the modbus port is < to 1024, we need the setuid root. */
-    addr.sin_port = htons(ctx_tcp->port);
-    addr.sin_addr.s_addr = INADDR_ANY;
-    if (bind(new_socket, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
-        close(new_socket);
-        return -1;
-    }
+        yes = 1;
+        status = setsockopt(new_socket, SOL_SOCKET, SO_REUSEADDR,
+                    (char *) &yes, sizeof(yes));
+        if (status != 0) {
+            close(new_socket);
+            new_socket = -1;
+            continue;
+        }
 
-    if (listen(new_socket, nb_connection) == -1) {
-        close(new_socket);
+        status = bind(new_socket, ai_ptr->ai_addr, ai_ptr->ai_addrlen);
+        if (status != 0) {
+            close(new_socket);
+            new_socket = -1;
+            continue;
+        }
+
+        status = listen(new_socket, nb_connection);
+        if (status != 0) {
+            close(new_socket);
+            new_socket = -1;
+            continue;
+        }
+
+        break;
+    } /* for (ai_list) */
+
+    freeaddrinfo (ai_list);
+
+    if (new_socket < 0) {
         return -1;
     }
 
@@ -419,10 +491,26 @@ const modbus_backend_t _modbus_tcp_backend = {
    to 1024 because it's not necessary to be root to use this port
    number.
 */
-modbus_t* modbus_new_tcp(const char *ip, int port)
+modbus_t* modbus_new_tcp(const char *ip_address, int port)
+{
+    char service[8];
+
+    if ((port <= 0) || (port > 65535))
+        port = MODBUS_TCP_DEFAULT_PORT;
+
+    snprintf (service, sizeof (service), "%i", port);
+    service[sizeof (service) - 1] = 0;
+
+    return (modbus_new_tcp_pi (ip_address, service));
+}
+
+modbus_t* modbus_new_tcp_pi(const char *node, const char *service)
 {
     modbus_t *ctx;
     modbus_tcp_t *ctx_tcp;
+
+    if (service == NULL)
+        service = MODBUS_TCP_DEFAULT_SERVICE;
 
     ctx = (modbus_t *) malloc(sizeof(modbus_t));
     _modbus_init_common(ctx);
@@ -435,8 +523,24 @@ modbus_t* modbus_new_tcp(const char *ip, int port)
     ctx->backend_data = (modbus_tcp_t *) malloc(sizeof(modbus_tcp_t));
     ctx_tcp = (modbus_tcp_t *)ctx->backend_data;
 
-    strncpy(ctx_tcp->ip, ip, sizeof(char)*16);
-    ctx_tcp->port = port;
+    if (node != NULL) {
+        ctx_tcp->node = strdup (node);
+        if (ctx_tcp->node == NULL) {
+            free (ctx->backend_data);
+            free (ctx);
+            return NULL;
+        }
+    } else {
+        ctx_tcp->node = NULL;
+    }
+
+    ctx_tcp->service = strdup (service);
+    if (ctx_tcp->service == NULL) {
+        free (ctx_tcp->node);
+        free (ctx->backend_data);
+        free (ctx);
+        return NULL;
+    }
 
     return ctx;
 }

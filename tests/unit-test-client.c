@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
     }
 
     if (use_backend == TCP) {
-        ctx = modbus_new_tcp("127.0.0.1", 1502);
+        ctx = modbus_new_tcp("127.0.0.1", "1502");
     } else {
         ctx = modbus_new_rtu("/dev/ttyUSB1", 115200, 'N', 8, 1);
     }

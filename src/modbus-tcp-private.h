@@ -26,9 +26,9 @@
 
 typedef struct _modbus_tcp {
     /* TCP port */
-    int port;
+    char *service;
     /* IP address */
-    char ip[16];
+    char *node;
 } modbus_tcp_t;
 
 #endif /* _MODBUS_TCP_PRIVATE_H_ */
