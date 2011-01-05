@@ -1,3 +1,21 @@
 #!/usr/bin/make -f
 include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/class/autotools.mk
+
+makebuilddir::
+	./autogen.sh
+
+clean::
+	rm -f Makefile.in
+	rm -f aclocal.m4
+	rm -f config.guess
+	rm -f config.h.in
+	rm -f config.sub
+	rm -f configure
+	rm -f depcomp
+	rm -f install-sh
+	rm -f ltmain.sh
+	rm -f missing
+	rm -f src/Makefile.in
+	rm -f tests/Makefile.in
+
