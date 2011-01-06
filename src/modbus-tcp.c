@@ -425,6 +425,19 @@ modbus_t* modbus_new_tcp(const char *ip, int port)
     modbus_t *ctx;
     modbus_tcp_t *ctx_tcp;
 
+#if defined(OS_BSD)
+    /* MSG_NOSIGNAL is unsupported on *BSD so we install an ignore
+       handler for SIGPIPE. */
+    struct sigaction sa;
+
+    sa.sa_handler = SIG_IGN;
+    if (sigaction(SIGPIPE, &sa, NULL) < 0) {
+        /* The debug flag can't be set here... */
+        fprintf(stderr, "Coud not install SIGPIPE handler.\n");
+        return -1;
+    }
+#endif
+
     ctx = (modbus_t *) malloc(sizeof(modbus_t));
     _modbus_init_common(ctx);
 
