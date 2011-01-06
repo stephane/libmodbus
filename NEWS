@@ -1,6 +1,8 @@
 libmodbus 2.9.3 (2011-01-XX)
 ============================
 
+- Fix closing of Win32 socket.
+  Reported by Petr Parýzek.
 - Fix unit identifier not copied by the TCP server.
   Reported by Antti Manninen.
 - New function to reply to an indication with an exception message

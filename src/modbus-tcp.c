@@ -27,6 +27,7 @@
 # include <winsock2.h>
 # include <ws2tcpip.h>
 # define SHUT_RDWR 2
+# define close closesocket
 #else
 # include <sys/socket.h>
 # include <sys/ioctl.h>
