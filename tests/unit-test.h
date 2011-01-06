@@ -41,7 +41,7 @@ const uint16_t UT_REGISTERS_ADDRESS = 0x6B;
 /* Raise a manual exception when this adress is used for the first byte */
 const uint16_t UT_REGISTERS_ADDRESS_SPECIAL = 0x6C;
 const uint16_t UT_REGISTERS_NB_POINTS = 0x3;
-const uint16_t UT_REGISTERS_TAB[] = { 0x022B, 0x0000, 0x0064 };
+const uint16_t UT_REGISTERS_TAB[] = { 0x022B, 0x0001, 0x0064 };
 /* If the following value is used, a bad response is sent.
    It's better to test with a lower value than
    UT_REGISTERS_NB_POINTS to try to raise a segfault. */

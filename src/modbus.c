@@ -794,15 +794,17 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
             rsp_length = ctx->backend->build_response_basis(&sft, rsp);
             rsp[rsp_length++] = nb << 1;
 
-            for (i = address; i < address + nb; i++) {
-                rsp[rsp_length++] = mb_mapping->tab_registers[i] >> 8;
-                rsp[rsp_length++] = mb_mapping->tab_registers[i] & 0xFF;
-            }
-
-            /* 10 and 11 = first value */
+            /* Write first.
+               10 and 11 are the offset of the first values to write */
             for (i = address_write, j = 10; i < address_write + nb_write; i++, j += 2) {
                 mb_mapping->tab_registers[i] =
                     (req[offset + j] << 8) + req[offset + j + 1];
+            }
+
+            /* and read the data for the response */
+            for (i = address; i < address + nb; i++) {
+                rsp[rsp_length++] = mb_mapping->tab_registers[i] >> 8;
+                rsp[rsp_length++] = mb_mapping->tab_registers[i] & 0xFF;
             }
         }
     }

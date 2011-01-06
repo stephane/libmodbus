@@ -1,6 +1,7 @@
 libmodbus 2.9.3 (2011-01-XX)
 ============================
 
+- Fix GH-2. Read/write were swapped in _FC_READ_AND_WRITE_REGISTERS
 - Install an ignore handler for SIGPIPE on *BSD
   Original patch by Jason Oster.
 - Fix closing of Win32 socket.

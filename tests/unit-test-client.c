@@ -269,45 +269,31 @@ int main(int argc, char *argv[])
         UT_REGISTERS_NB_POINTS : UT_INPUT_REGISTERS_NB_POINTS;
     memset(tab_rp_registers, 0, nb_points * sizeof(uint16_t));
 
-    /* Write registers to zero from tab_rp_registers and read registers to
-       tab_rp_registers. They should be same as UT_REGISTERS_TAB. */
+    /* Write registers to zero from tab_rp_registers and store read registers
+       into tab_rp_registers. So the read registers must set to 0, except the
+       first one because there is an offset of 1 register on write. */
     rc = modbus_read_and_write_registers(ctx,
                                          UT_REGISTERS_ADDRESS,
                                          UT_REGISTERS_NB_POINTS,
                                          tab_rp_registers,
-                                         UT_REGISTERS_ADDRESS,
-                                         UT_REGISTERS_NB_POINTS,
+                                         UT_REGISTERS_ADDRESS + 1,
+                                         UT_REGISTERS_NB_POINTS - 1,
                                          tab_rp_registers);
-    printf("4/5 modbus_read_and_write_registers, read part: ");
+    printf("4/5 modbus_read_and_write_registers: ");
     if (rc != UT_REGISTERS_NB_POINTS) {
         printf("FAILED (nb points %d != %d)\n", rc, UT_REGISTERS_NB_POINTS);
         goto close;
     }
 
-    for (i=0; i < UT_REGISTERS_NB_POINTS; i++) {
-        if (tab_rp_registers[i] != UT_REGISTERS_TAB[i]) {
-            printf("FAILED (%0X != %0X)\n",
-                   tab_rp_registers[i],
-                   UT_REGISTERS_TAB[i]);
-            goto close;
-        }
-    }
-    printf("OK\n");
-
-    rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
-                               UT_REGISTERS_NB_POINTS,
-                               tab_rp_registers);
-    printf("5/5 modbus_read_and_write_registers, write part: ");
-    if (rc != UT_REGISTERS_NB_POINTS) {
-        printf("FAILED (nb points %d != %d)\n", rc, UT_REGISTERS_NB_POINTS);
-        goto close;
+    if (tab_rp_registers[0] != UT_REGISTERS_TAB[0]) {
+        printf("FAILED (%0X != %0X)\n",
+               tab_rp_registers[0], UT_REGISTERS_TAB[0]);
     }
 
-    for (i=0; i < UT_REGISTERS_NB_POINTS; i++) {
+    for (i=1; i < UT_REGISTERS_NB_POINTS; i++) {
         if (tab_rp_registers[i] != 0) {
             printf("FAILED (%0X != %0X)\n",
-                   tab_rp_registers[i],
-                   UT_REGISTERS_TAB[i]);
+                   tab_rp_registers[i], 0);
             goto close;
         }
     }
