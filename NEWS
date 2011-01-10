@@ -1,6 +1,14 @@
-libmodbus 2.9.3 (2011-01-XX)
+libmodbus 2.9.3 (2011-01-10)
 ============================
 
+- Major rewriting of the message reading (no more timeouts on exception)
+- New function to reply to an indication with an exception message
+  modbus_reply_exception()
+- New function modbus_get_header_length(modbus_t *ctx)
+- New functions to manipulate data:
+    * MODBUS_GET_INT32_FROM_INT16
+    * MODBUS_GET_INT16_FROM_INT8
+    * MODBUS_SET_INT16_TO_INT8
 - Fix GH-2. Read/write were swapped in _FC_READ_AND_WRITE_REGISTERS
 - Install an ignore handler for SIGPIPE on *BSD
   Original patch by Jason Oster.
@@ -8,29 +16,21 @@ libmodbus 2.9.3 (2011-01-XX)
   Reported by Petr Parýzek.
 - Fix unit identifier not copied by the TCP server.
   Reported by Antti Manninen.
-- New function to reply to an indication with an exception message
-  modbus_reply_exception()
 - Fix missing modbus_flush() in unit tests
-- New functions to manipulate data:
-    * MODBUS_GET_INT32_FROM_INT16
-    * MODBUS_GET_INT16_FROM_INT8
-    * MODBUS_SET_INT16_TO_INT8
-- New function modbus_get_header_length(modbus_t *ctx)
-- Rewrite of the message reading (no more timeouts on exception)
 
 libmodbus 2.9.2 (2010-12-05)
 ============================
 
+- Win32 support by Tobias Doerffel
+- Split source code around RTU and TCP (backends)
+- Rename modbus_[listen|accept] to modbus_tcp_[listen|accept]
+- Remove slave argument from modbus_new_rtu()
+- Check received function code
 - Fix segfault in bandwidth-server-many-up on inet_ntoa() call
 - Fix unit test of report slave ID in RTU
 - Fix GH-3. Remove inclusion of config.h in modbus.h
 - Correctly detect if we are cross-compiling for win32 by Kirill Smelkov.
-- Rename modbus_[listen|accept] to modbus_tcp_[listen|accept]
 - Fix setting of the broadcast address
-- Remove slave argument from modbus_new_rtu()
-- Win32 support by Tobias Doerffel
-- Split source code around RTU and TCP (backends)
-- Check received function code
 
 libmodbus 2.9.1 (2010-08-16)
 ============================
@@ -39,6 +39,10 @@ libmodbus 2.9.1 (2010-08-16)
 - Remove the internal function set_message_length_tcp
 - Restore slave ID (server ID) argument in functions
 - Error conventions of POSIX systems and error recover
+- Parity setting is now a single char ('N', 'E' or 'O')
+- Report slave ID server side
+- OpenBSD support by Anibal Limón.
+- New read and write registers function by Hannu Vuolasaho.
 - Versioning infrastructure
   Inspired by the Clutter project and the work done by Florian Forster.
 - Fix the broadcast constant (255 -> 0)
@@ -47,10 +51,6 @@ libmodbus 2.9.1 (2010-08-16)
   Original patch by Sisyph (eric-paul).
 - Fix #591142 - Slave id check should be disabled in TCP connection
   Reported by aladdinwu.
-- Parity setting is now a single char ('N', 'E' or 'O')
-- Report slave ID server side
-- OpenBSD support by Anibal Limón.
-- New read and write registers function by Hannu Vuolasaho.
 
 libmodbus 2.1.0 (2010-03-24)
 ============================
