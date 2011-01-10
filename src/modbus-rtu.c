@@ -805,7 +805,10 @@ const modbus_backend_t _modbus_rtu_backend = {
 
 /* Allocate and initialize the modbus_t structure for RTU
    - device: "/dev/ttyS0"
-   - baud:   9600, 19200, 57600, 115200, etc
+     On Win32, it's necessary to prepend COM name with "\\.\" for COM number
+     greater than 9, eg. "\\\\.\\COM10". See
+     http://msdn.microsoft.com/en-us/library/aa365247(v=vs.85).aspx for details.
+   - baud: 9600, 19200, 57600, 115200, etc
    - parity: 'N' stands for None, 'E' for Even and 'O' for odd
    - data_bits: 5, 6, 7, 8
    - stop_bits: 1, 2
