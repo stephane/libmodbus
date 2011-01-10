@@ -817,7 +817,7 @@ modbus_t* modbus_new_rtu(const char *device,
     modbus_t *ctx;
     modbus_rtu_t *ctx_rtu;
     size_t dest_size;
-    size_t src_size;
+    size_t ret_size;
 
     ctx = (modbus_t *) malloc(sizeof(modbus_t));
     _modbus_init_common(ctx);
@@ -827,17 +827,17 @@ modbus_t* modbus_new_rtu(const char *device,
     ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
 
     dest_size = sizeof(ctx_rtu->device);
-    src_size = strlcpy(ctx_rtu->device, device, dest_size);
-    if (src_size == 0) {
-        modbus_free(ctx);
+    ret_size = strlcpy(ctx_rtu->device, device, dest_size);
+    if (ret_size == 0) {
         fprintf(stderr, "The device string is empty\n");
+        modbus_free(ctx);
         errno = EINVAL;
         return NULL;
     }
 
-    if (src_size >= dest_size) {
-        modbus_free(ctx);
+    if (ret_size >= dest_size) {
         fprintf(stderr, "The device string has been truncated\n");
+        modbus_free(ctx);
         errno = EINVAL;
         return NULL;
     }
