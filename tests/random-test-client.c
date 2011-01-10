@@ -204,11 +204,11 @@ int main(void)
                 nb_fail++;
             } else {
                 for (i=0; i<nb; i++) {
-                    if (tab_rq_registers[i] != tab_rp_registers[i]) {
+                    if (tab_rp_registers[i] != tab_rw_rq_registers[i]) {
                         printf("ERROR modbus_read_and_write_registers READ\n");
                         printf("Address = %d, value %d (0x%X) != %d (0x%X)\n",
-                               addr, tab_rq_registers[i], tab_rq_registers[i],
-                               tab_rp_registers[i], tab_rp_registers[i]);
+                               addr, tab_rp_registers[i], tab_rw_rq_registers[i],
+                               tab_rp_registers[i], tab_rw_rq_registers[i]);
                         nb_fail++;
                     }
                 }
