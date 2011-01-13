@@ -1,15 +1,15 @@
 Summary: A Modbus library written in C
 Name: libmodbus
-Version: 2.9.2
+Version: 2.9.3
 Release: 1
 License: LGPL V3+
 Packager: Stéphane Raimbault
 URL: http://www.libmodbus.org
 Group: Applications/System
-Provides: libmodbus=2.9.2
+Provides: libmodbus=2.9.3
 Requires: ,/bin/sh
 
-Source0: libmodbus-2.9.2.tar.bz2
+Source0: libmodbus-2.9.3.tar.gz
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: autoconf, automake
@@ -56,10 +56,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,root,root) %{_includedir}/modbus/modbus-rtu.h
 %attr(0644,root,root) %{_includedir}/modbus/modbus-tcp.h
 %attr(0644,root,root) %{_includedir}/modbus/modbus-version.h
-%doc AUTHORS ChangeLog INSTALL NEWS COPYING* README.rst
+%doc AUTHORS MIGRATION NEWS COPYING* README.rst
 
 
 %changelog
+* Mon Jan 10 2011 Stéphane Raimbault <stephane.raimbault@gmail.com> - 2.9.3-1
+- new upstream release
+
 * Mon Oct 5 2010 Stéphane Raimbault <stephane.raimbault@gmail.com> - 2.9.2-1
 - new upstream release
 
