@@ -20,6 +20,7 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <signal.h>
 #include <sys/types.h>
 
 #if defined(_WIN32)
@@ -32,7 +33,7 @@
 # include <sys/socket.h>
 # include <sys/ioctl.h>
 
-#if defined(OpenBSD) || (defined(__FreeBSD__) && __FreeBSD__ < 5)
+#if defined(__OpenBSD__) || (defined(__FreeBSD__) && __FreeBSD__ < 5)
 # define OS_BSD
 # include <netinet/in_systm.h>
 #endif
@@ -434,7 +435,7 @@ modbus_t* modbus_new_tcp(const char *ip, int port)
     if (sigaction(SIGPIPE, &sa, NULL) < 0) {
         /* The debug flag can't be set here... */
         fprintf(stderr, "Coud not install SIGPIPE handler.\n");
-        return -1;
+        return NULL;
     }
 #endif
 
