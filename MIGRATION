@@ -1,8 +1,8 @@
 =============================================
-Migration notes from the 2.0 series (for 2.2)
+Migration notes from the 2.0 series (for 3.0)
 =============================================
 
-The 2.2 release use a brand new API and this document covers only the general
+The 3.0 release use a brand new API and this document covers only the general
 changes:
 
 - the structure modbus_param_t is gone and is replaced by a new opaque and
