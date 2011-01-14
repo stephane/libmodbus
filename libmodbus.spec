@@ -1,7 +1,7 @@
 Summary: A Modbus library written in C
 Name: libmodbus
 Version: 2.9.3
-Release: 1
+Release: 1%{?dist%}
 License: LGPL V3+
 Packager: Stéphane Raimbault
 URL: http://www.libmodbus.org
@@ -26,19 +26,19 @@ autoreconf
 %build
 %configure
 
-make
+make %{?_smp_mflags}
 
 
 %install
-rm -rf $RPM_BUILD_ROOT
-mkdir -p -m755 $RPM_BUILD_ROOT/
-make install DESTDIR=$RPM_BUILD_ROOT
-mkdir -p -m755 $RPM_BUILD_ROOT/usr/share/libmodbus/
-ls -lRh $RPM_BUILD_ROOT/
+rm -rf %{buildroot}
+mkdir -p -m755 %{buildroot}/
+make install DESTDIR=%{buildroot}
+mkdir -p -m755 %{buildroot}/usr/share/libmodbus/
+ls -lRh %{buildroot}/
 
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 
 
 %files
