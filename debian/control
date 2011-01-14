@@ -8,6 +8,7 @@ Build-Depends: debhelper (>= 6),
                autotools-dev,
                libtool,
                dpkg-dev (>= 1.13.19)
+Homepage: http://libmodbus.org/
 
 Package: libmodbus
 Section: libs
@@ -31,6 +32,4 @@ Description: A Modbus library written in C, to send/receive data with a
  serial port or an Ethernet connection.
  .
  This package contains the development files.
-
-
 

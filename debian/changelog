@@ -1,25 +1,31 @@
+libmodbus (2.9.3-1) maverick; urgency=low
+
+  * New upstream release
+
+ -- Stéphane Raimbault <stephane.raimbault@gmail.com>  Fri, 14 Jan 2011 00:37:20 +0100
+
 libmodbus (2.9.2-1) maverick; urgency=low
 
   * New upstream release
-	
+
  -- Stéphane Raimbault <stephane.raimbault@gmail.com>  Mon, 4 Oct 2010 13:21:52 +0200
 
 libmodbus (2.0.3-1) intrepid; urgency=low
 
   * New upstream release
-	
+
  -- Stéphane Raimbault <stephane.raimbault@gmail.com>  Sun, 22 Mar 2009 12:16:52 +0200
 
 libmodbus (2.0.2-1) hardy; urgency=low
 
   * New upstream release
 
- -- Stephane Raimbault <stephane.raimbault@gmail.com>  Sun, 10 Aug 2008 16:44:49 +0200
-	
+ -- Stéphane Raimbault <stephane.raimbault@gmail.com>  Sun, 10 Aug 2008 16:44:49 +0200
+
 libmodbus (2.0.1-1) hardy; urgency=low
 
   * New upstream release
-	
+
  -- Stéphane Raimbault <stephane.raimbault@gmail.com>  Thu, 03 Jul 2008 21:47:52 +0200
 
 libmodbus (2.0.0-2) hardy; urgency=low
@@ -27,9 +33,9 @@ libmodbus (2.0.0-2) hardy; urgency=low
   * Add test files to examples directory in libmodbus-dev.
   * Add MIGRATION file to libmodbus-dev.
   * Define the compatibility level to 6.
-	
+
  -- Stéphane Raimbault <stephane.raimbault@gmail.com>  Sun, 18 May 2008 14:30:23 +0200
-	
+
 libmodbus (2.0.0-1) hardy; urgency=low
 
   * Initial release.

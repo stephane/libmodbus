@@ -1,7 +1,7 @@
 This package was debianized by Stéphane Raimbault
 <stephane.raimbault@gmail.com> on Wed, 14 May 2008 22:30:53 +0200
 
-It was downloaded from <http://launchpad.net/libmodbus>
+It was downloaded from <http://libmodbus.org>
 
 Upstream Author(s):
 
@@ -9,7 +9,7 @@ Upstream Author(s):
 
 Copyright:
 
-    <Copyright (C) 2001-2010 Stéphane Raimbault>
+    <Copyright (C) 2001-2011 Stéphane Raimbault>
 
 License:
 
