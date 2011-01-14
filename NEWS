@@ -1,7 +1,8 @@
-libmodbus 2.9.3 (2011-01-10)
+libmodbus 2.9.3 (2011-01-14)
 ============================
 
 - Major rewriting of the message reading (no more timeouts on exception)
+  by Stéphane Raimbault
 - New function to reply to an indication with an exception message
   modbus_reply_exception()
 - New function modbus_get_header_length(modbus_t *ctx)
@@ -17,6 +18,7 @@ libmodbus 2.9.3 (2011-01-10)
 - Fix unit identifier not copied by the TCP server.
   Reported by Antti Manninen.
 - Fix missing modbus_flush() in unit tests
+- Fixes for OpenBSD by Barry Grumbine and Jason Oster
 
 libmodbus 2.9.2 (2010-12-05)
 ============================
