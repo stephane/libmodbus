@@ -4,6 +4,8 @@ libmodbus 2.9.4 (2011-02-XX)
 - IPv6 support
   Make the TCP implementation "protocol independent" by Florian Forster
   and Stéphane Raimbault.
+- Fix compilation on Windows 7 (x64) with MinGW/MSYS and GCC 4.5
+  Reported by Patsy Kaye.
 
 libmodbus 2.9.3 (2011-01-14)
 ============================

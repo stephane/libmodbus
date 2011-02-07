@@ -58,15 +58,12 @@
 #ifdef OS_WIN32
 static int _modbus_tcp_init_win32(void)
 {
-    // Initialise Win32 Socket API
-    WORD wVersionRequested;
+    /* Initialise Windows Socket API */
     WSADATA wsaData;
 
-    wVersionRequested = MAKEWORD(2, 0);
-    if (WSAStartup(wVersionRequested, &wsaData) != 0)
-    {
-        fprintf (stderr, "WSAStartup() returned error code %d\n",
-                 GetLastError());
+    if (WSAStartup(MAKEWORD(2, 0), &wsaData) != 0) {
+        fprintf(stderr, "WSAStartup() returned error code %d\n",
+                (int)GetLastError());
         errno = EIO;
         return -1;
     }
