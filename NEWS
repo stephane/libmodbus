@@ -1,3 +1,10 @@
+libmodbus 2.9.4 (2011-02-XX)
+============================
+
+- IPv6 support
+  Make the TCP implementation "protocol independent" by Florian Forster
+  and Stéphane Raimbault.
+
 libmodbus 2.9.3 (2011-01-14)
 ============================
 
