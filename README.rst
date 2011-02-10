@@ -38,6 +38,6 @@ Report a Bug
 ------------
 
 To report a bug, you can:
- * send an email to stephane.raimbault@gmail.com
- * or fill a bug report on the issue tracker
+ * fill a bug report on the issue tracker
    http://github.com/stephane/libmodbus/issues
+ * or send an email to stephane.raimbault@gmail.com

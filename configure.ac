@@ -22,8 +22,9 @@ m4_define([libmodbus_release_status],
 m4_define([libmodbus_version],
         [libmodbus_version_major.libmodbus_version_minor.libmodbus_version_micro])
 
-AC_PREREQ(2.63)
-AC_INIT([libmodbus],[libmodbus_version],[stephane.raimbault@gmail.com])
+AC_PREREQ([2.63])
+AC_INIT([libmodbus],[libmodbus_version],
+[https://github.com/stephane/libmodbus/issues])
 AC_CONFIG_SRCDIR([src/modbus.c])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([foreign])
