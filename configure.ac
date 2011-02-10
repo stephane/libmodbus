@@ -62,9 +62,7 @@ AM_CONDITIONAL(OS_WIN32, test "$os_win32" = "true")
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_MAKE_SET
-AC_DISABLE_STATIC
-AC_LIBTOOL_WIN32_DLL
-AC_PROG_LIBTOOL
+LT_INIT([disable-static win32-dll])
 AC_CHECK_HEADERS([ \
     termios.h \
     sys/time.h \
