@@ -25,7 +25,11 @@
 
 #if defined(_WIN32)
 # define OS_WIN32
-# include <winsock2.h>
+/* ws2_32.dll has getaddrinfo and freeaddrinfo on Windows XP and later.
+ * minwg32 headers check WINVER before allowing the use of these */
+# ifndef WINVER
+# define WINVER 0x0501
+# endif
 # include <ws2tcpip.h>
 # define SHUT_RDWR 2
 # define close closesocket
@@ -304,7 +308,6 @@ static int _modbus_tcp_pi_connect(modbus_t *ctx)
     freeaddrinfo(ai_list);
 
     if (ctx->s < 0) {
-        errno = ENOTCONN;
         return -1;
     }
 
@@ -480,7 +483,6 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
     freeaddrinfo(ai_list);
 
     if (new_socket < 0) {
-        errno = ENOTCONN;
         return -1;
     }
 

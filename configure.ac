@@ -114,6 +114,13 @@ if test "x$GCC" = "xyes"; then
   esac
 fi
 
+# Required for getaddrinfo (TCP PI - IPv6)
+AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)
+if test "x$HAVE_WINSOCK2_H" = "xyes"; then
+   LIBS="$LIBS -lws2_32"
+   AC_SUBST(LIBS)
+fi
+
 AC_CONFIG_FILES([
         Makefile
         src/Makefile
