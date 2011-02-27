@@ -22,7 +22,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#ifndef _MSC_VER
 #include <unistd.h>
+#endif
 #include <errno.h>
 #include <limits.h>
 

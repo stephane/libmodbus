@@ -23,8 +23,13 @@
 #include <sys/param.h>
 #endif
 
+#ifndef _MSC_VER
 #include <stdint.h>
 #include <sys/time.h>
+#else
+#include "stdint.h"
+#include <time.h>
+#endif
 
 #include "modbus-version.h"
 

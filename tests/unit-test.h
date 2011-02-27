@@ -24,7 +24,11 @@
 #include <inttypes.h>
 #endif
 #ifdef HAVE_STDINT_H
-#include <stdint.h>
+# ifndef _MSC_VER
+# include <stdint.h>
+# else
+# include "stdint.h"
+# endif
 #endif
 
 #define SERVER_ID 17

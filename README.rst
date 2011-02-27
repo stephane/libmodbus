@@ -26,6 +26,9 @@ Installation
 
 The shell commands are ``./autogen.sh; ./configure; make; make install``.
 
+If you want to compile with Microsoft Visual Studio, you need to install
+http://code.google.com/p/msinttypes/ to fill the absence of stdint.h.
+
 Testing
 -------
 

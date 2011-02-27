@@ -18,7 +18,11 @@
 #ifndef _MODBUS_RTU_PRIVATE_H_
 #define _MODBUS_RTU_PRIVATE_H_
 
+#ifndef _MSC_VER
 #include <stdint.h>
+#else
+#include "stdint.h"
+#endif
 
 #if defined(_WIN32)
 #include <windows.h>

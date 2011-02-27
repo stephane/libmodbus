@@ -20,7 +20,9 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
+#ifndef _MSC_VER
 #include <unistd.h>
+#endif
 #include <assert.h>
 
 #include "modbus-private.h"
