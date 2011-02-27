@@ -28,6 +28,7 @@ modbus-version.h
 *.lo
 stamp-h1
 *.o
+*~
 tests/bandwidth-client
 tests/bandwidth-server-many-up
 tests/bandwidth-server-one
