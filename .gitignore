@@ -19,6 +19,7 @@ install-sh
 libtool
 ltmain.sh
 missing
+m4/
 libmodbus.pc
 modbus-version.h
 .deps
