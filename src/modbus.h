@@ -193,7 +193,7 @@ void modbus_set_bits_from_bytes(uint8_t *dest, int address, unsigned int nb_bits
                                 const uint8_t *tab_byte);
 uint8_t modbus_get_byte_from_bits(const uint8_t *src, int address, unsigned int nb_bits);
 float modbus_get_float(const uint16_t *src);
-void modbus_set_float(float real, uint16_t *dest);
+void modbus_set_float(float f, uint16_t *dest);
 
 #include "modbus-tcp.h"
 #include "modbus-rtu.h"

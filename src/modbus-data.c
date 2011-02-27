@@ -19,6 +19,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <assert.h>
+#include <netinet/in.h>
 
 /* Sets many bits from a single byte value (all 8 bits of the byte value are
    set) */
@@ -71,20 +72,21 @@ uint8_t modbus_get_byte_from_bits(const uint8_t *src, int address,
 /* Get a float from 4 bytes in Modbus format */
 float modbus_get_float(const uint16_t *src)
 {
-    float r = 0.0f;
+    float f = 0.0f;
     uint32_t i;
 
     i = (((uint32_t)src[1]) << 16) + src[0];
-    memcpy(&r, &i, sizeof (r));
-    return r;
+    memcpy(&f, &i, sizeof(float));
+
+    return f;
 }
 
 /* Set a float to 4 bytes in Modbus format */
-void modbus_set_float(float real, uint16_t *dest)
+void modbus_set_float(float f, uint16_t *dest)
 {
     uint32_t i = 0;
 
-    memcpy(&i, &real, sizeof (i));
+    memcpy(&i, &f, sizeof(uint32_t));
     dest[0] = (uint16_t)i;
     dest[1] = (uint16_t)(i >> 16);
 }
