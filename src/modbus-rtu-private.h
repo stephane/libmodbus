@@ -79,4 +79,6 @@ typedef struct _modbus_rtu {
 #endif
 } modbus_rtu_t;
 
+void _modbus_init_rtu(modbus_t *ctx, modbus_rtu_t *ctx_rtu);
+
 #endif /* _MODBUS_RTU_PRIVATE_H_ */
