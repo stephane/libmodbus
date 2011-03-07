@@ -613,15 +613,6 @@ const modbus_backend_t _modbus_tcp_pi_backend = {
     _modbus_tcp_filter_request
 };
 
-/* Allocates and initializes the modbus_t structure for TCP.
-   - ip: '192.168.0.5'
-   - port: 1099
-
-   Set the port to MODBUS_TCP_DEFAULT_PORT to use the default one
-   (502). It's convenient to use a port number greater than or equal
-   to 1024 because it's not necessary to be root to use this port
-   number.
-*/
 modbus_t* modbus_new_tcp(const char *ip, int port)
 {
     modbus_t *ctx;
@@ -674,14 +665,6 @@ modbus_t* modbus_new_tcp(const char *ip, int port)
     return ctx;
 }
 
-/* Allocates and initializes the modbus_t structure for TCP in a protocol
-   indepedent fashin, i.e. IPv4/IPv6 agnostic.
-
-   - node: host name or IP address of the host to connect to, eg. '192.168.0.5'
-     or 'server.com'.
-   - service: service name/port number to connect to. Use NULL for the default
-     port, 502/TCP.
-*/
 modbus_t* modbus_new_tcp_pi(const char *node, const char *service)
 {
     modbus_t *ctx;

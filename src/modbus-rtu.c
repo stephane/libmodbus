@@ -165,11 +165,12 @@ int _modbus_rtu_send_msg_pre(uint8_t *req, int req_length)
 }
 
 #if defined(_WIN32)
-/* This simple implementation is sort of a substitute of the select() call, working
- * this way: the win32_ser_select() call tries to read some data from the serial port,
- * setting the timeout as the select() call would. Data read is stored into the
- * receive buffer, that is then consumed by the win32_ser_read() call.
- * So win32_ser_select() does both the event waiting and the reading,
+
+/* This simple implementation is sort of a substitute of the select() call,
+ * working this way: the win32_ser_select() call tries to read some data from
+ * the serial port, setting the timeout as the select() call would. Data read is
+ * stored into the receive buffer, that is then consumed by the win32_ser_read()
+ * call.  So win32_ser_select() does both the event waiting and the reading,
  * while win32_ser_read() only consumes the receive buffer.
  */
 
@@ -182,7 +183,8 @@ static void win32_ser_init(struct win32_ser *ws) {
 }
 
 /* FIXME Try to remove length_to_read -> max_len argument, only used by win32 */
-static int win32_ser_select(struct win32_ser *ws, int max_len, struct timeval *tv) {
+static int win32_ser_select(struct win32_ser *ws, int max_len,
+                            struct timeval *tv) {
     COMMTIMEOUTS comm_to;
     unsigned int msec = 0;
 
@@ -223,7 +225,8 @@ static int win32_ser_select(struct win32_ser *ws, int max_len, struct timeval *t
     }
 }
 
-static int win32_ser_read(struct win32_ser *ws, uint8_t *p_msg, unsigned int max_len) {
+static int win32_ser_read(struct win32_ser *ws, uint8_t *p_msg,
+                          unsigned int max_len) {
     unsigned int n = ws->n_bytes;
 
     if (max_len < n) {
@@ -312,7 +315,8 @@ static int _modbus_rtu_connect(modbus_t *ctx)
      */
     win32_ser_init(&ctx_rtu->w_ser);
 
-    /* ctx_rtu->device should contain a string like "COMxx:" xx being a decimal number */
+    /* ctx_rtu->device should contain a string like "COMxx:" xx being a decimal
+     * number */
     ctx_rtu->w_ser.fd = CreateFileA(ctx_rtu->device,
                                     GENERIC_READ | GENERIC_WRITE,
                                     0,
@@ -716,11 +720,13 @@ int _modbus_rtu_flush(modbus_t *ctx)
 #endif
 }
 
-int _modbus_rtu_select(modbus_t *ctx, fd_set *rfds, struct timeval *tv, int length_to_read)
+int _modbus_rtu_select(modbus_t *ctx, fd_set *rfds,
+                       struct timeval *tv, int length_to_read)
 {
     int s_rc;
 #if defined(_WIN32)
-    s_rc = win32_ser_select(&(((modbus_rtu_t*)ctx->backend_data)->w_ser), length_to_read, tv);
+    s_rc = win32_ser_select(&(((modbus_rtu_t*)ctx->backend_data)->w_ser),
+                            length_to_read, tv);
     if (s_rc == 0) {
         errno = ETIMEDOUT;
         return -1;
@@ -805,16 +811,6 @@ const modbus_backend_t _modbus_rtu_backend = {
     _modbus_rtu_filter_request
 };
 
-/* Allocate and initialize the modbus_t structure for RTU
-   - device: "/dev/ttyS0"
-     On Win32, it's necessary to prepend COM name with "\\.\" for COM number
-     greater than 9, eg. "\\\\.\\COM10". See
-     http://msdn.microsoft.com/en-us/library/aa365247(v=vs.85).aspx for details.
-   - baud: 9600, 19200, 57600, 115200, etc
-   - parity: 'N' stands for None, 'E' for Even and 'O' for odd
-   - data_bits: 5, 6, 7, 8
-   - stop_bits: 1, 2
-*/
 modbus_t* modbus_new_rtu(const char *device,
                          int baud, char parity, int data_bit,
                          int stop_bit)

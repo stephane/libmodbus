@@ -1285,19 +1285,6 @@ int modbus_set_slave(modbus_t *ctx, int slave)
     return ctx->backend->set_slave(ctx, slave);
 }
 
-/*
-  When disabled (default), it is expected that the application will check for
-  error returns and deal with them as necessary.
-
-  It's not recommanded to enable error recovery for slave/server.
-
-  When enabled, the library will attempt an immediate reconnection which may
-  hang for several seconds if the network to the remote target unit is down.
-  The write will try a infinite close/connect loop until to be successful and
-  the select/read calls will just try to retablish the connection one time then
-  will return an error (if the connecton was down, the values to read are
-  certainly not available anymore after reconnection, except for slave/server).
-*/
 int modbus_set_error_recovery(modbus_t *ctx, int enabled)
 {
     if (enabled == TRUE || enabled == FALSE) {
@@ -1344,7 +1331,6 @@ int modbus_connect(modbus_t *ctx)
     return ctx->backend->connect(ctx);
 }
 
-/* Closes a  connection */
 void modbus_close(modbus_t *ctx)
 {
     if (ctx == NULL)
@@ -1353,7 +1339,6 @@ void modbus_close(modbus_t *ctx)
     ctx->backend->close(ctx);
 }
 
-/* Free an initialized modbus_t */
 void modbus_free(modbus_t *ctx)
 {
     if (ctx == NULL)
@@ -1363,7 +1348,6 @@ void modbus_free(modbus_t *ctx)
     free(ctx);
 }
 
-/* Activates the debug messages */
 void modbus_set_debug(modbus_t *ctx, int boolean)
 {
     ctx->debug = boolean;
