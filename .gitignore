@@ -37,3 +37,7 @@ tests/random-test-server
 tests/unit-test-client
 tests/unit-test-server
 tests/version
+doc/*.html
+doc/*.3
+doc/*.7
+
