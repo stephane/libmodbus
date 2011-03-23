@@ -45,9 +45,9 @@ MODBUS_BEGIN_DECLS
 
 #define _MODBUS_EXCEPTION_RSP_LENGTH  5
 
-/* Time out between trames in microsecond */
-#define _TIME_OUT_BEGIN_OF_TRAME    500000
-#define _TIME_OUT_END_OF_TRAME      500000
+/* Time out between messages in microsecond */
+#define _TIME_OUT_BEGIN_OF_MESSAGE    500000
+#define _TIME_OUT_END_OF_MESSAGE      500000
 
 /* Function codes */
 #define _FC_READ_COILS                0x01

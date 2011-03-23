@@ -1,5 +1,5 @@
 /*
- * Copyright © 2001-2010 Stéphane Raimbault <stephane.raimbault@gmail.com>
+ * Copyright © 2001-2011 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser Public License as published by
@@ -377,7 +377,7 @@ static int receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
 
         if (length_to_read > 0) {
             /* If no character at the buffer wait
-               TIME_OUT_END_OF_TRAME before raising an error. */
+               TIME_OUT_END_OF_MESSAGE before raising an error. */
             tv.tv_sec = ctx->timeout_end.tv_sec;
             tv.tv_usec = ctx->timeout_end.tv_usec;
         }
@@ -1273,10 +1273,10 @@ void _modbus_init_common(modbus_t *ctx)
     ctx->error_recovery = FALSE;
 
     ctx->timeout_begin.tv_sec = 0;
-    ctx->timeout_begin.tv_usec = _TIME_OUT_BEGIN_OF_TRAME;
+    ctx->timeout_begin.tv_usec = _TIME_OUT_BEGIN_OF_MESSAGE;
 
     ctx->timeout_end.tv_sec = 0;
-    ctx->timeout_end.tv_usec = _TIME_OUT_END_OF_TRAME;
+    ctx->timeout_end.tv_usec = _TIME_OUT_END_OF_MESSAGE;
 }
 
 /* Define the slave number */
@@ -1297,25 +1297,25 @@ int modbus_set_error_recovery(modbus_t *ctx, int enabled)
     return 0;
 }
 
-/* Get the timeout of begin of trame */
+/* Get the timeout of begin of message */
 void modbus_get_timeout_begin(modbus_t *ctx, struct timeval *timeout)
 {
     *timeout = ctx->timeout_begin;
 }
 
-/* Set timeout when waiting the beginning of a trame */
+/* Set timeout when waiting the beginning of a message */
 void modbus_set_timeout_begin(modbus_t *ctx, const struct timeval *timeout)
 {
     ctx->timeout_begin = *timeout;
 }
 
-/* Get the timeout of end of trame */
+/* Get the timeout of end of message */
 void modbus_get_timeout_end(modbus_t *ctx, struct timeval *timeout)
 {
     *timeout = ctx->timeout_end;
 }
 
-/* Set timeout when waiting the end of a trame */
+/* Set timeout when waiting the end of a message */
 void modbus_set_timeout_end(modbus_t *ctx, const struct timeval *timeout)
 {
     ctx->timeout_end = *timeout;
