@@ -1046,26 +1046,16 @@ static int write_single(modbus_t *ctx, int function, int addr, int value)
 }
 
 /* Turns ON or OFF a single bit of the remote device */
-int modbus_write_bit(modbus_t *ctx, int addr, int state)
+int modbus_write_bit(modbus_t *ctx, int addr, int status)
 {
-    int status;
-
-    if (state)
-        state = 0xFF00;
-
-    status = write_single(ctx, _FC_WRITE_SINGLE_COIL, addr, state);
-
-    return status;
+    return write_single(ctx, _FC_WRITE_SINGLE_COIL, addr,
+                        status ? 0xFF00 : 0);
 }
 
 /* Writes a value in one register of the remote device */
 int modbus_write_register(modbus_t *ctx, int addr, int value)
 {
-    int status;
-
-    status = write_single(ctx, _FC_WRITE_SINGLE_REGISTER, addr, value);
-
-    return status;
+    return write_single(ctx, _FC_WRITE_SINGLE_REGISTER, addr, value);
 }
 
 /* Write the bits of the array in the remote device */
