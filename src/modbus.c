@@ -855,7 +855,7 @@ int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
 
 /* Reads IO status */
 static int read_io_status(modbus_t *ctx, int function,
-                          int addr, int nb, uint8_t *data_dest)
+                          int addr, int nb, uint8_t *dest)
 {
     int rc;
     int req_length;
@@ -883,7 +883,7 @@ static int read_io_status(modbus_t *ctx, int function,
             temp = rsp[i];
 
             for (bit = 0x01; (bit & 0xff) && (pos < nb);) {
-                data_dest[pos++] = (temp & bit) ? TRUE : FALSE;
+                dest[pos++] = (temp & bit) ? TRUE : FALSE;
                 bit = bit << 1;
             }
 
@@ -895,7 +895,7 @@ static int read_io_status(modbus_t *ctx, int function,
 
 /* Reads the boolean status of bits and sets the array elements
    in the destination to TRUE or FALSE (single bits). */
-int modbus_read_bits(modbus_t *ctx, int addr, int nb, uint8_t *data_dest)
+int modbus_read_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest)
 {
     int rc;
 
@@ -909,7 +909,7 @@ int modbus_read_bits(modbus_t *ctx, int addr, int nb, uint8_t *data_dest)
         return -1;
     }
 
-    rc = read_io_status(ctx, _FC_READ_COILS, addr, nb, data_dest);
+    rc = read_io_status(ctx, _FC_READ_COILS, addr, nb, dest);
 
     if (rc == -1)
         return -1;
@@ -919,7 +919,7 @@ int modbus_read_bits(modbus_t *ctx, int addr, int nb, uint8_t *data_dest)
 
 
 /* Same as modbus_read_bits but reads the remote device input table */
-int modbus_read_input_bits(modbus_t *ctx, int addr, int nb, uint8_t *data_dest)
+int modbus_read_input_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest)
 {
     int rc;
 
@@ -933,7 +933,7 @@ int modbus_read_input_bits(modbus_t *ctx, int addr, int nb, uint8_t *data_dest)
         return -1;
     }
 
-    rc = read_io_status(ctx, _FC_READ_DISCRETE_INPUTS, addr, nb, data_dest);
+    rc = read_io_status(ctx, _FC_READ_DISCRETE_INPUTS, addr, nb, dest);
 
     if (rc == -1)
         return -1;
@@ -943,7 +943,7 @@ int modbus_read_input_bits(modbus_t *ctx, int addr, int nb, uint8_t *data_dest)
 
 /* Reads the data from a remove device and put that data into an array */
 static int read_registers(modbus_t *ctx, int function, int addr, int nb,
-                          uint16_t *data_dest)
+                          uint16_t *dest)
 {
     int rc;
     int req_length;
@@ -976,7 +976,7 @@ static int read_registers(modbus_t *ctx, int function, int addr, int nb,
 
         for (i = 0; i < rc; i++) {
             /* shift reg hi_byte to temp OR with lo_byte */
-            data_dest[i] = (rsp[offset + 2 + (i << 1)] << 8) |
+            dest[i] = (rsp[offset + 2 + (i << 1)] << 8) |
                 rsp[offset + 3 + (i << 1)];
         }
     }
@@ -986,7 +986,7 @@ static int read_registers(modbus_t *ctx, int function, int addr, int nb,
 
 /* Reads the holding registers of remote device and put the data into an
    array */
-int modbus_read_registers(modbus_t *ctx, int addr, int nb, uint16_t *data_dest)
+int modbus_read_registers(modbus_t *ctx, int addr, int nb, uint16_t *dest)
 {
     int status;
 
@@ -1001,13 +1001,13 @@ int modbus_read_registers(modbus_t *ctx, int addr, int nb, uint16_t *data_dest)
     }
 
     status = read_registers(ctx, _FC_READ_HOLDING_REGISTERS,
-                            addr, nb, data_dest);
+                            addr, nb, dest);
     return status;
 }
 
 /* Reads the input registers of remote device and put the data into an array */
 int modbus_read_input_registers(modbus_t *ctx, int addr, int nb,
-                                uint16_t *data_dest)
+                                uint16_t *dest)
 {
     int status;
 
@@ -1020,7 +1020,7 @@ int modbus_read_input_registers(modbus_t *ctx, int addr, int nb,
     }
 
     status = read_registers(ctx, _FC_READ_INPUT_REGISTERS,
-                            addr, nb, data_dest);
+                            addr, nb, dest);
 
     return status;
 }
@@ -1069,7 +1069,7 @@ int modbus_write_register(modbus_t *ctx, int addr, int value)
 }
 
 /* Write the bits of the array in the remote device */
-int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *data_src)
+int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *src)
 {
     int rc;
     int i;
@@ -1089,7 +1089,8 @@ int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *data_src)
         return -1;
     }
 
-    req_length = ctx->backend->build_request_basis(ctx, _FC_WRITE_MULTIPLE_COILS,
+    req_length = ctx->backend->build_request_basis(ctx,
+                                                   _FC_WRITE_MULTIPLE_COILS,
                                                    addr, nb, req);
     byte_count = (nb / 8) + ((nb % 8) ? 1 : 0);
     req[req_length++] = byte_count;
@@ -1101,7 +1102,7 @@ int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *data_src)
         req[req_length] = 0;
 
         while ((bit & 0xFF) && (bit_check++ < nb)) {
-            if (data_src[pos++])
+            if (src[pos++])
                 req[req_length] |= bit;
             else
                 req[req_length] &=~ bit;
@@ -1122,7 +1123,7 @@ int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *data_src)
 }
 
 /* Write the values from the array to the registers of the remote device */
-int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *data_src)
+int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *src)
 {
     int rc;
     int i;
@@ -1148,8 +1149,8 @@ int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *data
     req[req_length++] = byte_count;
 
     for (i = 0; i < nb; i++) {
-        req[req_length++] = data_src[i] >> 8;
-        req[req_length++] = data_src[i] & 0x00FF;
+        req[req_length++] = src[i] >> 8;
+        req[req_length++] = src[i] & 0x00FF;
     }
 
     rc = send_msg(ctx, req, req_length);
@@ -1229,7 +1230,7 @@ int modbus_read_and_write_registers(modbus_t *ctx,
 
 /* Send a request to get the slave ID of the device (only available in serial
    communication). */
-int modbus_report_slave_id(modbus_t *ctx, uint8_t *data_dest)
+int modbus_report_slave_id(modbus_t *ctx, uint8_t *dest)
 {
     int rc;
     int req_length;
@@ -1256,7 +1257,7 @@ int modbus_report_slave_id(modbus_t *ctx, uint8_t *data_dest)
         offset = ctx->backend->header_length + 2;
 
         for (i=0; i < rc; i++) {
-            data_dest[i] = rsp[offset + i];
+            dest[i] = rsp[offset + i];
         }
     }
 
