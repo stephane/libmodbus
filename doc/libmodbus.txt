@@ -1,0 +1,184 @@
+libmodbus(7)
+============
+
+
+NAME
+----
+libmodbus - fast and portable Modbus library
+
+
+SYNOPSIS
+--------
+*#include <modbus.h>*
+
+*cc* \`pkg-config --cflags --libs libmodbus` 'files'
+
+
+DESCRIPTION
+-----------
+libmodbus is a library to send/receive data with a device which respects the
+Modbus protocol. This library contains various backends to communicate over
+different networks (eg. serial in RTU mode or Ethernet in TCP/IPv6). The
+http://www.modbus.org site provides documentation about the protocol at
+http://www.modbus.org/specs.php.
+
+libmodbus provides an abstraction of the lower communication layers and offers
+the same API on all supported platforms.
+
+This documentation presents an overview of libmodbus concepts, describes how
+libmodbus abstracts Modbus communication with different hardware and platforms
+and provides a reference manual for the functions provided by the libmodbus
+library.
+
+
+Contexts
+~~~~~~~~
+The Modbus protocol contains many variants (eg. serial RTU or Ehternet TCP), to
+ease the implementation of a variant, the library was designed to use a backend
+for each variant. The backends are also a convenient way to fulfill other
+requirements (eg. real-time operations). Each backend offers a specific function
+to create a new 'modbus_t' context. The 'modbus_t' context is an opaque
+structure containing all necessary information to etablish a connection with
+others Modbus devices according to the selected variant.
+
+You can choose the best context for your needs among:
+
+RTU Context
+^^^^^^^^^^^
+The RTU backend (Remote Terminal Unit) is used in serial communication and makes
+use of a compact, binary representation of the data for protocol
+communication. The RTU format follows the commands/data with a cyclic redundancy
+check checksum as an error check mechanism to ensure the reliability of
+data. Modbus RTU is the most common implementation available for Modbus. A
+Modbus RTU message must be transmitted continuously without inter-character
+hesitations (extract from Wikipedia, Modbus, http://en.wikipedia.org/wiki/Modbus
+(as of Mar. 13, 2011, 20:51 GMT).
+
+Many Modbus devices can be connected together on the same physical link so you
+need to define which slave is concerned by the message with
+linkmb:modbus_set_slave[3]. If you're running a slave (server) the slave number
+is used to filter messages.
+
+Create a Modbus RTU context::
+    linkmb:modbus_new_rtu[3]
+
+TCP (IPv4) Context
+^^^^^^^^^^^^^^^^^^
+The TCP backend implements a Modbus variant used for communications over
+TCP/IPv4 networks. It does not require a checksum calculation as lower layer
+takes care of the same.
+
+Create a Modbus TCP context::
+    linkmb:modbus_new_tcp[3]
+
+
+TCP PI (IPv4 and IPv6) Context
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The TCP PI (Protocol Indepedent) backend implements a Modbus variant used for
+communications over TCP IPv4 and IPv6 networks. It does not require a checksum
+calculation as lower layer takes care of the same.
+
+Contrary to the TCP IPv4 only backend, the TCP PI backend offers hostname
+resolution but it consumes about 1Kb of additional memory.
+
+Create a Modbus TCP context::
+    linkmb:modbus_new_tcp_pi[3]
+
+
+Common
+^^^^^^
+Before using any libmodbus functions, the caller must allocate and initialize a
+'modbus_t' context with functions explained above, then the following functions
+are provided to modify and free a 'context':
+
+Free libmodbus context::
+    linkmb:modbus_free[3]
+
+Context setters and getters::
+    linkmb:modbus_set_debug[3]
+    linkmb:modbus_set_error_recovery[3]
+    linkmb:modbus_set_slave[3]
+    linkmb:modbus_get_timeout_begin[3]
+    linkmb:modbus_set_timeout_begin[3]
+    linkmb:modbus_get_timeout_end[3]
+    linkmb:modbus_set_timeout_end[3]
+    linkmb:modbus_get_header_length[3]
+
+A libmodbus 'context' is thread safe and may be shared among as many application
+threads as necessary, without any additional locking required on the part of the
+caller.
+
+
+Connection
+~~~~~~~~~~
+The following functions are provided to establish and close a connection with
+Modbus devices:
+
+Establish a connection::
+    linkmb:modbus_connect[3]
+
+Close a connection::
+    linkmb:modbus_close[3]
+
+Flush a connection::
+    linkmb:modbus_flush[3]
+
+
+Data
+~~~~
+The Modbus protocol defines different data types and functions to read and write
+them from/to remote devices.
+
+Read data::
+     linkmb:modbus_read_bits[3]
+     linkmb:modbus_read_input_bits[3]
+     linkmb:modbus_read_registers[3]
+     linkmb:modbus_read_input_registers[3]
+
+Write data::
+     linkmb:modbus_write_bit[3]
+     linkmb:modbus_write_register[3]
+     linkmb:modbus_write_bits[3]
+     linkmb:modbus_write_registers[3]
+
+
+ERROR HANDLING
+--------------
+The libmodbus functions handle errors using the standard conventions found on
+POSIX systems. Generally, this means that upon failure a libmodbus function
+shall return either a NULL value (if returning a pointer) or a negative value
+(if returning an integer), and the actual error code shall be stored in the
+'errno' variable.
+
+The _modbus_strerror()_ function is provided to translate libmodbus-specific
+error codes into error message strings; for details refer to
+linkmb:modbus_strerror[3].
+
+
+MISCELLANEOUS
+-------------
+The _LIBMODBUS_VERSION_STRING_ constant indicates the libmodbus version the
+program has been compiled against. The variables 'libmodbus_version_major',
+'libmodbus_version_minor', 'libmodbus_version_micro' give the version the
+program is linked against.
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>
+
+
+RESOURCES
+---------
+Main web site: <http://www.libmodbus.org/>
+
+Report bugs on the issue tracker at
+<http://github.com/stephane/libmodbus/issues>.
+
+
+COPYING
+-------
+Free use of this software is granted under the terms of the GNU Lesser General
+Public License (LGPL). For details see the files `COPYING` and `COPYING.LESSER`
+included with the libmodbus distribution.

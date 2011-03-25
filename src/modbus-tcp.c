@@ -665,6 +665,7 @@ modbus_t* modbus_new_tcp(const char *ip, int port)
     return ctx;
 }
 
+
 modbus_t* modbus_new_tcp_pi(const char *node, const char *service)
 {
     modbus_t *ctx;

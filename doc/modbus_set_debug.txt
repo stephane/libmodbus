@@ -1,0 +1,37 @@
+modbus_set_debug(3)
+===================
+
+NAME
+----
+modbus_set_debug - set debug flag of the context
+
+
+SYNOPSIS
+--------
+*void modbus_set_debug(*modbus_t 'ctx', int 'boolean');*
+
+
+DESCRIPTION
+-----------
+The _modbus_set_debug()_ function shall set the debug flag of the *modbus_t*
+context by using the argument 'boolean'. When the 'boolean' value is set to
+'TRUE', many verbose messages are displayed on stdout and stderr. For example,
+this flag is useful to display the bytes of the Modbus messages.
+
+[verse]
+___________________
+[00][14][00][00][00][06][12][03][00][6B][00][03]
+Waiting for a confirmation...
+<00><14><00><00><00><09><12><03><06><02><2B><00><00><00><00>
+___________________
+
+
+RETURN VALUE
+------------
+There is no return values.
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

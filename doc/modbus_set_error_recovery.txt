@@ -1,0 +1,48 @@
+modbus_set_error_recovery(3)
+============================
+
+
+NAME
+----
+modbus_set_error_recovery - set the error recovery mode
+
+
+SYNOPSIS
+--------
+*int modbus_set_error_recovery(modbus_t *'ctx', int 'enabled');*
+
+
+DESCRIPTION
+-----------
+The _modbus_set_error_recovery()_ function shall set the error recovery mode to
+apply when the connection fails.
+
+By default there is no error recovery so the application must check the error
+values returned by libmodbus functions and handle them if necessary.
+
+When enabled, the library will attempt an immediate reconnection which may hang
+for several seconds if the network to the remote target unit is down. The write
+will try a infinite close/connect loop until to be successful and the
+select/read calls will just try to retablish the connection one time then will
+return an error (if the connecton was down, the values to read are certainly not
+available anymore after reconnection, except for slave/server).
+
+It's not recommanded to enable error recovery for slave/server.
+
+
+RETURN VALUE
+------------
+The _modbus_close()_ function shall return 0 if successful. Otherwise it shall
+return -1 and set errno to one of the values defined below.
+
+
+ERRORS
+------
+*EINVAL*::
+The value of the argument 'enabled' is not 'TRUE' of 'FALSE'.
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

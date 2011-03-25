@@ -1,0 +1,38 @@
+modbus_write_register(3)
+========================
+
+
+NAME
+----
+modbus_write_register - write a single register
+
+
+SYNOPSIS
+--------
+*int modbus_write_register(modbus_t *'ctx', int 'addr', int 'value')*
+
+
+DESCRIPTION
+-----------
+The _modbus_write_register()_ function shall write the value of 'value'
+holding registers at the address 'addr' of the remote device.
+
+The function uses the Modbus function code 0x06 (preset single register).
+
+
+RETURN VALUE
+------------
+The _modbus_write_register()_ function shall return 1 if successful. Otherwise
+it shall return -1 and set errno.
+
+
+SEE ALSO
+--------
+linkmb:modbus_read_register[3]
+linkmb:modbus_write_registers[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

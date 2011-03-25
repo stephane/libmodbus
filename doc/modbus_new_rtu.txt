@@ -1,0 +1,78 @@
+modbus_new_rtu(3)
+=================
+
+
+NAME
+----
+modbus_new_rtu - create a libmodbus context for RTU
+
+
+SYNOPSIS
+--------
+*modbus_t modbus_new_rtu(const char *'device', int 'baud',
+                         char 'parity', int 'data_bit', int 'stop_bit')*
+
+
+
+DESCRIPTION
+-----------
+
+The _modbus_new_rtu()_ function shall allocate and initialize a modbus_t
+structure to communicate in RTU mode on a serial line.
+
+The _device_ argument specifies the name of the serial port handled by the OS,
+eg. '/dev/ttyS0' or '/dev/ttyUSB0'. On Windons, it's necessary to prepend COM
+name with '\\.\' for COM number greater than 9, eg. '\\\\.\\COM10'. See
+http://msdn.microsoft.com/en-us/library/aa365247(v=vs.85).aspx for details
+
+The _baud_ argument specifies the baud rate of the communication, eg. 9600,
+19200, 57600, 115200, etc.
+
+The _parity_ argument can have one of the following values:::
+* _N_ for none
+* _E_ for even
+* _O_ for odd
+
+The _data_bits_ argument specifies the number of bits of data, the allowed
+values are 5, 6, 7 and 8.
+
+The _stop_bits_ argument specifies the bits of stop, the allowed values are 1
+and 2.
+
+
+RETURN VALUE
+------------
+The _modbus_new_rtu()_ function shall return a pointer to a *modbus_t* structure
+if successful. Otherwise it shall return NULL and set errno to one of the values
+defined below.
+
+
+ERRORS
+------
+*EINVAL*::
+An invalid argument was given.
+
+
+EXAMPLE
+-------
+[source,c]
+-------------------
+modbus_t *ctx;
+
+ctx = modbus_new_ru("/dev/ttyUSB0", 115200, 'N', 8, 1);
+if (ctx == NULL) {
+    fprintf(stderr, "Unable to create the libmodbus context\n");
+    return -1;
+}
+-------------------
+
+SEE ALSO
+--------
+linkmb:modbus_new_tcp[3]
+linkmb:modbus_free[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

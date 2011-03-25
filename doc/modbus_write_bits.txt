@@ -1,0 +1,45 @@
+modbus_write_bits(3)
+====================
+
+
+NAME
+----
+modbus_write_bits - write many bits
+
+
+SYNOPSIS
+--------
+*int modbus_write_bits(modbus_t *'ctx', int 'addr', int 'nb', const uint8_t *'src')*
+
+
+DESCRIPTION
+-----------
+The _modbus_write_bits()_ function shall write the status of the 'nb' bits
+(coils) from 'src' at the address 'addr' of the remote device. The
+'src' array must contains bytes set to _TRUE_ or _FALSE_.
+
+The function uses the Modbus function code 0x0F (force multiple coils).
+
+
+RETURN VALUE
+------------
+The _modbus_write_bits()_ function shall return the number of written bits if
+successful. Otherwise it shall return -1 and set errno.
+
+
+ERRORS
+------
+EMBMDATA::
+Writing too many bits
+
+
+SEE ALSO
+--------
+linkmb:modbus_read_bits[3]
+linkmb:modbus_write_bit[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

@@ -79,6 +79,9 @@ AC_CHECK_HEADERS([ \
     netdb.h \
 ])
 
+# Check whether to build docs / install man pages
+AC_LIBMODBUS_CHECK_DOC_BUILD
+
 # Checks for header files.
 AC_HEADER_STDC
 
@@ -125,6 +128,7 @@ AC_CONFIG_FILES([
         Makefile
         src/Makefile
         src/modbus-version.h
+        doc/Makefile
         tests/Makefile
         libmodbus.pc
 ])

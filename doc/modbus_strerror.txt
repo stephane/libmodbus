@@ -1,0 +1,54 @@
+modbus_strerror(3)
+=================
+
+
+NAME
+----
+modbus_strerror - return the error message
+
+
+SYNOPSIS
+--------
+*const char *modbus_strerror(*int 'errnum');*
+
+
+DESCRIPTION
+-----------
+The _modbus_strerror()_ function shall return a pointer to an error message
+string corresponding to the error number specified by the 'errnum' argument.  As
+libmodbus defines additional error numbers over and above those defined by the
+operating system, applications should use _modbus_strerror()_ in preference to
+the standard _strerror()_ function.
+
+
+RETURN VALUE
+------------
+The _modbus_strerror()_ function shall return a pointer to an error message
+string.
+
+
+ERRORS
+------
+No errors are defined.
+
+
+EXAMPLE
+-------
+.Displaying an error message when a Modbus connection cannot be established
+[source,c]
+-------------------
+if (modbus_connect(ctx) == -1) {
+    fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
+    abort();
+}
+-------------------
+
+SEE ALSO
+--------
+linkmb:libmodbus
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

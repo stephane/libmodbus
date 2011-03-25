@@ -1,0 +1,38 @@
+modbus_write_bit(3)
+===================
+
+
+NAME
+----
+modbus_write_bit - write a single bit
+
+
+SYNOPSIS
+--------
+*int modbus_write_bit(modbus_t *'ctx', int 'addr', int 'status')*
+
+
+DESCRIPTION
+-----------
+The _modbus_write_bit()_ function shall write the status of 'status' at the
+address 'addr' of the remote device. The value must be set to _TRUE_ or _FALSE_.
+
+The function uses the Modbus function code 0x05 (force single coil).
+
+
+RETURN VALUE
+------------
+The _modbus_write_bit()_ function shall return 1 if successful. Otherwise it
+shall return -1 and set errno.
+
+
+SEE ALSO
+--------
+linkmb:modbus_read_bits[3]
+linkmb:modbus_write_bits[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>
