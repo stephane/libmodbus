@@ -33,20 +33,18 @@ MAN_HTML = $(MAN_TXT:%.txt=%.html)
 
 if INSTALL_MAN
 dist_man_MANS = $(MAN_DOC)
-doc : $(MAN_DOC)
+doc: $(MAN_DOC)
 endif
 
 EXTRA_DIST = asciidoc.conf $(MAN_TXT)
 if BUILD_DOC
 EXTRA_DIST += $(MAN_HTML)
-html : $(MAN_HTML)
+html: $(MAN_HTML)
 endif
 
 MAINTAINERCLEANFILES = $(MAN_DOC) $(MAN_HTML)
 
-dist-hook : $(MAN_DOC) $(MAN_HTML)
-
-html: $(MAN_HTML)
+dist-hook: $(MAN_DOC) $(MAN_HTML)
 
 if BUILD_DOC
 SUFFIXES=.html .txt .xml .1 .3 .7
