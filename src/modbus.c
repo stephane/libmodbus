@@ -140,23 +140,23 @@ static unsigned int compute_response_length_from_request(modbus_t *ctx, uint8_t 
 }
 
 /* Sends a request/response */
-static int send_msg(modbus_t *ctx, uint8_t *req, int req_length)
+static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
 {
     int rc;
     int i;
 
-    req_length = ctx->backend->send_msg_pre(req, req_length);
+    msg_length = ctx->backend->send_msg_pre(msg, msg_length);
 
     if (ctx->debug) {
-        for (i = 0; i < req_length; i++)
-            printf("[%.2X]", req[i]);
+        for (i = 0; i < msg_length; i++)
+            printf("[%.2X]", msg[i]);
         printf("\n");
     }
 
     /* In recovery mode, the write command will be issued until to be
        successful! Disabled by default. */
     do {
-        rc = ctx->backend->send(ctx, req, req_length);
+        rc = ctx->backend->send(ctx, msg, msg_length);
         if (rc == -1) {
             _error_print(ctx, NULL);
             if (ctx->error_recovery &&
@@ -167,7 +167,7 @@ static int send_msg(modbus_t *ctx, uint8_t *req, int req_length)
         }
     } while (ctx->error_recovery && rc == -1);
 
-    if (rc > 0 && rc != req_length) {
+    if (rc > 0 && rc != msg_length) {
         errno = EMBBADDATA;
         return -1;
     }
