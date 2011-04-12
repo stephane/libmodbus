@@ -69,7 +69,7 @@ static int _modbus_tcp_init_win32(void)
 
     if (WSAStartup(MAKEWORD(2, 0), &wsaData) != 0) {
         fprintf(stderr, "WSAStartup() returned error code %d\n",
-                (int)GetLastError());
+                (unsigned int)GetLastError());
         errno = EIO;
         return -1;
     }
