@@ -59,7 +59,7 @@ EXAMPLE
 -------------------
 modbus_t *ctx;
 
-ctx = modbus_new_ru("/dev/ttyUSB0", 115200, 'N', 8, 1);
+ctx = modbus_new_rtu("/dev/ttyUSB0", 115200, 'N', 8, 1);
 if (ctx == NULL) {
     fprintf(stderr, "Unable to create the libmodbus context\n");
     return -1;
