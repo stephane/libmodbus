@@ -277,7 +277,6 @@ static int receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     fd_set rfds;
     struct timeval tv;
     int length_to_read;
-    uint8_t *p_msg;
     int msg_length = 0;
     _step_t step;
 
@@ -310,14 +309,13 @@ static int receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
         tv.tv_usec = ctx->timeout_begin.tv_usec;
     }
 
-    p_msg = msg;
     while (length_to_read != 0) {
         rc = ctx->backend->select(ctx, &rfds, &tv, length_to_read);
         if (rc == -1) {
             return -1;
         }
 
-        rc = ctx->backend->recv(ctx, p_msg, length_to_read);
+        rc = ctx->backend->recv(ctx, msg + msg_length, length_to_read);
         if (rc == 0) {
             errno = ECONNRESET;
             rc = -1;
@@ -339,11 +337,9 @@ static int receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
         if (ctx->debug) {
             int i;
             for (i=0; i < rc; i++)
-                printf("<%.2X>", p_msg[i]);
+                printf("<%.2X>", msg[msg_length + i]);
         }
 
-        /* Moves the pointer to receive other data */
-        p_msg = &(p_msg[rc]);
         /* Sums bytes received */
         msg_length += rc;
         /* Computes remaining bytes */
