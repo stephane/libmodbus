@@ -175,6 +175,34 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
     return rc;
 }
 
+int modbus_send_raw_request(modbus_t *ctx, uint8_t *raw_req, int raw_req_length)
+{
+    sft_t sft;
+    uint8_t req[MAX_MESSAGE_LENGTH];
+    int req_length;
+
+    if (raw_req_length < 2) {
+        /* The raw request must contain function and slave at least */
+        errno = EINVAL;
+        return -1;
+    }
+
+    sft.slave = raw_req[0];
+    sft.function = raw_req[1];
+    /* The t_id is left to zero */
+    sft.t_id = 0;
+    /* This response function only set the header so it's convenient here */
+    req_length = ctx->backend->build_response_basis(&sft, req);
+
+    if (raw_req_length > 2) {
+        /* Copy data after function code */
+        memcpy(req + req_length, raw_req + 2, raw_req_length - 2);
+        req_length += raw_req_length - 2;
+    }
+
+    return send_msg(ctx, req, req_length);
+}
+
 /*
     ---------- Request     Indication ----------
     | Client | ---------------------->| Server |

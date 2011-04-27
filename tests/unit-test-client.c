@@ -628,6 +628,39 @@ int main(int argc, char *argv[])
         goto close;
     }
 
+    /** RAW REQUEST */
+    printf("\nTEST RAW REQUEST:\n");
+    {
+        const int RAW_REQ_LENGTH = 6;
+        uint8_t raw_req[] = { (use_backend == RTU) ? SERVER_ID : 0xFF,
+                              0x03, 0x00, 0x01, 0x0, 0x05 };
+        int req_length;
+        uint8_t rsp[MODBUS_TCP_MAX_ADU_LENGTH];
+
+        req_length = modbus_send_raw_request(ctx, raw_req,
+                                             RAW_REQ_LENGTH * sizeof(uint8_t));
+
+        if ((use_backend == RTU && req_length == (RAW_REQ_LENGTH + 2)) ||
+            ((use_backend == TCP || use_backend == TCP_PI) &&
+             req_length == (RAW_REQ_LENGTH + 6))) {
+            printf("OK\n");
+        } else {
+            printf("FAILED (%d)\n", req_length);
+            goto close;
+        }
+
+        printf("* modbus_receive: ");
+        rc  = modbus_receive(ctx, -1, rsp);
+        if ((use_backend == RTU && rc == 15) ||
+            ((use_backend == TCP || use_backend == TCP_PI) &&
+             rc == 19)) {
+            printf("OK\n");
+        } else {
+            printf("FAILED (%d)\n", rc);
+            goto close;
+        }
+    }
+
     printf("\nALL TESTS PASS WITH SUCCESS.\n");
 
 close:
