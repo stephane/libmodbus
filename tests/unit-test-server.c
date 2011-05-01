@@ -127,7 +127,7 @@ int main(int argc, char*argv[])
                 == UT_REGISTERS_NB_SPECIAL) {
                 printf("Set an incorrect number of values\n");
                 MODBUS_SET_INT16_TO_INT8(query, header_length + 3,
-                                         UT_REGISTERS_NB);
+                                         UT_REGISTERS_NB_SPECIAL - 1);
             } else if (MODBUS_GET_INT16_FROM_INT8(query, header_length + 1)
                 == UT_REGISTERS_ADDRESS_SPECIAL) {
                 printf("Reply to this special register address by an exception\n");
