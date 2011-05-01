@@ -13,6 +13,7 @@ MAN3 = \
         modbus_read_input_bits.3 \
         modbus_read_input_registers.3 \
         modbus_read_registers.3 \
+        modbus_receive_confirmation.3 \
         modbus_send_raw_request.3 \
         modbus_set_debug.3 \
         modbus_set_error_recovery.3 \

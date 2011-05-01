@@ -1,0 +1,38 @@
+modbus_receive_confirmation(3)
+==============================
+
+
+NAME
+----
+modbus_receive_confirmation - receive a confirmation request
+
+
+SYNOPSIS
+--------
+*int modbus_receive_confirmation(*modbus_t 'ctx', uint8_t *'rsp');*
+
+
+DESCRIPTION
+-----------
+The _modbus_receive_confirmation()_ function shall receive a request via the
+socket of the context 'ctx'. This function must be used for debugging purposes
+because the received response isn't checked against the initial request. This
+function can be used to receive request not handled by the library.
+
+
+RETURN VALUE
+------------
+The _modbus_receive_confirmation()_ function shall store the confirmation
+request in 'rsp' and return the response length if sucessful. Otherwise it shall
+return -1 and set errno.
+
+
+SEE ALSO
+--------
+linkmb:modbus_send_raw_request[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

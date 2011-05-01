@@ -428,32 +428,34 @@ int modbus_receive(modbus_t *ctx, int sockfd, uint8_t *req)
     return receive_msg(ctx, req, MSG_INDICATION);
 }
 
-/* Receives the response and checks values.
+/* Receives the confirmation.
 
-   The function shall return the number of values (bits or words) and the
-   response if successful. Otherwise, its shall return -1 and errno is set.
+   The function shall store the read response in rsp and return the number of
+   values (bits or words). Otherwise, its shall return -1 and errno is set.
 
-   Note: all functions used to send or receive data with modbus return
-   these values. */
-static int receive_msg_req(modbus_t *ctx, uint8_t *req, uint8_t *rsp)
+   The function doesn't check the confirmation is the expected response to the
+   initial request.
+*/
+int modbus_receive_confirmation(modbus_t *ctx, uint8_t *rsp)
+{
+    return receive_msg(ctx, rsp, MSG_CONFIRMATION);
+}
+
+static int check_confirmation(modbus_t *ctx, uint8_t *req,
+                              uint8_t *rsp, uint8_t rsp_length)
 {
     int rc;
     int rsp_length_computed;
-    int offset = ctx->backend->header_length;
-
-    rc = receive_msg(ctx, rsp, MSG_CONFIRMATION);
-    if (rc == -1) {
-        return -1;
-    }
+    const int offset = ctx->backend->header_length;
 
     rsp_length_computed = compute_response_length_from_request(ctx, req);
 
     /* Check length */
-    if (rc == rsp_length_computed ||
+    if (rsp_length == rsp_length_computed ||
         rsp_length_computed == MSG_LENGTH_UNDEFINED) {
         int req_nb_value;
         int rsp_nb_value;
-        int function = rsp[offset];
+        const int function = rsp[offset];
 
         /* Check function code */
         if (function != req[offset]) {
@@ -510,7 +512,7 @@ static int receive_msg_req(modbus_t *ctx, uint8_t *req, uint8_t *rsp)
             errno = EMBBADDATA;
             rc = -1;
         }
-    } else if (rc == (offset + 2 + ctx->backend->checksum_length) &&
+    } else if (rsp_length == (offset + 2 + ctx->backend->checksum_length) &&
                req[offset] == (rsp[offset] - 0x80)) {
         /* EXCEPTION CODE RECEIVED */
 
@@ -526,7 +528,7 @@ static int receive_msg_req(modbus_t *ctx, uint8_t *req, uint8_t *rsp)
         if (ctx->debug) {
             fprintf(stderr,
                     "Message length not corresponding to the computed length (%d != %d)\n",
-                    rc, rsp_length_computed);
+                    rsp_length, rsp_length_computed);
         }
         errno = EMBBADDATA;
         rc = -1;
@@ -896,7 +898,11 @@ static int read_io_status(modbus_t *ctx, int function,
         int offset;
         int offset_end;
 
-        rc = receive_msg_req(ctx, req, rsp);
+        rc = receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        if (rc == -1)
+            return -1;
+
+        rc = check_confirmation(ctx, req, rsp, rc);
         if (rc == -1)
             return -1;
 
@@ -991,10 +997,13 @@ static int read_registers(modbus_t *ctx, int function, int addr, int nb,
         int offset;
         int i;
 
-        rc = receive_msg_req(ctx, req, rsp);
-        if (rc == -1) {
+        rc = receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        if (rc == -1)
             return -1;
-        }
+
+        rc = check_confirmation(ctx, req, rsp, rc);
+        if (rc == -1)
+            return -1;
 
         offset = ctx->backend->header_length;
 
@@ -1063,7 +1072,12 @@ static int write_single(modbus_t *ctx, int function, int addr, int value)
     if (rc > 0) {
         /* Used by write_bit and write_register */
         uint8_t rsp[_MIN_REQ_LENGTH];
-        rc = receive_msg_req(ctx, req, rsp);
+
+        rc = receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        if (rc == -1)
+            return -1;
+
+        rc = check_confirmation(ctx, req, rsp, rc);
     }
 
     return rc;
@@ -1129,7 +1143,12 @@ int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *src)
     rc = send_msg(ctx, req, req_length);
     if (rc > 0) {
         uint8_t rsp[MAX_MESSAGE_LENGTH];
-        rc = receive_msg_req(ctx, req, rsp);
+
+        rc = receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        if (rc == -1)
+            return -1;
+
+        rc = check_confirmation(ctx, req, rsp, rc);
     }
 
 
@@ -1170,7 +1189,12 @@ int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *src)
     rc = send_msg(ctx, req, req_length);
     if (rc > 0) {
         uint8_t rsp[MAX_MESSAGE_LENGTH];
-        rc = receive_msg_req(ctx, req, rsp);
+
+        rc = receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        if (rc == -1)
+            return -1;
+
+        rc = check_confirmation(ctx, req, rsp, rc);
     }
 
     return rc;
@@ -1228,7 +1252,14 @@ int modbus_read_and_write_registers(modbus_t *ctx,
     if (rc > 0) {
         int offset;
 
-        rc = receive_msg_req(ctx, req, rsp);
+        rc = receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        if (rc == -1)
+            return -1;
+
+        rc = check_confirmation(ctx, req, rsp, rc);
+        if (rc == -1)
+            return -1;
+
         offset = ctx->backend->header_length;
 
         /* If rc is negative, the loop is jumped ! */
@@ -1262,14 +1293,18 @@ int modbus_report_slave_id(modbus_t *ctx, uint8_t *dest)
         int offset;
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        /* Byte count, slave id, run indicator status,
-           additional data */
-        rc = receive_msg_req(ctx, req, rsp);
+        rc = receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        if (rc == -1)
+            return -1;
+
+        rc = check_confirmation(ctx, req, rsp, rc);
         if (rc == -1)
             return -1;
 
         offset = ctx->backend->header_length + 2;
 
+        /* Byte count, slave id, run indicator status,
+           additional data */
         for (i=0; i < rc; i++) {
             dest[i] = rsp[offset + i];
         }

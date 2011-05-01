@@ -47,7 +47,7 @@ if (modbus_connect(ctx) == -1) {
 }
 
 req_length = modbus_send_raw_request(ctx, raw_req, 6 * sizeof(uint8_t));
-modbus_receive(ctx, -1, rsp);
+modbus_receive_confirmation(ctx, rsp);
 
 modbus_close(ctx);
 modbus_free(ctx);
@@ -55,7 +55,7 @@ modbus_free(ctx);
 
 SEE ALSO
 --------
-linkmb:modbus_receive[3]
+linkmb:modbus_receive_confirmation[3]
 
 
 AUTHORS

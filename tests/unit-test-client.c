@@ -649,8 +649,8 @@ int main(int argc, char *argv[])
             goto close;
         }
 
-        printf("* modbus_receive: ");
-        rc  = modbus_receive(ctx, -1, rsp);
+        printf("* modbus_receive_confirmation: ");
+        rc  = modbus_receive_confirmation(ctx, rsp);
         if ((use_backend == RTU && rc == 15) ||
             ((use_backend == TCP || use_backend == TCP_PI) &&
              rc == 19)) {
