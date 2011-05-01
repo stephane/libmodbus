@@ -87,15 +87,13 @@ int main(int argc, char *argv[])
     }
 
     /* Allocate and initialize the memory to store the bits */
-    nb_points = (UT_BITS_NB_POINTS > UT_INPUT_BITS_NB_POINTS) ?
-        UT_BITS_NB_POINTS : UT_INPUT_BITS_NB_POINTS;
+    nb_points = (UT_BITS_NB > UT_INPUT_BITS_NB) ? UT_BITS_NB : UT_INPUT_BITS_NB;
     tab_rp_bits = (uint8_t *) malloc(nb_points * sizeof(uint8_t));
     memset(tab_rp_bits, 0, nb_points * sizeof(uint8_t));
 
     /* Allocate and initialize the memory to store the registers */
-    nb_points = (UT_REGISTERS_NB_POINTS >
-                 UT_INPUT_REGISTERS_NB_POINTS) ?
-        UT_REGISTERS_NB_POINTS : UT_INPUT_REGISTERS_NB_POINTS;
+    nb_points = (UT_REGISTERS_NB > UT_INPUT_REGISTERS_NB) ?
+        UT_REGISTERS_NB : UT_INPUT_REGISTERS_NB;
     tab_rp_registers = (uint16_t *) malloc(nb_points * sizeof(uint16_t));
     memset(tab_rp_registers, 0, nb_points * sizeof(uint16_t));
 
@@ -131,14 +129,13 @@ int main(int argc, char *argv[])
 
     /* Multiple bits */
     {
-        uint8_t tab_value[UT_BITS_NB_POINTS];
+        uint8_t tab_value[UT_BITS_NB];
 
-        modbus_set_bits_from_bytes(tab_value, 0, UT_BITS_NB_POINTS,
-                                   UT_BITS_TAB);
+        modbus_set_bits_from_bytes(tab_value, 0, UT_BITS_NB, UT_BITS_TAB);
         rc = modbus_write_bits(ctx, UT_BITS_ADDRESS,
-                               UT_BITS_NB_POINTS, tab_value);
+                               UT_BITS_NB, tab_value);
         printf("1/2 modbus_write_bits: ");
-        if (rc == UT_BITS_NB_POINTS) {
+        if (rc == UT_BITS_NB) {
             printf("OK\n");
         } else {
             printf("FAILED\n");
@@ -146,24 +143,22 @@ int main(int argc, char *argv[])
         }
     }
 
-    rc = modbus_read_bits(ctx, UT_BITS_ADDRESS,
-                          UT_BITS_NB_POINTS, tab_rp_bits);
+    rc = modbus_read_bits(ctx, UT_BITS_ADDRESS, UT_BITS_NB, tab_rp_bits);
     printf("2/2 modbus_read_bits: ");
-    if (rc != UT_BITS_NB_POINTS) {
+    if (rc != UT_BITS_NB) {
         printf("FAILED (nb points %d)\n", rc);
         goto close;
     }
 
     i = 0;
     address = UT_BITS_ADDRESS;
-    nb_points = UT_BITS_NB_POINTS;
+    nb_points = UT_BITS_NB;
     while (nb_points > 0) {
         int nb_bits = (nb_points > 8) ? 8 : nb_points;
 
         value = modbus_get_byte_from_bits(tab_rp_bits, i*8, nb_bits);
         if (value != UT_BITS_TAB[i]) {
-            printf("FAILED (%0X != %0X)\n",
-                   value, UT_BITS_TAB[i]);
+            printf("FAILED (%0X != %0X)\n", value, UT_BITS_TAB[i]);
             goto close;
         }
 
@@ -175,24 +170,23 @@ int main(int argc, char *argv[])
 
     /** DISCRETE INPUTS **/
     rc = modbus_read_input_bits(ctx, UT_INPUT_BITS_ADDRESS,
-                                UT_INPUT_BITS_NB_POINTS, tab_rp_bits);
+                                UT_INPUT_BITS_NB, tab_rp_bits);
     printf("1/1 modbus_read_input_bits: ");
 
-    if (rc != UT_INPUT_BITS_NB_POINTS) {
+    if (rc != UT_INPUT_BITS_NB) {
         printf("FAILED (nb points %d)\n", rc);
         goto close;
     }
 
     i = 0;
     address = UT_INPUT_BITS_ADDRESS;
-    nb_points = UT_INPUT_BITS_NB_POINTS;
+    nb_points = UT_INPUT_BITS_NB;
     while (nb_points > 0) {
         int nb_bits = (nb_points > 8) ? 8 : nb_points;
 
         value = modbus_get_byte_from_bits(tab_rp_bits, i*8, nb_bits);
         if (value != UT_INPUT_BITS_TAB[i]) {
-            printf("FAILED (%0X != %0X)\n",
-                   value, UT_INPUT_BITS_TAB[i]);
+            printf("FAILED (%0X != %0X)\n", value, UT_INPUT_BITS_TAB[i]);
             goto close;
         }
 
@@ -231,10 +225,9 @@ int main(int argc, char *argv[])
 
     /* Many registers */
     rc = modbus_write_registers(ctx, UT_REGISTERS_ADDRESS,
-                                UT_REGISTERS_NB_POINTS,
-                                UT_REGISTERS_TAB);
+                                UT_REGISTERS_NB, UT_REGISTERS_TAB);
     printf("1/5 modbus_write_registers: ");
-    if (rc == UT_REGISTERS_NB_POINTS) {
+    if (rc == UT_REGISTERS_NB) {
         printf("OK\n");
     } else {
         printf("FAILED\n");
@@ -242,15 +235,14 @@ int main(int argc, char *argv[])
     }
 
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
-                               UT_REGISTERS_NB_POINTS,
-                               tab_rp_registers);
+                               UT_REGISTERS_NB, tab_rp_registers);
     printf("2/5 modbus_read_registers: ");
-    if (rc != UT_REGISTERS_NB_POINTS) {
+    if (rc != UT_REGISTERS_NB) {
         printf("FAILED (nb points %d)\n", rc);
         goto close;
     }
 
-    for (i=0; i < UT_REGISTERS_NB_POINTS; i++) {
+    for (i=0; i < UT_REGISTERS_NB; i++) {
         if (tab_rp_registers[i] != UT_REGISTERS_TAB[i]) {
             printf("FAILED (%0X != %0X)\n",
                    tab_rp_registers[i],
@@ -269,24 +261,23 @@ int main(int argc, char *argv[])
     }
     printf("OK\n");
 
-    nb_points = (UT_REGISTERS_NB_POINTS >
-                 UT_INPUT_REGISTERS_NB_POINTS) ?
-        UT_REGISTERS_NB_POINTS : UT_INPUT_REGISTERS_NB_POINTS;
+    nb_points = (UT_REGISTERS_NB >
+                 UT_INPUT_REGISTERS_NB) ?
+        UT_REGISTERS_NB : UT_INPUT_REGISTERS_NB;
     memset(tab_rp_registers, 0, nb_points * sizeof(uint16_t));
 
     /* Write registers to zero from tab_rp_registers and store read registers
        into tab_rp_registers. So the read registers must set to 0, except the
        first one because there is an offset of 1 register on write. */
     rc = modbus_read_and_write_registers(ctx,
-                                         UT_REGISTERS_ADDRESS,
-                                         UT_REGISTERS_NB_POINTS,
+                                         UT_REGISTERS_ADDRESS, UT_REGISTERS_NB,
                                          tab_rp_registers,
                                          UT_REGISTERS_ADDRESS + 1,
-                                         UT_REGISTERS_NB_POINTS - 1,
+                                         UT_REGISTERS_NB - 1,
                                          tab_rp_registers);
     printf("4/5 modbus_read_and_write_registers: ");
-    if (rc != UT_REGISTERS_NB_POINTS) {
-        printf("FAILED (nb points %d != %d)\n", rc, UT_REGISTERS_NB_POINTS);
+    if (rc != UT_REGISTERS_NB) {
+        printf("FAILED (nb points %d != %d)\n", rc, UT_REGISTERS_NB);
         goto close;
     }
 
@@ -295,7 +286,7 @@ int main(int argc, char *argv[])
                tab_rp_registers[0], UT_REGISTERS_TAB[0]);
     }
 
-    for (i=1; i < UT_REGISTERS_NB_POINTS; i++) {
+    for (i=1; i < UT_REGISTERS_NB; i++) {
         if (tab_rp_registers[i] != 0) {
             printf("FAILED (%0X != %0X)\n",
                    tab_rp_registers[i], 0);
@@ -309,15 +300,14 @@ int main(int argc, char *argv[])
 
     /** INPUT REGISTERS **/
     rc = modbus_read_input_registers(ctx, UT_INPUT_REGISTERS_ADDRESS,
-                                     UT_INPUT_REGISTERS_NB_POINTS,
-                                     tab_rp_registers);
+                                     UT_INPUT_REGISTERS_NB, tab_rp_registers);
     printf("1/1 modbus_read_input_registers: ");
-    if (rc != UT_INPUT_REGISTERS_NB_POINTS) {
+    if (rc != UT_INPUT_REGISTERS_NB) {
         printf("FAILED (nb points %d)\n", rc);
         goto close;
     }
 
-    for (i=0; i < UT_INPUT_REGISTERS_NB_POINTS; i++) {
+    for (i=0; i < UT_INPUT_REGISTERS_NB; i++) {
         if (tab_rp_registers[i] != UT_INPUT_REGISTERS_TAB[i]) {
             printf("FAILED (%0X != %0X)\n",
                    tab_rp_registers[i], UT_INPUT_REGISTERS_TAB[i]);
@@ -357,8 +347,7 @@ int main(int argc, char *argv[])
      * the addresses are not valid. */
 
     rc = modbus_read_bits(ctx, UT_BITS_ADDRESS,
-                          UT_BITS_NB_POINTS + 1,
-                          tab_rp_bits);
+                          UT_BITS_NB + 1, tab_rp_bits);
     printf("* modbus_read_bits: ");
     if (rc == -1 && errno == EMBXILADD) {
         printf("OK\n");
@@ -368,8 +357,7 @@ int main(int argc, char *argv[])
     }
 
     rc = modbus_read_input_bits(ctx, UT_INPUT_BITS_ADDRESS,
-                                UT_INPUT_BITS_NB_POINTS + 1,
-                                tab_rp_bits);
+                                UT_INPUT_BITS_NB + 1, tab_rp_bits);
     printf("* modbus_read_input_bits: ");
     if (rc == -1 && errno == EMBXILADD)
         printf("OK\n");
@@ -379,8 +367,7 @@ int main(int argc, char *argv[])
     }
 
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
-                               UT_REGISTERS_NB_POINTS + 1,
-                               tab_rp_registers);
+                               UT_REGISTERS_NB + 1, tab_rp_registers);
     printf("* modbus_read_registers: ");
     if (rc == -1 && errno == EMBXILADD)
         printf("OK\n");
@@ -390,8 +377,7 @@ int main(int argc, char *argv[])
     }
 
     rc = modbus_read_input_registers(ctx, UT_INPUT_REGISTERS_ADDRESS,
-                                     UT_INPUT_REGISTERS_NB_POINTS + 1,
-                                     tab_rp_registers);
+                                     UT_INPUT_REGISTERS_NB + 1, tab_rp_registers);
     printf("* modbus_read_input_registers: ");
     if (rc == -1 && errno == EMBXILADD)
         printf("OK\n");
@@ -400,7 +386,7 @@ int main(int argc, char *argv[])
         goto close;
     }
 
-    rc = modbus_write_bit(ctx, UT_BITS_ADDRESS + UT_BITS_NB_POINTS, ON);
+    rc = modbus_write_bit(ctx, UT_BITS_ADDRESS + UT_BITS_NB, ON);
     printf("* modbus_write_bit: ");
     if (rc == -1 && errno == EMBXILADD) {
         printf("OK\n");
@@ -409,9 +395,8 @@ int main(int argc, char *argv[])
         goto close;
     }
 
-    rc = modbus_write_bits(ctx, UT_BITS_ADDRESS + UT_BITS_NB_POINTS,
-                           UT_BITS_NB_POINTS,
-                           tab_rp_bits);
+    rc = modbus_write_bits(ctx, UT_BITS_ADDRESS + UT_BITS_NB,
+                           UT_BITS_NB, tab_rp_bits);
     printf("* modbus_write_coils: ");
     if (rc == -1 && errno == EMBXILADD) {
         printf("OK\n");
@@ -420,10 +405,8 @@ int main(int argc, char *argv[])
         goto close;
     }
 
-    rc = modbus_write_registers(ctx, UT_REGISTERS_ADDRESS +
-                                UT_REGISTERS_NB_POINTS,
-                                UT_REGISTERS_NB_POINTS,
-                                tab_rp_registers);
+    rc = modbus_write_registers(ctx, UT_REGISTERS_ADDRESS + UT_REGISTERS_NB,
+                                UT_REGISTERS_NB, tab_rp_registers);
     printf("* modbus_write_registers: ");
     if (rc == -1 && errno == EMBXILADD) {
         printf("OK\n");
@@ -436,8 +419,8 @@ int main(int argc, char *argv[])
     /** TOO MANY DATA **/
     printf("\nTEST TOO MANY DATA ERROR:\n");
 
-    rc = modbus_read_bits(ctx, UT_BITS_ADDRESS, MODBUS_MAX_READ_BITS + 1,
-                          tab_rp_bits);
+    rc = modbus_read_bits(ctx, UT_BITS_ADDRESS,
+                          MODBUS_MAX_READ_BITS + 1, tab_rp_bits);
     printf("* modbus_read_bits: ");
     if (rc == -1 && errno == EMBMDATA) {
         printf("OK\n");
@@ -447,8 +430,7 @@ int main(int argc, char *argv[])
     }
 
     rc = modbus_read_input_bits(ctx, UT_INPUT_BITS_ADDRESS,
-                                MODBUS_MAX_READ_BITS + 1,
-                                tab_rp_bits);
+                                MODBUS_MAX_READ_BITS + 1, tab_rp_bits);
     printf("* modbus_read_input_bits: ");
     if (rc == -1 && errno == EMBMDATA) {
         printf("OK\n");
@@ -480,8 +462,7 @@ int main(int argc, char *argv[])
     }
 
     rc = modbus_write_bits(ctx, UT_BITS_ADDRESS,
-                           MODBUS_MAX_WRITE_BITS + 1,
-                           tab_rp_bits);
+                           MODBUS_MAX_WRITE_BITS + 1, tab_rp_bits);
     printf("* modbus_write_bits: ");
     if (rc == -1 && errno == EMBMDATA) {
         printf("OK\n");
@@ -505,8 +486,7 @@ int main(int argc, char *argv[])
     printf("\nTEST SLAVE REPLY:\n");
     modbus_set_slave(ctx, 18);
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
-                               UT_REGISTERS_NB_POINTS,
-                               tab_rp_registers);
+                               UT_REGISTERS_NB, tab_rp_registers);
     if (use_backend == RTU) {
         /* No response in RTU mode */
         printf("1/4 No response from slave %d: ", 18);
@@ -521,7 +501,7 @@ int main(int argc, char *argv[])
         /* Response in TCP mode */
         printf("1/4 Response from slave %d: ", 18);
 
-        if (rc == UT_REGISTERS_NB_POINTS) {
+        if (rc == UT_REGISTERS_NB) {
             printf("OK\n");
         } else {
             printf("FAILED\n");
@@ -536,10 +516,9 @@ int main(int argc, char *argv[])
     }
 
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
-                               UT_REGISTERS_NB_POINTS,
-                               tab_rp_registers);
+                               UT_REGISTERS_NB, tab_rp_registers);
     printf("2/4 Reply after a broadcast query: ");
-    if (rc == UT_REGISTERS_NB_POINTS) {
+    if (rc == UT_REGISTERS_NB) {
         printf("OK\n");
     } else {
         printf("FAILED\n");
@@ -578,8 +557,7 @@ int main(int argc, char *argv[])
     modbus_set_timeout_begin(ctx, &timeout_begin_new);
 
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
-                               UT_REGISTERS_NB_POINTS,
-                               tab_rp_registers);
+                               UT_REGISTERS_NB, tab_rp_registers);
     printf("4/4 Too short timeout: ");
     if (rc == -1 && errno == ETIMEDOUT) {
         printf("OK\n");
@@ -600,10 +578,9 @@ int main(int argc, char *argv[])
 
     /* Allocate only the required space */
     tab_rp_registers_bad = (uint16_t *) malloc(
-        UT_REGISTERS_NB_POINTS_SPECIAL * sizeof(uint16_t));
+        UT_REGISTERS_NB_SPECIAL * sizeof(uint16_t));
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
-                               UT_REGISTERS_NB_POINTS_SPECIAL,
-                               tab_rp_registers_bad);
+                               UT_REGISTERS_NB_SPECIAL, tab_rp_registers_bad);
     printf("* modbus_read_registers: ");
     if (rc == -1 && errno == EMBBADDATA) {
         printf("OK\n");
@@ -618,8 +595,7 @@ int main(int argc, char *argv[])
     printf("\nTEST MANUAL EXCEPTION:\n");
 
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS_SPECIAL,
-                               UT_REGISTERS_NB_POINTS,
-                               tab_rp_registers);
+                               UT_REGISTERS_NB, tab_rp_registers);
     printf("* modbus_read_registers at special address: ");
     if (rc == -1 && errno == EMBXSBUSY) {
         printf("OK\n");

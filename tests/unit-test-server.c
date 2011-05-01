@@ -74,10 +74,10 @@ int main(int argc, char*argv[])
     modbus_set_error_recovery(ctx, TRUE);
 
     mb_mapping = modbus_mapping_new(
-        UT_BITS_ADDRESS + UT_BITS_NB_POINTS,
-        UT_INPUT_BITS_ADDRESS + UT_INPUT_BITS_NB_POINTS,
-        UT_REGISTERS_ADDRESS + UT_REGISTERS_NB_POINTS,
-        UT_INPUT_REGISTERS_ADDRESS + UT_INPUT_REGISTERS_NB_POINTS);
+        UT_BITS_ADDRESS + UT_BITS_NB,
+        UT_INPUT_BITS_ADDRESS + UT_INPUT_BITS_NB,
+        UT_REGISTERS_ADDRESS + UT_REGISTERS_NB,
+        UT_INPUT_REGISTERS_ADDRESS + UT_INPUT_REGISTERS_NB);
     if (mb_mapping == NULL) {
         fprintf(stderr, "Failed to allocate the mapping: %s\n",
                 modbus_strerror(errno));
@@ -90,11 +90,11 @@ int main(int argc, char*argv[])
 
     /** INPUT STATUS **/
     modbus_set_bits_from_bytes(mb_mapping->tab_input_bits,
-                               UT_INPUT_BITS_ADDRESS, UT_INPUT_BITS_NB_POINTS,
+                               UT_INPUT_BITS_ADDRESS, UT_INPUT_BITS_NB,
                                UT_INPUT_BITS_TAB);
 
     /** INPUT REGISTERS **/
-    for (i=0; i < UT_INPUT_REGISTERS_NB_POINTS; i++) {
+    for (i=0; i < UT_INPUT_REGISTERS_NB; i++) {
         mb_mapping->tab_input_registers[UT_INPUT_REGISTERS_ADDRESS+i] =
             UT_INPUT_REGISTERS_TAB[i];;
     }
@@ -124,10 +124,10 @@ int main(int argc, char*argv[])
         /* Read holding registers */
         if (query[header_length] == 0x03) {
             if (MODBUS_GET_INT16_FROM_INT8(query, header_length + 3)
-                == UT_REGISTERS_NB_POINTS_SPECIAL) {
+                == UT_REGISTERS_NB_SPECIAL) {
                 printf("Set an incorrect number of values\n");
                 MODBUS_SET_INT16_TO_INT8(query, header_length + 3,
-                                         UT_REGISTERS_NB_POINTS);
+                                         UT_REGISTERS_NB);
             } else if (MODBUS_GET_INT16_FROM_INT8(query, header_length + 1)
                 == UT_REGISTERS_ADDRESS_SPECIAL) {
                 printf("Reply to this special register address by an exception\n");
