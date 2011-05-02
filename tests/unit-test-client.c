@@ -570,7 +570,7 @@ int main(int argc, char *argv[])
     modbus_set_timeout_begin(ctx, &timeout_begin_old);
 
     /* Wait for data before flushing */
-    usleep(100);
+    usleep(250000);
     modbus_flush(ctx);
 
     /** BAD RESPONSE **/
