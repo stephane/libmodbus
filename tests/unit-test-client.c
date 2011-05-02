@@ -616,6 +616,7 @@ int main(int argc, char *argv[])
         req_length = modbus_send_raw_request(ctx, raw_req,
                                              RAW_REQ_LENGTH * sizeof(uint8_t));
 
+        printf("* modbus_send_raw_request: ");
         if ((use_backend == RTU && req_length == (RAW_REQ_LENGTH + 2)) ||
             ((use_backend == TCP || use_backend == TCP_PI) &&
              req_length == (RAW_REQ_LENGTH + 6))) {
