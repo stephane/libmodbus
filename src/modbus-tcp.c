@@ -354,7 +354,7 @@ int _modbus_tcp_flush(modbus_t *ctx)
         if (ctx->debug && rc != -1) {
             printf("\n%d bytes flushed\n", rc);
         }
-    } while (rc > 0);
+    } while (rc == MODBUS_TCP_MAX_ADU_LENGTH);
 
     return rc;
 }
