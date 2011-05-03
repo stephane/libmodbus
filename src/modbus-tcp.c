@@ -346,7 +346,10 @@ int _modbus_tcp_flush(modbus_t *ctx)
             return -1;
         }
 
-        rc = recv(ctx->s, devnull, MODBUS_TCP_MAX_ADU_LENGTH, 0);
+        if (rc == 1) {
+            /* There is data to flush */
+            rc = recv(ctx->s, devnull, MODBUS_TCP_MAX_ADU_LENGTH, 0);
+        }
 #endif
         if (ctx->debug && rc != -1) {
             printf("\n%d bytes flushed\n", rc);
