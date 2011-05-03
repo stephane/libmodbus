@@ -1,4 +1,4 @@
-libmodbus 2.9.4 (2011-02-XX)
+libmodbus 2.9.4 (2011-05-XX)
 ============================
 
 - IPv6 support
@@ -6,6 +6,11 @@ libmodbus 2.9.4 (2011-02-XX)
   and Stéphane Raimbault.
 - Fix compilation on Windows 7 (x64) with MinGW/MSYS and GCC 4.5
   Reported by Patsy Kaye.
+- Documentation of libmodbus functions with AsciiDoc (man and HTML) by Stéphane
+  Raimbault
+- New functions to send and receive raw requests
+- Fix flush function of TCP backend on Windows
+
 
 libmodbus 2.9.3 (2011-01-14)
 ============================
@@ -29,6 +34,7 @@ libmodbus 2.9.3 (2011-01-14)
 - Fix missing modbus_flush() in unit tests
 - Fixes for OpenBSD by Barry Grumbine and Jason Oster
 
+
 libmodbus 2.9.2 (2010-12-05)
 ============================
 
@@ -42,6 +48,7 @@ libmodbus 2.9.2 (2010-12-05)
 - Fix GH-3. Remove inclusion of config.h in modbus.h
 - Correctly detect if we are cross-compiling for win32 by Kirill Smelkov.
 - Fix setting of the broadcast address
+
 
 libmodbus 2.9.1 (2010-08-16)
 ============================
@@ -62,6 +69,7 @@ libmodbus 2.9.1 (2010-08-16)
   Original patch by Sisyph (eric-paul).
 - Fix #591142 - Slave id check should be disabled in TCP connection
   Reported by aladdinwu.
+
 
 libmodbus 2.1.0 (2010-03-24)
 ============================
@@ -95,14 +103,17 @@ Other changes:
   http://github.com/stephane/libmodbus
 - Waf support has been removed
 
+
 libmodbus 2.0.3 (2009-03-22)
 ============================
+
 - Fix CRC error when a slave RTU send a response.
   Thanks to Justin Carroll to have reported and tested my patch.
 - Remove an assignment in compute_response_length()
 - Remove duplicate counter in read_io_status()
 - Fix #274511 reported by 'Kylesch'
   Invalid error check in modbus_init_listen_tcp
+
 
 libmodbus 2.0.2 (2008-08-10)
 ============================
@@ -118,14 +129,18 @@ libmodbus 2.0.2 (2008-08-10)
 - Test only msg_length_computed on change
 - Many comments and cleanups
 
+
 libmodbus 2.0.1 (2008-07-02)
 ============================
+
 - Include libmodbus.spec in the tarball
 - Fix #241006 reported by Jesus Hernandez Tapia
   modbus_check_response() crashes on an invalid exception code
 
+
 libmodbus 2.0.0 (2008-05-18)
 ============================
+
 - Slave API
   https://blueprints.launchpad.net/libmodbus/+spec/slave-api
 - No more glib dependency
@@ -161,40 +176,52 @@ libmodbus 2.0.0 (2008-05-18)
 - Fix #224496 reported by Todd Denniston
   It is easier to install on rpm based systems with a spec file.
 
+
 libmodbus 1.2.5 (2008-05-18)
 ============================
+
 - Fix #224485 reported by Todd Denniston
   libmodbus does not link with c++ code.
 
+
 libmodbus 1.2.4 (2008-03-14)
 ============================
+
 - Fix #191039 reported by Todd Denniston
   modbus.h is not installed at prefix.
 
+
 libmodbus 1.2.3 (2008-02-03)
 ============================
+
 - Fix #188189 reported by Chris Hellyar
   Compute_response_size() no entry for read_input_status()
 - Fix #181887 reported by Jesus Hernandez Tapia.
   Slave address in build_request_packet_tcp() is hardcoded as 0xFF.
 
+
 libmodbus 1.2.2 (2007-11-12)
 ============================
+
 - Fix #161989 reported by Konstantinos Togias
   Serial device paths more than 10 chars long (eg. /dev/ttyUSB0) don't
   fit to modbus_param_t -> device char[11] var.
 - Structure is also bit better 'packed' to conserve memory (see the
   trunk for a real enhancement).
 
+
 libmodbus 1.2.1 (2007-11-02)
 ============================
+
 - Fix #159443 reported by Stefan Bisanz
   Index of incoming data in force multiple coils function
 - Deleted useless code in check_crc16()
 - Untabify source code
 - Changed author's email to Stéphane Raimbault
 
+
 libmodbus 1.2.0 (2007-05-10)
 ============================
+
 - FIX Compilation GCC-4.0
 - Project name in autogen.sh
