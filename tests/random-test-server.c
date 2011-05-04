@@ -46,7 +46,7 @@ int main(void)
         uint8_t query[MODBUS_TCP_MAX_ADU_LENGTH];
         int rc;
 
-        rc = modbus_receive(ctx, -1, query);
+        rc = modbus_receive(ctx, query);
         if (rc != -1) {
             /* rc is the query size */
             modbus_reply(ctx, query, rc, mb_mapping);

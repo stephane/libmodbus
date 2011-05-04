@@ -413,19 +413,27 @@ static int receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     return ctx->backend->check_integrity(ctx, msg, msg_length);
 }
 
-/* Receive the request from a modbus master, requires the socket file descriptor
-   etablished with the master device in argument or -1 to use the internal one
-   of modbus_t.
-
-   The function shall return the request received and its byte length if
-   successul. Otherwise, it shall return -1 and errno is set. */
-int modbus_receive(modbus_t *ctx, int sockfd, uint8_t *req)
+/* Receive the request from a modbus master */
+int modbus_receive(modbus_t *ctx, uint8_t *req)
 {
-    if (sockfd != -1) {
-        ctx->s = sockfd;
-    }
-
     return receive_msg(ctx, req, MSG_INDICATION);
+}
+
+/* Requires a socket file descriptor with a connection etablished in
+   argument */
+int modbus_receive_from(modbus_t *ctx, int sockfd, uint8_t *req)
+{
+    int rc;
+    const int s_old = ctx->s;
+
+    ctx->s = sockfd;
+
+    rc = receive_msg(ctx, req, MSG_INDICATION);
+
+    /* Restore orignal socket */
+    ctx->s = s_old;
+
+    return rc;
 }
 
 /* Receives the confirmation.

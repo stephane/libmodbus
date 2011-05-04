@@ -115,7 +115,7 @@ int main(int argc, char*argv[])
     }
 
     for (;;) {
-        rc = modbus_receive(ctx, -1, query);
+        rc = modbus_receive(ctx, query);
         if (rc == -1) {
             /* Connection closed by the client or error */
             break;

@@ -10,7 +10,9 @@ libmodbus 2.9.4 (2011-05-XX)
   Raimbault
 - New functions to send and receive raw requests
 - Fix flush function of TCP backend on Windows
-
+- API changes for server/slave:
+    * modbus_receive has been renamed modbus_receive_from
+    * modbus_receive has been added to use the socket of the context.
 
 libmodbus 2.9.3 (2011-01-14)
 ============================

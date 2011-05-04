@@ -1,0 +1,40 @@
+modbus_receive(3)
+=================
+
+
+NAME
+----
+modbus_receive - receive a indication request
+
+
+SYNOPSIS
+--------
+*int modbus_receive(*modbus_t 'ctx', uint8_t *'req');*
+
+
+DESCRIPTION
+-----------
+The _modbus_receive()_ function shall receive an indication request from the
+socket of the context 'ctx'. This function is used by Modbus slave/server to
+receive and analyze indication request sent by the masters/clients.
+
+If you need to use another socket than the one defined in the context 'ctx', see
+the function linkmb:modbus_receive_from[3].
+
+
+RETURN VALUE
+------------
+The _modbus_receive()_ function shall store the indication request in 'req' and
+return the request length if sucessful. Otherwise it shall return -1 and set
+errno.
+
+
+SEE ALSO
+--------
+linkmb:modbus_receive_from[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

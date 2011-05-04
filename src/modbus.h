@@ -175,7 +175,9 @@ void modbus_mapping_free(modbus_mapping_t *mb_mapping);
 
 int modbus_send_raw_request(modbus_t *ctx, uint8_t *raw_req, int raw_req_length);
 
-int modbus_receive(modbus_t *ctx, int sockfd, uint8_t *req);
+int modbus_receive(modbus_t *ctx, uint8_t *req);
+int modbus_receive_from(modbus_t *ctx, int sockfd, uint8_t *req);
+
 int modbus_receive_confirmation(modbus_t *ctx, uint8_t *rsp);
 
 int modbus_reply(modbus_t *ctx, const uint8_t *req,
