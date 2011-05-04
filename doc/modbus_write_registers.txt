@@ -23,8 +23,8 @@ The function uses the Modbus function code 0x10 (preset multiple registers).
 
 RETURN VALUE
 ------------
-The _modbus_write_registers()_ function shall return the number of written registers
-if successful. Otherwise it shall return -1 and set errno.
+The _modbus_write_registers()_ function shall return the number of written
+registers if successful. Otherwise it shall return -1 and set errno.
 
 
 SEE ALSO

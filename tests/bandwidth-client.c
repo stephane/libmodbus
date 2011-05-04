@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
     rate = bytes / 1024 * G_MSEC_PER_SEC / (end - start);
     printf("* %.3f ms for %d bytes\n", elapsed, bytes);
     printf("* %d KiB/s\n", rate);
-    printf("\n");
+    printf("\n\n");
 
     printf("READ AND WRITE REGISTERS\n\n");
 

@@ -4,6 +4,7 @@ MAN3 = \
         modbus_flush.3 \
         modbus_free.3 \
         modbus_get_header_length.3 \
+        modbus_get_socket.3 \
         modbus_get_timeout_begin.3 \
         modbus_get_timeout_end.3 \
         modbus_new_rtu.3 \
@@ -14,12 +15,12 @@ MAN3 = \
         modbus_read_input_registers.3 \
         modbus_read_registers.3 \
         modbus_receive.3 \
-        modbus_receive_from.3 \
         modbus_receive_confirmation.3 \
         modbus_send_raw_request.3 \
         modbus_set_debug.3 \
         modbus_set_error_recovery.3 \
         modbus_set_slave.3 \
+        modbus_set_socket.3 \
         modbus_set_timeout_begin.3 \
         modbus_set_timeout_end.3 \
         modbus_strerror.3 \

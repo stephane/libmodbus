@@ -135,8 +135,9 @@ typedef struct {
 } modbus_mapping_t;
 
 int modbus_set_slave(modbus_t* ctx, int slave);
-
 int modbus_set_error_recovery(modbus_t *ctx, int enabled);
+void modbus_set_socket(modbus_t *ctx, int socket);
+int modbus_get_socket(modbus_t *ctx);
 
 void modbus_get_timeout_begin(modbus_t *ctx, struct timeval *timeout);
 void modbus_set_timeout_begin(modbus_t *ctx, const struct timeval *timeout);

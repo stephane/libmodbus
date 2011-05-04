@@ -118,7 +118,8 @@ int main(void)
                     /* An already connected master has sent a new query */
                     uint8_t query[MODBUS_TCP_MAX_ADU_LENGTH];
 
-                    rc = modbus_receive_from(ctx, master_socket, query);
+                    modbus_set_socket(ctx, master_socket);
+                    rc = modbus_receive(ctx, query);
                     if (rc != -1) {
                         modbus_reply(ctx, query, rc, mb_mapping);
                     } else {

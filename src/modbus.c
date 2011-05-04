@@ -417,23 +417,6 @@ int modbus_receive(modbus_t *ctx, uint8_t *req)
     return receive_msg(ctx, req, MSG_INDICATION);
 }
 
-/* Requires a socket file descriptor with a connection etablished in
-   argument */
-int modbus_receive_from(modbus_t *ctx, int sockfd, uint8_t *req)
-{
-    int rc;
-    const int s_old = ctx->s;
-
-    ctx->s = sockfd;
-
-    rc = receive_msg(ctx, req, MSG_INDICATION);
-
-    /* Restore orignal socket */
-    ctx->s = s_old;
-
-    return rc;
-}
-
 /* Receives the confirmation.
 
    The function shall store the read response in rsp and return the number of
@@ -1351,6 +1334,16 @@ int modbus_set_error_recovery(modbus_t *ctx, int enabled)
     }
 
     return 0;
+}
+
+void modbus_set_socket(modbus_t *ctx, int socket)
+{
+    ctx->s = socket;
+}
+
+int modbus_get_socket(modbus_t *ctx)
+{
+    return ctx->s;
 }
 
 /* Get the timeout of begin of message */

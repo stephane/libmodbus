@@ -1,0 +1,34 @@
+modbus_get_socket(3)
+====================
+
+
+NAME
+----
+modbus_get_socket - get the current socket of the context
+
+
+SYNOPSIS
+--------
+*int modbus_get_socket(modbus_t *'ctx')*
+
+
+DESCRIPTION
+-----------
+The _modbus_get_socket()_ function shall return the current socket or file
+descriptor of the libmodbus context.
+
+
+RETURN VALUE
+------------
+The current socket or file descriptor of the context.
+
+
+SEE ALSO
+--------
+linkmb:modbus_set_socket[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

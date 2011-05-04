@@ -1,0 +1,56 @@
+modbus_set_socket(3)
+====================
+
+
+NAME
+----
+modbus_set_socket - set socket of the context
+
+
+SYNOPSIS
+--------
+*void modbus_set_socket(modbus_t *'ctx', int 'socket')*
+
+
+DESCRIPTION
+-----------
+The _modbus_set_socket()_ function shall set the socket or file descriptor in
+the libmodbus context. This function is useful for managing multiple client
+connections to the same server.
+
+
+RETURN VALUE
+------------
+There is no return values.
+
+
+EXAMPLE
+-------
+[source,c]
+-------------------
+ctx = modbus_new_tcp("127.0.0.1", 1502);
+server_socket = modbus_tcp_listen(ctx, NB_CONNECTION);
+
+FD_ZERO(&rdset);
+FD_SET(server_socket, &rdset);
+
+/* .... */
+
+if (FD_ISSET(master_socket, &rdset)) {
+    modbus_set_socket(ctx, master_socket);
+    rc = modbus_receive(ctx, query);
+    if (rc != -1) {
+        modbus_reply(ctx, query, rc, mb_mapping);
+    }
+}
+-------------------
+
+SEE ALSO
+--------
+linkmb:modbus_get_socket[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

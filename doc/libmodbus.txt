@@ -102,6 +102,8 @@ Context setters and getters::
     linkmb:modbus_set_debug[3]
     linkmb:modbus_set_error_recovery[3]
     linkmb:modbus_set_slave[3]
+    linkmb:modbus_set_socket[3]
+    linkmb:modbus_get_socket[3]
     linkmb:modbus_get_timeout_begin[3]
     linkmb:modbus_set_timeout_begin[3]
     linkmb:modbus_get_timeout_end[3]
@@ -159,7 +161,6 @@ receive and reply:
 
 Receive::
      linkmb:modbus_receive[3]
-     linkmb:modbus_receive_from[3]
 
 Reply::
      linkmb:modbus_reply[3]
