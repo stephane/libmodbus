@@ -54,9 +54,13 @@ Modbus RTU message must be transmitted continuously without inter-character
 hesitations (extract from Wikipedia, Modbus, http://en.wikipedia.org/wiki/Modbus
 (as of Mar. 13, 2011, 20:51 GMT).
 
+The Modbus RTU framing calls a slave, a device/service which handle Modbus
+requests, and a master, a client which send requests. The communication is
+always initiated by the master.
+
 Many Modbus devices can be connected together on the same physical link so you
 need to define which slave is concerned by the message with
-linkmb:modbus_set_slave[3]. If you're running a slave (server) the slave number
+linkmb:modbus_set_slave[3]. If you're running a slave, the slave number
 is used to filter messages.
 
 Create a Modbus RTU context::
@@ -124,10 +128,11 @@ Flush a connection::
     linkmb:modbus_flush[3]
 
 
-Data
-~~~~
+Client
+~~~~~~
 The Modbus protocol defines different data types and functions to read and write
-them from/to remote devices.
+them from/to remote devices. The following functions are used by the clients to send
+Modbus requests:
 
 Read data::
      linkmb:modbus_read_bits[3]
@@ -140,6 +145,24 @@ Write data::
      linkmb:modbus_write_register[3]
      linkmb:modbus_write_bits[3]
      linkmb:modbus_write_registers[3]
+
+Raw requests::
+    linkmb:modbus_send_raw_request[3]
+    linkmb:modbus_receive_confirmation[3]
+
+
+Server
+~~~~~~
+The server is waiting for request from clients and must answer when it is
+concerned by the request. The libmodbus offers the following functions to
+receive and reply:
+
+Receive::
+     linkmb:modbus_receive[3]
+     linkmb:modbus_receive_from[3]
+
+Reply::
+     linkmb:modbus_reply[3]
 
 
 ERROR HANDLING
