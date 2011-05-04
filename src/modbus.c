@@ -107,9 +107,7 @@ int modbus_flush(modbus_t *ctx)
 static unsigned int compute_response_length_from_request(modbus_t *ctx, uint8_t *req)
 {
     int length;
-    int offset;
-
-    offset = ctx->backend->header_length;
+    const int offset = ctx->backend->header_length;
 
     switch (req[offset]) {
     case _FC_READ_COILS:
@@ -450,7 +448,7 @@ int modbus_receive_confirmation(modbus_t *ctx, uint8_t *rsp)
 }
 
 static int check_confirmation(modbus_t *ctx, uint8_t *req,
-                              uint8_t *rsp, uint8_t rsp_length)
+                              uint8_t *rsp, int rsp_length)
 {
     int rc;
     int rsp_length_computed;
