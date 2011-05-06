@@ -139,11 +139,11 @@ int modbus_set_error_recovery(modbus_t *ctx, int enabled);
 void modbus_set_socket(modbus_t *ctx, int socket);
 int modbus_get_socket(modbus_t *ctx);
 
-void modbus_get_timeout_begin(modbus_t *ctx, struct timeval *timeout);
-void modbus_set_timeout_begin(modbus_t *ctx, const struct timeval *timeout);
+void modbus_get_response_timeout(modbus_t *ctx, struct timeval *timeout);
+void modbus_set_response_timeout(modbus_t *ctx, const struct timeval *timeout);
 
-void modbus_get_timeout_end(modbus_t *ctx, struct timeval *timeout);
-void modbus_set_timeout_end(modbus_t *ctx, const struct timeval *timeout);
+void modbus_get_byte_timeout(modbus_t *ctx, struct timeval *timeout);
+void modbus_set_byte_timeout(modbus_t *ctx, const struct timeval *timeout);
 
 int modbus_get_header_length(modbus_t *ctx);
 

@@ -331,8 +331,8 @@ static int receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
         tv.tv_sec = 60;
         tv.tv_usec = 0;
     } else {
-        tv.tv_sec = ctx->timeout_begin.tv_sec;
-        tv.tv_usec = ctx->timeout_begin.tv_usec;
+        tv.tv_sec = ctx->response_timeout.tv_sec;
+        tv.tv_usec = ctx->response_timeout.tv_usec;
     }
 
     while (length_to_read != 0) {
@@ -398,10 +398,11 @@ static int receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
         }
 
         if (length_to_read > 0) {
-            /* If no character at the buffer wait
-               TIME_OUT_END_OF_MESSAGE before raising an error. */
-            tv.tv_sec = ctx->timeout_end.tv_sec;
-            tv.tv_usec = ctx->timeout_end.tv_usec;
+            /* If there is no character in the buffer, the allowed timeout
+               interval between two consecutive bytes is defined by
+               byte_timeout */
+            tv.tv_sec = ctx->byte_timeout.tv_sec;
+            tv.tv_usec = ctx->byte_timeout.tv_usec;
         }
     }
 
@@ -1311,11 +1312,11 @@ void _modbus_init_common(modbus_t *ctx)
     ctx->debug = FALSE;
     ctx->error_recovery = FALSE;
 
-    ctx->timeout_begin.tv_sec = 0;
-    ctx->timeout_begin.tv_usec = _TIME_OUT_BEGIN_OF_MESSAGE;
+    ctx->response_timeout.tv_sec = 0;
+    ctx->response_timeout.tv_usec = _RESPONSE_TIMEOUT;
 
-    ctx->timeout_end.tv_sec = 0;
-    ctx->timeout_end.tv_usec = _TIME_OUT_END_OF_MESSAGE;
+    ctx->byte_timeout.tv_sec = 0;
+    ctx->byte_timeout.tv_usec = _BYTE_TIMEOUT;
 }
 
 /* Define the slave number */
@@ -1346,28 +1347,26 @@ int modbus_get_socket(modbus_t *ctx)
     return ctx->s;
 }
 
-/* Get the timeout of begin of message */
-void modbus_get_timeout_begin(modbus_t *ctx, struct timeval *timeout)
+/* Get the timeout interval used to wait for a response */
+void modbus_get_response_timeout(modbus_t *ctx, struct timeval *timeout)
 {
-    *timeout = ctx->timeout_begin;
+    *timeout = ctx->response_timeout;
 }
 
-/* Set timeout when waiting the beginning of a message */
-void modbus_set_timeout_begin(modbus_t *ctx, const struct timeval *timeout)
+void modbus_set_response_timeout(modbus_t *ctx, const struct timeval *timeout)
 {
-    ctx->timeout_begin = *timeout;
+    ctx->response_timeout = *timeout;
 }
 
-/* Get the timeout of end of message */
-void modbus_get_timeout_end(modbus_t *ctx, struct timeval *timeout)
+/* Get the timeout interval between two consecutive bytes of a message */
+void modbus_get_byte_timeout(modbus_t *ctx, struct timeval *timeout)
 {
-    *timeout = ctx->timeout_end;
+    *timeout = ctx->byte_timeout;
 }
 
-/* Set timeout when waiting the end of a message */
-void modbus_set_timeout_end(modbus_t *ctx, const struct timeval *timeout)
+void modbus_set_byte_timeout(modbus_t *ctx, const struct timeval *timeout)
 {
-    ctx->timeout_end = *timeout;
+    ctx->byte_timeout = *timeout;
 }
 
 int modbus_get_header_length(modbus_t *ctx)

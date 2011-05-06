@@ -1,0 +1,47 @@
+modbus_get_byte_timeout(3)
+==========================
+
+
+NAME
+----
+modbus_get_byte_timeout - get timeout between bytes
+
+
+SYNOPSIS
+--------
+*void modbus_get_byte_timeout(*modbus_t 'ctx', struct timeval *'timeout');*
+
+
+DESCRIPTION
+-----------
+The _modbus_get_byte_timeout()_ function shall store the timeout interval
+between two consecutive bytes of the same message in the 'timeout' argument.
+
+
+RETURN VALUE
+------------
+There is no return values.
+
+
+EXAMPLE
+-------
+[source,c]
+-------------------
+struct timeval byte_timeout;
+
+/* Save original timeout */
+modbus_get_byte_timeout(ctx, &byte_timeout);
+-------------------
+
+
+SEE ALSO
+--------
+linkmb:modbus_get_response_timeout[3]
+linkmb:modbus_set_response_timeout[3]
+linkmb:modbus_set_byte_timeout[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

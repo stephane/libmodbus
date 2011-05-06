@@ -1,0 +1,53 @@
+modbus_get_response_timeout(3)
+==============================
+
+
+NAME
+----
+modbus_get_response_timeout - get timeout for response
+
+
+SYNOPSIS
+--------
+*void modbus_get_response_timeout(*modbus_t 'ctx', struct timeval *'timeout');*
+
+
+DESCRIPTION
+-----------
+The _modbus_get_response_timeout()_ function shall store the timeout interval
+used to wait for a response in the 'timeout' argument.
+
+
+RETURN VALUE
+------------
+There is no return values.
+
+
+EXAMPLE
+-------
+[source,c]
+-------------------
+struct timeval old_response_timeout;
+struct timeval response_timeout;
+
+/* Save original timeout */
+modbus_get_response_timeout(ctx, &old_response_timeout);
+
+/* Define a new and too short timeout! */
+response_timeout.tv_sec = 0;
+response_timeout.tv_usec = 0;
+modbus_set_response_timeout(ctx, &response_timeout);
+-------------------
+
+
+SEE ALSO
+--------
+linkmb:modbus_set_response_timeout[3]
+linkmb:modbus_get_byte_timeout[3]
+linkmb:modbus_set_byte_timeout[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

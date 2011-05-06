@@ -42,8 +42,8 @@ int main(int argc, char *argv[])
     int nb_points;
     int rc;
     float real;
-    struct timeval timeout_begin_old;
-    struct timeval timeout_begin_new;
+    struct timeval old_response_timeout;
+    struct timeval response_timeout;
     int use_backend;
 
     if (argc > 1) {
@@ -549,12 +549,12 @@ int main(int argc, char *argv[])
     }
 
     /* Save original timeout */
-    modbus_get_timeout_begin(ctx, &timeout_begin_old);
+    modbus_get_response_timeout(ctx, &old_response_timeout);
 
     /* Define a new and too short timeout */
-    timeout_begin_new.tv_sec = 0;
-    timeout_begin_new.tv_usec = 0;
-    modbus_set_timeout_begin(ctx, &timeout_begin_new);
+    response_timeout.tv_sec = 0;
+    response_timeout.tv_usec = 0;
+    modbus_set_response_timeout(ctx, &response_timeout);
 
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
                                UT_REGISTERS_NB, tab_rp_registers);
@@ -567,7 +567,7 @@ int main(int argc, char *argv[])
     }
 
     /* Restore original timeout */
-    modbus_set_timeout_begin(ctx, &timeout_begin_old);
+    modbus_set_response_timeout(ctx, &old_response_timeout);
 
     /* Wait for data before flushing */
     usleep(250000);

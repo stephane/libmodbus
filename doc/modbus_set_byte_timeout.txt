@@ -1,0 +1,37 @@
+modbus_set_byte_timeout(3)
+==========================
+
+
+NAME
+----
+modbus_set_byte_timeout - set timeout between bytes
+
+
+SYNOPSIS
+--------
+*void modbus_set_byte_timeout(*modbus_t 'ctx', struct timeval *'timeout');*
+
+
+DESCRIPTION
+-----------
+The _modbus_set_byte_timeout()_ function shall set the timeout interval between
+two consecutive bytes of the same message. If the delay between is longer than
+the given timeout, an error will be raised.
+
+
+RETURN VALUE
+------------
+There is no return values.
+
+
+SEE ALSO
+--------
+linkmb:modbus_get_byte_timeout[3]
+linkmb:modbus_get_response_timeout[3]
+linkmb:modbus_set_response_timeout[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>
