@@ -193,10 +193,18 @@ static int win32_ser_select(struct win32_ser *ws, int max_len,
         return 1;
     }
 
-    /* Setup timeouts like select() would do */
-    msec = tv->tv_sec * 1000 + tv->tv_usec / 1000;
-    if (msec < 1)
-        msec = 1;
+    /* Setup timeouts like select() would do.
+       FIXME Please someone on Windows can look at this?
+       Does it possible to use WaitCommEvent?
+       When tv is NULL, MAXDWORD isn't infinite!
+     */
+    if (tv == NULL) {
+        msec = MAXDWORD;
+    } else {
+        msec = tv->tv_sec * 1000 + tv->tv_usec / 1000;
+        if (msec < 1)
+            msec = 1;
+    }
 
     comm_to.ReadIntervalTimeout = msec;
     comm_to.ReadTotalTimeoutMultiplier = 0;

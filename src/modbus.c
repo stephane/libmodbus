@@ -302,6 +302,7 @@ static int receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     int rc;
     fd_set rfds;
     struct timeval tv;
+    struct timeval *p_tv;
     int length_to_read;
     int msg_length = 0;
     _step_t step;
@@ -327,16 +328,15 @@ static int receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     if (msg_type == MSG_INDICATION) {
         /* Wait for a message, we don't know when the message will be
          * received */
-        /* FIXME Not infinite */
-        tv.tv_sec = 60;
-        tv.tv_usec = 0;
+        p_tv = NULL;
     } else {
         tv.tv_sec = ctx->response_timeout.tv_sec;
         tv.tv_usec = ctx->response_timeout.tv_usec;
+        p_tv = &tv;
     }
 
     while (length_to_read != 0) {
-        rc = ctx->backend->select(ctx, &rfds, &tv, length_to_read);
+        rc = ctx->backend->select(ctx, &rfds, p_tv, length_to_read);
         if (rc == -1) {
             return -1;
         }
@@ -403,6 +403,7 @@ static int receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
                byte_timeout */
             tv.tv_sec = ctx->byte_timeout.tv_sec;
             tv.tv_usec = ctx->byte_timeout.tv_usec;
+            p_tv = &tv;
         }
     }
 
