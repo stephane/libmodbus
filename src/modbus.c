@@ -250,7 +250,8 @@ static uint8_t compute_meta_length_after_function(int function,
 }
 
 /* Computes the length to read after the meta information (address, count, etc) */
-static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
+static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
+                                          msg_type_t msg_type)
 {
     int function = msg[ctx->backend->header_length];
     int length;

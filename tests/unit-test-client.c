@@ -300,7 +300,8 @@ int main(int argc, char *argv[])
 
     /** INPUT REGISTERS **/
     rc = modbus_read_input_registers(ctx, UT_INPUT_REGISTERS_ADDRESS,
-                                     UT_INPUT_REGISTERS_NB, tab_rp_registers);
+                                     UT_INPUT_REGISTERS_NB,
+                                     tab_rp_registers);
     printf("1/1 modbus_read_input_registers: ");
     if (rc != UT_INPUT_REGISTERS_NB) {
         printf("FAILED (nb points %d)\n", rc);
@@ -377,7 +378,8 @@ int main(int argc, char *argv[])
     }
 
     rc = modbus_read_input_registers(ctx, UT_INPUT_REGISTERS_ADDRESS,
-                                     UT_INPUT_REGISTERS_NB + 1, tab_rp_registers);
+                                     UT_INPUT_REGISTERS_NB + 1,
+                                     tab_rp_registers);
     printf("* modbus_read_input_registers: ");
     if (rc == -1 && errno == EMBXILADD)
         printf("OK\n");
@@ -484,12 +486,17 @@ int main(int argc, char *argv[])
 
     /** SLAVE REPLY **/
     printf("\nTEST SLAVE REPLY:\n");
-    modbus_set_slave(ctx, 18);
+    modbus_set_slave(ctx, INVALID_SERVER_ID);
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
                                UT_REGISTERS_NB, tab_rp_registers);
     if (use_backend == RTU) {
+        const int RAW_REQ_LENGTH = 6;
+        uint8_t raw_req[] = { INVALID_SERVER_ID, 0x03, 0x00, 0x01, 0xFF, 0xFF };
+        int req_length;
+        uint8_t rsp[MODBUS_TCP_MAX_ADU_LENGTH];
+
         /* No response in RTU mode */
-        printf("1/4 No response from slave %d: ", 18);
+        printf("1/4-A No response from slave %d: ", INVALID_SERVER_ID);
 
         if (rc == -1 && errno == ETIMEDOUT) {
             printf("OK\n");
@@ -497,6 +504,23 @@ int main(int argc, char *argv[])
             printf("FAILED\n");
             goto close;
         }
+
+        /* Send an invalid query with a wrong slave ID */
+        req_length = modbus_send_raw_request(
+            ctx, raw_req,
+            RAW_REQ_LENGTH * sizeof(uint8_t));
+        rc = modbus_receive_confirmation(ctx, rsp);
+
+        printf("1/4-B No response from slave %d with invalid request: ",
+               INVALID_SERVER_ID);
+
+        if (rc == -1 && errno == ETIMEDOUT) {
+            printf("OK\n");
+        } else {
+            printf("FAILED (%d)\n", rc);
+            goto close;
+        }
+
     } else {
         /* Response in TCP mode */
         printf("1/4 Response from slave %d: ", 18);
