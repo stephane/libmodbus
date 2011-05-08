@@ -21,7 +21,7 @@ The _modbus_new_rtu()_ function shall allocate and initialize a modbus_t
 structure to communicate in RTU mode on a serial line.
 
 The _device_ argument specifies the name of the serial port handled by the OS,
-eg. '/dev/ttyS0' or '/dev/ttyUSB0'. On Windons, it's necessary to prepend COM
+eg. '/dev/ttyS0' or '/dev/ttyUSB0'. On Windows, it's necessary to prepend COM
 name with '\\.\' for COM number greater than 9, eg. '\\\\.\\COM10'. See
 http://msdn.microsoft.com/en-us/library/aa365247(v=vs.85).aspx for details
 
