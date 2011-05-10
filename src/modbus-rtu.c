@@ -812,6 +812,7 @@ const modbus_backend_t _modbus_rtu_backend = {
     _modbus_rtu_send,
     _modbus_rtu_recv,
     _modbus_rtu_check_integrity,
+    NULL,
     _modbus_rtu_connect,
     _modbus_rtu_close,
     _modbus_rtu_flush,

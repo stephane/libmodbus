@@ -90,6 +90,8 @@ typedef struct _modbus_backend {
     ssize_t (*recv) (modbus_t *ctx, uint8_t *rsp, int rsp_length);
     int (*check_integrity) (modbus_t *ctx, uint8_t *msg,
                             const int msg_length);
+    int (*pre_check_confirmation) (modbus_t *ctx, const uint8_t *req,
+                                   const uint8_t *rsp, int rsp_length);
     int (*connect) (modbus_t *ctx);
     void (*close) (modbus_t *ctx);
     int (*flush) (modbus_t *ctx);

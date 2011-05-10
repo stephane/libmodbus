@@ -190,6 +190,22 @@ int _modbus_tcp_check_integrity(modbus_t *ctx, uint8_t *msg, const int msg_lengt
     return msg_length;
 }
 
+int _modbus_tcp_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
+                                       const uint8_t *rsp, int rsp_length)
+{
+    /* Check TID */
+    if (req[0] != rsp[0] || req[1] != rsp[1]) {
+        if (ctx->debug) {
+            fprintf(stderr, "Invalid TID received 0x%X (not 0x%X)\n",
+                    (rsp[0] << 8) + rsp[1], (req[0] << 8) + req[1]);
+        }
+        errno = EMBBADDATA;
+        return -1;
+    } else {
+        return 0;
+    }
+}
+
 static int _modbus_tcp_set_ipv4_options(int s)
 {
     int rc;
@@ -352,7 +368,7 @@ int _modbus_tcp_flush(modbus_t *ctx)
         }
 #endif
         if (ctx->debug && rc != -1) {
-            printf("\n%d bytes flushed\n", rc);
+            printf("%d bytes flushed\n", rc);
         }
     } while (rc == MODBUS_TCP_MAX_ADU_LENGTH);
 
@@ -588,6 +604,7 @@ const modbus_backend_t _modbus_tcp_backend = {
     _modbus_tcp_send,
     _modbus_tcp_recv,
     _modbus_tcp_check_integrity,
+    _modbus_tcp_pre_check_confirmation,
     _modbus_tcp_connect,
     _modbus_tcp_close,
     _modbus_tcp_flush,
@@ -609,6 +626,7 @@ const modbus_backend_t _modbus_tcp_pi_backend = {
     _modbus_tcp_send,
     _modbus_tcp_recv,
     _modbus_tcp_check_integrity,
+    _modbus_tcp_pre_check_confirmation,
     _modbus_tcp_pi_connect,
     _modbus_tcp_close,
     _modbus_tcp_flush,

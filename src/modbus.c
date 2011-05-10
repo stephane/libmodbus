@@ -440,6 +440,14 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
     int rsp_length_computed;
     const int offset = ctx->backend->header_length;
 
+
+    if (ctx->backend->pre_check_confirmation) {
+        rc = ctx->backend->pre_check_confirmation(ctx, req, rsp, rsp_length);
+        if (rc == -1) {
+            return -1;
+        }
+    }
+
     rsp_length_computed = compute_response_length_from_request(ctx, req);
 
     /* Check length */
