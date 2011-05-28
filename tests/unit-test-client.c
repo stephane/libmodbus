@@ -38,7 +38,6 @@ int main(int argc, char *argv[])
     modbus_t *ctx;
     int i;
     uint8_t value;
-    int address;
     int nb_points;
     int rc;
     float real;
@@ -151,7 +150,6 @@ int main(int argc, char *argv[])
     }
 
     i = 0;
-    address = UT_BITS_ADDRESS;
     nb_points = UT_BITS_NB;
     while (nb_points > 0) {
         int nb_bits = (nb_points > 8) ? 8 : nb_points;
@@ -179,7 +177,6 @@ int main(int argc, char *argv[])
     }
 
     i = 0;
-    address = UT_INPUT_BITS_ADDRESS;
     nb_points = UT_INPUT_BITS_NB;
     while (nb_points > 0) {
         int nb_bits = (nb_points > 8) ? 8 : nb_points;
@@ -492,7 +489,6 @@ int main(int argc, char *argv[])
     if (use_backend == RTU) {
         const int RAW_REQ_LENGTH = 6;
         uint8_t raw_req[] = { INVALID_SERVER_ID, 0x03, 0x00, 0x01, 0xFF, 0xFF };
-        int req_length;
         uint8_t rsp[MODBUS_TCP_MAX_ADU_LENGTH];
 
         /* No response in RTU mode */
@@ -506,9 +502,8 @@ int main(int argc, char *argv[])
         }
 
         /* Send an invalid query with a wrong slave ID */
-        req_length = modbus_send_raw_request(
-            ctx, raw_req,
-            RAW_REQ_LENGTH * sizeof(uint8_t));
+        modbus_send_raw_request(ctx, raw_req,
+                                RAW_REQ_LENGTH * sizeof(uint8_t));
         rc = modbus_receive_confirmation(ctx, rsp);
 
         printf("1/4-B No response from slave %d with invalid request: ",
