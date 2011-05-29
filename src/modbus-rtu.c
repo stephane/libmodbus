@@ -30,6 +30,11 @@
 #include "modbus-rtu.h"
 #include "modbus-rtu-private.h"
 
+#if defined(linux)
+#include <sys/ioctl.h>
+#include <linux/serial.h>
+#endif
+
 /* Table of CRC values for high-order byte */
 static const uint8_t table_crc_hi[] = {
     0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0,
@@ -692,10 +697,54 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     if (tcsetattr(ctx->s, TCSANOW, &tios) < 0) {
         return -1;
     }
-#endif
 
+    /* The RS232 mode has been set by default */
+    ctx_rtu->serial_mode = MODBUS_RTU_RS232;
+#endif
     return 0;
 }
+
+#if defined(linux)
+int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode)
+{
+    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
+        modbus_rtu_t *ctx_rtu = ctx->backend_data;
+        struct serial_rs485 rs485conf;
+        memset(&rs485conf, 0x0, sizeof(struct serial_rs485));
+
+        if (mode == MODBUS_RTU_RS485) {
+            rs485conf.flags = SER_RS485_ENABLED;
+            if (ioctl(ctx->s, TIOCSRS485, &rs485conf) < 0) {
+                return -1;
+            }
+
+            ctx_rtu->serial_mode |= MODBUS_RTU_RS485;
+            return 0;
+        } else if (mode == MODBUS_RTU_RS232) {
+            if (ioctl(ctx->s, TIOCSRS485, &rs485conf) < 0) {
+                return -1;
+            }
+
+            ctx_rtu->serial_mode = MODBUS_RTU_RS232;
+            return 0;
+        }
+    }
+
+    /* Wrong backend and invalid mode specified */
+    errno = EINVAL;
+    return -1;
+}
+
+int modbus_rtu_get_serial_mode(modbus_t *ctx) {
+    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
+        modbus_rtu_t *ctx_rtu = ctx->backend_data;
+        return ctx_rtu->serial_mode;
+    } else {
+        errno = EINVAL;
+        return -1;
+    }
+}
+#endif
 
 void _modbus_rtu_close(modbus_t *ctx)
 {

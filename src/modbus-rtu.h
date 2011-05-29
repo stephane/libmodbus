@@ -28,4 +28,13 @@
 modbus_t* modbus_new_rtu(const char *device, int baud, char parity,
                          int data_bit, int stop_bit);
 
+#if defined(linux)
+/* On Linux, we can tell the kernel for RS485 communication */
+#define MODBUS_RTU_RS232 0
+#define MODBUS_RTU_RS485 1
+
+int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode);
+int modbus_rtu_get_serial_mode(modbus_t *ctx);
+#endif
+
 #endif /* _MODBUS_RTU_H_ */

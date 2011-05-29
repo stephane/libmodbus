@@ -18,7 +18,8 @@ libmodbus 2.9.4 (2011-05-XX)
     * modbus_set_timeout_begin -> modbus_set_response_timeout
     * modbus_get_timeout_end -> modbus_get_byte_timeout
     * modbus_set_timeout_end -> modbus_set_byte_timeout
-
+- New functions modbus_set/get_serial_mode by Manfred Gruber and Stéphane
+  Raimbault for RS485 communications
 
 libmodbus 2.9.3 (2011-01-14)
 ============================

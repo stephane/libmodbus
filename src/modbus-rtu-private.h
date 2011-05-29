@@ -74,6 +74,7 @@ typedef struct _modbus_rtu {
 #else
     /* Save old termios settings */
     struct termios old_tios;
+    int serial_mode;
 #endif
 } modbus_rtu_t;
 

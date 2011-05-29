@@ -77,6 +77,7 @@ AC_CHECK_HEADERS([ \
     netinet/tcp.h \
     arpa/inet.h \
     netdb.h \
+    linux/serial.h \
 ])
 
 # Check whether to build docs / install man pages
