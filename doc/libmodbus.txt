@@ -66,6 +66,12 @@ is used to filter messages.
 Create a Modbus RTU context::
     linkmb:modbus_new_rtu[3]
 
+
+Set the serial mode::
+    linkmb:modbus_rtu_get_serial_mode[3]
+    linkmb:modbus_rtu_set_serial_mode[3]
+
+
 TCP (IPv4) Context
 ^^^^^^^^^^^^^^^^^^
 The TCP backend implements a Modbus variant used for communications over
