@@ -13,7 +13,7 @@
 #
 m4_define([libmodbus_version_major], [2])
 m4_define([libmodbus_version_minor], [9])
-m4_define([libmodbus_version_micro], [3])
+m4_define([libmodbus_version_micro], [4])
 
 m4_define([libmodbus_release_status],
             [m4_if(m4_eval(libmodbus_version_minor % 2), [1], [snapshot],
@@ -41,7 +41,8 @@ AC_SUBST(LIBMODBUS_VERSION_MICRO)
 AC_SUBST(LIBMODBUS_VERSION)
 
 # ABI version
-LIBMODBUS_LD_CURRENT=4
+# http://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
+LIBMODBUS_LD_CURRENT=5
 LIBMODBUS_LD_REVISION=0
 LIBMODBUS_LD_AGE=0
 LIBMODBUS_LT_VERSION_INFO=$LIBMODBUS_LD_CURRENT:$LIBMODBUS_LD_REVISION:$LIBMODBUS_LD_AGE

@@ -1,4 +1,4 @@
-libmodbus 2.9.4 (2011-06-XX)
+libmodbus 2.9.4 (2011-06-05)
 ============================
 
 - IPv6 support
@@ -10,7 +10,7 @@ libmodbus 2.9.4 (2011-06-XX)
   Raimbault
 - Avoid an iteration in flush function
 - New functions to send and receive raw requests (modbus_send_raw_request,
-  odbus_receive_confirmation)
+  modbus_receive_confirmation)
 - Fix flush function of TCP backend on Windows
 - API changes for server/slave:
     * modbus_receive doesn't take socket/fd argument anymore

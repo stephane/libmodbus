@@ -18,4 +18,5 @@ clean::
 	rm -f missing
 	rm -f src/Makefile.in
 	rm -f tests/Makefile.in
+        rm -f doc/Makefile.in
 

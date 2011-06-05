@@ -1,15 +1,15 @@
 Summary: A Modbus library written in C
 Name: libmodbus
-Version: 2.9.3
+Version: 2.9.4
 Release: 1%{?dist%}
 License: LGPL V3+
 Packager: Stéphane Raimbault
 URL: http://www.libmodbus.org
 Group: Applications/System
-Provides: libmodbus=2.9.3
+Provides: libmodbus=2.9.4
 Requires: ,/bin/sh
 
-Source0: libmodbus-2.9.3.tar.gz
+Source0: libmodbus-2.9.4.tar.gz
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: autoconf, automake
@@ -47,9 +47,9 @@ rm -rf %{buildroot}
 %attr(0755,root,root) %dir %{_libdir}/pkgconfig
 %attr(0755,root,root) %dir %{_includedir}
 %attr(0755,root,root) %dir %{_includedir}/modbus/
-%dir %{_libdir}/libmodbus.so.4
+%dir %{_libdir}/libmodbus.so.5
 %dir %{_libdir}/libmodbus.so
-%attr(0755,root,root) %{_libdir}/libmodbus.so.4.0.0
+%attr(0755,root,root) %{_libdir}/libmodbus.so.5.0.0
 %attr(0755,root,root) %{_libdir}/libmodbus.la
 %attr(0644,root,root) %{_libdir}/pkgconfig/libmodbus.pc
 %attr(0644,root,root) %{_includedir}/modbus/modbus.h
@@ -60,6 +60,9 @@ rm -rf %{buildroot}
 
 
 %changelog
+* Sun Jun 5 2011 Stéphane Raimbault <stephane.raimbault@gmail.com> - 2.9.4-1
+- new upstream release
+
 * Mon Jan 10 2011 Stéphane Raimbault <stephane.raimbault@gmail.com> - 2.9.3-1
 - new upstream release
 
