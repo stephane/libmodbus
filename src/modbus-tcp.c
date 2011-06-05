@@ -342,6 +342,7 @@ void _modbus_tcp_close(modbus_t *ctx)
 int _modbus_tcp_flush(modbus_t *ctx)
 {
     int rc;
+    int rc_sum = 0;
 
     do {
         /* Extract the garbage from the socket */
@@ -367,12 +368,12 @@ int _modbus_tcp_flush(modbus_t *ctx)
             rc = recv(ctx->s, devnull, MODBUS_TCP_MAX_ADU_LENGTH, 0);
         }
 #endif
-        if (ctx->debug && rc != -1) {
-            printf("%d bytes flushed\n", rc);
+        if (rc > 0) {
+            rc_sum += rc;
         }
     } while (rc == MODBUS_TCP_MAX_ADU_LENGTH);
 
-    return rc;
+    return rc_sum;
 }
 
 /* Listens for any request from one or many modbus masters in TCP */
@@ -565,21 +566,12 @@ int _modbus_tcp_select(modbus_t *ctx, fd_set *rfds, struct timeval *tv, int leng
             FD_ZERO(rfds);
             FD_SET(ctx->s, rfds);
         } else {
-            _error_print(ctx, "select");
-            if (ctx->error_recovery && (errno == EBADF)) {
-                modbus_close(ctx);
-                modbus_connect(ctx);
-                errno = EBADF;
-                return -1;
-            } else {
-                return -1;
-            }
+            return -1;
         }
     }
 
     if (s_rc == 0) {
         errno = ETIMEDOUT;
-        _error_print(ctx, "select");
         return -1;
     }
 

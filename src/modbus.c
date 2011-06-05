@@ -22,11 +22,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#ifndef _MSC_VER
-#include <unistd.h>
-#endif
 #include <errno.h>
 #include <limits.h>
+#include <time.h>
 
 #include <config.h>
 
@@ -98,9 +96,31 @@ void _error_print(modbus_t *ctx, const char *context)
     }
 }
 
+int _sleep_and_flush(modbus_t *ctx)
+{
+#ifdef _WIN32
+    /* usleep doesn't exist on Windows */
+    Sleep((ctx->response_timeout.tv_sec * 1000) +
+          (ctx->response_timeout.tv_usec / 1000));
+#else
+    /* usleep source code */
+    struct timespec request, remaining;
+    request.tv_sec = ctx->response_timeout.tv_sec;
+    request.tv_nsec = ((long int)ctx->response_timeout.tv_usec % 1000000)
+        * 1000;
+    while (nanosleep(&request, &remaining) == -1 && errno == EINTR)
+        request = remaining;
+#endif
+    return modbus_flush(ctx);
+}
+
 int modbus_flush(modbus_t *ctx)
 {
-    return ctx->backend->flush(ctx);
+    int rc = ctx->backend->flush(ctx);
+    if (rc != -1 && ctx->debug) {
+        printf("%d bytes flushed\n", rc);
+    }
+    return rc;
 }
 
 /* Computes the length of the expected response */
@@ -157,13 +177,20 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
         rc = ctx->backend->send(ctx, msg, msg_length);
         if (rc == -1) {
             _error_print(ctx, NULL);
-            if (ctx->error_recovery &&
-                (errno == EBADF || errno == ECONNRESET || errno == EPIPE)) {
-                modbus_close(ctx);
-                modbus_connect(ctx);
+            if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) {
+                int saved_errno = errno;
+
+                if ((errno == EBADF || errno == ECONNRESET || errno == EPIPE)) {
+                    modbus_close(ctx);
+                    modbus_connect(ctx);
+                } else {
+                    _sleep_and_flush(ctx);
+                }
+                errno = saved_errno;
             }
         }
-    } while (ctx->error_recovery && rc == -1);
+    } while ((ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) &&
+             rc == -1);
 
     if (rc > 0 && rc != msg_length) {
         errno = EMBBADDATA;
@@ -339,6 +366,18 @@ static int receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     while (length_to_read != 0) {
         rc = ctx->backend->select(ctx, &rfds, p_tv, length_to_read);
         if (rc == -1) {
+            _error_print(ctx, "select");
+            if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) {
+                int saved_errno = errno;
+
+                if (errno == ETIMEDOUT) {
+                    _sleep_and_flush(ctx);
+                } else if (errno == EBADF) {
+                    modbus_close(ctx);
+                    modbus_connect(ctx);
+                }
+                errno = saved_errno;
+            }
             return -1;
         }
 
@@ -350,12 +389,14 @@ static int receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
 
         if (rc == -1) {
             _error_print(ctx, "read");
-            if (ctx->error_recovery && (errno == ECONNRESET ||
-                                        errno == ECONNREFUSED)) {
+            if ((ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) &&
+                (errno == ECONNRESET || errno == ECONNREFUSED ||
+                 errno == EBADF)) {
+                int saved_errno = errno;
                 modbus_close(ctx);
                 modbus_connect(ctx);
                 /* Could be removed by previous calls */
-                errno = ECONNRESET;
+                errno = saved_errno;
             }
             return -1;
         }
@@ -440,10 +481,12 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
     int rsp_length_computed;
     const int offset = ctx->backend->header_length;
 
-
     if (ctx->backend->pre_check_confirmation) {
         rc = ctx->backend->pre_check_confirmation(ctx, req, rsp, rsp_length);
         if (rc == -1) {
+            if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_PROTOCOL) {
+                _sleep_and_flush(ctx);
+            }
             return -1;
         }
     }
@@ -463,6 +506,9 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
                 fprintf(stderr,
                         "Received function not corresponding to the request (%d != %d)\n",
                         function, req[offset]);
+            }
+            if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_PROTOCOL) {
+                _sleep_and_flush(ctx);
             }
             errno = EMBBADDATA;
             return -1;
@@ -509,6 +555,11 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
                         "Quantity not corresponding to the request (%d != %d)\n",
                         rsp_nb_value, req_nb_value);
             }
+
+            if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_PROTOCOL) {
+                _sleep_and_flush(ctx);
+            }
+
             errno = EMBBADDATA;
             rc = -1;
         }
@@ -529,6 +580,9 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
             fprintf(stderr,
                     "Message length not corresponding to the computed length (%d != %d)\n",
                     rsp_length, rsp_length_computed);
+        }
+        if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_PROTOCOL) {
+            _sleep_and_flush(ctx);
         }
         errno = EMBBADDATA;
         rc = -1;
@@ -1320,7 +1374,7 @@ void _modbus_init_common(modbus_t *ctx)
     ctx->s = -1;
 
     ctx->debug = FALSE;
-    ctx->error_recovery = FALSE;
+    ctx->error_recovery = MODBUS_ERROR_RECOVERY_NONE;
 
     ctx->response_timeout.tv_sec = 0;
     ctx->response_timeout.tv_usec = _RESPONSE_TIMEOUT;
@@ -1335,10 +1389,11 @@ int modbus_set_slave(modbus_t *ctx, int slave)
     return ctx->backend->set_slave(ctx, slave);
 }
 
-int modbus_set_error_recovery(modbus_t *ctx, int enabled)
+int modbus_set_error_recovery(modbus_t *ctx,
+                              modbus_error_recovery_mode error_recovery)
 {
-    if (enabled == TRUE || enabled == FALSE) {
-        ctx->error_recovery = (uint8_t) enabled;
+    if (error_recovery >= 0) {
+        ctx->error_recovery = (uint8_t) error_recovery;
     } else {
         errno = EINVAL;
         return -1;

@@ -66,6 +66,7 @@ LT_INIT([disable-static win32-dll])
 AC_CHECK_HEADERS([ \
     termios.h \
     sys/time.h \
+    time.h \
     unistd.h \
     errno.h \
     limits.h \

@@ -297,7 +297,7 @@ int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
             fprintf(stderr, "ERROR CRC received %0X != CRC calculated %0X\n",
                     crc_received, crc_calculated);
         }
-        if (ctx->error_recovery) {
+        if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_PROTOCOL) {
             _modbus_rtu_flush(ctx);
         }
         errno = EMBBADCRC;
@@ -790,15 +790,7 @@ int _modbus_rtu_select(modbus_t *ctx, fd_set *rfds,
     }
 
     if (s_rc < 0) {
-        _error_print(ctx, "select");
-        if (ctx->error_recovery && (errno == EBADF)) {
-            modbus_close(ctx);
-            modbus_connect(ctx);
-            errno = EBADF;
-            return -1;
-        } else {
-            return -1;
-        }
+        return -1;
     }
 #else
     while ((s_rc = select(ctx->s+1, rfds, NULL, NULL, tv)) == -1) {
@@ -810,22 +802,13 @@ int _modbus_rtu_select(modbus_t *ctx, fd_set *rfds,
             FD_ZERO(rfds);
             FD_SET(ctx->s, rfds);
         } else {
-            _error_print(ctx, "select");
-            if (ctx->error_recovery && (errno == EBADF)) {
-                modbus_close(ctx);
-                modbus_connect(ctx);
-                errno = EBADF;
-                return -1;
-            } else {
-                return -1;
-            }
+            return -1;
         }
     }
 
     if (s_rc == 0) {
         /* Timeout */
         errno = ETIMEDOUT;
-        _error_print(ctx, "select");
         return -1;
     }
 #endif

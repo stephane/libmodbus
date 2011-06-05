@@ -73,6 +73,9 @@ int main(int argc, char *argv[])
         return -1;
     }
     modbus_set_debug(ctx, TRUE);
+    modbus_set_error_recovery(ctx,
+                              MODBUS_ERROR_RECOVERY_LINK |
+                              MODBUS_ERROR_RECOVERY_PROTOCOL);
 
     if (use_backend == RTU) {
           modbus_set_slave(ctx, SERVER_ID);
@@ -587,9 +590,8 @@ int main(int argc, char *argv[])
     /* Restore original timeout */
     modbus_set_response_timeout(ctx, &old_response_timeout);
 
-    /* Wait for data before flushing */
-    usleep(500000);
-    modbus_flush(ctx);
+    /* A wait and flush operation is done by the error recovery code of
+     * libmodbus */
 
     /** BAD RESPONSE **/
     printf("\nTEST BAD RESPONSE ERROR:\n");

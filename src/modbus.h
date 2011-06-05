@@ -134,8 +134,15 @@ typedef struct {
     uint16_t *tab_registers;
 } modbus_mapping_t;
 
+typedef enum
+{
+    MODBUS_ERROR_RECOVERY_NONE          = 0,
+    MODBUS_ERROR_RECOVERY_LINK          = (1<<1),
+    MODBUS_ERROR_RECOVERY_PROTOCOL      = (1<<2),
+} modbus_error_recovery_type;
+
 int modbus_set_slave(modbus_t* ctx, int slave);
-int modbus_set_error_recovery(modbus_t *ctx, int enabled);
+int modbus_set_error_recovery(modbus_t *ctx, modbus_error_recovery_type error_recovery);
 void modbus_set_socket(modbus_t *ctx, int socket);
 int modbus_get_socket(modbus_t *ctx);
 

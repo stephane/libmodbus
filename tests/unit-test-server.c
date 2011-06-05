@@ -71,7 +71,6 @@ int main(int argc, char*argv[])
     header_length = modbus_get_header_length(ctx);
 
     modbus_set_debug(ctx, TRUE);
-    modbus_set_error_recovery(ctx, TRUE);
 
     mb_mapping = modbus_mapping_new(
         UT_BITS_ADDRESS + UT_BITS_NB,
