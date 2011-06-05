@@ -30,7 +30,7 @@ mode:
  automation because it can be used effectively over long distances and in
  electrically noisy environments.
 
-This function is only available on recent Linux kernels.
+This function is only available on Linux kernels 2.6.28 onwards.
 
 
 RETURN VALUE
