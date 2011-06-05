@@ -127,6 +127,9 @@ if test "x$HAVE_WINSOCK2_H" = "xyes"; then
    AC_SUBST(LIBS)
 fi
 
+# Check for RS485 support (recent Linux kernels)
+AC_CHECK_DECLS([TIOCSRS485], [], [], [[#include <sys/ioctl.h>]])
+
 AC_CONFIG_FILES([
         Makefile
         src/Makefile

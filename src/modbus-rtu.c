@@ -30,7 +30,7 @@
 #include "modbus-rtu.h"
 #include "modbus-rtu-private.h"
 
-#if defined(linux)
+#if defined(HAVE_TIOCSRS485)
 #include <sys/ioctl.h>
 #include <linux/serial.h>
 #endif
@@ -704,7 +704,8 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     return 0;
 }
 
-#if defined(linux)
+#if defined(HAVE_TIOCSRS485)
+d
 int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode)
 {
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
