@@ -1,3 +1,7 @@
+libmodbus 2.0.4 (2011-06-05)
+============================
+- Backport fix 'return check_crc16' from master
+
 libmodbus 2.0.3 (2009-03-22)
 ============================
 - Fix CRC error when a slave RTU send a response.
