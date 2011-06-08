@@ -30,7 +30,7 @@ mode:
  automation because it can be used effectively over long distances and in
  electrically noisy environments.
 
-This function is only available on Linux kernels 2.6.28 onwards.
+This function is only supported on Linux kernels 2.6.28 onwards.
 
 
 RETURN VALUE
@@ -43,6 +43,9 @@ ERRORS
 ------
 *EINVAL*::
 The current libmodbus backend is not RTU.
+
+*ENOTSUP*::
+The function is not supported on your platform.
 
 If the call to ioctl() fails, the error code of ioctl will be returned.
 
