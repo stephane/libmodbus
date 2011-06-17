@@ -1,3 +1,12 @@
+libmodbus 2.9.5 (2011-06-XX)
+============================
+
+- Revert libmodbus licence from LGPLv3 to LGPLv2.1 to avoid
+  incompatibility with GPLv2 program. This change has been approved
+  by Tobias Doerffel, Florian octo Forster and Hannu Vuolasaho.
+- Enable RS485 support only when available
+- Export modbus_set/get_serial_mode functions on all platforms
+
 libmodbus 2.9.4 (2011-06-05)
 ============================
 

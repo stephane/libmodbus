@@ -210,5 +210,5 @@ Report bugs on the issue tracker at
 COPYING
 -------
 Free use of this software is granted under the terms of the GNU Lesser General
-Public License (LGPL). For details see the files `COPYING` and `COPYING.LESSER`
-included with the libmodbus distribution.
+Public License (LGPL v2.1+). For details see the files `COPYING` and
+`COPYING.LESSER` included with the libmodbus distribution.
