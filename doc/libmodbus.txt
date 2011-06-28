@@ -166,7 +166,11 @@ Server
 ~~~~~~
 The server is waiting for request from clients and must answer when it is
 concerned by the request. The libmodbus offers the following functions to
-receive and reply:
+handle requests:
+
+Data mapping:
+     linkmb:modbus_mapping_new[3]
+     linkmb:modbus_mapping_free[3]
 
 Receive::
      linkmb:modbus_receive[3]
