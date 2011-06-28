@@ -28,6 +28,7 @@ MAN3 = \
         modbus_strerror.3 \
         modbus_write_bits.3 \
         modbus_write_bit.3 \
+        modbus_write_and_read_registers.3 \
         modbus_write_registers.3 \
         modbus_write_register.3
 MAN7 = libmodbus.7

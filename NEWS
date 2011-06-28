@@ -10,6 +10,7 @@ libmodbus 2.9.5 (2011-06-XX)
     * modbus_read_and_write_registers -> modbus_write_and_read_registers
   The function name was confusing because the write operation is performed
   before the read. Take care to swap the arguments in the migration process.
+- Documentation of modbus_write_and_read_registers
 
 libmodbus 2.9.4 (2011-06-05)
 ============================

@@ -154,6 +154,9 @@ Write data::
      linkmb:modbus_write_bits[3]
      linkmb:modbus_write_registers[3]
 
+Write and read data::
+      linkmb:modbus_write_and_read_registers[3]
+
 Raw requests::
     linkmb:modbus_send_raw_request[3]
     linkmb:modbus_receive_confirmation[3]
