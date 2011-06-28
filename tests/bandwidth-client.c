@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
     nb_points = MODBUS_MAX_RW_WRITE_REGISTERS;
     start = gettime_ms();
     for (i=0; i<n_loop; i++) {
-        rc = modbus_read_and_write_registers(ctx,
+        rc = modbus_write_and_read_registers(ctx,
                                              0, nb_points, tab_reg,
                                              0, nb_points, tab_reg);
         if (rc == -1) {

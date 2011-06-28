@@ -269,13 +269,13 @@ int main(int argc, char *argv[])
     /* Write registers to zero from tab_rp_registers and store read registers
        into tab_rp_registers. So the read registers must set to 0, except the
        first one because there is an offset of 1 register on write. */
-    rc = modbus_read_and_write_registers(ctx,
-                                         UT_REGISTERS_ADDRESS, UT_REGISTERS_NB,
+    rc = modbus_write_and_read_registers(ctx,
+                                         UT_REGISTERS_ADDRESS + 1, UT_REGISTERS_NB - 1,
                                          tab_rp_registers,
-                                         UT_REGISTERS_ADDRESS + 1,
-                                         UT_REGISTERS_NB - 1,
+                                         UT_REGISTERS_ADDRESS,
+                                         UT_REGISTERS_NB,
                                          tab_rp_registers);
-    printf("4/5 modbus_read_and_write_registers: ");
+    printf("4/5 modbus_write_and_read_registers: ");
     if (rc != UT_REGISTERS_NB) {
         printf("FAILED (nb points %d != %d)\n", rc, UT_REGISTERS_NB);
         goto close;

@@ -6,6 +6,10 @@ libmodbus 2.9.5 (2011-06-XX)
   by Tobias Doerffel, Florian octo Forster and Hannu Vuolasaho.
 - Enable RS485 support only when available
 - Export modbus_set/get_serial_mode functions on all platforms
+- API change for read/write multiple registers function:
+    * modbus_read_and_write_registers -> modbus_write_and_read_registers
+  The function name was confusing because the write operation is performed
+  before the read. Take care to swap the arguments in the migration process.
 
 libmodbus 2.9.4 (2011-06-05)
 ============================

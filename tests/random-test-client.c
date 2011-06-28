@@ -195,9 +195,9 @@ int main(void)
                 }
             }
             /* R/W MULTIPLE REGISTERS */
-            rc = modbus_read_and_write_registers(ctx,
-                                                 addr, nb, tab_rp_registers,
-                                                 addr, nb, tab_rw_rq_registers);
+            rc = modbus_write_and_read_registers(ctx,
+                                                 addr, nb, tab_rw_rq_registers,
+                                                 addr, nb, tab_rp_registers);
             if (rc != nb) {
                 printf("ERROR modbus_read_and_write_registers (%d)\n", rc);
                 printf("Address = %d, nb = %d\n", addr, nb);
