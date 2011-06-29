@@ -16,9 +16,9 @@ DESCRIPTION
 -----------
 The _modbus_write_and_read_registers()_ function shall write the content of the
 'write_nb' holding registers from the array 'src' to the address 'write_addr' of
-the remote device then shall read the content of the 'read_nb' holding registers to
-the address 'read_addr' of the remote device. The result of reading is stored in
-'dest' array as word values (16 bits).
+the remote device then shall read the content of the 'read_nb' holding registers
+to the address 'read_addr' of the remote device. The result of reading is stored
+in 'dest' array as word values (16 bits).
 
 You must take care to allocate enough memory to store the results in 'dest'
 (at least 'nb' * sizeof(uint16_t)).
