@@ -80,7 +80,12 @@ typedef struct _modbus_rtu {
 #endif
 #if HAVE_DECL_TIOCSRS485
     int serial_mode;
+    int usage_rts;
 #endif
 } modbus_rtu_t;
+
+/* Time waited beetween the RTS switch before transmit data o after transmit data before to read */
+#define TIME_BETWEEN_RTS_SWITCH  10000
+void _modbus_rtu_setrts(int fd, int on);
 
 #endif /* _MODBUS_RTU_PRIVATE_H_ */

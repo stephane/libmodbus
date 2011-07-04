@@ -32,7 +32,13 @@ modbus_t* modbus_new_rtu(const char *device, int baud, char parity,
 #define MODBUS_RTU_RS232 0
 #define MODBUS_RTU_RS485 1
 
+#define MODBUS_NO_USE_RTS 0
+#define MODBUS_USE_RTS    1
+
 int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode);
 int modbus_rtu_get_serial_mode(modbus_t *ctx);
+
+int modbus_rtu_set_usage_rts(modbus_t *ctx, int mode);
+int modbus_rtu_get_usage_rts(modbus_t *ctx);
 
 #endif /* _MODBUS_RTU_H_ */

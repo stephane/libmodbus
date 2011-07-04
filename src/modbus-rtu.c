@@ -264,7 +264,21 @@ ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
     DWORD n_bytes = 0;
     return (WriteFile(ctx_rtu->w_ser.fd, req, req_length, &n_bytes, NULL)) ? n_bytes : -1;
 #else
-    return write(ctx->s, req, req_length);
+    modbus_rtu_t *ctx_rtu = ctx->backend_data;
+    if (ctx_rtu->usage_rts == MODBUS_USE_RTS) {
+        ssize_t size;
+
+        _modbus_rtu_setrts(ctx->s,1);
+        usleep(TIME_BETWEEN_RTS_SWITCH);
+
+        size = write(ctx->s, req, req_length);
+        usleep(TIME_BETWEEN_RTS_SWITCH);
+        _modbus_rtu_setrts(ctx->s,0);
+
+        return size;
+    } else {
+        return write(ctx->s, req, req_length);
+    }
 #endif
 }
 
@@ -703,6 +717,10 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 #if HAVE_DECL_TIOCSRS485
     /* The RS232 mode has been set by default */
     ctx_rtu->serial_mode = MODBUS_RTU_RS232;
+
+    /* The RTS usage has been set by default */
+    ctx_rtu->usage_rts = MODBUS_NO_USE_RTS;
+
 #endif
 
     return 0;
@@ -758,6 +776,38 @@ int modbus_rtu_get_serial_mode(modbus_t *ctx) {
         errno = ENOTSUP;
         return -1;
 #endif
+    } else {
+        errno = EINVAL;
+        return -1;
+    }
+}
+
+int modbus_rtu_set_usage_rts(modbus_t *ctx, int mode)
+{
+    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
+        modbus_rtu_t *ctx_rtu = ctx->backend_data;
+        
+        if (mode == MODBUS_NO_USE_RTS || mode == MODBUS_USE_RTS ) {
+            ctx_rtu->usage_rts = mode;
+            return 0;
+        }
+
+        if (ctx->debug) {
+            fprintf(stderr, "This function isn't supported on your platform\n");
+        }
+        errno = ENOTSUP;
+        return -1;
+    }
+
+    /* Wrong backend and invalid mode specified */
+    errno = EINVAL;
+    return -1;
+}
+
+int modbus_rtu_get_usage_rts(modbus_t *ctx) {
+    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
+        modbus_rtu_t *ctx_rtu = ctx->backend_data;
+        return ctx_rtu->usage_rts;
     } else {
         errno = EINVAL;
         return -1;
@@ -915,3 +965,17 @@ modbus_t* modbus_new_rtu(const char *device,
 
     return ctx;
 }
+
+void _modbus_rtu_setrts(int fd, int on)
+{
+    int controlbits;
+
+    ioctl(fd, TIOCMGET, &controlbits);
+    if (on) {
+        controlbits |= TIOCM_RTS;
+    } else {
+      controlbits &= ~TIOCM_RTS;
+    }
+    ioctl(fd, TIOCMSET, &controlbits);
+}
+
