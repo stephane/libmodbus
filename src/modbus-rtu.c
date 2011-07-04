@@ -266,6 +266,10 @@ ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
 #else
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
     if (ctx_rtu->usage_rts == MODBUS_USE_RTS) {
+        if (ctx->debug) {
+            fprintf(stderr, "sending request using RTS signal\n");
+        }
+
         ssize_t size;
 
         _modbus_rtu_setrts(ctx->s,1);
@@ -277,6 +281,9 @@ ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
 
         return size;
     } else {
+        if (ctx->debug) {
+            fprintf(stderr, "sending request without RTS signal\n");
+        }
         return write(ctx->s, req, req_length);
     }
 #endif
