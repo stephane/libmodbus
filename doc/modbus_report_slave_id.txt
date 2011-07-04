@@ -1,0 +1,55 @@
+modbus_report_slave_id(3)
+=========================
+
+
+NAME
+----
+modbus_report_slave_id - returns a description of the controller
+
+
+SYNOPSIS
+--------
+*int modbus_report_slave_id(modbus_t *'ctx', uint8_t *'dest')*
+
+
+DESCRIPTION
+-----------
+The _modbus_report_slave_id()_ function shall send a request to the controller
+to obtain a description of the controller.
+
+The response stored in 'dest' contains:
+
+* the byte count of the response
+* the slave ID, this unique ID is in reality not unique at all so it's not
+  possible to depend on it to know how the information are packed in the
+  response.
+* the run indicator status (0x00 = OFF, 0xFF = ON)
+* additional data specific to each controller. For example, libmodbus returns
+  the version of the library as a string.
+
+
+RETURN VALUE
+------------
+The _modbus_report_slave_id()_ function shall return the number of read data if
+successful. Otherwise it shall return -1 and set errno.
+
+
+EXAMPLE
+-------
+[source,c]
+-------------------
+uint8_t *tab_bytes;
+
+...
+
+rc = modbus_report_slave_id(ctx, tab_bytes);
+if (rc > 1) {
+    printf("Run Status Indicator: %s\n", tab_bytes[1] ? "ON" : "OFF");
+}
+-------------------
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

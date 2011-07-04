@@ -842,13 +842,22 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         }
     }
         break;
-    case _FC_REPORT_SLAVE_ID:
+    case _FC_REPORT_SLAVE_ID: {
+        int str_len;
+        int byte_count_pos;
+
         rsp_length = ctx->backend->build_response_basis(&sft, rsp);
-        /* 2 bytes */
-        rsp[rsp_length++] = 2;
-        rsp[rsp_length++] = ctx->slave;
-        /* Slave is ON */
+        /* Skip byte count for now */
+        byte_count_pos = rsp_length++;
+        rsp[rsp_length++] = _REPORT_SLAVE_ID;
+        /* Run indicator status to ON */
         rsp[rsp_length++] = 0xFF;
+        /* LMB + length of LIBMODBUS_VERSION_STRING */
+        str_len = 3 + strlen(LIBMODBUS_VERSION_STRING);
+        memcpy(rsp + rsp_length, "LMB" LIBMODBUS_VERSION_STRING, str_len);
+        rsp_length += str_len;
+        rsp[byte_count_pos] = rsp_length - byte_count_pos - 1;
+    }
         break;
     case _FC_READ_EXCEPTION_STATUS:
         if (ctx->debug) {

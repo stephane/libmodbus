@@ -562,12 +562,29 @@ int main(int argc, char *argv[])
         goto close;
     }
 
-    if (((use_backend == RTU) && (tab_rp_bits[0] == SERVER_ID))
-        || tab_rp_bits[0] == 0xFF) {
-        printf("OK\n");
+    /* Slave ID is an arbitraty number for libmodbus */
+    if (rc > 0) {
+        printf("OK Slave ID is %d\n", tab_rp_bits[0]);
     } else {
         printf("FAILED\n");
         goto close;
+    }
+
+    /* Run status indicator */
+    if (rc > 1 && tab_rp_bits[1] == 0xFF) {
+        printf("OK Run Status Indicator is %s\n", tab_rp_bits[1] ? "ON" : "OFF");
+    } else {
+        printf("FAILED\n");
+        goto close;
+    }
+
+    /* Print additional data as string */
+    if (rc > 2) {
+        printf("Additional data: ");
+        for (i=2; i < rc; i++) {
+            printf("%c", tab_rp_bits[i]);
+        }
+        printf("\n");
     }
 
     /* Save original timeout */

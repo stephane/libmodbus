@@ -18,6 +18,7 @@ MAN3 = \
         modbus_read_registers.3 \
         modbus_receive.3 \
         modbus_receive_confirmation.3 \
+        modbus_report_slave_id.3 \
         modbus_rtu_get_serial_mode.3 \
         modbus_rtu_set_serial_mode.3 \
         modbus_send_raw_request.3 \

@@ -139,14 +139,15 @@ Flush a connection::
 Client
 ~~~~~~
 The Modbus protocol defines different data types and functions to read and write
-them from/to remote devices. The following functions are used by the clients to send
-Modbus requests:
+them from/to remote devices. The following functions are used by the clients to
+send Modbus requests:
 
 Read data::
      linkmb:modbus_read_bits[3]
      linkmb:modbus_read_input_bits[3]
      linkmb:modbus_read_registers[3]
      linkmb:modbus_read_input_registers[3]
+     libkmb:modbus_report_slave_id[3]
 
 Write data::
      linkmb:modbus_write_bit[3]
