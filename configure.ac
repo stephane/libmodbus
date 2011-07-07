@@ -137,5 +137,6 @@ AC_CONFIG_FILES([
         doc/Makefile
         tests/Makefile
         libmodbus.pc
+        libmodbus.spec
 ])
 AC_OUTPUT

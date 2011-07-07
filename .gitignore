@@ -21,6 +21,7 @@ ltmain.sh
 missing
 m4/
 libmodbus.pc
+libmodbus.spec
 modbus-version.h
 .deps
 .libs
