@@ -105,16 +105,16 @@ Free libmodbus context::
     linkmb:modbus_free[3]
 
 Context setters and getters::
+    linkmb:modbus_get_byte_timeout[3]
+    linkmb:modbus_set_byte_timeout[3]
     linkmb:modbus_set_debug[3]
     linkmb:modbus_set_error_recovery[3]
+    linkmb:modbus_get_header_length[3]
+    linkmb:modbus_get_response_timeout[3]
+    linkmb:modbus_set_response_timeout[3]
     linkmb:modbus_set_slave[3]
     linkmb:modbus_set_socket[3]
     linkmb:modbus_get_socket[3]
-    linkmb:modbus_get_timeout_begin[3]
-    linkmb:modbus_set_timeout_begin[3]
-    linkmb:modbus_get_timeout_end[3]
-    linkmb:modbus_set_timeout_end[3]
-    linkmb:modbus_get_header_length[3]
 
 A libmodbus 'context' is thread safe and may be shared among as many application
 threads as necessary, without any additional locking required on the part of the
