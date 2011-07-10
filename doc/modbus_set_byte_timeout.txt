@@ -18,6 +18,9 @@ The _modbus_set_byte_timeout()_ function shall set the timeout interval between
 two consecutive bytes of the same message. If the delay between is longer than
 the given timeout, an error will be raised.
 
+If the timeout value has a tv_sec of -1 then this timeout will not be used at
+all. This results in modbus_set_response_timeout governing the entire timeout
+duration of an operation.
 
 RETURN VALUE
 ------------
