@@ -80,6 +80,8 @@ const char *modbus_strerror(int errnum) {
         return "Invalid exception code";
     case EMBMDATA:
         return "Too many data";
+    case EMBBADSLAVE:
+        return "Response not from requested slave";
     default:
         return strerror(errnum);
     }
@@ -490,6 +492,12 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
             }
             return -1;
         }
+    }
+
+    /* Check responding slave is the slave we requested */
+    if(req[0] != 0 && rsp[0] != req[0]) {
+        errno = EMBBADSLAVE;
+        return -1;
     }
 
     rsp_length_computed = compute_response_length_from_request(ctx, req);
