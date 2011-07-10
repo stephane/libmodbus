@@ -27,25 +27,25 @@
 
 /* Sets many bits from a single byte value (all 8 bits of the byte value are
    set) */
-void modbus_set_bits_from_byte(uint8_t *dest, int address, const uint8_t value)
+void modbus_set_bits_from_byte(uint8_t *dest, int index, const uint8_t value)
 {
     int i;
 
     for (i=0; i<8; i++) {
-        dest[address+i] = (value & (1 << i)) ? 1 : 0;
+        dest[index+i] = (value & (1 << i)) ? 1 : 0;
     }
 }
 
-/* Sets many bits from a table of bytes (only the bits between address and
-   address + nb_bits are set) */
-void modbus_set_bits_from_bytes(uint8_t *dest, int address, unsigned int nb_bits,
+/* Sets many bits from a table of bytes (only the bits between index and
+   index + nb_bits are set) */
+void modbus_set_bits_from_bytes(uint8_t *dest, int index, unsigned int nb_bits,
                                 const uint8_t *tab_byte)
 {
     int i;
     int shift = 0;
 
-    for (i = address; i < address + nb_bits; i++) {
-        dest[i] = tab_byte[(i - address) / 8] & (1 << shift) ? 1 : 0;
+    for (i = index; i < index + nb_bits; i++) {
+        dest[i] = tab_byte[(i - index) / 8] & (1 << shift) ? 1 : 0;
         /* gcc doesn't like: shift = (++shift) % 8; */
         shift++;
         shift %= 8;
@@ -54,7 +54,7 @@ void modbus_set_bits_from_bytes(uint8_t *dest, int address, unsigned int nb_bits
 
 /* Gets the byte value from many bits.
    To obtain a full byte, set nb_bits to 8. */
-uint8_t modbus_get_byte_from_bits(const uint8_t *src, int address,
+uint8_t modbus_get_byte_from_bits(const uint8_t *src, int index,
                                   unsigned int nb_bits)
 {
     int i;
@@ -67,7 +67,7 @@ uint8_t modbus_get_byte_from_bits(const uint8_t *src, int address,
     }
 
     for (i=0; i < nb_bits; i++) {
-        value |= (src[address+i] << i);
+        value |= (src[index+i] << i);
     }
 
     return value;

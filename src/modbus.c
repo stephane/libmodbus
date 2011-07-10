@@ -632,7 +632,7 @@ static int response_exception(modbus_t *ctx, sft_t *sft,
     return rsp_length;
 }
 
-/* Send a response to the receive request.
+/* Send a response to the received request.
    Analyses the request and constructs a response.
 
    If an error occurs, this function construct the response

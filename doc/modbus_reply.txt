@@ -1,0 +1,52 @@
+modbus_reply(3)
+===============
+
+NAME
+----
+modbus_reply - send a reponse to the received request
+
+
+SYNOPSIS
+--------
+*int modbus_reply(modbus_t *'ctx', const uint8_t *'req', int 'req_length', modbus_mapping_t *'mb_mapping');
+
+
+DESCRIPTION
+-----------
+The _modbus_reply()_ function shall send a response to received request. The
+request 'req' given in argument is analyzed, a response is then built and sent
+by using the information of the modbus context 'ctx'.
+
+If the request indicates to read or write a value the operation will done in the
+modbus mapping 'mb_mapping' according to the type of the manipulated data.
+
+If an error occurs, an exception response will be sent.
+
+This function is designed for Modbus server.
+
+
+RETURN VALUE
+------------
+The _modbus_reply()_ function shall return the length of the response sent if
+successful. Otherwise it shall return -1 and set errno.
+
+
+ERRORS
+------
+EMBMDATA::
+Sending has failed
+
+See also the errors returned by the syscall used to send the response (eg. send
+or write).
+
+
+SEE ALSO
+--------
+linkmb:modbus_reply_exception[3]
+linkmb:libmodbus[7]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

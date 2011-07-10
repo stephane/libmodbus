@@ -1,0 +1,35 @@
+modbus_set_float(3)
+===================
+
+
+NAME
+----
+modbus_set_float - set a float value
+
+
+SYNOPSIS
+--------
+*void modbus_set_float(float 'f', uint16_t *'dest');*
+
+
+DESCRIPTION
+-----------
+The _modbus_set_float()_ function shall set a float to 4 bytes in Modbus
+format. The 'dest' array must be pointer on two 16 bits values to be able to
+store the full result of the conversion.
+
+
+RETURN VALUE
+------------
+The is no return values.
+
+
+SEE ALSO
+--------
+linkmb:modbus_set_float[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

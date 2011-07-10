@@ -1,0 +1,36 @@
+modbus_get_byte_from_bits(3)
+============================
+
+NAME
+----
+modbus_get_byte_from_bits - get the value from many bits
+
+
+SYNOPSIS
+--------
+*uint8_t modbus_get_byte_from_bits(const uint8_t *'src', int 'index', unsigned int 'nb_bits');*
+
+
+DESCRIPTION
+-----------
+The _modbus_get_byte_from_bits()_ function shall extract a value from many
+bits. All 'nb_bits' bits from 'src' at position 'index' will be read as a
+single value. To obtain a full byte, set nb_bits to 8.
+
+
+RETURN VALUE
+------------
+The _modbus_get_byte_from_bits()_ function shall return a byte containing the
+bits read.
+
+
+SEE ALSO
+--------
+linkmb:modbus_set_bits_from_byte[3]
+linkmb:modbus_set_bits_from_bytes[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

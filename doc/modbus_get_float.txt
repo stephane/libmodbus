@@ -1,0 +1,36 @@
+modbus_get_float(3)
+===================
+
+
+NAME
+----
+modbus_get_float - get a float value
+
+
+SYNOPSIS
+--------
+*float modbus_get_float(const uint16_t *'src');*
+
+
+DESCRIPTION
+-----------
+The _modbus_get_float()_ function shall get a float from 4 bytes in Modbus
+format. The 'src' array must be pointer on two 16 bits values, for example,
+if the first word is set to 0x4465 and the second to 0x229a, the float value
+read will be 916.540649.
+
+
+RETURN VALUE
+------------
+The _modbus_get_float()_ function shall return a float.
+
+
+SEE ALSO
+--------
+linkmb:modbus_set_float[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

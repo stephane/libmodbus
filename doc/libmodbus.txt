@@ -120,6 +120,23 @@ A libmodbus 'context' is thread safe and may be shared among as many application
 threads as necessary, without any additional locking required on the part of the
 caller.
 
+Macros for data manipulation::
+    MODBUS_GET_HIGH_BYTE(data), extracts the high byte from a byte
+    MODBUS_GET_LOW_BYTE(data), extracts the low byte from a byte
+    MODBUS_GET_INT32_FROM_INT16(tab_int16, index), builds an int32 from the two
+    first int16 starting at tab_int16[index]
+    MODBUS_GET_INT16_FROM_INT8(tab_int8, index), builds an int16 from the two
+    first int8 starting at tab_int8[index]
+    MODBUS_SET_INT16_TO_INT8(tab_int8, index, value), set an int16 value into
+    the two first bytes starting at tab_int8[index]
+
+Functions for data manipulation::
+    linkmb:modbus_set_bits_from_byte[3]
+    linkmb:modbus_set_bits_from_bytes[3]
+    linkmb:modbus_get_byte_from_bits[3]
+    linkmb:modbus_get_float[3]
+    linkmb:modbus_set_float[3]
+
 
 Connection
 ~~~~~~~~~~
@@ -162,6 +179,9 @@ Raw requests::
     linkmb:modbus_send_raw_request[3]
     linkmb:modbus_receive_confirmation[3]
 
+Reply an exception::
+    linkmb:modbus_reply_exception[3]
+
 
 Server
 ~~~~~~
@@ -178,6 +198,7 @@ Receive::
 
 Reply::
      linkmb:modbus_reply[3]
+     linkmb:modbus_reply_exception[3]
 
 
 ERROR HANDLING

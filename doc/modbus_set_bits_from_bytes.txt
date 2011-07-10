@@ -1,0 +1,36 @@
+modbus_set_bits_from_bytes(3)
+============================
+
+
+NAME
+----
+modbus_set_bits_from_bytes - set many bits from an array of bytes
+
+
+SYNOPSIS
+--------
+*void modbus_set_bits_from_bytes(uint8_t *'dest', int 'index', unsigned int 'nb_bits', const uint8_t *'tab_byte');*
+
+
+DESCRIPTION
+-----------
+The _modbus_set_bits_from_bytes_ function shall set bits by reading an array of
+bytes. All the bits of the bytes read from the first position of the array
+'tab_byte' are written as bits in the 'dest' array starting at position 'index'.
+
+
+RETURN VALUE
+------------
+There is no return values.
+
+
+SEE ALSO
+--------
+linkmb:modbus_set_bits_from_byte[3]
+linkmb:modbus_get_byte_from_bits[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>
