@@ -442,7 +442,7 @@ static int receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
             }
         }
 
-        if (length_to_read > 0) {
+        if (length_to_read > 0 && ctx->byte_timeout.tv_sec != -1) {
             /* If there is no character in the buffer, the allowed timeout
                interval between two consecutive bytes is defined by
                byte_timeout */
