@@ -38,7 +38,7 @@ Too many discrete inputs requested
 
 SEE ALSO
 --------
-linkmb:modbus_write_input_bits[3]
+linkmb:modbus_read_input_registers[3]
 
 
 AUTHORS

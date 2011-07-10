@@ -40,8 +40,9 @@ Too many bits requested
 
 SEE ALSO
 --------
-linkmb:modbus_read_[3]
-linkmb:modbus_write_bit[3]
+linkmb:modbus_read_input_bits[3]
+linkmb:modbus_write_register[3]
+linkmb:modbus_write_registers[3]
 
 
 AUTHORS
