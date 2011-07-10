@@ -9,7 +9,7 @@ modbus_read_input_registers - read many input registers
 
 SYNOPSIS
 --------
-*int modbus_read_input_registers(modbus_t *'ctx', int 'addr', int 'nb', uint16_t *'dest')*
+*int modbus_read_input_registers(modbus_t *'ctx', int 'addr', int 'nb', uint16_t *'dest');*
 
 
 DESCRIPTION

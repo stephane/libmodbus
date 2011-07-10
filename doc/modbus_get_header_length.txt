@@ -9,7 +9,7 @@ modbus_get_header_length - retrieve the current header length
 
 SYNOPSIS
 --------
-*int modbus_get_header_length(*modbus_t 'ctx');*
+*int modbus_get_header_length(modbus_t *'ctx');*
 
 
 DESCRIPTION

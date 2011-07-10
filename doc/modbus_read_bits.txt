@@ -9,7 +9,7 @@ modbus_read_bits - read many bits
 
 SYNOPSIS
 --------
-*int modbus_read_bits(modbus_t *'ctx', int 'addr', int 'nb', uint8_t *'dest')*
+*int modbus_read_bits(modbus_t *'ctx', int 'addr', int 'nb', uint8_t *'dest');*
 
 
 DESCRIPTION

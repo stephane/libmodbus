@@ -9,7 +9,7 @@ modbus_set_slave - set slave number in the context
 
 SYNOPSIS
 --------
-*int modbus_set_slave(modbus_t *'ctx', int 'slave')*
+*int modbus_set_slave(modbus_t *'ctx', int 'slave');*
 
 
 DESCRIPTION

@@ -9,7 +9,7 @@ modbus_mapping_new - allocate four arrays of bits and registers
 
 SYNOPSIS
 --------
-*modbus_mapping_t* modbus_mapping_new(int 'nb_bits', int 'nb_input_bits', int 'nb_registers', int 'nb_input_registers')*
+*modbus_mapping_t* modbus_mapping_new(int 'nb_bits', int 'nb_input_bits', int 'nb_registers', int 'nb_input_registers');*
 
 
 DESCRIPTION

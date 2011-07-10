@@ -9,7 +9,7 @@ modbus_write_bit - write a single bit
 
 SYNOPSIS
 --------
-*int modbus_write_bit(modbus_t *'ctx', int 'addr', int 'status')*
+*int modbus_write_bit(modbus_t *'ctx', int 'addr', int 'status');*
 
 
 DESCRIPTION

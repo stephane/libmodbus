@@ -9,7 +9,7 @@ modbus_write_bits - write many bits
 
 SYNOPSIS
 --------
-*int modbus_write_bits(modbus_t *'ctx', int 'addr', int 'nb', const uint8_t *'src')*
+*int modbus_write_bits(modbus_t *'ctx', int 'addr', int 'nb', const uint8_t *'src');*
 
 
 DESCRIPTION

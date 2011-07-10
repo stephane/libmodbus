@@ -9,7 +9,7 @@ modbus_write_registers - write many registers
 
 SYNOPSIS
 --------
-*int modbus_write_registers(modbus_t *'ctx', int 'addr', int 'nb', const uint16_t *'src')*
+*int modbus_write_registers(modbus_t *'ctx', int 'addr', int 'nb', const uint16_t *'src');*
 
 
 DESCRIPTION

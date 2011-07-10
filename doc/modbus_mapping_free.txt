@@ -9,7 +9,7 @@ modbus_mapping_free - free a modbus_mapping_t structure
 
 SYNOPSIS
 --------
-*void modbus_mapping_free(modbus_mapping_t *'mb_mapping')*
+*void modbus_mapping_free(modbus_mapping_t *'mb_mapping');*
 
 
 DESCRIPTION
