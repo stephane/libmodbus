@@ -69,7 +69,6 @@ make %{?_smp_mflags}
 %{_includedir}/modbus/modbus-version.h
 %dir %{_libdir}/libmodbus.so
 
-%{_libdir}/libmodbus.la
 %{_libdir}/pkgconfig/libmodbus.pc
 %{_libdir}/libmodbus.so
 
