@@ -1,4 +1,4 @@
-libmodbus 2.9.5 (2011-07-XX)
+libmodbus 3.0.0 (2011-07-11)
 ============================
 
 - Revert libmodbus licence from LGPLv3 to LGPLv2.1 to avoid

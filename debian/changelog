@@ -1,3 +1,9 @@
+libmodbus (3.0.0-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Stéphane Raimbault <stephane.raimbault@gmail.com>  Mon, 11 Jul 2011 23:23:32 +0200
+
 libmodbus (2.9.4-1) maverick; urgency=low
 
   * New upstream release
