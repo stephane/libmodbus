@@ -265,19 +265,19 @@ ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
     return (WriteFile(ctx_rtu->w_ser.fd, req, req_length, &n_bytes, NULL)) ? n_bytes : -1;
 #else
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
-    if (ctx_rtu->usage_rts != MODBUS_NO_USE_RTS) {
+    if (ctx_rtu->use_rts != MODBUS_RTS_NONE) {
         if (ctx->debug) {
             fprintf(stderr, "sending request using RTS signal\n");
         }
 
         ssize_t size;
 
-        _modbus_rtu_setrts(ctx->s, (ctx_rtu->usage_rts == MODBUS_USE_RTS_UP ? 1 : 0));
+        _modbus_rtu_setrts(ctx->s, (ctx_rtu->use_rts == MODBUS_RTS_UP ? 1 : 0));
         usleep(TIME_BETWEEN_RTS_SWITCH);
 
         size = write(ctx->s, req, req_length);
         usleep(TIME_BETWEEN_RTS_SWITCH);
-        _modbus_rtu_setrts(ctx->s, (ctx_rtu->usage_rts == MODBUS_USE_RTS_UP ? 0 : 1));
+        _modbus_rtu_setrts(ctx->s, (ctx_rtu->use_rts == MODBUS_RTS_UP ? 0 : 1));
 
         return size;
     } else {
@@ -725,8 +725,8 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     /* The RS232 mode has been set by default */
     ctx_rtu->serial_mode = MODBUS_RTU_RS232;
 
-    /* The RTS usage has been set by default */
-    ctx_rtu->usage_rts = MODBUS_NO_USE_RTS;
+    /* The RTS use has been set by default */
+    ctx_rtu->use_rts = MODBUS_RTS_NONE;
 
 #endif
 
@@ -789,16 +789,16 @@ int modbus_rtu_get_serial_mode(modbus_t *ctx) {
     }
 }
 
-int modbus_rtu_set_usage_rts(modbus_t *ctx, int mode)
+int modbus_rtu_set_use_rts(modbus_t *ctx, int mode)
 {
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
         modbus_rtu_t *ctx_rtu = ctx->backend_data;
         
-        if (mode == MODBUS_NO_USE_RTS || mode == MODBUS_USE_RTS_UP || mode == MODBUS_USE_RTS_DOWN) {
-            ctx_rtu->usage_rts = mode;
+        if (mode == MODBUS_RTS_NONE || mode == MODBUS_RTS_UP || mode == MODBUS_RTS_DOWN) {
+            ctx_rtu->use_rts = mode;
 
             // Set the RTS bit in order to not reserve the RS485 bus
-            _modbus_rtu_setrts(ctx->s, (ctx_rtu->usage_rts == MODBUS_USE_RTS_UP ? 0 : 1));
+            _modbus_rtu_setrts(ctx->s, (ctx_rtu->use_rts == MODBUS_RTS_UP ? 0 : 1));
             return 0;
         }
 
@@ -814,10 +814,10 @@ int modbus_rtu_set_usage_rts(modbus_t *ctx, int mode)
     return -1;
 }
 
-int modbus_rtu_get_usage_rts(modbus_t *ctx) {
+int modbus_rtu_get_use_rts(modbus_t *ctx) {
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
         modbus_rtu_t *ctx_rtu = ctx->backend_data;
-        return ctx_rtu->usage_rts;
+        return ctx_rtu->use_rts;
     } else {
         errno = EINVAL;
         return -1;
