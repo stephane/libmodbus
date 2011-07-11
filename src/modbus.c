@@ -495,7 +495,7 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
     }
 
     /* Check responding slave is the slave we requested */
-    if(req[0] != 0 && rsp[0] != req[0]) {
+    if (req[0] != 0 && rsp[0] != req[0]) {
         errno = EMBBADSLAVE;
         return -1;
     }
