@@ -3,18 +3,13 @@ Priority: extra
 Maintainer: Stéphane Raimbault <stephane.raimbault@gmail.com>
 Standards-Version: 3.9.1
 Section: libs
-Build-Depends: debhelper (>= 6),
-               cdbs (>= 0.4.43),
-               autotools-dev,
-               libtool,
-               dpkg-dev (>= 1.13.19)
+Build-Depends: debhelper (>= 6), cdbs (>= 0.4.43), autotools-dev, libtool, dpkg-dev (>= 1.13.19)
 Homepage: http://libmodbus.org/
 
 Package: libmodbus
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends},
-         ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: library for the Modbus protocol
  A Modbus library written in C, to send/receive data with a device which
  respects the Modbus protocol. This library can use a serial port or an
@@ -25,9 +20,7 @@ Description: library for the Modbus protocol
 Package: libmodbus-dev
 Section: libdevel
 Architecture: any
-Depends: libmodbus (= ${binary:Version}),
-         ${shlibs:Depends},
-         ${misc:Depends}
+Depends: libmodbus (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
 Description: library for the Modbus protocol
  A Modbus library written in C, to send/receive data with a device which
  respects the Modbus protocol. This library can use a serial port or an
