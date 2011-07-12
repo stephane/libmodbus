@@ -257,6 +257,21 @@ static int win32_ser_read(struct win32_ser *ws, uint8_t *p_msg,
 }
 #endif
 
+void _modbus_rtu_ioctl_rts(int fd, int on)
+{
+#if HAVE_DECL_TIOCM_RTS
+    int flags;
+
+    ioctl(fd, TIOCMGET, &flags);
+    if (on) {
+        flags |= TIOCM_RTS;
+    } else {
+        flags &= ~TIOCM_RTS;
+    }
+    ioctl(fd, TIOCMSET, &flags);
+#endif
+}
+
 ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
 {
 #if defined(_WIN32)
@@ -265,25 +280,23 @@ ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
     return (WriteFile(ctx_rtu->w_ser.fd, req, req_length, &n_bytes, NULL)) ? n_bytes : -1;
 #else
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
-    if (ctx_rtu->use_rts != MODBUS_RTS_NONE) {
-        if (ctx->debug) {
-            fprintf(stderr, "sending request using RTS signal\n");
-        }
-
+    if (ctx_rtu->rts != MODBUS_RTU_RTS_NONE) {
         ssize_t size;
 
-        _modbus_rtu_setrts(ctx->s, (ctx_rtu->use_rts == MODBUS_RTS_UP ? 1 : 0));
-        usleep(TIME_BETWEEN_RTS_SWITCH);
+        if (ctx->debug) {
+            fprintf(stderr, "Sending request using RTS signal\n");
+        }
+
+        _modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts == MODBUS_RTU_RTS_UP);
+        usleep(_MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
 
         size = write(ctx->s, req, req_length);
-        usleep(TIME_BETWEEN_RTS_SWITCH);
-        _modbus_rtu_setrts(ctx->s, (ctx_rtu->use_rts == MODBUS_RTS_UP ? 0 : 1));
+
+        usleep(_MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
+        _modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
 
         return size;
     } else {
-        if (ctx->debug) {
-            fprintf(stderr, "sending request without RTS signal\n");
-        }
         return write(ctx->s, req, req_length);
     }
 #endif
@@ -726,7 +739,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     ctx_rtu->serial_mode = MODBUS_RTU_RS232;
 
     /* The RTS use has been set by default */
-    ctx_rtu->use_rts = MODBUS_RTS_NONE;
+    ctx_rtu->rts = MODBUS_RTU_RTS_NONE;
 
 #endif
 
@@ -789,35 +802,32 @@ int modbus_rtu_get_serial_mode(modbus_t *ctx) {
     }
 }
 
-int modbus_rtu_set_use_rts(modbus_t *ctx, int mode)
+int modbus_rtu_set_rts(modbus_t *ctx, int mode)
 {
+#if HAVE_DECL_TIOCM_RTS
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
         modbus_rtu_t *ctx_rtu = ctx->backend_data;
-        
-        if (mode == MODBUS_RTS_NONE || mode == MODBUS_RTS_UP || mode == MODBUS_RTS_DOWN) {
-            ctx_rtu->use_rts = mode;
 
-            // Set the RTS bit in order to not reserve the RS485 bus
-            _modbus_rtu_setrts(ctx->s, (ctx_rtu->use_rts == MODBUS_RTS_UP ? 0 : 1));
+        if (mode == MODBUS_RTU_RTS_NONE || mode == MODBUS_RTU_RTS_UP ||
+            mode == MODBUS_RTU_RTS_DOWN) {
+            ctx_rtu->rts = mode;
+
+            /* Set the RTS bit in order to not reserve the RS485 bus */
+            _modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
+
             return 0;
         }
-
-        if (ctx->debug) {
-            fprintf(stderr, "This function isn't supported on your platform\n");
-        }
-        errno = ENOTSUP;
-        return -1;
     }
-
-    /* Wrong backend and invalid mode specified */
+#endif
+    /* Wrong backend or invalid mode specified */
     errno = EINVAL;
     return -1;
 }
 
-int modbus_rtu_get_use_rts(modbus_t *ctx) {
+int modbus_rtu_get_rts(modbus_t *ctx) {
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
         modbus_rtu_t *ctx_rtu = ctx->backend_data;
-        return ctx_rtu->use_rts;
+        return ctx_rtu->rts;
     } else {
         errno = EINVAL;
         return -1;
@@ -975,17 +985,3 @@ modbus_t* modbus_new_rtu(const char *device,
 
     return ctx;
 }
-
-void _modbus_rtu_setrts(int fd, int on)
-{
-    int controlbits;
-
-    ioctl(fd, TIOCMGET, &controlbits);
-    if (on) {
-        controlbits |= TIOCM_RTS;
-    } else {
-      controlbits &= ~TIOCM_RTS;
-    }
-    ioctl(fd, TIOCMSET, &controlbits);
-}
-
