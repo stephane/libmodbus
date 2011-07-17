@@ -77,6 +77,8 @@ typedef struct _modbus_rtu {
 #else
     /* Save old termios settings */
     struct termios old_tios;
+#endif
+#if HAVE_DECL_TIOCSRS485
     int serial_mode;
 #endif
 } modbus_rtu_t;

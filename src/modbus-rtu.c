@@ -698,10 +698,13 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     if (tcsetattr(ctx->s, TCSANOW, &tios) < 0) {
         return -1;
     }
+#endif
 
+#if HAVE_DECL_TIOCSRS485
     /* The RS232 mode has been set by default */
     ctx_rtu->serial_mode = MODBUS_RTU_RS232;
 #endif
+
     return 0;
 }
 
