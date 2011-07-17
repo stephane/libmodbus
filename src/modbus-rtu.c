@@ -745,7 +745,7 @@ int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode)
 
 int modbus_rtu_get_serial_mode(modbus_t *ctx) {
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
-#if defined(HAVE_DECL_TIOCSRS485)
+#if HAVE_DECL_TIOCSRS485
         modbus_rtu_t *ctx_rtu = ctx->backend_data;
         return ctx_rtu->serial_mode;
 #else
