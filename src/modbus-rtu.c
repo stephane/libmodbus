@@ -31,7 +31,7 @@
 #include "modbus-rtu.h"
 #include "modbus-rtu-private.h"
 
-#if defined(HAVE_DECL_TIOCSRS485)
+#if HAVE_DECL_TIOCSRS485
 #include <sys/ioctl.h>
 #include <linux/serial.h>
 #endif
@@ -708,7 +708,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode)
 {
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
-#if defined(HAVE_DECL_TIOCSRS485)
+#if HAVE_DECL_TIOCSRS485
         modbus_rtu_t *ctx_rtu = ctx->backend_data;
         struct serial_rs485 rs485conf;
         memset(&rs485conf, 0x0, sizeof(struct serial_rs485));
