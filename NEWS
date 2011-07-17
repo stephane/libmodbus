@@ -1,3 +1,9 @@
+libmodbus 3.0.1 (2011-07-XX)
+============================
+
+- Properly check TIOCSRS485 define by Matthijs Kool
+- Rename package to libmodbus5 to fix lintian warning
+
 libmodbus 3.0.0 (2011-07-11)
 ============================
 
