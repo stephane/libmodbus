@@ -38,6 +38,8 @@
 #define _MODBUS_RTU_CHECKSUM_LENGTH    2
 
 #if defined(_WIN32)
+#define ENOTSUP WSAEOPNOTSUPP
+
 /* WIN32: struct containing serial handle and a receive buffer */
 #define PY_BUF_SIZE 512
 struct win32_ser {
