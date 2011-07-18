@@ -1,6 +1,9 @@
-libmodbus 3.0.1 (2011-07-XX)
+libmodbus 3.0.1 (2011-07-18)
 ============================
 
+- Avoid useless serial_mode integer when TIOCSRS485 isn't supported
+- Fix compilation failure on Windows (RS485 support) by Tobias Doerffel
+  <tobias.doerffel@gmail.com>
 - Properly check TIOCSRS485 define by Matthijs Kool
 - Rename package to libmodbus5 to fix lintian warning
 
