@@ -34,7 +34,7 @@ No errors are defined.
 
 EXAMPLE
 -------
-.Displaying an error message when a Modbus connection cannot be established
+.Display an error message when a Modbus connection cannot be established
 [source,c]
 -------------------
 if (modbus_connect(ctx) == -1) {
