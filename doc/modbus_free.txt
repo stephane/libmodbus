@@ -9,7 +9,7 @@ modbus_free - free a libmodbus context
 
 SYNOPSIS
 --------
-*void modbus_free(*modbus_t 'ctx');*
+*void modbus_free(modbus_t *'ctx');*
 
 
 DESCRIPTION

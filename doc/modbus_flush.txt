@@ -9,7 +9,7 @@ modbus_flush - flush non-transmitted data
 
 SYNOPSIS
 --------
-*int modbus_flush(*modbus_t 'ctx');*
+*int modbus_flush(modbus_t *'ctx');*
 
 
 DESCRIPTION

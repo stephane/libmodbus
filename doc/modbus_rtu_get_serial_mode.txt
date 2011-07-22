@@ -9,7 +9,7 @@ modbus_rtu_get_serial_mode - get the current serial mode
 
 SYNOPSIS
 --------
-*int modbus_rtu_get_serial_mode(*modbus_t 'ctx');*
+*int modbus_rtu_get_serial_mode(modbus_t *'ctx');*
 
 
 DESCRIPTION
@@ -30,7 +30,8 @@ currently used by the libmodbus context:
  automation because it can be used effectively over long distances and in
  electrically noisy environments.
 
-This function is only available on Linux kernels 2.6.28 onwards.
+This function is only available on Linux kernels 2.6.28 onwards and can only be
+used with a context using a RTU backend.
 
 
 RETURN VALUE

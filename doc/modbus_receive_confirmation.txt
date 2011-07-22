@@ -9,7 +9,7 @@ modbus_receive_confirmation - receive a confirmation request
 
 SYNOPSIS
 --------
-*int modbus_receive_confirmation(*modbus_t 'ctx', uint8_t *'rsp');*
+*int modbus_receive_confirmation(modbus_t *'ctx', uint8_t *'rsp');*
 
 
 DESCRIPTION

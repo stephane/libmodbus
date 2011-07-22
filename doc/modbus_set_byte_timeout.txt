@@ -9,7 +9,7 @@ modbus_set_byte_timeout - set timeout between bytes
 
 SYNOPSIS
 --------
-*void modbus_set_byte_timeout(*modbus_t 'ctx', struct timeval *'timeout');*
+*void modbus_set_byte_timeout(modbus_t *'ctx', struct timeval *'timeout');*
 
 
 DESCRIPTION

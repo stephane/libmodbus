@@ -9,7 +9,7 @@ modbus_get_response_timeout - get timeout for response
 
 SYNOPSIS
 --------
-*void modbus_get_response_timeout(*modbus_t 'ctx', struct timeval *'timeout');*
+*void modbus_get_response_timeout(modbus_t *'ctx', struct timeval *'timeout');*
 
 
 DESCRIPTION

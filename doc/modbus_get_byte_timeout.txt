@@ -9,7 +9,7 @@ modbus_get_byte_timeout - get timeout between bytes
 
 SYNOPSIS
 --------
-*void modbus_get_byte_timeout(*modbus_t 'ctx', struct timeval *'timeout');*
+*void modbus_get_byte_timeout(modbus_t *'ctx', struct timeval *'timeout');*
 
 
 DESCRIPTION

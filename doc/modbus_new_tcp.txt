@@ -9,7 +9,7 @@ modbus_new_tcp - create a libmodbus context for TCP/IPv4
 
 SYNOPSIS
 --------
-*modbus_t modbus_new_tcp(const char *'ip', int 'port');*
+*modbus_t *modbus_new_tcp(const char *'ip', int 'port');*
 
 
 DESCRIPTION

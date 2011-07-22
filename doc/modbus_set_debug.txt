@@ -8,7 +8,7 @@ modbus_set_debug - set debug flag of the context
 
 SYNOPSIS
 --------
-*void modbus_set_debug(*modbus_t 'ctx', int 'boolean');*
+*void modbus_set_debug(modbus_t *'ctx', int 'boolean');*
 
 
 DESCRIPTION

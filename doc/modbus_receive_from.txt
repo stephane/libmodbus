@@ -9,7 +9,7 @@ modbus_receive_from - receive a indication request from a socket
 
 SYNOPSIS
 --------
-*int modbus_receive_from(*modbus_t 'ctx', int sockfd, uint8_t *'req');*
+*int modbus_receive_from(modbus_t *'ctx', int sockfd, uint8_t *'req');*
 
 
 DESCRIPTION

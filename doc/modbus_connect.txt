@@ -9,7 +9,7 @@ modbus_connect - establish a Modbus connection
 
 SYNOPSIS
 --------
-*int modbus_connect(*modbus_t 'ctx');*
+*int modbus_connect(modbus_t *'ctx');*
 
 
 DESCRIPTION

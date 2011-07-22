@@ -41,7 +41,7 @@ successful. Otherwise it shall return -1 and set errno.
 
 ERRORS
 ------
-EINVAL::
+*EINVAL*::
 The exception code is invalid
 
 

@@ -9,7 +9,7 @@ modbus_set_response_timeout - set timeout for response
 
 SYNOPSIS
 --------
-*void modbus_set_response_timeout(*modbus_t 'ctx', struct timeval *'timeout');*
+*void modbus_set_response_timeout(modbus_t *'ctx', struct timeval *'timeout');*
 
 
 DESCRIPTION

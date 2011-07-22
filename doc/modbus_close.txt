@@ -9,7 +9,7 @@ modbus_close - close a Modbus connection
 
 SYNOPSIS
 --------
-*int modbus_close(*modbus_t 'ctx');*
+*int modbus_close(modbus_t *'ctx');*
 
 
 DESCRIPTION

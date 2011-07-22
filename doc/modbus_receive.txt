@@ -9,7 +9,7 @@ modbus_receive - receive a indication request
 
 SYNOPSIS
 --------
-*int modbus_receive(*modbus_t 'ctx', uint8_t *'req');*
+*int modbus_receive(modbus_t *'ctx', uint8_t *'req');*
 
 
 DESCRIPTION
