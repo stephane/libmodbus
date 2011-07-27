@@ -1,6 +1,6 @@
 Name: libmodbus
 Version: @PACKAGE_VERSION@
-Release: 1%{?dist%}
+Release: 1%{?dist}
 Summary: A Modbus library written in C
 
 Group: Applications/System
@@ -8,10 +8,8 @@ License: LGPLv2.1+
 URL: http://www.libmodbus.org/
 Source0: https://github.com/downloads/stephane/libmodbus/libmodbus-%{version}.tar.gz
 
-Packager: Stéphane Raimbault
-Provides: libmodbus=%{version}
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires: gcc, autoconf, automake, libtool
+BuildRequires: autoconf, xmlto, asciidoc
 
 %description
 The library is written in C and designed to run on Linux, Mac OS X, FreeBSD and
@@ -22,7 +20,7 @@ This package contains the libmodbus shared library.
 %package devel
 Summary: Development files for the libmodbus library
 Group: Development/Libraries
-Requires: %{name} = %{version}-%{release}, pkgconfig
+Requires: %{name}%{?_isa} = %{version}-%{release}, pkgconfig
 
 %description devel
 The library is written in C and designed to run on Linux, Mac OS X, FreeBSD and
@@ -40,84 +38,37 @@ autoreconf
 make %{?_smp_mflags}
 
 %install
-[ "%{buildroot}" != "/" ] && %{__rm} -rf %{buildroot}
-%{__make} check
-%makeinstall
+make install DESTDIR=%{buildroot}
+rm -f %{buildroot}/%{_libdir}/*.la
 
-%post
-/sbin/ldconfig
+%post -p /sbin/ldconfig
 
-%postun
-/sbin/ldconfig
+%postun -p /sbin/ldconfig
 
 %clean
-[ "%{buildroot}" != "/" ] && %{__rm} -rf %{buildroot}
 
 %files
 %defattr(-,root,root)
 
 %doc AUTHORS MIGRATION NEWS COPYING* README.rst
 
-%{_libdir}/libmodbus.so.5
-%{_libdir}/libmodbus.so.5.0.0
+%{_libdir}/libmodbus.so.*
 
 %files devel
 %defattr(-,root,root)
-%{_includedir}/modbus/modbus.h
-%{_includedir}/modbus/modbus-rtu.h
-%{_includedir}/modbus/modbus-tcp.h
-%{_includedir}/modbus/modbus-version.h
+%{_includedir}/modbus/
 
-%{_libdir}/libmodbus.la
 %{_libdir}/pkgconfig/libmodbus.pc
 %{_libdir}/libmodbus.so
 
-%{_mandir}/man7/libmodbus.7.gz
-%{_mandir}/man3/modbus_close.3.gz
-%{_mandir}/man3/modbus_connect.3.gz
-%{_mandir}/man3/modbus_flush.3.gz
-%{_mandir}/man3/modbus_free.3.gz
-%{_mandir}/man3/modbus_get_byte_from_bits.3.gz
-%{_mandir}/man3/modbus_get_byte_timeout.3.gz
-%{_mandir}/man3/modbus_get_float.3.gz
-%{_mandir}/man3/modbus_get_header_length.3.gz
-%{_mandir}/man3/modbus_get_response_timeout.3.gz
-%{_mandir}/man3/modbus_get_socket.3.gz
-%{_mandir}/man3/modbus_mapping_free.3.gz
-%{_mandir}/man3/modbus_mapping_new.3.gz
-%{_mandir}/man3/modbus_new_rtu.3.gz
-%{_mandir}/man3/modbus_new_tcp_pi.3.gz
-%{_mandir}/man3/modbus_new_tcp.3.gz
-%{_mandir}/man3/modbus_read_bits.3.gz
-%{_mandir}/man3/modbus_read_input_bits.3.gz
-%{_mandir}/man3/modbus_read_input_registers.3.gz
-%{_mandir}/man3/modbus_read_registers.3.gz
-%{_mandir}/man3/modbus_receive_confirmation.3.gz
-%{_mandir}/man3/modbus_receive_from.3.gz
-%{_mandir}/man3/modbus_receive.3.gz
-%{_mandir}/man3/modbus_reply_exception.3.gz
-%{_mandir}/man3/modbus_reply.3.gz
-%{_mandir}/man3/modbus_report_slave_id.3.gz
-%{_mandir}/man3/modbus_rtu_get_serial_mode.3.gz
-%{_mandir}/man3/modbus_rtu_set_serial_mode.3.gz
-%{_mandir}/man3/modbus_send_raw_request.3.gz
-%{_mandir}/man3/modbus_set_bits_from_bytes.3.gz
-%{_mandir}/man3/modbus_set_bits_from_byte.3.gz
-%{_mandir}/man3/modbus_set_byte_timeout.3.gz
-%{_mandir}/man3/modbus_set_debug.3.gz
-%{_mandir}/man3/modbus_set_error_recovery.3.gz
-%{_mandir}/man3/modbus_set_float.3.gz
-%{_mandir}/man3/modbus_set_response_timeout.3.gz
-%{_mandir}/man3/modbus_set_slave.3.gz
-%{_mandir}/man3/modbus_set_socket.3.gz
-%{_mandir}/man3/modbus_strerror.3.gz
-%{_mandir}/man3/modbus_write_and_read_registers.3.gz
-%{_mandir}/man3/modbus_write_bits.3.gz
-%{_mandir}/man3/modbus_write_bit.3.gz
-%{_mandir}/man3/modbus_write_registers.3.gz
-%{_mandir}/man3/modbus_write_register.3.gz
+%{_mandir}/man7/*.7.*
+%{_mandir}/man3/*.3.*
 
 %changelog
+* Mon Jul 23 2011 Stéphane Raimbault <stephane.raimbault@gmail.com> - 3.0.2-1
+- package reviewed by Peter Lemenkov <lemenkov@gmail.com> and Veeti Paananen
+  <veeti.paananen@rojekti.fi> of Fedora Quality Assurance team
+
 * Mon Jul 18 2011 Stéphane Raimbault <stephane.raimbault@gmail.com> - 3.0.1-1
 - new upstream release
 
