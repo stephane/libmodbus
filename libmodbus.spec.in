@@ -1,32 +1,30 @@
 Name: libmodbus
 Version: @PACKAGE_VERSION@
-Release: 1%{?dist}
-Summary: A Modbus library written in C
-
+Release: 2%{?dist}
+Summary: A Modbus library
 Group: Applications/System
-License: LGPLv2.1+
+License: LGPLv2+
 URL: http://www.libmodbus.org/
 Source0: https://github.com/downloads/stephane/libmodbus/libmodbus-%{version}.tar.gz
-
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires: autoconf, xmlto, asciidoc
+BuildRequires: autoconf, automake, xmlto, asciidoc
 
 %description
-The library is written in C and designed to run on Linux, Mac OS X, FreeBSD and
-QNX and Windows.
+libmodbus is a C library designed to provide a fast and robust implementation of
+the Modbus protocol. It runs on Linux, Mac OS X, FreeBSD, QNX and Windows.
 
 This package contains the libmodbus shared library.
 
 %package devel
-Summary: Development files for the libmodbus library
+Summary: Development files for libmodbus
 Group: Development/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}, pkgconfig
 
 %description devel
-The library is written in C and designed to run on Linux, Mac OS X, FreeBSD and
-QNX and Windows.
+libmodbus is a C library designed to provide a fast and robust implementation of
+the Modbus protocol. It runs on Linux, Mac OS X, FreeBSD, QNX and Windows.
 
-This package contains libmodbus related development libraries and header files.
+This package contains libraries, header files and developer documentation needed
+for developing software which uses the libmodbus library.
 
 %prep
 %setup -q
@@ -65,7 +63,7 @@ rm -f %{buildroot}/%{_libdir}/*.la
 %{_mandir}/man3/*.3.*
 
 %changelog
-* Mon Jul 23 2011 Stéphane Raimbault <stephane.raimbault@gmail.com> - 3.0.2-1
+* Mon Jul 23 2011 Stéphane Raimbault <stephane.raimbault@gmail.com> - 3.0.1-2
 - package reviewed by Peter Lemenkov <lemenkov@gmail.com> and Veeti Paananen
   <veeti.paananen@rojekti.fi> of Fedora Quality Assurance team
 
