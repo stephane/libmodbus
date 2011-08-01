@@ -76,7 +76,7 @@ uint8_t modbus_get_byte_from_bits(const uint8_t *src, int index,
 /* Get a float from 4 bytes in Modbus format */
 float modbus_get_float(const uint16_t *src)
 {
-    float f = 0.0f;
+    float f;
     uint32_t i;
 
     i = (((uint32_t)src[1]) << 16) + src[0];
@@ -88,7 +88,7 @@ float modbus_get_float(const uint16_t *src)
 /* Set a float to 4 bytes in Modbus format */
 void modbus_set_float(float f, uint16_t *dest)
 {
-    uint32_t i = 0;
+    uint32_t i;
 
     memcpy(&i, &f, sizeof(uint32_t));
     dest[0] = (uint16_t)i;
