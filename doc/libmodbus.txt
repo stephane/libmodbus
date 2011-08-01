@@ -4,7 +4,7 @@ libmodbus(7)
 
 NAME
 ----
-libmodbus - fast and portable Modbus library
+libmodbus - a fast and portable Modbus library
 
 
 SYNOPSIS

@@ -10,21 +10,21 @@ Package: libmodbus5
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: library for the Modbus protocol
- A Modbus library written in C, to send/receive data with a device which
- respects the Modbus protocol. This library can use a serial port or an
- Ethernet connection.
+Description: A Modbus library
+ libmodbus is a C library designed to provide a fast and robust implementation
+ of the Modbus protocol. It runs on Linux, Mac OS X, FreeBSD, QNX and Windows.
  .
- This package contains the shared library.
+ This package contains the libmodbus shared library.
+
 
 Package: libmodbus-dev
 Section: libdevel
 Architecture: any
 Depends: libmodbus5 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
-Description: library for the Modbus protocol
- A Modbus library written in C, to send/receive data with a device which
- respects the Modbus protocol. This library can use a serial port or an
- Ethernet connection.
+Description: A Modbus library
+ libmodbus is a C library designed to provide a fast and robust implementation
+ of the Modbus protocol. It runs on Linux, Mac OS X, FreeBSD, QNX and Windows.
  .
- This package contains the development files.
+ This package contains libraries, header files and developer documentation
+ needed for developing software which uses the libmodbus library.
 
