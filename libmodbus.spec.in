@@ -17,7 +17,7 @@ This package contains the libmodbus shared library.
 %package devel
 Summary: Development files for libmodbus
 Group: Development/Libraries
-Requires: %{name}%{?_isa} = %{version}-%{release}, pkgconfig
+Requires: %{name}%{?_isa} = %{version}-%{release}
 
 %description devel
 libmodbus is a C library designed to provide a fast and robust implementation of
@@ -42,8 +42,6 @@ rm -f %{buildroot}/%{_libdir}/*.la
 %post -p /sbin/ldconfig
 
 %postun -p /sbin/ldconfig
-
-%clean
 
 %files
 %defattr(-,root,root)
