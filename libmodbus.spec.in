@@ -6,7 +6,7 @@ Group: Applications/System
 License: LGPLv2+
 URL: http://www.libmodbus.org/
 Source0: https://github.com/downloads/stephane/libmodbus/libmodbus-%{version}.tar.gz
-BuildRequires: autoconf, automake, xmlto, asciidoc
+BuildRequires: autoconf, automake, libtool, xmlto, asciidoc
 
 %description
 libmodbus is a C library designed to provide a fast and robust implementation of
