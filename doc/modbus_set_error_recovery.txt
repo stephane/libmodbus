@@ -15,7 +15,9 @@ SYNOPSIS
 DESCRIPTION
 -----------
 The _modbus_set_error_recovery()_ function shall set the error recovery mode to
-apply when the connection fails or the date received are not expected.
+apply when the connection fails or the byte received is not expected. The
+argument 'error_recovery' may be bitwise-or'ed with zero or more of the
+following constants.
 
 By default there is no error recovery ('MODBUS_ERROR_RECOVERY_NONE') so the
 application is responsible for controlling the error values returned by
