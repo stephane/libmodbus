@@ -824,14 +824,17 @@ int modbus_rtu_set_rts(modbus_t *ctx, int mode)
     return -1;
 }
 
-int modbus_rtu_get_rts(modbus_t *ctx) {
+int modbus_rtu_get_rts(modbus_t *ctx)
+{
+#if HAVE_DECL_TIOCSRS485
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
         modbus_rtu_t *ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
         return ctx_rtu->rts;
-    } else {
-        errno = EINVAL;
-        return -1;
     }
+#endif
+    /* Wrong backend or invalid mode specified */
+    errno = EINVAL;
+    return -1;
 }
 
 void _modbus_rtu_close(modbus_t *ctx)
