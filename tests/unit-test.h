@@ -30,6 +30,9 @@
 # include "stdint.h"
 # endif
 #endif
+#if defined(_WIN32)
+# define close closesocket
+#endif
 
 #define SERVER_ID         17
 #define INVALID_SERVER_ID 18
