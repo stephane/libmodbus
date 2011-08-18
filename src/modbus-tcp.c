@@ -378,7 +378,7 @@ int _modbus_tcp_flush(modbus_t *ctx)
 }
 
 /* Listens for any request from one or many modbus masters in TCP */
-int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
+DLL int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
 {
     int new_socket;
     int yes;
@@ -421,7 +421,7 @@ int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
     return new_socket;
 }
 
-int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
+DLL int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
 {
     int rc;
     struct addrinfo *ai_list;
@@ -515,7 +515,7 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
 /* On success, the function return a non-negative integer that is a descriptor
    for the accepted socket. On error, -1 is returned, and errno is set
    appropriately. */
-int modbus_tcp_accept(modbus_t *ctx, int *socket)
+DLL int modbus_tcp_accept(modbus_t *ctx, int *socket)
 {
     struct sockaddr_in addr;
     socklen_t addrlen;
@@ -536,7 +536,7 @@ int modbus_tcp_accept(modbus_t *ctx, int *socket)
     return ctx->s;
 }
 
-int modbus_tcp_pi_accept(modbus_t *ctx, int *socket)
+DLL int modbus_tcp_pi_accept(modbus_t *ctx, int *socket)
 {
     struct sockaddr_storage addr;
     socklen_t addrlen;
@@ -627,7 +627,7 @@ const modbus_backend_t _modbus_tcp_pi_backend = {
     _modbus_tcp_filter_request
 };
 
-modbus_t* modbus_new_tcp(const char *ip, int port)
+DLL modbus_t* modbus_new_tcp(const char *ip, int port)
 {
     modbus_t *ctx;
     modbus_tcp_t *ctx_tcp;
@@ -680,7 +680,7 @@ modbus_t* modbus_new_tcp(const char *ip, int port)
 }
 
 
-modbus_t* modbus_new_tcp_pi(const char *node, const char *service)
+DLL modbus_t* modbus_new_tcp_pi(const char *node, const char *service)
 {
     modbus_t *ctx;
     modbus_tcp_pi_t *ctx_tcp_pi;

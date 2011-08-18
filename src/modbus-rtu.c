@@ -746,7 +746,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     return 0;
 }
 
-int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode)
+DLL int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode)
 {
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
 #if HAVE_DECL_TIOCSRS485
@@ -784,7 +784,7 @@ int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode)
     return -1;
 }
 
-int modbus_rtu_get_serial_mode(modbus_t *ctx) {
+DLL int modbus_rtu_get_serial_mode(modbus_t *ctx) {
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
 #if HAVE_DECL_TIOCSRS485
         modbus_rtu_t *ctx_rtu = ctx->backend_data;
@@ -802,7 +802,7 @@ int modbus_rtu_get_serial_mode(modbus_t *ctx) {
     }
 }
 
-int modbus_rtu_set_rts(modbus_t *ctx, int mode)
+DLL int modbus_rtu_set_rts(modbus_t *ctx, int mode)
 {
 #if HAVE_DECL_TIOCM_RTS
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
@@ -824,7 +824,7 @@ int modbus_rtu_set_rts(modbus_t *ctx, int mode)
     return -1;
 }
 
-int modbus_rtu_get_rts(modbus_t *ctx)
+DLL int modbus_rtu_get_rts(modbus_t *ctx)
 {
 #if HAVE_DECL_TIOCSRS485
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
@@ -943,7 +943,7 @@ const modbus_backend_t _modbus_rtu_backend = {
     _modbus_rtu_filter_request
 };
 
-modbus_t* modbus_new_rtu(const char *device,
+DLL modbus_t* modbus_new_rtu(const char *device,
                          int baud, char parity, int data_bit,
                          int stop_bit)
 {
