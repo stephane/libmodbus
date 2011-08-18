@@ -1,3 +1,5 @@
 
 *.sdf
 *.suo
+
+libmodbus.opensdf

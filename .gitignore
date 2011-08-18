@@ -49,3 +49,4 @@ doc/*.7
 /vs2010/unit-test-client/Debug
 /vs2010/unit-test-server/Debug
 /vs2010/unit-test-server/Release
+/vs2010/ipch
