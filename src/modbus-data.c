@@ -24,6 +24,7 @@
 #endif
 #include <string.h>
 #include <assert.h>
+#include "modbus.h"
 
 /* Sets many bits from a single byte value (all 8 bits of the byte value are
    set) */
