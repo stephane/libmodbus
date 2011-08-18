@@ -216,7 +216,7 @@ static int _modbus_tcp_set_ipv4_options(int s)
     /* SOL_TCP = IPPROTO_TCP */
     option = 1;
     rc = setsockopt(s, IPPROTO_TCP, TCP_NODELAY,
-                    (const void *)&option, sizeof(int));
+                    (const char *)&option, sizeof(int));
     if (rc == -1) {
         return -1;
     }
@@ -243,7 +243,7 @@ static int _modbus_tcp_connect(modbus_t *ctx)
 {
     int rc;
     struct sockaddr_in addr;
-    modbus_tcp_t *ctx_tcp = ctx->backend_data;
+    modbus_tcp_t *ctx_tcp = (modbus_tcp_t *)ctx->backend_data;
 
 #ifdef OS_WIN32
     if (_modbus_tcp_init_win32() == -1) {
@@ -286,7 +286,7 @@ static int _modbus_tcp_pi_connect(modbus_t *ctx)
     struct addrinfo *ai_list;
     struct addrinfo *ai_ptr;
     struct addrinfo ai_hints;
-    modbus_tcp_pi_t *ctx_tcp_pi = ctx->backend_data;
+    modbus_tcp_pi_t *ctx_tcp_pi = (modbus_tcp_pi_t *)ctx->backend_data;
 
     memset(&ai_hints, 0, sizeof(ai_hints));
 #ifdef AI_ADDRCONFIG
@@ -383,7 +383,7 @@ int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
     int new_socket;
     int yes;
     struct sockaddr_in addr;
-    modbus_tcp_t *ctx_tcp = ctx->backend_data;
+    modbus_tcp_t *ctx_tcp = (modbus_tcp_t *)ctx->backend_data;
 
 #ifdef OS_WIN32
     if (_modbus_tcp_init_win32() == -1) {
@@ -430,7 +430,7 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
     const char *node;
     const char *service;
     int new_socket;
-    modbus_tcp_pi_t *ctx_tcp_pi = ctx->backend_data;
+    modbus_tcp_pi_t *ctx_tcp_pi = (modbus_tcp_pi_t *)ctx->backend_data;
 
     if (ctx_tcp_pi->node[0] == 0)
         node = NULL; /* == any */
@@ -472,7 +472,7 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
         } else {
             int yes = 1;
             rc = setsockopt(s, SOL_SOCKET, SO_REUSEADDR,
-                            (void *) &yes, sizeof (yes));
+                            (const char *) &yes, sizeof (yes));
             if (rc != 0) {
                 close(s);
                 if (ctx->debug) {
@@ -542,7 +542,7 @@ int modbus_tcp_pi_accept(modbus_t *ctx, int *socket)
     socklen_t addrlen;
 
     addrlen = sizeof(addr);
-    ctx->s = accept(*socket, (void *)&addr, &addrlen);
+    ctx->s = accept(*socket, (sockaddr *)&addr, &addrlen);
     if (ctx->s == -1) {
         close(*socket);
         *socket = 0;

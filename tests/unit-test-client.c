@@ -78,8 +78,7 @@ int main(int argc, char *argv[])
     }
     modbus_set_debug(ctx, TRUE);
     modbus_set_error_recovery(ctx,
-                              MODBUS_ERROR_RECOVERY_LINK |
-                              MODBUS_ERROR_RECOVERY_PROTOCOL);
+                              MODBUS_ERROR_RECOVERY_LINK_AND_PROTOCOL);
 
     if (use_backend == RTU) {
           modbus_set_slave(ctx, SERVER_ID);

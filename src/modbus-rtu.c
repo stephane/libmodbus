@@ -275,7 +275,7 @@ void _modbus_rtu_ioctl_rts(int fd, int on)
 ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
 {
 #if defined(_WIN32)
-    modbus_rtu_t *ctx_rtu = ctx->backend_data;
+    modbus_rtu_t *ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
     DWORD n_bytes = 0;
     return (WriteFile(ctx_rtu->w_ser.fd, req, req_length, &n_bytes, NULL)) ? n_bytes : -1;
 #else
@@ -349,7 +349,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     struct termios tios;
     speed_t speed;
 #endif
-    modbus_rtu_t *ctx_rtu = ctx->backend_data;
+    modbus_rtu_t *ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
 
     if (ctx->debug) {
         printf("Opening %s at %d bauds (%c, %d, %d)\n",
@@ -826,7 +826,7 @@ int modbus_rtu_set_rts(modbus_t *ctx, int mode)
 
 int modbus_rtu_get_rts(modbus_t *ctx) {
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
-        modbus_rtu_t *ctx_rtu = ctx->backend_data;
+        modbus_rtu_t *ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
         return ctx_rtu->rts;
     } else {
         errno = EINVAL;
@@ -837,7 +837,7 @@ int modbus_rtu_get_rts(modbus_t *ctx) {
 void _modbus_rtu_close(modbus_t *ctx)
 {
     /* Closes the file descriptor in RTU mode */
-    modbus_rtu_t *ctx_rtu = ctx->backend_data;
+    modbus_rtu_t *ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
 
 #if defined(_WIN32)
     /* Revert settings */
@@ -857,7 +857,7 @@ void _modbus_rtu_close(modbus_t *ctx)
 int _modbus_rtu_flush(modbus_t *ctx)
 {
 #if defined(_WIN32)
-    modbus_rtu_t *ctx_rtu = ctx->backend_data;
+    modbus_rtu_t *ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
     ctx_rtu->w_ser.n_bytes = 0;
     return (FlushFileBuffers(ctx_rtu->w_ser.fd) == FALSE);
 #else
