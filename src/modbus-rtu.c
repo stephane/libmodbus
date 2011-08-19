@@ -96,6 +96,11 @@ static const uint8_t table_crc_lo[] = {
     0x43, 0x83, 0x41, 0x81, 0x80, 0x40
 };
 
+#if defined(_WIN32)
+/* prefix used to distinguish file and device namespace. */
+#define DEVICE_NAMESPACE_PREFIX "\\\\.\\"
+#endif
+
 /* Define the slave ID of the remote device to talk in master mode or set the
  * internal slave ID in slave mode */
 static int _modbus_set_slave(modbus_t *ctx, int slave)
@@ -345,6 +350,9 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 {
 #if defined(_WIN32)
     DCB dcb;
+    char devicec_w_ns[sizeof(DEVICE_NAMESPACE_PREFIX) + sizeof(((_modbus_rtu *)0)->device)];
+    char* pdevice = NULL;
+    memset(devicec_w_ns, 0, sizeof(devicec_w_ns));
 #else
     struct termios tios;
     speed_t speed;
@@ -363,9 +371,27 @@ static int _modbus_rtu_connect(modbus_t *ctx)
      */
     win32_ser_init(&ctx_rtu->w_ser);
 
+    /* Ensure that the device namespace is prepended 
+       (see http://msdn.microsoft.com/en-us/library/aa365247%28v=vs.85%29.aspx) */
+    if (0 == strncmp(DEVICE_NAMESPACE_PREFIX, ctx_rtu->device, sizeof(DEVICE_NAMESPACE_PREFIX)))
+    {
+        pdevice = ctx_rtu->device; // starts already with the device namespace prefix
+    }
+    else
+    {
+        /* prepend \\.\ in front of the device name */
+        pdevice = devicec_w_ns;
+        memcpy(pdevice, DEVICE_NAMESPACE_PREFIX, sizeof(DEVICE_NAMESPACE_PREFIX));
+		pdevice += strlen(DEVICE_NAMESPACE_PREFIX);
+        strncpy(pdevice, ctx_rtu->device, sizeof(ctx_rtu->device) - 1);
+	    devicec_w_ns[sizeof(devicec_w_ns) - 1] = 0;
+		pdevice = devicec_w_ns;
+    }
+
+
     /* ctx_rtu->device should contain a string like "COMxx:" xx being a decimal
      * number */
-    ctx_rtu->w_ser.fd = CreateFileA(ctx_rtu->device,
+    ctx_rtu->w_ser.fd = CreateFileA(pdevice, /* ctx_rtu->device starting with \\.\ */
                                     GENERIC_READ | GENERIC_WRITE,
                                     0,
                                     NULL,
