@@ -49,6 +49,10 @@ const uint16_t UT_INPUT_REGISTERS_NB = 0x1;
 
 int main(int argc, char *argv[])
 {
+    int nb_points = UT_INPUT_REGISTERS_NB;
+    uint16_t *tab_rp_registers = NULL;
+    int rc = -1;
+
     modbus_t *ctx = modbus_new_rtu(SERIALPORT_DEVICE_NAME, SERIALPORT_BAUD, 
         SERIALPORT_PARITY, SERIALPORT_DATA_BITS, SERIALPORT_STOP_BIT);
     if (ctx == NULL)
@@ -66,15 +70,15 @@ int main(int argc, char *argv[])
         modbus_free(ctx);
         return -1;
     }
-
+    
     /* Allocate and initialize the memory to store the registers */
-    int nb_points = UT_INPUT_REGISTERS_NB;
-    uint16_t *tab_rp_registers = (uint16_t *)malloc(nb_points * sizeof(uint16_t));
+    tab_rp_registers = (uint16_t *)malloc(nb_points * sizeof(uint16_t));
     if (NULL == tab_rp_registers) { goto close; }
     memset(tab_rp_registers, 0, nb_points * sizeof(uint16_t));
 
+
     // read single register (function 4)
-    int rc = modbus_read_input_registers(ctx, READ_REGISTER_ADDRESS, 1, tab_rp_registers);
+    rc = modbus_read_input_registers(ctx, READ_REGISTER_ADDRESS, 1, tab_rp_registers);
     printf("modbus_read_input_registers: ");
     if (rc != 1)
     {
