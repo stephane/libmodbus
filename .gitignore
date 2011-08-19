@@ -47,6 +47,9 @@ doc/*.7
 /vs2010/libmodbus/Release
 /vs2010/libmodbus/Debug
 /vs2010/unit-test-client/Debug
+/vs2010/unit-test-client/Release
 /vs2010/unit-test-server/Debug
 /vs2010/unit-test-server/Release
 /vs2010/ipch
+/vs2010/simpleclient-rtu/Release
+/vs2010/simpleclient-rtu/Debug

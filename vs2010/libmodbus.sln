@@ -13,6 +13,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unit-test-client", "unit-te
 		{1B64568D-378D-465C-AC66-973C591542C2} = {1B64568D-378D-465C-AC66-973C591542C2}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "simpleclient-rtu", "simpleclient-rtu\simpleclient-rtu.vcxproj", "{F5125924-C4AE-98CD-3876-4BDCDF6F500B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1B64568D-378D-465C-AC66-973C591542C2} = {1B64568D-378D-465C-AC66-973C591542C2}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -31,6 +36,10 @@ Global
 		{F5125924-C4AE-98CD-4BDC-3876DF6F500B}.Debug|Win32.Build.0 = Debug|Win32
 		{F5125924-C4AE-98CD-4BDC-3876DF6F500B}.Release|Win32.ActiveCfg = Release|Win32
 		{F5125924-C4AE-98CD-4BDC-3876DF6F500B}.Release|Win32.Build.0 = Release|Win32
+		{F5125924-C4AE-98CD-3876-4BDCDF6F500B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F5125924-C4AE-98CD-3876-4BDCDF6F500B}.Debug|Win32.Build.0 = Debug|Win32
+		{F5125924-C4AE-98CD-3876-4BDCDF6F500B}.Release|Win32.ActiveCfg = Release|Win32
+		{F5125924-C4AE-98CD-3876-4BDCDF6F500B}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
