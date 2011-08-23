@@ -24,10 +24,11 @@
 #endif
 #include <string.h>
 #include <assert.h>
+#include "modbus.h"
 
 /* Sets many bits from a single byte value (all 8 bits of the byte value are
    set) */
-void modbus_set_bits_from_byte(uint8_t *dest, int index, const uint8_t value)
+DLL void modbus_set_bits_from_byte(uint8_t *dest, int index, const uint8_t value)
 {
     int i;
 
@@ -38,13 +39,13 @@ void modbus_set_bits_from_byte(uint8_t *dest, int index, const uint8_t value)
 
 /* Sets many bits from a table of bytes (only the bits between index and
    index + nb_bits are set) */
-void modbus_set_bits_from_bytes(uint8_t *dest, int index, unsigned int nb_bits,
+DLL void modbus_set_bits_from_bytes(uint8_t *dest, int index, unsigned int nb_bits,
                                 const uint8_t *tab_byte)
 {
     int i;
     int shift = 0;
 
-    for (i = index; i < index + nb_bits; i++) {
+    for (i = index; i < index + (int)nb_bits; i++) {
         dest[i] = tab_byte[(i - index) / 8] & (1 << shift) ? 1 : 0;
         /* gcc doesn't like: shift = (++shift) % 8; */
         shift++;
@@ -54,7 +55,7 @@ void modbus_set_bits_from_bytes(uint8_t *dest, int index, unsigned int nb_bits,
 
 /* Gets the byte value from many bits.
    To obtain a full byte, set nb_bits to 8. */
-uint8_t modbus_get_byte_from_bits(const uint8_t *src, int index,
+DLL uint8_t modbus_get_byte_from_bits(const uint8_t *src, int index,
                                   unsigned int nb_bits)
 {
     int i;
@@ -66,7 +67,7 @@ uint8_t modbus_get_byte_from_bits(const uint8_t *src, int index,
         nb_bits = 8;
     }
 
-    for (i=0; i < nb_bits; i++) {
+    for (i=0; i < (int)nb_bits; i++) {
         value |= (src[index+i] << i);
     }
 
@@ -74,7 +75,7 @@ uint8_t modbus_get_byte_from_bits(const uint8_t *src, int index,
 }
 
 /* Get a float from 4 bytes in Modbus format */
-float modbus_get_float(const uint16_t *src)
+DLL float modbus_get_float(const uint16_t *src)
 {
     float f;
     uint32_t i;
@@ -86,7 +87,7 @@ float modbus_get_float(const uint16_t *src)
 }
 
 /* Set a float to 4 bytes in Modbus format */
-void modbus_set_float(float f, uint16_t *dest)
+DLL void modbus_set_float(float f, uint16_t *dest)
 {
     uint32_t i;
 

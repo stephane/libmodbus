@@ -30,6 +30,9 @@
 # include "stdint.h"
 # endif
 #endif
+#if defined(_WIN32)
+# define close closesocket
+#endif
 
 #define SERVER_ID         17
 #define INVALID_SERVER_ID 18
@@ -56,7 +59,7 @@ const uint16_t UT_INPUT_REGISTERS_ADDRESS = 0x08;
 const uint16_t UT_INPUT_REGISTERS_NB = 0x1;
 const uint16_t UT_INPUT_REGISTERS_TAB[] = { 0x000A };
 
-const float UT_REAL = 916.540649;
+const float UT_REAL = 916.540649f;
 const uint32_t UT_IREAL = 0x4465229a;
 
 #endif /* _UNIT_TEST_H_ */

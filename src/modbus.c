@@ -50,7 +50,7 @@ typedef enum {
     _STEP_DATA
 } _step_t;
 
-const char *modbus_strerror(int errnum) {
+DLL const char *modbus_strerror(int errnum) {
     switch (errnum) {
     case EMBXILFUN:
         return "Illegal function";
@@ -115,7 +115,7 @@ int _sleep_and_flush(modbus_t *ctx)
     return modbus_flush(ctx);
 }
 
-int modbus_flush(modbus_t *ctx)
+DLL int modbus_flush(modbus_t *ctx)
 {
     int rc = ctx->backend->flush(ctx);
     if (rc != -1 && ctx->debug) {
@@ -201,7 +201,7 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
     return rc;
 }
 
-int modbus_send_raw_request(modbus_t *ctx, uint8_t *raw_req, int raw_req_length)
+DLL int modbus_send_raw_request(modbus_t *ctx, uint8_t *raw_req, int raw_req_length)
 {
     sft_t sft;
     uint8_t req[MAX_MESSAGE_LENGTH];
@@ -428,7 +428,7 @@ static int receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
             case _STEP_META:
                 length_to_read = compute_data_length_after_meta(
                     ctx, msg, msg_type);
-                if ((msg_length + length_to_read) > ctx->backend->max_adu_length) {
+                if ((msg_length + length_to_read) > (int)(ctx->backend->max_adu_length)) {
                     errno = EMBBADDATA;
                     _error_print(ctx, "too many data");
                     return -1;
@@ -457,7 +457,7 @@ static int receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
 }
 
 /* Receive the request from a modbus master */
-int modbus_receive(modbus_t *ctx, uint8_t *req)
+DLL int modbus_receive(modbus_t *ctx, uint8_t *req)
 {
     return receive_msg(ctx, req, MSG_INDICATION);
 }
@@ -470,7 +470,7 @@ int modbus_receive(modbus_t *ctx, uint8_t *req)
    The function doesn't check the confirmation is the expected response to the
    initial request.
 */
-int modbus_receive_confirmation(modbus_t *ctx, uint8_t *rsp)
+DLL int modbus_receive_confirmation(modbus_t *ctx, uint8_t *rsp)
 {
     return receive_msg(ctx, rsp, MSG_CONFIRMATION);
 }
@@ -638,7 +638,7 @@ static int response_exception(modbus_t *ctx, sft_t *sft,
    If an error occurs, this function construct the response
    accordingly.
 */
-int modbus_reply(modbus_t *ctx, const uint8_t *req,
+DLL int modbus_reply(modbus_t *ctx, const uint8_t *req,
                  int req_length, modbus_mapping_t *mb_mapping)
 {
     int offset = ctx->backend->header_length;
@@ -912,7 +912,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
     return send_msg(ctx, rsp, rsp_length);
 }
 
-int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
+DLL int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
                            unsigned int exception_code)
 {
     int offset = ctx->backend->header_length;
@@ -989,7 +989,7 @@ static int read_io_status(modbus_t *ctx, int function,
 
 /* Reads the boolean status of bits and sets the array elements
    in the destination to TRUE or FALSE (single bits). */
-int modbus_read_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest)
+DLL int modbus_read_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest)
 {
     int rc;
 
@@ -1013,7 +1013,7 @@ int modbus_read_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest)
 
 
 /* Same as modbus_read_bits but reads the remote device input table */
-int modbus_read_input_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest)
+DLL int modbus_read_input_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest)
 {
     int rc;
 
@@ -1083,7 +1083,7 @@ static int read_registers(modbus_t *ctx, int function, int addr, int nb,
 
 /* Reads the holding registers of remote device and put the data into an
    array */
-int modbus_read_registers(modbus_t *ctx, int addr, int nb, uint16_t *dest)
+DLL int modbus_read_registers(modbus_t *ctx, int addr, int nb, uint16_t *dest)
 {
     int status;
 
@@ -1103,7 +1103,7 @@ int modbus_read_registers(modbus_t *ctx, int addr, int nb, uint16_t *dest)
 }
 
 /* Reads the input registers of remote device and put the data into an array */
-int modbus_read_input_registers(modbus_t *ctx, int addr, int nb,
+DLL int modbus_read_input_registers(modbus_t *ctx, int addr, int nb,
                                 uint16_t *dest)
 {
     int status;
@@ -1148,20 +1148,20 @@ static int write_single(modbus_t *ctx, int function, int addr, int value)
 }
 
 /* Turns ON or OFF a single bit of the remote device */
-int modbus_write_bit(modbus_t *ctx, int addr, int status)
+DLL int modbus_write_bit(modbus_t *ctx, int addr, int status)
 {
     return write_single(ctx, _FC_WRITE_SINGLE_COIL, addr,
                         status ? 0xFF00 : 0);
 }
 
 /* Writes a value in one register of the remote device */
-int modbus_write_register(modbus_t *ctx, int addr, int value)
+DLL int modbus_write_register(modbus_t *ctx, int addr, int value)
 {
     return write_single(ctx, _FC_WRITE_SINGLE_REGISTER, addr, value);
 }
 
 /* Write the bits of the array in the remote device */
-int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *src)
+DLL int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *src)
 {
     int rc;
     int i;
@@ -1220,7 +1220,7 @@ int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *src)
 }
 
 /* Write the values from the array to the registers of the remote device */
-int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *src)
+DLL int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *src)
 {
     int rc;
     int i;
@@ -1266,7 +1266,7 @@ int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *src)
 
 /* Write multiple registers from src array to remote device and read multiple
    registers from remote device to dest array. */
-int modbus_write_and_read_registers(modbus_t *ctx,
+DLL int modbus_write_and_read_registers(modbus_t *ctx,
                                     int write_addr, int write_nb, const uint16_t *src,
                                     int read_addr, int read_nb, uint16_t *dest)
 
@@ -1340,7 +1340,7 @@ int modbus_write_and_read_registers(modbus_t *ctx,
 
 /* Send a request to get the slave ID of the device (only available in serial
    communication). */
-int modbus_report_slave_id(modbus_t *ctx, uint8_t *dest)
+DLL int modbus_report_slave_id(modbus_t *ctx, uint8_t *dest)
 {
     int rc;
     int req_length;
@@ -1395,12 +1395,12 @@ void _modbus_init_common(modbus_t *ctx)
 }
 
 /* Define the slave number */
-int modbus_set_slave(modbus_t *ctx, int slave)
+DLL int modbus_set_slave(modbus_t *ctx, int slave)
 {
     return ctx->backend->set_slave(ctx, slave);
 }
 
-int modbus_set_error_recovery(modbus_t *ctx,
+DLL int modbus_set_error_recovery(modbus_t *ctx,
                               modbus_error_recovery_mode error_recovery)
 {
     if (error_recovery >= 0) {
@@ -1413,49 +1413,49 @@ int modbus_set_error_recovery(modbus_t *ctx,
     return 0;
 }
 
-void modbus_set_socket(modbus_t *ctx, int socket)
+DLL void modbus_set_socket(modbus_t *ctx, int socket)
 {
     ctx->s = socket;
 }
 
-int modbus_get_socket(modbus_t *ctx)
+DLL int modbus_get_socket(modbus_t *ctx)
 {
     return ctx->s;
 }
 
 /* Get the timeout interval used to wait for a response */
-void modbus_get_response_timeout(modbus_t *ctx, struct timeval *timeout)
+DLL void modbus_get_response_timeout(modbus_t *ctx, struct timeval *timeout)
 {
     *timeout = ctx->response_timeout;
 }
 
-void modbus_set_response_timeout(modbus_t *ctx, const struct timeval *timeout)
+DLL void modbus_set_response_timeout(modbus_t *ctx, const struct timeval *timeout)
 {
     ctx->response_timeout = *timeout;
 }
 
 /* Get the timeout interval between two consecutive bytes of a message */
-void modbus_get_byte_timeout(modbus_t *ctx, struct timeval *timeout)
+DLL void modbus_get_byte_timeout(modbus_t *ctx, struct timeval *timeout)
 {
     *timeout = ctx->byte_timeout;
 }
 
-void modbus_set_byte_timeout(modbus_t *ctx, const struct timeval *timeout)
+DLL void modbus_set_byte_timeout(modbus_t *ctx, const struct timeval *timeout)
 {
     ctx->byte_timeout = *timeout;
 }
 
-int modbus_get_header_length(modbus_t *ctx)
+DLL int modbus_get_header_length(modbus_t *ctx)
 {
     return ctx->backend->header_length;
 }
 
-int modbus_connect(modbus_t *ctx)
+DLL int modbus_connect(modbus_t *ctx)
 {
     return ctx->backend->connect(ctx);
 }
 
-void modbus_close(modbus_t *ctx)
+DLL void modbus_close(modbus_t *ctx)
 {
     if (ctx == NULL)
         return;
@@ -1463,7 +1463,7 @@ void modbus_close(modbus_t *ctx)
     ctx->backend->close(ctx);
 }
 
-void modbus_free(modbus_t *ctx)
+DLL void modbus_free(modbus_t *ctx)
 {
     if (ctx == NULL)
         return;
@@ -1472,7 +1472,7 @@ void modbus_free(modbus_t *ctx)
     free(ctx);
 }
 
-void modbus_set_debug(modbus_t *ctx, int boolean)
+DLL void modbus_set_debug(modbus_t *ctx, int boolean)
 {
     ctx->debug = boolean;
 }
@@ -1482,7 +1482,7 @@ void modbus_set_debug(modbus_t *ctx, int boolean)
 
    The modbus_mapping_new() function shall return the new allocated structure if
    successful. Otherwise it shall return NULL and set errno to ENOMEM. */
-modbus_mapping_t* modbus_mapping_new(int nb_bits, int nb_input_bits,
+DLL modbus_mapping_t* modbus_mapping_new(int nb_bits, int nb_input_bits,
                                      int nb_registers, int nb_input_registers)
 {
     modbus_mapping_t *mb_mapping;
@@ -1560,7 +1560,7 @@ modbus_mapping_t* modbus_mapping_new(int nb_bits, int nb_input_bits,
 }
 
 /* Frees the 4 arrays */
-void modbus_mapping_free(modbus_mapping_t *mb_mapping)
+DLL void modbus_mapping_free(modbus_mapping_t *mb_mapping)
 {
     free(mb_mapping->tab_input_registers);
     free(mb_mapping->tab_registers);

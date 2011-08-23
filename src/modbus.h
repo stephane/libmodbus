@@ -27,9 +27,16 @@
 #ifndef _MSC_VER
 #include <stdint.h>
 #include <sys/time.h>
+#define DLL
 #else
+#include <windows.h>
 #include "stdint.h"
 #include <time.h>
+#if defined(LIBMODBUSEXPORT)
+#define DLL   __declspec(dllexport)
+#else
+#define DLL   __declspec(dllimport)
+#endif
 #endif
 
 #include "modbus-version.h"
@@ -140,58 +147,59 @@ typedef enum
     MODBUS_ERROR_RECOVERY_NONE          = 0,
     MODBUS_ERROR_RECOVERY_LINK          = (1<<1),
     MODBUS_ERROR_RECOVERY_PROTOCOL      = (1<<2),
+    MODBUS_ERROR_RECOVERY_LINK_AND_PROTOCOL = MODBUS_ERROR_RECOVERY_LINK | MODBUS_ERROR_RECOVERY_PROTOCOL
 } modbus_error_recovery_mode;
 
-int modbus_set_slave(modbus_t* ctx, int slave);
-int modbus_set_error_recovery(modbus_t *ctx, modbus_error_recovery_mode error_recovery);
-void modbus_set_socket(modbus_t *ctx, int socket);
-int modbus_get_socket(modbus_t *ctx);
+DLL int modbus_set_slave(modbus_t* ctx, int slave);
+DLL int modbus_set_error_recovery(modbus_t *ctx, modbus_error_recovery_mode error_recovery);
+DLL void modbus_set_socket(modbus_t *ctx, int socket);
+DLL int modbus_get_socket(modbus_t *ctx);
 
-void modbus_get_response_timeout(modbus_t *ctx, struct timeval *timeout);
-void modbus_set_response_timeout(modbus_t *ctx, const struct timeval *timeout);
+DLL void modbus_get_response_timeout(modbus_t *ctx, struct timeval *timeout);
+DLL void modbus_set_response_timeout(modbus_t *ctx, const struct timeval *timeout);
 
-void modbus_get_byte_timeout(modbus_t *ctx, struct timeval *timeout);
-void modbus_set_byte_timeout(modbus_t *ctx, const struct timeval *timeout);
+DLL void modbus_get_byte_timeout(modbus_t *ctx, struct timeval *timeout);
+DLL void modbus_set_byte_timeout(modbus_t *ctx, const struct timeval *timeout);
 
-int modbus_get_header_length(modbus_t *ctx);
+DLL int modbus_get_header_length(modbus_t *ctx);
 
-int modbus_connect(modbus_t *ctx);
-void modbus_close(modbus_t *ctx);
+DLL int modbus_connect(modbus_t *ctx);
+DLL void modbus_close(modbus_t *ctx);
 
-void modbus_free(modbus_t *ctx);
+DLL void modbus_free(modbus_t *ctx);
 
-int modbus_flush(modbus_t *ctx);
-void modbus_set_debug(modbus_t *ctx, int boolean);
+DLL int modbus_flush(modbus_t *ctx);
+DLL void modbus_set_debug(modbus_t *ctx, int boolean);
 
-const char *modbus_strerror(int errnum);
+DLL const char *modbus_strerror(int errnum);
 
-int modbus_read_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest);
-int modbus_read_input_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest);
-int modbus_read_registers(modbus_t *ctx, int addr, int nb, uint16_t *dest);
-int modbus_read_input_registers(modbus_t *ctx, int addr, int nb, uint16_t *dest);
-int modbus_write_bit(modbus_t *ctx, int coil_addr, int status);
-int modbus_write_register(modbus_t *ctx, int reg_addr, int value);
-int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *data);
-int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *data);
-int modbus_write_and_read_registers(modbus_t *ctx, int write_addr, int write_nb,
+DLL int modbus_read_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest);
+DLL int modbus_read_input_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest);
+DLL int modbus_read_registers(modbus_t *ctx, int addr, int nb, uint16_t *dest);
+DLL int modbus_read_input_registers(modbus_t *ctx, int addr, int nb, uint16_t *dest);
+DLL int modbus_write_bit(modbus_t *ctx, int coil_addr, int status);
+DLL int modbus_write_register(modbus_t *ctx, int reg_addr, int value);
+DLL int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *data);
+DLL int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *data);
+DLL int modbus_write_and_read_registers(modbus_t *ctx, int write_addr, int write_nb,
                                     const uint16_t *src, int read_addr, int read_nb,
                                     uint16_t *dest);
-int modbus_report_slave_id(modbus_t *ctx, uint8_t *dest);
+DLL int modbus_report_slave_id(modbus_t *ctx, uint8_t *dest);
 
-modbus_mapping_t* modbus_mapping_new(int nb_coil_status, int nb_input_status,
+DLL modbus_mapping_t* modbus_mapping_new(int nb_coil_status, int nb_input_status,
                                      int nb_holding_registers, int nb_input_registers);
-void modbus_mapping_free(modbus_mapping_t *mb_mapping);
+DLL void modbus_mapping_free(modbus_mapping_t *mb_mapping);
 
-int modbus_send_raw_request(modbus_t *ctx, uint8_t *raw_req, int raw_req_length);
+DLL int modbus_send_raw_request(modbus_t *ctx, uint8_t *raw_req, int raw_req_length);
 
-int modbus_receive(modbus_t *ctx, uint8_t *req);
-int modbus_receive_from(modbus_t *ctx, int sockfd, uint8_t *req);
+DLL int modbus_receive(modbus_t *ctx, uint8_t *req);
+// not implemented: int modbus_receive_from(modbus_t *ctx, int sockfd, uint8_t *req);
 
-int modbus_receive_confirmation(modbus_t *ctx, uint8_t *rsp);
+DLL int modbus_receive_confirmation(modbus_t *ctx, uint8_t *rsp);
 
-int modbus_reply(modbus_t *ctx, const uint8_t *req,
+DLL int modbus_reply(modbus_t *ctx, const uint8_t *req,
                  int req_length, modbus_mapping_t *mb_mapping);
-int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
+DLL int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
                            unsigned int exception_code);
 
 /**
@@ -208,12 +216,12 @@ int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
         tab_int8[(index) + 1] = (value) & 0xFF; \
     } while (0)
 
-void modbus_set_bits_from_byte(uint8_t *dest, int index, const uint8_t value);
-void modbus_set_bits_from_bytes(uint8_t *dest, int index, unsigned int nb_bits,
+DLL void modbus_set_bits_from_byte(uint8_t *dest, int index, const uint8_t value);
+DLL void modbus_set_bits_from_bytes(uint8_t *dest, int index, unsigned int nb_bits,
                                 const uint8_t *tab_byte);
-uint8_t modbus_get_byte_from_bits(const uint8_t *src, int index, unsigned int nb_bits);
-float modbus_get_float(const uint16_t *src);
-void modbus_set_float(float f, uint16_t *dest);
+DLL uint8_t modbus_get_byte_from_bits(const uint8_t *src, int index, unsigned int nb_bits);
+DLL float modbus_get_float(const uint16_t *src);
+DLL void modbus_set_float(float f, uint16_t *dest);
 
 #include "modbus-tcp.h"
 #include "modbus-rtu.h"

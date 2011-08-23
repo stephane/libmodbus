@@ -15,8 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <config.h>
+
 #include <stdio.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -59,14 +63,14 @@ int main(int argc, char*argv[])
 
     if (use_backend == TCP) {
         ctx = modbus_new_tcp("127.0.0.1", 1502);
-        query = malloc(MODBUS_TCP_MAX_ADU_LENGTH);
+        query = (uint8_t *)malloc(MODBUS_TCP_MAX_ADU_LENGTH);
     } else if (use_backend == TCP_PI) {
         ctx = modbus_new_tcp_pi("::0", "1502");
-        query = malloc(MODBUS_TCP_MAX_ADU_LENGTH);
+        query = (uint8_t *)malloc(MODBUS_TCP_MAX_ADU_LENGTH);
     } else {
         ctx = modbus_new_rtu("/dev/ttyUSB0", 115200, 'N', 8, 1);
         modbus_set_slave(ctx, SERVER_ID);
-        query = malloc(MODBUS_RTU_MAX_ADU_LENGTH);
+        query = (uint8_t *)malloc(MODBUS_RTU_MAX_ADU_LENGTH);
     }
     header_length = modbus_get_header_length(ctx);
 

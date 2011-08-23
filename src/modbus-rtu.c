@@ -96,6 +96,11 @@ static const uint8_t table_crc_lo[] = {
     0x43, 0x83, 0x41, 0x81, 0x80, 0x40
 };
 
+#if defined(_WIN32)
+/* prefix used to distinguish file and device namespace. */
+#define DEVICE_NAMESPACE_PREFIX "\\\\.\\"
+#endif
+
 /* Define the slave ID of the remote device to talk in master mode or set the
  * internal slave ID in slave mode */
 static int _modbus_set_slave(modbus_t *ctx, int slave)
@@ -275,7 +280,7 @@ void _modbus_rtu_ioctl_rts(int fd, int on)
 ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
 {
 #if defined(_WIN32)
-    modbus_rtu_t *ctx_rtu = ctx->backend_data;
+    modbus_rtu_t *ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
     DWORD n_bytes = 0;
     return (WriteFile(ctx_rtu->w_ser.fd, req, req_length, &n_bytes, NULL)) ? n_bytes : -1;
 #else
@@ -345,11 +350,14 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 {
 #if defined(_WIN32)
     DCB dcb;
+    char devicec_w_ns[sizeof(DEVICE_NAMESPACE_PREFIX) + sizeof(((_modbus_rtu *)0)->device)];
+    char* pdevice = NULL;
+    memset(devicec_w_ns, 0, sizeof(devicec_w_ns));
 #else
     struct termios tios;
     speed_t speed;
 #endif
-    modbus_rtu_t *ctx_rtu = ctx->backend_data;
+    modbus_rtu_t *ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
 
     if (ctx->debug) {
         printf("Opening %s at %d bauds (%c, %d, %d)\n",
@@ -363,9 +371,27 @@ static int _modbus_rtu_connect(modbus_t *ctx)
      */
     win32_ser_init(&ctx_rtu->w_ser);
 
+    /* Ensure that the device namespace is prepended 
+       (see http://msdn.microsoft.com/en-us/library/aa365247%28v=vs.85%29.aspx) */
+    if (0 == strncmp(DEVICE_NAMESPACE_PREFIX, ctx_rtu->device, sizeof(DEVICE_NAMESPACE_PREFIX)))
+    {
+        pdevice = ctx_rtu->device; // starts already with the device namespace prefix
+    }
+    else
+    {
+        /* prepend \\.\ in front of the device name */
+        pdevice = devicec_w_ns;
+        memcpy(pdevice, DEVICE_NAMESPACE_PREFIX, sizeof(DEVICE_NAMESPACE_PREFIX));
+		pdevice += strlen(DEVICE_NAMESPACE_PREFIX);
+        strncpy(pdevice, ctx_rtu->device, sizeof(ctx_rtu->device) - 1);
+	    devicec_w_ns[sizeof(devicec_w_ns) - 1] = 0;
+		pdevice = devicec_w_ns;
+    }
+
+
     /* ctx_rtu->device should contain a string like "COMxx:" xx being a decimal
      * number */
-    ctx_rtu->w_ser.fd = CreateFileA(ctx_rtu->device,
+    ctx_rtu->w_ser.fd = CreateFileA(pdevice, /* ctx_rtu->device starting with \\.\ */
                                     GENERIC_READ | GENERIC_WRITE,
                                     0,
                                     NULL,
@@ -746,7 +772,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     return 0;
 }
 
-int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode)
+DLL int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode)
 {
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
 #if HAVE_DECL_TIOCSRS485
@@ -784,7 +810,7 @@ int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode)
     return -1;
 }
 
-int modbus_rtu_get_serial_mode(modbus_t *ctx) {
+DLL int modbus_rtu_get_serial_mode(modbus_t *ctx) {
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
 #if HAVE_DECL_TIOCSRS485
         modbus_rtu_t *ctx_rtu = ctx->backend_data;
@@ -802,7 +828,7 @@ int modbus_rtu_get_serial_mode(modbus_t *ctx) {
     }
 }
 
-int modbus_rtu_set_rts(modbus_t *ctx, int mode)
+DLL int modbus_rtu_set_rts(modbus_t *ctx, int mode)
 {
 #if HAVE_DECL_TIOCM_RTS
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
@@ -824,20 +850,23 @@ int modbus_rtu_set_rts(modbus_t *ctx, int mode)
     return -1;
 }
 
-int modbus_rtu_get_rts(modbus_t *ctx) {
+DLL int modbus_rtu_get_rts(modbus_t *ctx)
+{
+#if HAVE_DECL_TIOCSRS485
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
-        modbus_rtu_t *ctx_rtu = ctx->backend_data;
+        modbus_rtu_t *ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
         return ctx_rtu->rts;
-    } else {
-        errno = EINVAL;
-        return -1;
     }
+#endif
+    /* Wrong backend or invalid mode specified */
+    errno = EINVAL;
+    return -1;
 }
 
 void _modbus_rtu_close(modbus_t *ctx)
 {
     /* Closes the file descriptor in RTU mode */
-    modbus_rtu_t *ctx_rtu = ctx->backend_data;
+    modbus_rtu_t *ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
 
 #if defined(_WIN32)
     /* Revert settings */
@@ -857,7 +886,7 @@ void _modbus_rtu_close(modbus_t *ctx)
 int _modbus_rtu_flush(modbus_t *ctx)
 {
 #if defined(_WIN32)
-    modbus_rtu_t *ctx_rtu = ctx->backend_data;
+    modbus_rtu_t *ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
     ctx_rtu->w_ser.n_bytes = 0;
     return (FlushFileBuffers(ctx_rtu->w_ser.fd) == FALSE);
 #else
@@ -940,7 +969,7 @@ const modbus_backend_t _modbus_rtu_backend = {
     _modbus_rtu_filter_request
 };
 
-modbus_t* modbus_new_rtu(const char *device,
+DLL modbus_t* modbus_new_rtu(const char *device,
                          int baud, char parity, int data_bit,
                          int stop_bit)
 {

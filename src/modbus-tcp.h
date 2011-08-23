@@ -24,10 +24,18 @@
 #if defined(_WIN32) && !defined(__CYGWIN__)
 /* Win32 with MinGW, supplement to <errno.h> */
 #include <winsock2.h>
+#if !defined(ECONNRESET)
 #define ECONNRESET   WSAECONNRESET
+#endif
+#if !defined(ECONNREFUSED)
 #define ECONNREFUSED WSAECONNREFUSED
+#endif
+#if !defined(ETIMEDOUT)
 #define ETIMEDOUT    WSAETIMEDOUT
+#endif
+#if !defined(ENOPROTOOPT)
 #define ENOPROTOOPT  WSAENOPROTOOPT
+#endif
 #endif
 
 #define MODBUS_TCP_DEFAULT_PORT   502
@@ -38,12 +46,12 @@
  */
 #define MODBUS_TCP_MAX_ADU_LENGTH  260
 
-modbus_t* modbus_new_tcp(const char *ip_address, int port);
-int modbus_tcp_listen(modbus_t *ctx, int nb_connection);
-int modbus_tcp_accept(modbus_t *ctx, int *socket);
+DLL modbus_t* modbus_new_tcp(const char *ip_address, int port);
+DLL int modbus_tcp_listen(modbus_t *ctx, int nb_connection);
+DLL int modbus_tcp_accept(modbus_t *ctx, int *socket);
 
-modbus_t* modbus_new_tcp_pi(const char *node, const char *service);
-int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection);
-int modbus_tcp_pi_accept(modbus_t *ctx, int *socket);
+DLL modbus_t* modbus_new_tcp_pi(const char *node, const char *service);
+DLL int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection);
+DLL int modbus_tcp_pi_accept(modbus_t *ctx, int *socket);
 
 #endif /* _MODBUS_TCP_H_ */

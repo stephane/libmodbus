@@ -68,6 +68,10 @@ typedef enum {
     _MODBUS_BACKEND_TYPE_TCP
 } modbus_bakend_type_t;
 
+#if defined(_MSC_VER)
+typedef long ssize_t;
+#endif
+
 /* This structure reduces the number of params in functions and so
  * optimizes the speed of execution (~ 37%). */
 typedef struct _sft {
