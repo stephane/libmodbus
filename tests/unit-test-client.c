@@ -524,7 +524,7 @@ int main(int argc, char *argv[])
 
     } else {
         /* Response in TCP mode */
-        printf("1/4 Response from slave %d: ", 18);
+        printf("1/4 Response from slave %d: ", INVALID_SERVER_ID);
 
         if (rc == UT_REGISTERS_NB) {
             printf("OK\n");
