@@ -9,7 +9,7 @@ modbus_close - close a Modbus connection
 
 SYNOPSIS
 --------
-*int modbus_close(modbus_t *'ctx');*
+*void modbus_close(modbus_t *'ctx');*
 
 
 DESCRIPTION
@@ -20,8 +20,7 @@ backend set in the context.
 
 RETURN VALUE
 ------------
-The _modbus_close()_ function shall return 0 if successful. Otherwise it shall
-return -1 and set errno.
+There is no return value.
 
 
 EXAMPLE
