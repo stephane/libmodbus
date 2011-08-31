@@ -15,7 +15,7 @@ SYNOPSIS
 DESCRIPTION
 -----------
 The _modbus_get_header_length()_ function shall retrieve the current header
-length from the backend. This fonction is convenient to manipulate a message and
+length from the backend. This function is convenient to manipulate a message and
 so its limited to low-level operations.
 
 
