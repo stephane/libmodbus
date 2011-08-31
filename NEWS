@@ -1,3 +1,9 @@
+libmodbus 3.1.0 (2011-XX-XX)
+============================
+
+- RTS flow control with modbus_rtu_set_rts and modbus_rtu_get_rts
+  functions by Torello Querci <tquerci@gmail.com> and Stéphane Raimbault.
+
 libmodbus 3.0.1 (2011-07-18)
 ============================
 
@@ -6,9 +12,6 @@ libmodbus 3.0.1 (2011-07-18)
   <tobias.doerffel@gmail.com>
 - Properly check TIOCSRS485 define by Matthijs Kool
 - Rename package to libmodbus5 to fix lintian warning
-- RTS flow control with modbus_rtu_set_rts and modbus_rtu_get_rts
-  functions by Torello Querci <tquerci@gmail.com> and Stéphane Raimbault.
-
 
 libmodbus 3.0.0 (2011-07-11)
 ============================
@@ -27,7 +30,6 @@ libmodbus 3.0.0 (2011-07-11)
   modbus_[gs]et_float, modbus_reply and modbus_reply_exception.
 - Enhanced report slave ID
 - New RPM spec file to package documentation and development files
-
 
 libmodbus 2.9.4 (2011-06-05)
 ============================
