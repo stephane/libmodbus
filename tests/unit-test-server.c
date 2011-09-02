@@ -62,12 +62,14 @@ int main(int argc, char*argv[])
     }
 
     if (use_backend == TCP) {
+        printf("Modbus TCP server for unit testing.\n");
         ctx = modbus_new_tcp("127.0.0.1", 1502);
         query = (uint8_t *)malloc(MODBUS_TCP_MAX_ADU_LENGTH);
     } else if (use_backend == TCP_PI) {
         ctx = modbus_new_tcp_pi("::0", "1502");
         query = (uint8_t *)malloc(MODBUS_TCP_MAX_ADU_LENGTH);
     } else {
+        printf("Modbus RTU server for unit testing.\n");
         ctx = modbus_new_rtu("/dev/ttyUSB0", 115200, 'N', 8, 1);
         modbus_set_slave(ctx, SERVER_ID);
         query = (uint8_t *)malloc(MODBUS_RTU_MAX_ADU_LENGTH);
@@ -120,7 +122,7 @@ int main(int argc, char*argv[])
     for (;;) {
         rc = modbus_receive(ctx, query);
         if (rc == -1) {
-            /* Connection closed by the client or error */
+            printf("Connection closed by the client or error.\n");
             break;
         }
 
