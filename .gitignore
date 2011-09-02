@@ -53,3 +53,8 @@ doc/*.7
 /vs2010/ipch
 /vs2010/simpleclient-rtu/Release
 /vs2010/simpleclient-rtu/Debug
+
+/vs2010/LibModbus.Net/obj
+/vs2010/Release
+/vs2010/SimpleClientRtu.Net/obj
+/vs2010/UnitTestClient.Net/obj

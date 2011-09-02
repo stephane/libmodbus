@@ -51,7 +51,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;LIBMODBUSEXPORT;_DEBUG;_WINDOWS;_USRDLL;LIBMODBUS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;LIBMODBUSEXPORT;CSHARPWRAPPER;_DEBUG;_WINDOWS;_USRDLL;LIBMODBUS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CompileAs>CompileAsCpp</CompileAs>
       <AdditionalIncludeDirectories>.</AdditionalIncludeDirectories>
       <EnablePREfast>false</EnablePREfast>
@@ -71,7 +71,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;LIBMODBUSEXPORT;NDEBUG;_WINDOWS;_USRDLL;LIBMODBUS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;LIBMODBUSEXPORT;CSHARPWRAPPER;NDEBUG;_WINDOWS;_USRDLL;LIBMODBUS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CompileAs>CompileAsCpp</CompileAs>
       <AdditionalIncludeDirectories>.</AdditionalIncludeDirectories>
     </ClCompile>

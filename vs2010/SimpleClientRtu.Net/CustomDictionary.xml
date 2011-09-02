@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Dictionary>
+   <Words>
+      <Recognized>
+         <!--A-->
+
+         <!--B-->
+
+         <!--C-->
+
+         <!--D-->
+
+         <!--E-->
+
+         <!--F-->
+
+         <!--G-->
+
+         <!--H-->
+
+         <!--I-->
+
+         <!--J-->
+
+         <!--K-->
+
+         <!--L-->
+
+         <!--M-->
+         <Word>Modbus</Word>
+         <Word>modbus_new_rtu</Word>
+         
+         <!--N-->
+
+         <!--O-->
+
+         <!--P-->
+
+         <!--Q-->
+
+         <!--R-->
+         <Word>RTU</Word>
+
+         <!--S-->
+
+         <!--T-->
+         
+
+         <!--U-->
+
+         <!--V-->
+
+         <!--W-->
+
+         <!--X-->
+
+         <!--Y-->
+
+         <!--Z-->
+
+      </Recognized>
+   </Words>
+   <Acronyms>
+      <CasingExceptions>
+         <Acronym>Rtu</Acronym>
+         <Acronym>Modbus</Acronym>
+      </CasingExceptions>
+   </Acronyms>
+</Dictionary>
