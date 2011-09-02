@@ -16,7 +16,7 @@
  */
 /*
 This is small client with hard coded values to read a single register
-value from a ModBus RTU connected device. 
+value from a Modbus RTU connected device. 
 It is derived from the unit-test-client from Stéphane.
 
 It was successfully used on a Win 7, SP1, 64 bit System. Though the 
