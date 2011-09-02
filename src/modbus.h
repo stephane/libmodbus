@@ -172,6 +172,9 @@ DLL int modbus_flush(modbus_t *ctx);
 DLL void modbus_set_debug(modbus_t *ctx, int boolean);
 
 DLL const char *modbus_strerror(int errnum);
+#if defined(CSHARPWRAPPER)
+DLL void modbus_last_error(char *err_msg, int max_msg_size);
+#endif
 
 DLL int modbus_read_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest);
 DLL int modbus_read_input_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest);

@@ -244,6 +244,10 @@ static int _modbus_tcp_connect(modbus_t *ctx)
     int rc;
     struct sockaddr_in addr;
     modbus_tcp_t *ctx_tcp = (modbus_tcp_t *)ctx->backend_data;
+#if defined(CSHARPWRAPPER)
+    int err = 0;
+    char err_msg[512] = {0};
+#endif
 
 #ifdef OS_WIN32
     if (_modbus_tcp_init_win32() == -1) {
@@ -273,6 +277,11 @@ static int _modbus_tcp_connect(modbus_t *ctx)
                  sizeof(struct sockaddr_in));
     if (rc == -1) {
         close(ctx->s);
+#if defined(CSHARPWRAPPER)
+        err = WSAGetLastError();
+        fprintf(stdout, "connect() failed with error code %d.\n", err);
+        errno = err;
+#endif
         return -1;
     }
 

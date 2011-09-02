@@ -85,6 +85,15 @@ DLL const char *modbus_strerror(int errnum) {
     }
 }
 
+#if defined(CSHARPWRAPPER)
+// the used parameter list is the only way to return a string to be consumed by the managed code.
+DLL void modbus_last_error(char *err_msg, int max_msg_size) 
+{
+    int errnum = errno;
+    _snprintf(err_msg, max_msg_size, "%s (%d/0x%x)", modbus_strerror(errnum), errnum, errnum);
+}
+#endif
+
 void _error_print(modbus_t *ctx, const char *context)
 {
     if (ctx->debug) {
