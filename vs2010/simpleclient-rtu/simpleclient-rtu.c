@@ -85,9 +85,9 @@ int main(int argc, char *argv[])
         printf("FAILED (nb points %d)\n", rc);
         goto close;
     }
-    if (tab_rp_registers[0] != 1635) 
+    if (tab_rp_registers[0] != READ_REGISTER_EXPECTED_VALUE)// the expected value to read is READ_REGISTER_EXPECTED_VALUE/1635
     {
-        printf("FAILED (%0X != %0X)\n", tab_rp_registers[0], 1635);
+        printf("FAILED (%d/0x%0X != %d/0x%0X)\n", tab_rp_registers[0], tab_rp_registers[0], READ_REGISTER_EXPECTED_VALUE, READ_REGISTER_EXPECTED_VALUE);
         goto close;
     }
     else
