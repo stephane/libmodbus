@@ -1,3 +1,9 @@
+libmodbus (3.0.1-2) unstable; urgency=low
+
+  * Initial Debian release
+
+ -- Ivo De Decker <Ivo.DeDecker@UGent.be>  Thu, 11 Aug 2011 19:53:33 +0200
+
 libmodbus (3.0.1-1) unstable; urgency=low
 
   * New upstream release
