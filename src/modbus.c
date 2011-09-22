@@ -674,7 +674,8 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
     case _FC_READ_COILS: {
         int nb = (req[offset + 3] << 8) + req[offset + 4];
 
-        if ((address + nb) > mb_mapping->nb_bits) {
+        if ((address + nb) > mb_mapping->nb_bits ||
+			nb > MODBUS_MAX_READ_REGISTERS) {
             if (ctx->debug) {
                 fprintf(stderr, "Illegal data address %0X in read_bits\n",
                         address + nb);
@@ -696,7 +697,8 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
          * function) */
         int nb = (req[offset + 3] << 8) + req[offset + 4];
 
-        if ((address + nb) > mb_mapping->nb_input_bits) {
+        if ((address + nb) > mb_mapping->nb_input_bits ||
+			nb > MODBUS_MAX_READ_REGISTERS) {
             if (ctx->debug) {
                 fprintf(stderr, "Illegal data address %0X in read_input_bits\n",
                         address + nb);
@@ -716,7 +718,8 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
     case _FC_READ_HOLDING_REGISTERS: {
         int nb = (req[offset + 3] << 8) + req[offset + 4];
 
-        if ((address + nb) > mb_mapping->nb_registers) {
+        if ((address + nb) > mb_mapping->nb_registers ||
+			nb > MODBUS_MAX_READ_REGISTERS) {
             if (ctx->debug) {
                 fprintf(stderr, "Illegal data address %0X in read_registers\n",
                         address + nb);
@@ -741,7 +744,8 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
          * function) */
         int nb = (req[offset + 3] << 8) + req[offset + 4];
 
-        if ((address + nb) > mb_mapping->nb_input_registers) {
+        if ((address + nb) > mb_mapping->nb_input_registers ||
+			nb > MODBUS_MAX_READ_REGISTERS) {
             if (ctx->debug) {
                 fprintf(stderr, "Illegal data address %0X in read_input_registers\n",
                         address + nb);
@@ -809,7 +813,8 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
     case _FC_WRITE_MULTIPLE_COILS: {
         int nb = (req[offset + 3] << 8) + req[offset + 4];
 
-        if ((address + nb) > mb_mapping->nb_bits) {
+        if ((address + nb) > mb_mapping->nb_bits ||
+			nb > MODBUS_MAX_WRITE_REGISTERS) {
             if (ctx->debug) {
                 fprintf(stderr, "Illegal data address %0X in write_bits\n",
                         address + nb);
@@ -831,7 +836,8 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
     case _FC_WRITE_MULTIPLE_REGISTERS: {
         int nb = (req[offset + 3] << 8) + req[offset + 4];
 
-        if ((address + nb) > mb_mapping->nb_registers) {
+        if ((address + nb) > mb_mapping->nb_registers ||
+			nb > MODBUS_MAX_WRITE_REGISTERS) {
             if (ctx->debug) {
                 fprintf(stderr, "Illegal data address %0X in write_registers\n",
                         address + nb);
@@ -904,7 +910,9 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         int nb_write = (req[offset + 7] << 8) + req[offset + 8];
 
         if ((address + nb) > mb_mapping->nb_registers ||
-            (address_write + nb_write) > mb_mapping->nb_registers) {
+            (address_write + nb_write) > mb_mapping->nb_registers ||
+			nb > MODBUS_MAX_RW_WRITE_REGISTERS ||
+			nb_write > MODBUS_MAX_RW_WRITE_REGISTERS) {
             if (ctx->debug) {
                 fprintf(stderr,
                         "Illegal data read address %0X or write address %0X write_and_read_registers\n",
