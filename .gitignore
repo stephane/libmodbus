@@ -36,6 +36,7 @@ tests/bandwidth-server-one
 tests/random-test-client
 tests/random-test-server
 tests/unit-test-client
+tests/unit-test.h
 tests/unit-test-server
 tests/version
 doc/*.html
