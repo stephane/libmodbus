@@ -1,5 +1,5 @@
 dnl ##############################################################################
-dnl # AC_LIBMODBUS_CHECK_DOC_BUILD                                                     #
+dnl # AC_LIBMODBUS_CHECK_DOC_BUILD                                               #
 dnl # Check whether to build documentation and install man-pages                 #
 dnl ##############################################################################
 AC_DEFUN([AC_LIBMODBUS_CHECK_DOC_BUILD], [{
@@ -20,7 +20,7 @@ AC_DEFUN([AC_LIBMODBUS_CHECK_DOC_BUILD], [{
         if test "x$ac_libmodbus_have_asciidoc" = "xno" -o "x$ac_libmodbus_have_xmlto" = "xno"; then
             ac_libmodbus_build_doc="no"
             # Tarballs built with 'make dist' ship with prebuilt documentation.
-            if ! test -f doc/modbus.7; then
+            if ! test -f doc/libmodbus.7; then
                 ac_libmodbus_install_man="no"
                 AC_MSG_WARN([You are building an unreleased version of libmodbus and asciidoc or xmlto are not installed.])
                 AC_MSG_WARN([Documentation will not be built and manual pages will not be installed.])
