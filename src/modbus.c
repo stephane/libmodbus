@@ -1562,6 +1562,10 @@ modbus_mapping_t* modbus_mapping_new(int nb_bits, int nb_input_bits,
 /* Frees the 4 arrays */
 void modbus_mapping_free(modbus_mapping_t *mb_mapping)
 {
+    if (mb_mapping != NULL) {
+        return;
+    }
+
     free(mb_mapping->tab_input_registers);
     free(mb_mapping->tab_registers);
     free(mb_mapping->tab_input_bits);
