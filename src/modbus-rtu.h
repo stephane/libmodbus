@@ -42,4 +42,10 @@ int modbus_rtu_get_serial_mode(modbus_t *ctx);
 int modbus_rtu_set_rts(modbus_t *ctx, int mode);
 int modbus_rtu_get_rts(modbus_t *ctx);
 
+#define MODBUS_RTU_HAS_ECHOHW 1
+#define MODBUS_RTU_NO_ECHOHW 0
+
+int modbus_rtu_set_echohw_mode(modbus_t *ctx, uint8_t mode);
+int modbus_rtu_get_echohw_mode(modbus_t *ctx);
+
 #endif /* _MODBUS_RTU_H_ */

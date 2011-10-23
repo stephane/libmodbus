@@ -86,6 +86,7 @@ typedef struct _modbus_rtu {
     int serial_mode;
     int rts;
 #endif
+    uint8_t echohw;
 } modbus_rtu_t;
 
 #endif /* _MODBUS_RTU_PRIVATE_H_ */
