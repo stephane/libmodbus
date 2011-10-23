@@ -84,8 +84,10 @@ typedef struct _modbus_rtu {
 #endif
 #if HAVE_DECL_TIOCSRS485
     int serial_mode;
-    int rts;
 #endif
+#if HAVE_DECL_TIOCM_RTS    
+    int rts;
+#endif    
     uint8_t echohw;
 } modbus_rtu_t;
 
