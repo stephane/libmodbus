@@ -313,6 +313,24 @@ ssize_t _modbus_rtu_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length)
 
 int _modbus_rtu_flush(modbus_t *);
 
+int _modbus_rtu_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
+                                       const uint8_t *rsp, int rsp_length)
+{
+    /* Check responding slave is the slave we requested (except for broacast
+     * request) */
+    if (req[0] != 0 && req[0] != rsp[0]) {
+        if (ctx->debug) {
+            fprintf(stderr,
+                    "The responding slave %d it not the requested slave %d",
+                    rsp[0], req[0]);
+        }
+        errno = EMBBADSLAVE;
+        return -1;
+    } else {
+        return 0;
+    }
+}
+
 /* The check_crc16 function shall return the message length if the CRC is
    valid. Otherwise it shall return -1 and set errno to EMBADCRC. */
 int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
@@ -940,7 +958,7 @@ const modbus_backend_t _modbus_rtu_backend = {
     _modbus_rtu_send,
     _modbus_rtu_recv,
     _modbus_rtu_check_integrity,
-    NULL,
+    _modbus_rtu_pre_check_confirmation,
     _modbus_rtu_connect,
     _modbus_rtu_close,
     _modbus_rtu_flush,
