@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+/* For accept4 when available */
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -526,7 +528,13 @@ int modbus_tcp_accept(modbus_t *ctx, int *socket)
     socklen_t addrlen;
 
     addrlen = sizeof(addr);
+#ifdef HAVE_ACCEPT4
+    /* Inherit socket flags and use accept4 call */
+    ctx->s = accept4(*socket, (struct sockaddr *)&addr, &addrlen, SOCK_CLOEXEC);
+#else
     ctx->s = accept(*socket, (struct sockaddr *)&addr, &addrlen);
+#endif
+
     if (ctx->s == -1) {
         close(*socket);
         *socket = 0;

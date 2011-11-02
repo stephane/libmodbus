@@ -101,7 +101,7 @@ AC_CHECK_DECLS([__CYGWIN__])
 
 # Checks for library functions.
 AC_FUNC_FORK
-AC_CHECK_FUNCS([gettimeofday inet_ntoa memset select socket strerror strlcpy getaddrinfo])
+AC_CHECK_FUNCS([accept4 getaddrinfo gettimeofday inet_ntoa memset select socket strerror strlcpy])
 
 # Add -Wall -Werror for GCC if not already there
 if test "x$GCC" = "xyes"; then
