@@ -373,6 +373,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 #else
     struct termios tios;
     speed_t speed;
+    int flags;
 #endif
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
 
@@ -526,7 +527,12 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 
        Timeouts are ignored in canonical input mode or when the
        NDELAY option is set on the file via open or fcntl */
-    ctx->s = open(ctx_rtu->device, O_RDWR | O_NOCTTY | O_NDELAY | O_EXCL);
+    flags = O_RDWR | O_NOCTTY | O_NDELAY | O_EXCL;
+#ifdef O_CLOEXEC
+    flags |= O_CLOEXEC;
+#endif
+
+    ctx->s = open(ctx_rtu->device, flags);
     if (ctx->s == -1) {
         fprintf(stderr, "ERROR Can't open the device %s (%s)\n",
                 ctx_rtu->device, strerror(errno));
