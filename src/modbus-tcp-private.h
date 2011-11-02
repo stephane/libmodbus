@@ -44,4 +44,7 @@ typedef struct _modbus_tcp_pi {
     char service[_MODBUS_TCP_PI_SERVICE_LENGTH];
 } modbus_tcp_pi_t;
 
+void _modbus_init_tcp(modbus_t *ctx, modbus_tcp_t *ctx_tcp);
+void _modbus_init_tcp_pi(modbus_t *ctx, modbus_tcp_pi_t *ctx_tcp_pi);
+
 #endif /* _MODBUS_TCP_PRIVATE_H_ */

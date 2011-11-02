@@ -978,6 +978,14 @@ const modbus_backend_t _modbus_rtu_backend = {
     _modbus_rtu_filter_request
 };
 
+void _modbus_init_rtu(modbus_t *ctx, modbus_rtu_t *ctx_rtu)
+{
+    _modbus_init_common(ctx);
+
+    ctx->backend = &_modbus_rtu_backend;
+    ctx->backend_data = ctx_rtu;
+}
+
 modbus_t* modbus_new_rtu(const char *device,
                          int baud, char parity, int data_bit,
                          int stop_bit)
@@ -988,11 +996,15 @@ modbus_t* modbus_new_rtu(const char *device,
     size_t ret_size;
 
     ctx = (modbus_t *) malloc(sizeof(modbus_t));
-    _modbus_init_common(ctx);
-
-    ctx->backend = &_modbus_rtu_backend;
-    ctx->backend_data = (modbus_rtu_t *) malloc(sizeof(modbus_rtu_t));
-    ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
+    if (ctx == NULL) {
+        return NULL;
+    }
+    ctx_rtu = (modbus_rtu_t *) malloc(sizeof(modbus_rtu_t));
+    if (ctx_rtu == NULL) {
+        free(ctx);
+        return NULL;
+    }
+    _modbus_init_rtu(ctx, ctx_rtu);
 
     dest_size = sizeof(ctx_rtu->device);
     ret_size = strlcpy(ctx_rtu->device, device, dest_size);

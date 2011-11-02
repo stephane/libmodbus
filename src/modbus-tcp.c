@@ -627,6 +627,17 @@ const modbus_backend_t _modbus_tcp_pi_backend = {
     _modbus_tcp_filter_request
 };
 
+void _modbus_init_tcp(modbus_t *ctx, modbus_tcp_t *ctx_tcp)
+{
+    _modbus_init_common(ctx);
+
+    /* Could be changed after to reach a remote serial Modbus device */
+    ctx->slave = MODBUS_TCP_SLAVE;
+
+    ctx->backend = &_modbus_tcp_backend;
+    ctx->backend_data = ctx_tcp;
+}
+
 modbus_t* modbus_new_tcp(const char *ip, int port)
 {
     modbus_t *ctx;
@@ -648,15 +659,15 @@ modbus_t* modbus_new_tcp(const char *ip, int port)
 #endif
 
     ctx = (modbus_t *) malloc(sizeof(modbus_t));
-    _modbus_init_common(ctx);
-
-    /* Could be changed after to reach a remote serial Modbus device */
-    ctx->slave = MODBUS_TCP_SLAVE;
-
-    ctx->backend = &(_modbus_tcp_backend);
-
-    ctx->backend_data = (modbus_tcp_t *) malloc(sizeof(modbus_tcp_t));
-    ctx_tcp = (modbus_tcp_t *)ctx->backend_data;
+    if (ctx == NULL) {
+        return NULL;
+    }
+    ctx_tcp = (modbus_tcp_t *) malloc(sizeof(modbus_tcp_t));
+    if (ctx_tcp == NULL) {
+        free(ctx);
+        return NULL;
+    }
+    _modbus_init_tcp(ctx, ctx_tcp);
 
     dest_size = sizeof(char) * 16;
     ret_size = strlcpy(ctx_tcp->ip, ip, dest_size);
@@ -679,6 +690,16 @@ modbus_t* modbus_new_tcp(const char *ip, int port)
     return ctx;
 }
 
+void _modbus_init_tcp_pi(modbus_t *ctx, modbus_tcp_pi_t *ctx_tcp_pi)
+{
+    _modbus_init_common(ctx);
+
+    /* Could be changed after to reach a remote serial Modbus device */
+    ctx->slave = MODBUS_TCP_SLAVE;
+
+    ctx->backend = &_modbus_tcp_pi_backend;
+    ctx->backend_data = ctx_tcp_pi;
+}
 
 modbus_t* modbus_new_tcp_pi(const char *node, const char *service)
 {
@@ -688,15 +709,15 @@ modbus_t* modbus_new_tcp_pi(const char *node, const char *service)
     size_t ret_size;
 
     ctx = (modbus_t *) malloc(sizeof(modbus_t));
-    _modbus_init_common(ctx);
-
-    /* Could be changed after to reach a remote serial Modbus device */
-    ctx->slave = MODBUS_TCP_SLAVE;
-
-    ctx->backend = &(_modbus_tcp_pi_backend);
-
-    ctx->backend_data = (modbus_tcp_pi_t *) malloc(sizeof(modbus_tcp_pi_t));
-    ctx_tcp_pi = (modbus_tcp_pi_t *)ctx->backend_data;
+    if (ctx == NULL) {
+        return NULL;
+    }
+    ctx_tcp_pi = (modbus_tcp_pi_t *) malloc(sizeof(modbus_tcp_pi_t));
+    if (ctx_tcp_pi == NULL) {
+        free(ctx);
+        return NULL;
+    }
+    _modbus_init_tcp_pi(ctx, ctx_tcp_pi);
 
     dest_size = sizeof(char) * _MODBUS_TCP_PI_NODE_LENGTH;
     ret_size = strlcpy(ctx_tcp_pi->node, node, dest_size);
