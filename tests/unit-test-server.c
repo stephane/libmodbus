@@ -128,10 +128,22 @@ int main(int argc, char*argv[])
                 MODBUS_SET_INT16_TO_INT8(query, header_length + 3,
                                          UT_REGISTERS_NB_SPECIAL - 1);
             } else if (MODBUS_GET_INT16_FROM_INT8(query, header_length + 1)
-                == UT_REGISTERS_ADDRESS_SPECIAL) {
+                       == UT_REGISTERS_ADDRESS_SPECIAL) {
                 printf("Reply to this special register address by an exception\n");
                 modbus_reply_exception(ctx, query,
                                        MODBUS_EXCEPTION_SLAVE_OR_SERVER_BUSY);
+                continue;
+            } else if (MODBUS_GET_INT16_FROM_INT8(query, header_length + 1)
+                       == UT_REGISTERS_ADDRESS_INVALID_TID_OR_SLAVE) {
+                const int RAW_REQ_LENGTH = 5;
+                uint8_t raw_req[] = {
+                    (use_backend == RTU) ? INVALID_SERVER_ID : 0xFF,
+                    0x03,
+                    0x02, 0x00, 0x00
+                };
+
+                printf("Reply with an invalid TID or slave\n");
+                modbus_send_raw_request(ctx, raw_req, RAW_REQ_LENGTH * sizeof(uint8_t));
                 continue;
             }
         }

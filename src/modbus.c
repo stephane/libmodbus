@@ -80,6 +80,8 @@ const char *modbus_strerror(int errnum) {
         return "Invalid exception code";
     case EMBMDATA:
         return "Too many data";
+    case EMBBADSLAVE:
+        return "Response not from requested slave";
     default:
         return strerror(errnum);
     }
@@ -440,7 +442,7 @@ static int receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
             }
         }
 
-        if (length_to_read > 0) {
+        if (length_to_read > 0 && ctx->byte_timeout.tv_sec != -1) {
             /* If there is no character in the buffer, the allowed timeout
                interval between two consecutive bytes is defined by
                byte_timeout */
@@ -481,6 +483,7 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
     int rc;
     int rsp_length_computed;
     const int offset = ctx->backend->header_length;
+    const int function = rsp[offset];
 
     if (ctx->backend->pre_check_confirmation) {
         rc = ctx->backend->pre_check_confirmation(ctx, req, rsp, rsp_length);
@@ -494,18 +497,39 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
 
     rsp_length_computed = compute_response_length_from_request(ctx, req);
 
+    /* Exception code */
+    if (function >= 0x80) {
+        if (rsp_length == (offset + 2 + ctx->backend->checksum_length) &&
+            req[offset] == (rsp[offset] - 0x80)) {
+            /* Valid exception code received */
+
+            int exception_code = rsp[offset + 1];
+            if (exception_code < MODBUS_EXCEPTION_MAX) {
+                errno = MODBUS_ENOBASE + exception_code;
+            } else {
+                errno = EMBBADEXC;
+            }
+            _error_print(ctx, NULL);
+            return -1;
+        } else {
+            errno = EMBBADEXC;
+            _error_print(ctx, NULL);
+            return -1;
+        }
+    }
+
     /* Check length */
-    if (rsp_length == rsp_length_computed ||
-        rsp_length_computed == MSG_LENGTH_UNDEFINED) {
+    if ((rsp_length == rsp_length_computed ||
+         rsp_length_computed == MSG_LENGTH_UNDEFINED) &&
+        function < 0x80) {
         int req_nb_value;
         int rsp_nb_value;
-        const int function = rsp[offset];
 
         /* Check function code */
         if (function != req[offset]) {
             if (ctx->debug) {
                 fprintf(stderr,
-                        "Received function not corresponding to the request (%d != %d)\n",
+                        "Received function not corresponding to the requestd (0x%X != 0x%X)\n",
                         function, req[offset]);
             }
             if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_PROTOCOL) {
@@ -564,18 +588,6 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
             errno = EMBBADDATA;
             rc = -1;
         }
-    } else if (rsp_length == (offset + 2 + ctx->backend->checksum_length) &&
-               req[offset] == (rsp[offset] - 0x80)) {
-        /* EXCEPTION CODE RECEIVED */
-
-        int exception_code = rsp[offset + 1];
-        if (exception_code < MODBUS_EXCEPTION_MAX) {
-            errno = MODBUS_ENOBASE + exception_code;
-        } else {
-            errno = EMBBADEXC;
-        }
-        _error_print(ctx, NULL);
-        rc = -1;
     } else {
         if (ctx->debug) {
             fprintf(stderr,

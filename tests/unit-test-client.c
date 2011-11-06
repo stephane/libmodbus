@@ -495,7 +495,7 @@ int main(int argc, char *argv[])
         uint8_t rsp[MODBUS_TCP_MAX_ADU_LENGTH];
 
         /* No response in RTU mode */
-        printf("1/4-A No response from slave %d: ", INVALID_SERVER_ID);
+        printf("1/5-A No response from slave %d: ", INVALID_SERVER_ID);
 
         if (rc == -1 && errno == ETIMEDOUT) {
             printf("OK\n");
@@ -509,7 +509,7 @@ int main(int argc, char *argv[])
                                 RAW_REQ_LENGTH * sizeof(uint8_t));
         rc = modbus_receive_confirmation(ctx, rsp);
 
-        printf("1/4-B No response from slave %d with invalid request: ",
+        printf("1/5-B No response from slave %d with invalid request: ",
                INVALID_SERVER_ID);
 
         if (rc == -1 && errno == ETIMEDOUT) {
@@ -539,7 +539,7 @@ int main(int argc, char *argv[])
 
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
                                UT_REGISTERS_NB, tab_rp_registers);
-    printf("2/4 Reply after a broadcast query: ");
+    printf("2/5 Reply after a broadcast query: ");
     if (rc == UT_REGISTERS_NB) {
         printf("OK\n");
     } else {
@@ -554,7 +554,7 @@ int main(int argc, char *argv[])
         modbus_set_slave(ctx, MODBUS_TCP_SLAVE);
     }
 
-    printf("3/4 Report slave ID: \n");
+    printf("3/5 Report slave ID: \n");
     /* tab_rp_bits is used to store bytes */
     rc = modbus_report_slave_id(ctx, tab_rp_bits);
     if (rc == -1) {
@@ -585,6 +585,16 @@ int main(int argc, char *argv[])
             printf("%c", tab_rp_bits[i]);
         }
         printf("\n");
+    }
+
+    printf("5/5 Response with an invalid TID or slave: ");
+    rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS_INVALID_TID_OR_SLAVE,
+                               1, tab_rp_registers);
+    if (rc == -1) {
+        printf("OK\n");
+    } else {
+        printf("FAILED\n");
+        goto close;
     }
 
     /* Save original timeout */

@@ -31,8 +31,11 @@
 #include "modbus-rtu.h"
 #include "modbus-rtu-private.h"
 
-#if HAVE_DECL_TIOCSRS485
+#if HAVE_DECL_TIOCSRS485 || HAVE_DECL_TIOCM_RTS
 #include <sys/ioctl.h>
+#endif
+
+#if HAVE_DECL_TIOCSRS485
 #include <linux/serial.h>
 #endif
 
@@ -295,12 +298,11 @@ ssize_t _modbus_rtu_write_n_read(modbus_t *ctx, const uint8_t *req, int req_leng
 }
 
 ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length) {
-#if defined(_WIN32)
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
+#if defined(_WIN32)
     DWORD n_bytes = 0;
     return (WriteFile(ctx_rtu->w_ser.fd, req, req_length, &n_bytes, NULL)) ? n_bytes : -1;
 #else
-    modbus_rtu_t *ctx_rtu = ctx->backend_data;
 #if HAVE_DECL_TIOCM_RTS
     if (ctx_rtu->rts != MODBUS_RTU_RTS_NONE) {
         ssize_t size;
@@ -322,7 +324,7 @@ ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length) {
 
         return size;
     } else {
-#endif    
+#endif // HAVE_DECL_TIOCM_RTS   
         if (!ctx_rtu->echohw)
             return write(ctx->s, req, req_length);
         else
@@ -330,7 +332,8 @@ ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length) {
 #if HAVE_DECL_TIOCM_RTS    
     }
 #endif
-#endif
+    
+#endif // !_WIN32
 }
 
 ssize_t _modbus_rtu_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length) {
@@ -342,6 +345,24 @@ ssize_t _modbus_rtu_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length) {
 }
 
 int _modbus_rtu_flush(modbus_t *);
+
+int _modbus_rtu_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
+                                       const uint8_t *rsp, int rsp_length)
+{
+    /* Check responding slave is the slave we requested (except for broacast
+     * request) */
+    if (req[0] != 0 && req[0] != rsp[0]) {
+        if (ctx->debug) {
+            fprintf(stderr,
+                    "The responding slave %d it not the requested slave %d",
+                    rsp[0], req[0]);
+        }
+        errno = EMBBADSLAVE;
+        return -1;
+    } else {
+        return 0;
+    }
+}
 
 /* The check_crc16 function shall return the message length if the CRC is
    valid. Otherwise it shall return -1 and set errno to EMBADCRC. */
@@ -770,15 +791,6 @@ static int _modbus_rtu_connect(modbus_t *ctx) {
     }
 #endif
 
-#if HAVE_DECL_TIOCSRS485
-    /* The RS232 mode has been set by default */
-    ctx_rtu->serial_mode = MODBUS_RTU_RS232;
-
-    /* The RTS use has been set by default */
-    ctx_rtu->rts = MODBUS_RTU_RTS_NONE;
-
-#endif
-
     return 0;
 }
 
@@ -999,7 +1011,7 @@ const modbus_backend_t _modbus_rtu_backend = {
     _modbus_rtu_send,
     _modbus_rtu_recv,
     _modbus_rtu_check_integrity,
-    NULL,
+    _modbus_rtu_pre_check_confirmation,
     _modbus_rtu_connect,
     _modbus_rtu_close,
     _modbus_rtu_flush,
@@ -1050,9 +1062,12 @@ modbus_t* modbus_new_rtu(const char *device,
     ctx_rtu->stop_bit = stop_bit;
 
 #if HAVE_DECL_TIOCSRS485    
+    /* The RS232 mode has been set by default */
     ctx_rtu->serial_mode = MODBUS_RTU_RS232;
 #endif 
+
 #if HAVE_DECL_TIOCM_RTS
+    /* The RTS use has been set by default */
     ctx_rtu->rts = MODBUS_RTU_RTS_NONE;
 #endif 
 
