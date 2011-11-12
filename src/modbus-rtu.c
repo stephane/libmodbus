@@ -362,12 +362,12 @@ int _modbus_rtu_flush(modbus_t *);
 int _modbus_rtu_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
                                        const uint8_t *rsp, int rsp_length)
 {
-    /* Check responding slave is the slave we requested (except for broacast
+    /* Check responding slave is the slave we requested (except for broadcast
      * request) */
     if (req[0] != 0 && req[0] != rsp[0]) {
         if (ctx->debug) {
             fprintf(stderr,
-                    "The responding slave %d it not the requested slave %d",
+                    "The responding slave %d is not the requested slave %d",
                     rsp[0], req[0]);
         }
         errno = EMBBADSLAVE;

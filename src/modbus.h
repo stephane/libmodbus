@@ -194,6 +194,9 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
                  int req_length, modbus_mapping_t *mb_mapping);
 int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
                            unsigned int exception_code);
+int modbus_proxy(modbus_t* master_ctx, modbus_t* slave_ctx, uint8_t* master_req,
+                 int master_req_length);
+
 
 /**
  * UTILS FUNCTIONS
