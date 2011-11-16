@@ -165,6 +165,7 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
 {
     int rc;
     int i;
+    int send_attempts = 0;
 
     msg_length = ctx->backend->send_msg_pre(msg, msg_length);
 
@@ -193,10 +194,15 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
             }
         }
     } while ((ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) &&
-             rc == -1);
+             rc == -1 &&
+             send_attempts++ < MODBUS_MAX_SEND_RETRIES);
 
     if (rc > 0 && rc != msg_length) {
         errno = EMBBADDATA;
+        return -1;
+    }
+    if (send_attempts >= MODBUS_MAX_SEND_RETRIES) {
+        errno = EMBXSFAIL;
         return -1;
     }
 
