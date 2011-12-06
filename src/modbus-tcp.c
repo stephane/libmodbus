@@ -102,21 +102,15 @@ int _modbus_tcp_build_request_basis(modbus_t *ctx, int function,
                                     int addr, int nb,
                                     uint8_t *req)
 {
+    modbus_tcp_t *ctx_tcp = ctx->backend_data;
 
-    /* Extract from MODBUS Messaging on TCP/IP Implementation Guide V1.0b
-       (page 23/46):
-       The transaction identifier is used to associate the future response
-       with the request. So, at a time, on a TCP connection, this identifier
-       must be unique. */
-    static uint16_t t_id = 0;
-
-    /* Transaction ID */
-    if (t_id < UINT16_MAX)
-        t_id++;
+    /* Increase transaction ID */
+    if (ctx_tcp->t_id < UINT16_MAX)
+        ctx_tcp->t_id++;
     else
-        t_id = 0;
-    req[0] = t_id >> 8;
-    req[1] = t_id & 0x00ff;
+        ctx_tcp->t_id = 0;
+    req[0] = ctx_tcp->t_id >> 8;
+    req[1] = ctx_tcp->t_id & 0x00ff;
 
     /* Protocol Modbus */
     req[2] = 0;
@@ -688,6 +682,7 @@ modbus_t* modbus_new_tcp(const char *ip, int port)
     }
 
     ctx_tcp->port = port;
+    ctx_tcp->t_id = 0;
 
     return ctx;
 }
@@ -742,6 +737,8 @@ modbus_t* modbus_new_tcp_pi(const char *node, const char *service)
         errno = EINVAL;
         return NULL;
     }
+
+    ctx_tcp_pi->t_id = 0;
 
     return ctx;
 }
