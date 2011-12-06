@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
     }
 
     if (tab_rp_bits[0] != ON) {
-        printf("FAILED (%0X = != %0X)\n", tab_rp_bits[0], ON);
+        printf("FAILED (%0X != %0X)\n", tab_rp_bits[0], ON);
         goto close;
     }
     printf("OK\n");
