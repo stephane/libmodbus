@@ -39,6 +39,11 @@
 #include <linux/serial.h>
 #endif
 
+#if HAVE_DECL_TIOCM_RTS && !HAVE_DECL_TIOCSRS485
+#include <sys/ioctl.h>
+#endif
+
+
 /* Table of CRC values for high-order byte */
 static const uint8_t table_crc_hi[] = {
     0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0,
@@ -183,7 +188,8 @@ int _modbus_rtu_send_msg_pre(uint8_t *req, int req_length)
  * while win32_ser_read() only consumes the receive buffer.
  */
 
-static void win32_ser_init(struct win32_ser *ws) {
+static void win32_ser_init(struct win32_ser *ws)
+{
     /* Clear everything */
     memset(ws, 0x00, sizeof(struct win32_ser));
 
@@ -193,7 +199,8 @@ static void win32_ser_init(struct win32_ser *ws) {
 
 /* FIXME Try to remove length_to_read -> max_len argument, only used by win32 */
 static int win32_ser_select(struct win32_ser *ws, int max_len,
-                            struct timeval *tv) {
+                            struct timeval *tv)
+{
     COMMTIMEOUTS comm_to;
     unsigned int msec = 0;
 
@@ -243,7 +250,8 @@ static int win32_ser_select(struct win32_ser *ws, int max_len,
 }
 
 static int win32_ser_read(struct win32_ser *ws, uint8_t *p_msg,
-                          unsigned int max_len) {
+                          unsigned int max_len)
+{
     unsigned int n = ws->n_bytes;
 
     if (max_len < n) {
@@ -275,15 +283,39 @@ void _modbus_rtu_ioctl_rts(int fd, int on)
 #endif
 }
 
+ssize_t _modbus_rtu_write_n_read(modbus_t *ctx, const uint8_t *req, int req_length)
+{
+    ssize_t w, r, tr, i;
+    uint8_t rb[req_length];
+
+    // Transmit
+    w = write(ctx->s, req, req_length);
+
+    // Read back written bytes if hw has echo
+    tr = 0;
+    while (tr < w) {
+        r = read(ctx->s, rb + tr, w - tr);
+        if (r < 0)
+            return r;
+        tr += r;
+    }
+    if (ctx->debug) {
+        for (i = 0; i < tr; ++i)
+            fprintf(stderr, "|%02X|", rb[i]);
+        fprintf(stderr, "\n");
+    }
+
+    return w;
+}
+
 ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
 {
-#if defined(_WIN32)
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
+#if defined(_WIN32)
     DWORD n_bytes = 0;
     return (WriteFile(ctx_rtu->w_ser.fd, req, req_length, &n_bytes, NULL)) ? n_bytes : -1;
 #else
 #if HAVE_DECL_TIOCM_RTS
-    modbus_rtu_t *ctx_rtu = ctx->backend_data;
     if (ctx_rtu->rts != MODBUS_RTU_RTS_NONE) {
         ssize_t size;
 
@@ -294,25 +326,32 @@ ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
         _modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts == MODBUS_RTU_RTS_UP);
         usleep(_MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
 
-        size = write(ctx->s, req, req_length);
+        if (!ctx_rtu->echohw)
+            size = write(ctx->s, req, req_length);
+        else
+            size = _modbus_rtu_write_n_read(ctx, req, req_length);
 
         usleep(_MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
         _modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
 
         return size;
     } else {
-#endif
-        return write(ctx->s, req, req_length);
-#if HAVE_DECL_TIOCM_RTS
+#endif // HAVE_DECL_TIOCM_RTS   
+        if (!ctx_rtu->echohw)
+            return write(ctx->s, req, req_length);
+        else
+            return _modbus_rtu_write_n_read(ctx, req, req_length);
+#if HAVE_DECL_TIOCM_RTS    
     }
 #endif
-#endif
+
+#endif // !_WIN32
 }
 
 ssize_t _modbus_rtu_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length)
 {
 #if defined(_WIN32)
-    return win32_ser_read(&((modbus_rtu_t *)ctx->backend_data)->w_ser, rsp, rsp_length);
+    return win32_ser_read(&((modbus_rtu_t *) ctx->backend_data)->w_ser, rsp, rsp_length);
 #else
     return read(ctx->s, rsp, rsp_length);
 #endif
@@ -323,12 +362,12 @@ int _modbus_rtu_flush(modbus_t *);
 int _modbus_rtu_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
                                        const uint8_t *rsp, int rsp_length)
 {
-    /* Check responding slave is the slave we requested (except for broacast
+    /* Check responding slave is the slave we requested (except for broadcast
      * request) */
     if (req[0] != 0 && req[0] != rsp[0]) {
         if (ctx->debug) {
             fprintf(stderr,
-                    "The responding slave %d it not the requested slave %d",
+                    "The responding slave %d is not the requested slave %d",
                     rsp[0], req[0]);
         }
         errno = EMBBADSLAVE;
@@ -407,10 +446,10 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     }
 
     /* Save params */
-    ctx_rtu->old_dcb.DCBlength = sizeof(DCB);
+    ctx_rtu->old_dcb.DCBlength = sizeof (DCB);
     if (!GetCommState(ctx_rtu->w_ser.fd, &ctx_rtu->old_dcb)) {
         fprintf(stderr, "ERROR Error getting configuration (LastError %d)\n",
-                (int)GetLastError());
+                (int) GetLastError());
         CloseHandle(ctx_rtu->w_ser.fd)
         ctx_rtu->w_ser.fd = INVALID_HANDLE_VALUE;
         return -1;
@@ -514,7 +553,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     /* Setup port */
     if (!SetCommState(ctx_rtu->w_ser.fd, &dcb)) {
         fprintf(stderr, "ERROR Error setting new configuration (LastError %d)\n",
-                (int)GetLastError());
+                (int) GetLastError());
         CloseHandle(ctx_rtu->w_ser.fd)
         ctx_rtu->w_ser.fd = INVALID_HANDLE_VALUE;
         return -1;
@@ -542,11 +581,11 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     /* Save */
     tcgetattr(ctx->s, &(ctx_rtu->old_tios));
 
-    memset(&tios, 0, sizeof(struct termios));
+    memset(&tios, 0, sizeof (struct termios));
 
     /* C_ISPEED     Input baud (new interface)
        C_OSPEED     Output baud (new interface)
-    */
+     */
     switch (ctx_rtu->baud) {
     case 110:
         speed = B110;
@@ -601,13 +640,13 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     /* C_CFLAG      Control options
        CLOCAL       Local line - do not change "owner" of port
        CREAD        Enable receiver
-    */
+     */
     tios.c_cflag |= (CREAD | CLOCAL);
     /* CSIZE, HUPCL, CRTSCTS (hardware flow control) */
 
     /* Set data bits (5, 6, 7, 8 bits)
        CSIZE        Bit mask for data bits
-    */
+     */
     tios.c_cflag &= ~CSIZE;
     switch (ctx_rtu->data_bit) {
     case 5:
@@ -627,7 +666,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 
     /* Stop bit (1 or 2) */
     if (ctx_rtu->stop_bit == 1)
-        tios.c_cflag &=~ CSTOPB;
+        tios.c_cflag &= ~CSTOPB;
     else /* 2 */
         tios.c_cflag |= CSTOPB;
 
@@ -635,11 +674,11 @@ static int _modbus_rtu_connect(modbus_t *ctx)
        PARODD       Use odd parity instead of even */
     if (ctx_rtu->parity == 'N') {
         /* None */
-        tios.c_cflag &=~ PARENB;
+        tios.c_cflag &= ~PARENB;
     } else if (ctx_rtu->parity == 'E') {
         /* Even */
         tios.c_cflag |= PARENB;
-        tios.c_cflag &=~ PARODD;
+        tios.c_cflag &= ~PARODD;
     } else {
         /* Odd */
         tios.c_cflag |= PARENB;
@@ -650,7 +689,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 
     /* This field isn't used on POSIX systems
        tios.c_line = 0;
-    */
+     */
 
     /* C_LFLAG      Line options
 
@@ -680,7 +719,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
        through exactly as they are received, when they are
        received. Generally you'll deselect the ICANON, ECHO,
        ECHOE, and ISIG options when using raw input
-    */
+     */
 
     /* Raw input */
     tios.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
@@ -702,7 +741,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
        ICRNL        Map CR to NL
        IUCLC        Map uppercase to lowercase
        IMAXBEL      Echo BEL on input line too long
-    */
+     */
     if (ctx_rtu->parity == 'N') {
         /* None */
         tios.c_iflag &= ~INPCK;
@@ -718,10 +757,10 @@ static int _modbus_rtu_connect(modbus_t *ctx)
        ONLCR        Map NL to CR-NL
 
        ONCLR ant others needs OPOST to be enabled
-    */
+     */
 
     /* Raw ouput */
-    tios.c_oflag &=~ OPOST;
+    tios.c_oflag &= ~OPOST;
 
     /* C_CC         Control characters
        VMIN         Minimum number of characters to read
@@ -761,7 +800,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
        characters in tenths of seconds. If VTIME is set to 0 (the
        default), reads will block (wait) indefinitely unless the
        NDELAY option is set on the port with open or fcntl.
-    */
+     */
     /* Unused because we use open with the NDELAY option */
     tios.c_cc[VMIN] = 0;
     tios.c_cc[VTIME] = 0;
@@ -782,7 +821,7 @@ int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode)
 #if HAVE_DECL_TIOCSRS485
         modbus_rtu_t *ctx_rtu = ctx->backend_data;
         struct serial_rs485 rs485conf;
-        memset(&rs485conf, 0x0, sizeof(struct serial_rs485));
+        memset(&rs485conf, 0x0, sizeof (struct serial_rs485));
 
         if (mode == MODBUS_RTU_RS485) {
             rs485conf.flags = SER_RS485_ENABLED;
@@ -814,7 +853,8 @@ int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode)
     return -1;
 }
 
-int modbus_rtu_get_serial_mode(modbus_t *ctx) {
+int modbus_rtu_get_serial_mode(modbus_t *ctx)
+{
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
 #if HAVE_DECL_TIOCSRS485
         modbus_rtu_t *ctx_rtu = ctx->backend_data;
@@ -860,7 +900,8 @@ int modbus_rtu_set_rts(modbus_t *ctx, int mode)
     return -1;
 }
 
-int modbus_rtu_get_rts(modbus_t *ctx) {
+int modbus_rtu_get_rts(modbus_t *ctx)
+{
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
 #if HAVE_DECL_TIOCM_RTS
         modbus_rtu_t *ctx_rtu = ctx->backend_data;
@@ -878,6 +919,31 @@ int modbus_rtu_get_rts(modbus_t *ctx) {
     }
 }
 
+int modbus_rtu_set_echohw_mode(modbus_t* ctx, uint8_t mode)
+{
+    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
+        modbus_rtu_t* rtu = (modbus_rtu_t*) ctx->backend_data;
+        rtu->echohw = mode;
+        return 0;
+    }
+    /* Wrong backend and invalid mode specified */
+    errno = EINVAL;
+    return -1;
+
+}
+
+int modbus_rtu_get_echohw_mode(modbus_t* ctx)
+{
+    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
+        modbus_rtu_t* rtu = (modbus_rtu_t*) ctx->backend_data;
+        return rtu->echohw;
+    }
+    /* Wrong backend and invalid mode specified */
+    errno = EINVAL;
+    return -1;
+
+}
+
 void _modbus_rtu_close(modbus_t *ctx)
 {
     /* Closes the file descriptor in RTU mode */
@@ -887,11 +953,11 @@ void _modbus_rtu_close(modbus_t *ctx)
     /* Revert settings */
     if (!SetCommState(ctx_rtu->w_ser.fd, &ctx_rtu->old_dcb))
         fprintf(stderr, "ERROR Couldn't revert to configuration (LastError %d)\n",
-                (int)GetLastError());
+                (int) GetLastError());
 
     if (!CloseHandle(ctx_rtu->w_ser.fd))
         fprintf(stderr, "ERROR Error while closing handle (LastError %d)\n",
-                (int)GetLastError());
+                (int) GetLastError());
 #else
     tcsetattr(ctx->s, TCSANOW, &(ctx_rtu->old_tios));
     close(ctx->s);
@@ -914,7 +980,7 @@ int _modbus_rtu_select(modbus_t *ctx, fd_set *rfds,
 {
     int s_rc;
 #if defined(_WIN32)
-    s_rc = win32_ser_select(&(((modbus_rtu_t*)ctx->backend_data)->w_ser),
+    s_rc = win32_ser_select(&(((modbus_rtu_t*) ctx->backend_data)->w_ser),
                             length_to_read, tv);
     if (s_rc == 0) {
         errno = ETIMEDOUT;
@@ -925,7 +991,7 @@ int _modbus_rtu_select(modbus_t *ctx, fd_set *rfds,
         return -1;
     }
 #else
-    while ((s_rc = select(ctx->s+1, rfds, NULL, NULL, tv)) == -1) {
+    while ((s_rc = select(ctx->s + 1, rfds, NULL, NULL, tv)) == -1) {
         if (errno == EINTR) {
             if (ctx->debug) {
                 fprintf(stderr, "A non blocked signal was caught\n");
@@ -993,14 +1059,14 @@ modbus_t* modbus_new_rtu(const char *device,
     size_t dest_size;
     size_t ret_size;
 
-    ctx = (modbus_t *) malloc(sizeof(modbus_t));
+    ctx = (modbus_t *) malloc(sizeof (modbus_t));
     _modbus_init_common(ctx);
 
     ctx->backend = &_modbus_rtu_backend;
-    ctx->backend_data = (modbus_rtu_t *) malloc(sizeof(modbus_rtu_t));
-    ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
+    ctx->backend_data = (modbus_rtu_t *) malloc(sizeof (modbus_rtu_t));
+    ctx_rtu = (modbus_rtu_t *) ctx->backend_data;
 
-    dest_size = sizeof(ctx_rtu->device);
+    dest_size = sizeof (ctx_rtu->device);
     ret_size = strlcpy(ctx_rtu->device, device, dest_size);
     if (ret_size == 0) {
         fprintf(stderr, "The device string is empty\n");
@@ -1027,15 +1093,17 @@ modbus_t* modbus_new_rtu(const char *device,
     ctx_rtu->data_bit = data_bit;
     ctx_rtu->stop_bit = stop_bit;
 
-#if HAVE_DECL_TIOCSRS485
+#if HAVE_DECL_TIOCSRS485    
     /* The RS232 mode has been set by default */
     ctx_rtu->serial_mode = MODBUS_RTU_RS232;
-#endif
+#endif 
 
 #if HAVE_DECL_TIOCM_RTS
     /* The RTS use has been set by default */
     ctx_rtu->rts = MODBUS_RTU_RTS_NONE;
-#endif
+#endif 
+
+    ctx_rtu->echohw = MODBUS_RTU_NO_ECHOHW;
 
     return ctx;
 }

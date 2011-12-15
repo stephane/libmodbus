@@ -87,7 +87,8 @@ typedef struct _modbus_rtu {
 #endif
 #if HAVE_DECL_TIOCM_RTS
     int rts;
-#endif
+#endif    
+    uint8_t echohw;
 } modbus_rtu_t;
 
 #endif /* _MODBUS_RTU_PRIVATE_H_ */
