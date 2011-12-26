@@ -328,7 +328,7 @@ int _modbus_rtu_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
     if (req[0] != 0 && req[0] != rsp[0]) {
         if (ctx->debug) {
             fprintf(stderr,
-                    "The responding slave %d it not the requested slave %d",
+                    "The responding slave %d isn't the requested slave %d",
                     rsp[0], req[0]);
         }
         errno = EMBBADSLAVE;
@@ -338,13 +338,24 @@ int _modbus_rtu_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
     }
 }
 
-/* The check_crc16 function shall return the message length if the CRC is
-   valid. Otherwise it shall return -1 and set errno to EMBADCRC. */
+/* The check_crc16 function shall return 0 is the message is ignored and the
+   message length if the CRC is valid. Otherwise it shall return -1 and set
+   errno to EMBADCRC. */
 int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
                                 const int msg_length)
 {
     uint16_t crc_calculated;
     uint16_t crc_received;
+    int slave = msg[0];
+
+    /* Filter on the Modbus unit identifier (slave) in RTU mode */
+    if (slave != ctx->slave && slave != MODBUS_BROADCAST_ADDRESS) {
+        /* Ignores the request (not for me) */
+        if (ctx->debug) {
+            printf("Request for slave %d ignored (not %d)\n", slave, ctx->slave);
+        }
+        return 0;
+    }
 
     crc_calculated = crc16(msg, msg_length - 2);
     crc_received = (msg[msg_length - 2] << 8) | msg[msg_length - 1];
@@ -948,21 +959,6 @@ int _modbus_rtu_select(modbus_t *ctx, fd_set *rfds,
     return s_rc;
 }
 
-int _modbus_rtu_filter_request(modbus_t *ctx, int slave)
-{
-    /* Filter on the Modbus unit identifier (slave) in RTU mode */
-    if (slave != ctx->slave && slave != MODBUS_BROADCAST_ADDRESS) {
-        /* Ignores the request (not for me) */
-        if (ctx->debug) {
-            printf("Request for slave %d ignored (not %d)\n",
-                   slave, ctx->slave);
-        }
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
 const modbus_backend_t _modbus_rtu_backend = {
     _MODBUS_BACKEND_TYPE_RTU,
     _MODBUS_RTU_HEADER_LENGTH,
@@ -980,8 +976,7 @@ const modbus_backend_t _modbus_rtu_backend = {
     _modbus_rtu_connect,
     _modbus_rtu_close,
     _modbus_rtu_flush,
-    _modbus_rtu_select,
-    _modbus_rtu_filter_request
+    _modbus_rtu_select
 };
 
 modbus_t* modbus_new_rtu(const char *device,

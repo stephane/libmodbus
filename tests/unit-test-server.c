@@ -114,11 +114,16 @@ int main(int argc, char*argv[])
     }
 
     for (;;) {
-        rc = modbus_receive(ctx, query);
+        do {
+            rc = modbus_receive(ctx, query);
+            /* Filtered queries return 0 */
+        } while (rc == 0);
+
         if (rc == -1) {
             /* Connection closed by the client or error */
             break;
         }
+
 
         /* Read holding registers */
         if (query[header_length] == 0x03) {

@@ -661,11 +661,6 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
     int rsp_length = 0;
     sft_t sft;
 
-    if (ctx->backend->filter_request(ctx, slave) == 1) {
-        /* Filtered */
-        return 0;
-    }
-
     sft.slave = slave;
     sft.function = function;
     sft.t_id = ctx->backend->prepare_response_tid(req, &req_length);
@@ -934,11 +929,6 @@ int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
     int rsp_length;
     int dummy_length = 99;
     sft_t sft;
-
-    if (ctx->backend->filter_request(ctx, slave) == 1) {
-        /* Filtered */
-        return 0;
-    }
 
     sft.slave = slave;
     sft.function = function + 0x80;;

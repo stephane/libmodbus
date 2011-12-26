@@ -120,10 +120,11 @@ int main(void)
 
                     modbus_set_socket(ctx, master_socket);
                     rc = modbus_receive(ctx, query);
-                    if (rc != -1) {
+                    if (rc > 0) {
                         modbus_reply(ctx, query, rc, mb_mapping);
-                    } else {
-                        /* Connection closed by the client, end of server */
+                    } else if (rc == -1) {
+                        /* This example server in ended on connection closing or
+                         * any errors. */
                         printf("Connection closed on socket %d\n", master_socket);
                         close(master_socket);
 

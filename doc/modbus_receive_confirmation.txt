@@ -23,8 +23,9 @@ function can be used to receive request not handled by the library.
 RETURN VALUE
 ------------
 The _modbus_receive_confirmation()_ function shall store the confirmation
-request in 'rsp' and return the response length if sucessful. Otherwise it shall
-return -1 and set errno.
+request in 'rsp' and return the response length if sucessful. The returned
+request length can be zero if the indication request is ignored (eg. a query for
+another slave in RTU mode). Otherwise it shall return -1 and set errno.
 
 
 SEE ALSO

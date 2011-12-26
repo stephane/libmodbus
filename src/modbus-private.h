@@ -97,7 +97,6 @@ typedef struct _modbus_backend {
     void (*close) (modbus_t *ctx);
     int (*flush) (modbus_t *ctx);
     int (*select) (modbus_t *ctx, fd_set *rfds, struct timeval *tv, int msg_length);
-    int (*filter_request) (modbus_t *ctx, int slave);
 } modbus_backend_t;
 
 struct _modbus {

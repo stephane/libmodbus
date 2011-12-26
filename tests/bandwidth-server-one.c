@@ -75,10 +75,10 @@ int main(int argc, char *argv[])
         uint8_t query[MODBUS_TCP_MAX_ADU_LENGTH];
 
         rc = modbus_receive(ctx, query);
-        if (rc >= 0) {
+        if (rc > 0) {
             modbus_reply(ctx, query, rc, mb_mapping);
-        } else {
-            /* Connection closed by the client or server */
+        } else if (rc  == -1) {
+            /* Connection closed by the client or error */
             break;
         }
     }
