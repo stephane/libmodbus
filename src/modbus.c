@@ -121,7 +121,8 @@ int modbus_flush(modbus_t *ctx)
 {
     int rc = ctx->backend->flush(ctx);
     if (rc != -1 && ctx->debug) {
-        printf("%d bytes flushed\n", rc);
+        /* Not all backends are able to return the number of bytes flushed */
+        printf("Bytes flushed (%d)\n", rc);
     }
     return rc;
 }
