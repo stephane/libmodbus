@@ -309,6 +309,29 @@ ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
 #endif
 }
 
+int _modbus_rtu_receive(modbus_t *ctx, uint8_t *req)
+{
+    int rc;
+    modbus_rtu_t *ctx_rtu = ctx->backend_data;
+
+    if (ctx_rtu->confirmation_to_ignore) {
+        _modbus_receive_msg(ctx, req, MSG_CONFIRMATION);
+        /* Ignore errors and reset the flag */
+        ctx_rtu->confirmation_to_ignore = FALSE;
+        rc = 0;
+        if (ctx->debug) {
+            printf("Confirmation to ignore\n");
+        }
+    } else {
+        rc = _modbus_receive_msg(ctx, req, MSG_INDICATION);
+        if (rc == 0) {
+            /* The next expected message is a confirmation to ignore */
+            ctx_rtu->confirmation_to_ignore = TRUE;
+        }
+    }
+    return rc;
+}
+
 ssize_t _modbus_rtu_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length)
 {
 #if defined(_WIN32)
@@ -354,6 +377,7 @@ int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
         if (ctx->debug) {
             printf("Request for slave %d ignored (not %d)\n", slave, ctx->slave);
         }
+
         return 0;
     }
 
@@ -368,6 +392,7 @@ int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
             fprintf(stderr, "ERROR CRC received %0X != CRC calculated %0X\n",
                     crc_received, crc_calculated);
         }
+
         if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_PROTOCOL) {
             _modbus_rtu_flush(ctx);
         }
@@ -970,6 +995,7 @@ const modbus_backend_t _modbus_rtu_backend = {
     _modbus_rtu_prepare_response_tid,
     _modbus_rtu_send_msg_pre,
     _modbus_rtu_send,
+    _modbus_rtu_receive,
     _modbus_rtu_recv,
     _modbus_rtu_check_integrity,
     _modbus_rtu_pre_check_confirmation,
@@ -1031,6 +1057,8 @@ modbus_t* modbus_new_rtu(const char *device,
     /* The RTS use has been set by default */
     ctx_rtu->rts = MODBUS_RTU_RTS_NONE;
 #endif
+
+    ctx_rtu->confirmation_to_ignore = FALSE;
 
     return ctx;
 }

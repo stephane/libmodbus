@@ -26,6 +26,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <config.h>
 
@@ -233,17 +234,10 @@ int modbus_send_raw_request(modbus_t *ctx, uint8_t *raw_req, int raw_req_length)
 }
 
 /*
-    ---------- Request     Indication ----------
-    | Client | ---------------------->| Server |
-    ---------- Confirmation  Response ----------
-*/
-
-typedef enum {
-    /* Request message on the server side */
-    MSG_INDICATION,
-    /* Request message on the client side */
-    MSG_CONFIRMATION
-} msg_type_t;
+ *  ---------- Request     Indication ----------
+ *  | Client | ---------------------->| Server |
+ *  ---------- Confirmation  Response ----------
+ */
 
 /* Computes the length to read after the function received */
 static uint8_t compute_meta_length_after_function(int function,
@@ -329,7 +323,7 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
    - read() or recv() error codes
 */
 
-static int receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
+int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
 {
     int rc;
     fd_set rfds;
@@ -462,7 +456,7 @@ static int receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
 /* Receive the request from a modbus master */
 int modbus_receive(modbus_t *ctx, uint8_t *req)
 {
-    return receive_msg(ctx, req, MSG_INDICATION);
+    return ctx->backend->receive(ctx, req);
 }
 
 /* Receives the confirmation.
@@ -475,7 +469,7 @@ int modbus_receive(modbus_t *ctx, uint8_t *req)
 */
 int modbus_receive_confirmation(modbus_t *ctx, uint8_t *rsp)
 {
-    return receive_msg(ctx, rsp, MSG_CONFIRMATION);
+    return _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
 }
 
 static int check_confirmation(modbus_t *ctx, uint8_t *req,
@@ -965,7 +959,7 @@ static int read_io_status(modbus_t *ctx, int function,
         int offset;
         int offset_end;
 
-        rc = receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
         if (rc == -1)
             return -1;
 
@@ -1064,7 +1058,7 @@ static int read_registers(modbus_t *ctx, int function, int addr, int nb,
         int offset;
         int i;
 
-        rc = receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
         if (rc == -1)
             return -1;
 
@@ -1140,7 +1134,7 @@ static int write_single(modbus_t *ctx, int function, int addr, int value)
         /* Used by write_bit and write_register */
         uint8_t rsp[_MIN_REQ_LENGTH];
 
-        rc = receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
         if (rc == -1)
             return -1;
 
@@ -1211,7 +1205,7 @@ int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *src)
     if (rc > 0) {
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
         if (rc == -1)
             return -1;
 
@@ -1257,7 +1251,7 @@ int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *src)
     if (rc > 0) {
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
         if (rc == -1)
             return -1;
 
@@ -1320,7 +1314,7 @@ int modbus_write_and_read_registers(modbus_t *ctx,
     if (rc > 0) {
         int offset;
 
-        rc = receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
         if (rc == -1)
             return -1;
 
@@ -1361,7 +1355,7 @@ int modbus_report_slave_id(modbus_t *ctx, uint8_t *dest)
         int offset;
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
         if (rc == -1)
             return -1;
 

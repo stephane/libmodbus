@@ -88,6 +88,8 @@ typedef struct _modbus_rtu {
 #if HAVE_DECL_TIOCM_RTS
     int rts;
 #endif
+    /* To handle many slaves on the same link */
+    int confirmation_to_ignore;
 } modbus_rtu_t;
 
 #endif /* _MODBUS_RTU_PRIVATE_H_ */
