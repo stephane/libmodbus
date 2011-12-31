@@ -38,7 +38,7 @@ ease the implementation of a variant, the library was designed to use a backend
 for each variant. The backends are also a convenient way to fulfill other
 requirements (eg. real-time operations). Each backend offers a specific function
 to create a new 'modbus_t' context. The 'modbus_t' context is an opaque
-structure containing all necessary information to etablish a connection with
+structure containing all necessary information to establish a connection with
 others Modbus devices according to the selected variant.
 
 You can choose the best context for your needs among:
@@ -167,7 +167,7 @@ Read data::
      linkmb:modbus_read_input_bits[3]
      linkmb:modbus_read_registers[3]
      linkmb:modbus_read_input_registers[3]
-     libkmb:modbus_report_slave_id[3]
+     linkmb:modbus_report_slave_id[3]
 
 Write data::
      linkmb:modbus_write_bit[3]
