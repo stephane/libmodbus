@@ -21,6 +21,8 @@
 
 #include "modbus.h"
 
+MODBUS_BEGIN_DECLS
+
 /* Modbus_Application_Protocol_V1_1b.pdf Chapter 4 Section 1 Page 5
  * RS232 / RS485 ADU = 253 bytes + slave (1 byte) + CRC (2 bytes) = 256 bytes
  */
@@ -41,5 +43,7 @@ int modbus_rtu_get_serial_mode(modbus_t *ctx);
 
 int modbus_rtu_set_rts(modbus_t *ctx, int mode);
 int modbus_rtu_get_rts(modbus_t *ctx);
+
+MODBUS_END_DECLS
 
 #endif /* _MODBUS_RTU_H_ */

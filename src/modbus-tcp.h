@@ -21,6 +21,8 @@
 
 #include "modbus.h"
 
+MODBUS_BEGIN_DECLS
+
 #if defined(_WIN32) && !defined(__CYGWIN__)
 /* Win32 with MinGW, supplement to <errno.h> */
 #include <winsock2.h>
@@ -45,5 +47,7 @@ int modbus_tcp_accept(modbus_t *ctx, int *socket);
 modbus_t* modbus_new_tcp_pi(const char *node, const char *service);
 int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection);
 int modbus_tcp_pi_accept(modbus_t *ctx, int *socket);
+
+MODBUS_END_DECLS
 
 #endif /* _MODBUS_TCP_H_ */
