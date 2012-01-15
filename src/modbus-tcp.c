@@ -342,8 +342,12 @@ static int _modbus_tcp_pi_connect(modbus_t *ctx)
     ai_list = NULL;
     rc = getaddrinfo(ctx_tcp_pi->node, ctx_tcp_pi->service,
                      &ai_hints, &ai_list);
-    if (rc != 0)
-        return rc;
+    if (rc != 0) {
+        if (ctx->debug) {
+            printf("Error returned by getaddrinfo: %d\n", rc);
+        }
+        return -1;
+    }
 
     for (ai_ptr = ai_list; ai_ptr != NULL; ai_ptr = ai_ptr->ai_next) {
         int flags = ai_ptr->ai_socktype;
