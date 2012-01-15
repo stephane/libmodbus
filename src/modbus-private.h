@@ -109,7 +109,7 @@ typedef struct _modbus_backend {
     int (*connect) (modbus_t *ctx);
     void (*close) (modbus_t *ctx);
     int (*flush) (modbus_t *ctx);
-    int (*select) (modbus_t *ctx, fd_set *rfds, struct timeval *tv, int msg_length);
+    int (*select) (modbus_t *ctx, fd_set *rset, struct timeval *tv, int msg_length);
 } modbus_backend_t;
 
 struct _modbus {

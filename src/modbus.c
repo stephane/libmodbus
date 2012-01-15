@@ -326,7 +326,7 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
 int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
 {
     int rc;
-    fd_set rfds;
+    fd_set rset;
     struct timeval tv;
     struct timeval *p_tv;
     int length_to_read;
@@ -342,8 +342,8 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     }
 
     /* Add a file descriptor to the set */
-    FD_ZERO(&rfds);
-    FD_SET(ctx->s, &rfds);
+    FD_ZERO(&rset);
+    FD_SET(ctx->s, &rset);
 
     /* We need to analyse the message step by step.  At the first step, we want
      * to reach the function code because all packets contain this
@@ -362,7 +362,7 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     }
 
     while (length_to_read != 0) {
-        rc = ctx->backend->select(ctx, &rfds, p_tv, length_to_read);
+        rc = ctx->backend->select(ctx, &rset, p_tv, length_to_read);
         if (rc == -1) {
             _error_print(ctx, "select");
             if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) {

@@ -945,7 +945,7 @@ int _modbus_rtu_flush(modbus_t *ctx)
 #endif
 }
 
-int _modbus_rtu_select(modbus_t *ctx, fd_set *rfds,
+int _modbus_rtu_select(modbus_t *ctx, fd_set *rset,
                        struct timeval *tv, int length_to_read)
 {
     int s_rc;
@@ -961,14 +961,14 @@ int _modbus_rtu_select(modbus_t *ctx, fd_set *rfds,
         return -1;
     }
 #else
-    while ((s_rc = select(ctx->s+1, rfds, NULL, NULL, tv)) == -1) {
+    while ((s_rc = select(ctx->s+1, rset, NULL, NULL, tv)) == -1) {
         if (errno == EINTR) {
             if (ctx->debug) {
                 fprintf(stderr, "A non blocked signal was caught\n");
             }
             /* Necessary after an error */
-            FD_ZERO(rfds);
-            FD_SET(ctx->s, rfds);
+            FD_ZERO(rset);
+            FD_SET(ctx->s, rset);
         } else {
             return -1;
         }

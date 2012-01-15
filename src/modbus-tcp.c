@@ -238,10 +238,37 @@ static int _modbus_tcp_set_ipv4_options(int s)
     return 0;
 }
 
+static int _connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen,
+                    struct timeval *tv)
+{
+    int rc;
+
+    rc = connect(sockfd, addr, addrlen);
+    if (rc == -1 && errno == EINPROGRESS) {
+        fd_set wset;
+        int err;
+        socklen_t errlen = sizeof(err);
+
+        FD_ZERO(&wset);
+        FD_SET(sockfd, &wset);
+        rc = select(sockfd + 1, NULL, &wset, NULL, tv);
+        if (rc < 0) {
+            /* Timeout or fail */
+            return -1;
+        }
+
+        /* The socket is available for writing if it returns 0 */
+        return getsockopt(sockfd, SOL_SOCKET, SO_ERROR, (void *)&err, &errlen);
+    }
+    /* 0 or (-1 and errno != EINPROGRESS) */
+    return rc;
+}
+
 /* Establishes a modbus TCP connection with a Modbus server. */
 static int _modbus_tcp_connect(modbus_t *ctx)
 {
     int rc;
+    /* Specialized version of sockaddr for Internet socket address (same size) */
     struct sockaddr_in addr;
     modbus_tcp_t *ctx_tcp = ctx->backend_data;
     int flags = SOCK_STREAM;
@@ -254,6 +281,10 @@ static int _modbus_tcp_connect(modbus_t *ctx)
 
 #ifdef SOCK_CLOEXEC
     flags |= SOCK_CLOEXEC;
+#endif
+
+#ifdef SOCK_NONBLOCK
+    flags |= SOCK_NONBLOCK;
 #endif
 
     ctx->s = socket(PF_INET, flags, 0);
@@ -274,8 +305,7 @@ static int _modbus_tcp_connect(modbus_t *ctx)
     addr.sin_family = AF_INET;
     addr.sin_port = htons(ctx_tcp->port);
     addr.sin_addr.s_addr = inet_addr(ctx_tcp->ip);
-    rc = connect(ctx->s, (struct sockaddr *)&addr,
-                 sizeof(struct sockaddr_in));
+    rc = _connect(ctx->s, (struct sockaddr *)&addr, sizeof(addr), &ctx->response_timeout);
     if (rc == -1) {
         close(ctx->s);
         return -1;
@@ -317,6 +347,10 @@ static int _modbus_tcp_pi_connect(modbus_t *ctx)
         flags |= SOCK_CLOEXEC;
 #endif
 
+#ifdef SOCK_NONBLOCK
+        flags |= SOCK_NONBLOCK;
+#endif
+
         s = socket(ai_ptr->ai_family, flags, ai_ptr->ai_protocol);
         if (s < 0)
             continue;
@@ -324,8 +358,8 @@ static int _modbus_tcp_pi_connect(modbus_t *ctx)
         if (ai_ptr->ai_family == AF_INET)
             _modbus_tcp_set_ipv4_options(s);
 
-        rc = connect(s, ai_ptr->ai_addr, ai_ptr->ai_addrlen);
-        if (rc != 0) {
+        rc = _connect(s, ai_ptr->ai_addr, ai_ptr->ai_addrlen, &ctx->response_timeout);
+        if (rc == -1) {
             close(s);
             continue;
         }
@@ -362,14 +396,14 @@ int _modbus_tcp_flush(modbus_t *ctx)
         rc = recv(ctx->s, devnull, MODBUS_TCP_MAX_ADU_LENGTH, MSG_DONTWAIT);
 #else
         /* On Win32, it's a bit more complicated to not wait */
-        fd_set rfds;
+        fd_set rset;
         struct timeval tv;
 
         tv.tv_sec = 0;
         tv.tv_usec = 0;
-        FD_ZERO(&rfds);
-        FD_SET(ctx->s, &rfds);
-        rc = select(ctx->s+1, &rfds, NULL, NULL, &tv);
+        FD_ZERO(&rset);
+        FD_SET(ctx->s, &rset);
+        rc = select(ctx->s+1, &rset, NULL, NULL, &tv);
         if (rc == -1) {
             return -1;
         }
@@ -571,17 +605,17 @@ int modbus_tcp_pi_accept(modbus_t *ctx, int *socket)
     return ctx->s;
 }
 
-int _modbus_tcp_select(modbus_t *ctx, fd_set *rfds, struct timeval *tv, int length_to_read)
+int _modbus_tcp_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int length_to_read)
 {
     int s_rc;
-    while ((s_rc = select(ctx->s+1, rfds, NULL, NULL, tv)) == -1) {
+    while ((s_rc = select(ctx->s+1, rset, NULL, NULL, tv)) == -1) {
         if (errno == EINTR) {
             if (ctx->debug) {
                 fprintf(stderr, "A non blocked signal was caught\n");
             }
             /* Necessary after an error */
-            FD_ZERO(rfds);
-            FD_SET(ctx->s, rfds);
+            FD_ZERO(rset);
+            FD_SET(ctx->s, rset);
         } else {
             return -1;
         }
