@@ -246,9 +246,10 @@ static int _connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen,
     rc = connect(sockfd, addr, addrlen);
     if (rc == -1 && errno == EINPROGRESS) {
         fd_set wset;
-        int err;
-        socklen_t errlen = sizeof(err);
+        int optval;
+        socklen_t optlen = sizeof(optval);
 
+        /* Wait to be available in writing */
         FD_ZERO(&wset);
         FD_SET(sockfd, &wset);
         rc = select(sockfd + 1, NULL, &wset, NULL, tv);
@@ -257,10 +258,15 @@ static int _connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen,
             return -1;
         }
 
-        /* The socket is available for writing if it returns 0 */
-        return getsockopt(sockfd, SOL_SOCKET, SO_ERROR, (void *)&err, &errlen);
+        /* The connection is established if SO_ERROR and optval are set to 0 */
+        rc = getsockopt(sockfd, SOL_SOCKET, SO_ERROR, (void *)&optval, &optlen);
+        if (rc == 0 && optval == 0) {
+            return 0;
+        } else {
+            errno = ECONNREFUSED;
+            return -1;
+        }
     }
-    /* 0 or (-1 and errno != EINPROGRESS) */
     return rc;
 }
 
