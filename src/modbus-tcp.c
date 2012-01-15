@@ -549,7 +549,7 @@ int modbus_tcp_pi_accept(modbus_t *ctx, int *socket)
     }
 
     if (ctx->debug) {
-        printf("The client connection is accepted.");
+        printf("The client connection is accepted.\n");
     }
 
     return ctx->s;
