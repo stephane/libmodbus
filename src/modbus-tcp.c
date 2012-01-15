@@ -310,9 +310,14 @@ static int _modbus_tcp_pi_connect(modbus_t *ctx)
         return rc;
 
     for (ai_ptr = ai_list; ai_ptr != NULL; ai_ptr = ai_ptr->ai_next) {
+        int flags = ai_ptr->ai_socktype;
         int s;
 
-        s = socket(ai_ptr->ai_family, ai_ptr->ai_socktype, ai_ptr->ai_protocol);
+#ifdef SOCK_CLOEXEC
+        flags |= SOCK_CLOEXEC;
+#endif
+
+        s = socket(ai_ptr->ai_family, flags, ai_ptr->ai_protocol);
         if (s < 0)
             continue;
 
