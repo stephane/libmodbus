@@ -1,6 +1,6 @@
 Name: libmodbus
 Version: @PACKAGE_VERSION@
-Release: 2%{?dist}
+Release: 1%{?dist}
 Summary: A Modbus library
 Group: Applications/System
 License: LGPLv2+
@@ -61,6 +61,9 @@ rm -f %{buildroot}/%{_libdir}/*.la
 %{_mandir}/man3/*.3.*
 
 %changelog
+* Mon Jan 16 2012 Stéphane Raimbault <stephane.raimbault@gmail.com> - 3.0.2-1
+- new upstream release
+
 * Mon Jul 23 2011 Stéphane Raimbault <stephane.raimbault@gmail.com> - 3.0.1-2
 - package reviewed by Peter Lemenkov <lemenkov@gmail.com> and Veeti Paananen
   <veeti.paananen@rojekti.fi> of Fedora Quality Assurance team
