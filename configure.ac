@@ -22,9 +22,9 @@ m4_define([libmodbus_version],
     [libmodbus_version_major.libmodbus_version_minor.libmodbus_version_micro])
 
 AC_PREREQ([2.63])
-AC_INIT([libmodbus],[libmodbus_version],
-[https://github.com/stephane/libmodbus/issues])
+AC_INIT([libmodbus],[libmodbus_version],[https://github.com/stephane/libmodbus/issues])
 AC_CONFIG_HEADERS([config.h tests/unit-test.h])
+AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign])
 # enable nice build output on automake1.11
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
