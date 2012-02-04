@@ -26,7 +26,9 @@
 #include <errno.h>
 #include <limits.h>
 #include <time.h>
+#ifndef _MSC_VER
 #include <unistd.h>
+#endif
 
 #include <config.h>
 
