@@ -351,7 +351,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     if (!GetCommState(ctx_rtu->w_ser.fd, &ctx_rtu->old_dcb)) {
         fprintf(stderr, "ERROR Error getting configuration (LastError %d)\n",
                 (int)GetLastError());
-        CloseHandle(ctx_rtu->w_ser.fd)
+        CloseHandle(ctx_rtu->w_ser.fd);
         ctx_rtu->w_ser.fd = INVALID_HANDLE_VALUE;
         return -1;
     }
@@ -455,7 +455,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     if (!SetCommState(ctx_rtu->w_ser.fd, &dcb)) {
         fprintf(stderr, "ERROR Error setting new configuration (LastError %d)\n",
                 (int)GetLastError());
-        CloseHandle(ctx_rtu->w_ser.fd)
+        CloseHandle(ctx_rtu->w_ser.fd);
         ctx_rtu->w_ser.fd = INVALID_HANDLE_VALUE;
         return -1;
     }
