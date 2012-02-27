@@ -826,7 +826,7 @@ int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode)
                 return -1;
             }
 
-            ctx_rtu->serial_mode |= MODBUS_RTU_RS485;
+            ctx_rtu->serial_mode = MODBUS_RTU_RS485;
             return 0;
         } else if (mode == MODBUS_RTU_RS232) {
             if (ioctl(ctx->s, TIOCSRS485, &rs485conf) < 0) {
