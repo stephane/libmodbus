@@ -253,7 +253,7 @@ static int _connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen,
         FD_ZERO(&wset);
         FD_SET(sockfd, &wset);
         rc = select(sockfd + 1, NULL, &wset, NULL, tv);
-        if (rc < 0) {
+        if (rc <= 0) {
             /* Timeout or fail */
             return -1;
         }
