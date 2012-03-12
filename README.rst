@@ -27,10 +27,14 @@ QNX and Windows.
 Installation
 ------------
 
-The shell commands are ``./autogen.sh; ./configure; make; make install``.
+To instal, just run the usual dance, ``./configure && make install`` and run
+``./autogen.sh`` first if the ``configure.sh`` is not present.
 
 If you want to compile with Microsoft Visual Studio, you need to install
 http://code.google.com/p/msinttypes/ to fill the absence of stdint.h.
+
+To compile under Windows, install `MinGW <http://www.mingw.org/>`_ and MSYS then
+select the common packages (gcc, automake, libtool, etc).
 
 Testing
 -------
