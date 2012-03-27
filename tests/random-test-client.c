@@ -244,7 +244,7 @@ int main(void)
     free(tab_rp_bits);
     free(tab_rq_registers);
     free(tab_rp_registers);
-    free(tab_rw_rp_registers);
+    free(tab_rw_rq_registers);
 
     /* Close the connection */
     modbus_close(ctx);
