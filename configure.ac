@@ -63,21 +63,21 @@ AC_PROG_CXX
 AC_PROG_MAKE_SET
 LT_INIT([disable-static win32-dll])
 AC_CHECK_HEADERS([ \
-    termios.h \
-    sys/time.h \
-    time.h \
-    unistd.h \
+    arpa/inet.h \
     errno.h \
-    limits.h \
     fcntl.h \
-    sys/types.h \
-    sys/socket.h \
-    sys/ioctl.h \
+    limits.h \
+    linux/serial.h \
+    netdb.h \
     netinet/in.h \
     netinet/tcp.h \
-    arpa/inet.h \
-    netdb.h \
-    linux/serial.h \
+    sys/ioctl.h \
+    sys/socket.h \
+    sys/time.h \
+    sys/types.h \
+    termios.h \
+    time.h \
+    unistd.h \
 ])
 
 # Check whether to build docs / install man pages
