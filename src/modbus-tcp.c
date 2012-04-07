@@ -305,7 +305,7 @@ static int _modbus_tcp_connect(modbus_t *ctx)
     }
 
     if (ctx->debug) {
-        printf("Connecting to %s\n", ctx_tcp->ip);
+        printf("Connecting to %s:%d\n", ctx_tcp->ip, ctx_tcp->port);
     }
 
     addr.sin_family = AF_INET;
@@ -367,6 +367,10 @@ static int _modbus_tcp_pi_connect(modbus_t *ctx)
 
         if (ai_ptr->ai_family == AF_INET)
             _modbus_tcp_set_ipv4_options(s);
+
+        if (ctx->debug) {
+            printf("Connecting to [%s]:%s\n", ctx_tcp_pi->node, ctx_tcp_pi->service);
+        }
 
         rc = _connect(s, ai_ptr->ai_addr, ai_ptr->ai_addrlen, &ctx->response_timeout);
         if (rc == -1) {

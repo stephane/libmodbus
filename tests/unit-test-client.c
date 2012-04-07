@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     if (argc > 1) {
         if (strcmp(argv[1], "tcp") == 0) {
             use_backend = TCP;
-	} else if (strcmp(argv[1], "tcppi") == 0) {
+    } else if (strcmp(argv[1], "tcppi") == 0) {
             use_backend = TCP_PI;
         } else if (strcmp(argv[1], "rtu") == 0) {
             use_backend = RTU;
