@@ -54,8 +54,12 @@ case "${host_os}" in
       *mingw32*)
 		os_win32="true"
 	;;
+      *nto-qnx*)
+		os_qnx="true"
+	;;
 esac
 AM_CONDITIONAL(OS_WIN32, test "$os_win32" = "true")
+AM_CONDITIONAL(OS_QNX, test "$os_qnx" = "true")
 
 # Checks for programs.
 AC_PROG_CC
