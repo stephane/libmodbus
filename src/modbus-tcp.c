@@ -288,6 +288,12 @@ static int _modbus_tcp_pi_connect(modbus_t *ctx)
     struct addrinfo ai_hints;
     modbus_tcp_pi_t *ctx_tcp_pi = ctx->backend_data;
 
+#ifdef OS_WIN32
+    if (_modbus_tcp_init_win32() == -1) {
+        return -1;
+    }
+#endif
+
     memset(&ai_hints, 0, sizeof(ai_hints));
 #ifdef AI_ADDRCONFIG
     ai_hints.ai_flags |= AI_ADDRCONFIG;
