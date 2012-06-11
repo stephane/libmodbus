@@ -48,8 +48,9 @@ AC_SUBST(LIBMODBUS_LT_VERSION_INFO)
 
 AC_CANONICAL_HOST
 
-# Check whether we are building for Win32
+# OS check
 os_win32="false"
+os_qnx="false"
 case "${host_os}" in
       *mingw32*)
 		os_win32="true"
