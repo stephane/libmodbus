@@ -42,7 +42,9 @@
 #define _MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH 10000
 
 #if defined(_WIN32)
+#if !defined(ENOTSUP)
 #define ENOTSUP WSAEOPNOTSUPP
+#endif
 
 /* WIN32: struct containing serial handle and a receive buffer */
 #define PY_BUF_SIZE 512
