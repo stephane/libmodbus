@@ -25,6 +25,8 @@
 #include <string.h>
 #include <assert.h>
 
+#include "modbus.h"
+
 /* Sets many bits from a single byte value (all 8 bits of the byte value are
    set) */
 void modbus_set_bits_from_byte(uint8_t *dest, int index, const uint8_t value)
