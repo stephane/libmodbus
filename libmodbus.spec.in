@@ -1,6 +1,6 @@
 Name: libmodbus
 Version: @PACKAGE_VERSION@
-Release: 2%{?dist}
+Release: 1%{?dist}
 Summary: A Modbus library
 Group: Applications/System
 License: LGPLv2+
