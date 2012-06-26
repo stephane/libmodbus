@@ -125,7 +125,48 @@ extern const unsigned int libmodbus_version_micro;
 
 typedef struct _modbus modbus_t;
 
-typedef struct {
+typedef struct _modbus_mapping modbus_mapping_t;
+
+/**
+ * Prototype for function to handle read access.
+ *
+ * The function can read the data from anywhere, it does not have to use
+ * the mapping structure. The resulting bytes must be written to rsp_buf.
+ * On entry *size is filled with the number of bytes available in the buffer,
+ * the variable must return the number of bytes actually written.
+ *
+ * @param [in] function MODBUS function code
+ * @param [in] address MODBUS address of first register/bit
+ * @param [in] nb number of registers/bits
+ * @param [out] rsp_buf buffer for response data excluding length field
+ * @param [in;out] size pass available size in bytes and return number of bytes written into buffer
+ * @param [in] mb_mapping mapping structure
+ *
+ * @return 0 on success, exception code on error.
+ */
+typedef int (modbus_callback_read_t)(int function, uint16_t address, int nb,
+		uint8_t *rsp_buf, int *size, const modbus_mapping_t *mb_mapping);
+
+/**
+ * Prototype for function to handle write access.
+ *
+ * The function can write the data anywhere it does not have to use
+ * the mapping structure. The data from the request are passed as
+ * req_buf, size contains the number of valid bytes in the buffer.
+ *
+ * @param [in] function MODBUS function code
+ * @param [in] address MODBUS address of first register/bit
+ * @param [in] nb number of registers/bits
+ * @param [in] req_buf buffer with data from request
+ * @param [in] size number of data bytes in request
+ * @param [in;out] mb_mapping mapping structure
+ *
+ * @return 0 on success, exception code on error.
+ */
+typedef int (modbus_callback_write_t)(int function, uint16_t address, int nb,
+		const uint8_t *req_buf, int size, modbus_mapping_t *mb_mapping);
+
+struct _modbus_mapping {
     int nb_bits;
     int nb_input_bits;
     int nb_input_registers;
@@ -134,7 +175,9 @@ typedef struct {
     uint8_t *tab_input_bits;
     uint16_t *tab_input_registers;
     uint16_t *tab_registers;
-} modbus_mapping_t;
+    modbus_callback_read_t *cb_read;
+    modbus_callback_write_t *cb_write;
+};
 
 typedef enum
 {
@@ -181,6 +224,10 @@ int modbus_report_slave_id(modbus_t *ctx, uint8_t *dest);
 
 modbus_mapping_t* modbus_mapping_new(int nb_coil_status, int nb_input_status,
                                      int nb_holding_registers, int nb_input_registers);
+int modbus_add_callback(modbus_mapping_t *mb_mapping,
+		modbus_callback_read_t *cb_read,
+		modbus_callback_write_t *cb_write);
+
 void modbus_mapping_free(modbus_mapping_t *mb_mapping);
 
 int modbus_send_raw_request(modbus_t *ctx, uint8_t *raw_req, int raw_req_length);
