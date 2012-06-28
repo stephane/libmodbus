@@ -144,7 +144,7 @@ typedef struct _modbus_mapping modbus_mapping_t;
  *
  * @return 0 on success, exception code on error.
  */
-typedef int (modbus_callback_read_t)(int function, uint16_t address, int nb,
+typedef int (modbus_callback_read_t)(modbus_t *ctx, int function, uint16_t address, int nb,
 		uint8_t *rsp_buf, int *size, const modbus_mapping_t *mb_mapping);
 
 /**
@@ -163,7 +163,7 @@ typedef int (modbus_callback_read_t)(int function, uint16_t address, int nb,
  *
  * @return 0 on success, exception code on error.
  */
-typedef int (modbus_callback_write_t)(int function, uint16_t address, int nb,
+typedef int (modbus_callback_write_t)(modbus_t *ctx, int function, uint16_t address, int nb,
 		const uint8_t *req_buf, int size, modbus_mapping_t *mb_mapping);
 
 struct _modbus_mapping {
