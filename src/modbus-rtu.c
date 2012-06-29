@@ -437,8 +437,8 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 
     /* Error checking */
     if (ctx_rtu->w_ser.fd == INVALID_HANDLE_VALUE) {
-        fprintf(stderr, "ERROR Can't open the device %s (%s)\n",
-                ctx_rtu->device, strerror(errno));
+        fprintf(stderr, "ERROR Can't open the device %s (LastError %d)\n",
+                ctx_rtu->device, (int)GetLastError());
         return -1;
     }
 
