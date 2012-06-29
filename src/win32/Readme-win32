@@ -1,0 +1,26 @@
+
+Intro
+-----
+
+This directory contains the project file for Visual
+Studio 2008 to build a modbus.dll.
+
+The project file searches for D:/include/msvc_std to
+find stdint.h. See ../../README.rst
+
+config.h and modbus-version.h were generated using
+a Windows native experimental port of zsh and Microsoft cl.
+
+Please note that modbus.dll.manifest hardcodes
+the version number !
+
+
+
+TODO
+----
+
+Fix the ugly need to have config.h and modbus-version.h
+in this directory.
+
+
+oldfaber
