@@ -16,11 +16,13 @@
  */
 
 #include <stdio.h>
+#ifndef _MSC_VER
 #include <unistd.h>
+#include <sys/time.h>
+#endif
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
-#include <sys/time.h>
 #include <errno.h>
 
 #include <modbus.h>
@@ -30,7 +32,15 @@
 uint32_t gettime_ms(void)
 {
     struct timeval tv;
+#if !defined(_MSC_VER)
     gettimeofday (&tv, NULL);
+#else
+    SYSTEMTIME st;
+
+    GetLocalTime(&st);
+    tv.tv_sec = st.wSecond;
+    tv.tv_usec = st.wMilliseconds * 1000;
+#endif
 
     return (uint32_t) tv.tv_sec * 1000 + tv.tv_usec / 1000;
 }
