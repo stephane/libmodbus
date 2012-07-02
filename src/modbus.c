@@ -1567,6 +1567,71 @@ void modbus_mapping_free(modbus_mapping_t *mb_mapping)
     free(mb_mapping);
 }
 
+/**
+ * Take a request received from a master context, pass it to an slave context and then
+ * send the confirmation back to the master.
+ */
+int modbus_proxy(modbus_t* master_ctx, modbus_t* slave_ctx, uint8_t* master_req,
+                 int master_req_length)
+{
+    int offset = master_ctx->backend->header_length;
+    int slave = master_req[offset - 1];
+
+    /* Set slave address */
+    modbus_set_slave(slave_ctx, slave);
+
+    /* Translate request to the slave */
+    int function = master_req[offset++];
+    int addr = ((int) master_req[offset++] << 8);
+    addr |= ((int) master_req[offset++]);
+    int nb = ((int) master_req[offset++] << 8);
+    nb |= ((int) master_req[offset++]);
+    uint8_t buf[MAX_MESSAGE_LENGTH];
+    int buf_length = slave_ctx->backend->build_request_basis(slave_ctx, function, addr, nb, buf);
+    /* Copy the remaining PDU to the request */
+    int l = master_req_length - offset - master_ctx->backend->checksum_length;
+    memcpy(buf + buf_length, master_req + offset, l);
+    buf_length += l;
+
+    /* Send the request to the slave */
+    if (send_msg(slave_ctx, buf, buf_length) < 0) {
+        modbus_reply_exception(master_ctx, master_req, MODBUS_EXCEPTION_GATEWAY_PATH);
+        return -1;
+    }
+
+    /* Receive the response */
+    uint8_t rsp[MAX_MESSAGE_LENGTH];
+    int rsp_length = _modbus_receive_msg(slave_ctx, rsp, MSG_CONFIRMATION);
+    if (rsp_length < 0) {
+        if (errno == ETIMEDOUT)
+            modbus_reply_exception(master_ctx, master_req, MODBUS_EXCEPTION_GATEWAY_TARGET);
+        else
+            modbus_reply_exception(master_ctx, master_req, MODBUS_EXCEPTION_GATEWAY_PATH);
+        return -1;
+    }
+
+    /* Check response in backend */
+    if (slave_ctx->backend->pre_check_confirmation(slave_ctx, buf, rsp, rsp_length) < 0) {
+        modbus_reply_exception(master_ctx, master_req, MODBUS_EXCEPTION_GATEWAY_TARGET);
+        return -1;
+    }
+
+    /* Translate response to master */
+    offset = slave_ctx->backend->header_length;
+    sft_t sft;
+    sft.slave = rsp[offset - 1];
+    sft.function = rsp[offset];
+    sft.t_id = master_ctx->backend->prepare_response_tid(master_req, &master_req_length);
+    buf_length = master_ctx->backend->build_response_basis(&sft, buf);
+    /* Copy the remaining response data: PDU - function */
+    l = rsp_length - offset - slave_ctx->backend->checksum_length - 1;
+    memcpy(buf + buf_length, rsp + offset + 1, l);
+    buf_length += l;
+
+    /* Send response to master */
+    return send_msg(master_ctx, buf, buf_length);
+}
+
 #ifndef HAVE_STRLCPY
 /*
  * Function strlcpy was originally developed by
@@ -1605,3 +1670,4 @@ size_t strlcpy(char *dest, const char *src, size_t dest_size)
     return (s - src - 1); /* count does not include NUL */
 }
 #endif
+
