@@ -53,8 +53,8 @@ typedef enum {
     _STEP_DATA
 } _step_t;
 
-static modbus_callback_read_t default_read;
-static modbus_callback_write_t default_write;
+static modbus_callback_read_t modbus_default_read;
+static modbus_callback_write_t modbus_default_write;
 static int modbus_read_any_registers(modbus_t *ctx, uint16_t address, int nb,
         uint8_t *rsp_buf, int *size, int nb_registers,
         uint16_t *tab_registers, const char *function_name);
@@ -669,8 +669,8 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
     int nb_write = 0;
     uint16_t address_write = 0;
     int data_offset = 0;
-    modbus_callback_read_t *cb_read = default_read;
-    modbus_callback_write_t *cb_write = default_write;
+    modbus_callback_read_t *cb_read = modbus_default_read;
+    modbus_callback_write_t *cb_write = modbus_default_write;
 
     sft.slave = slave;
     sft.function = function;
@@ -1515,7 +1515,7 @@ size_t strlcpy(char *dest, const char *src, size_t dest_size)
         } \
 } while(0)
 
-static int default_read(modbus_t *ctx, int function, uint16_t address, int nb,
+static int modbus_default_read(modbus_t *ctx, int function, uint16_t address, int nb,
         uint8_t *rsp_buf, int *size, const modbus_mapping_t *mb_mapping) {
     int data_length;
     int rc = 0;
@@ -1592,7 +1592,7 @@ static int default_read(modbus_t *ctx, int function, uint16_t address, int nb,
         } \
 } while(0)
 
-static int default_write(modbus_t *ctx, int function, uint16_t address, int nb,
+static int modbus_default_write(modbus_t *ctx, int function, uint16_t address, int nb,
         const uint8_t *req_buf, int size, modbus_mapping_t *mb_mapping) {
     switch (function) {
     case _FC_WRITE_SINGLE_COIL:
