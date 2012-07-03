@@ -665,8 +665,6 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
     int nb = 0;
     int nb_write = 0;
     uint16_t address_write = 0;
-    int op_read = 0;
-    int op_write = 0;
     int data_offset = 0;
     modbus_callback_read_t *cb_read = default_read;
     modbus_callback_write_t *cb_write = default_write;
