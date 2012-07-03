@@ -58,6 +58,9 @@ static modbus_callback_write_t modbus_default_write;
 static int modbus_read_any_registers(modbus_t *ctx, uint16_t address, int nb,
         uint8_t *rsp_buf, int *size, int nb_registers,
         uint16_t *tab_registers, const char *function_name);
+static int modbus_read_any_bits(modbus_t *ctx, uint16_t address, int nb,
+        uint8_t *rsp_buf, int *size, int nb_bits,
+        uint8_t *tab_bits, const char *function_name);
 
 const char *modbus_strerror(int errnum) {
     switch (errnum) {
@@ -1517,40 +1520,19 @@ size_t strlcpy(char *dest, const char *src, size_t dest_size)
 
 static int modbus_default_read(modbus_t *ctx, int function, uint16_t address, int nb,
         uint8_t *rsp_buf, int *size, const modbus_mapping_t *mb_mapping) {
-    int data_length;
     int rc = 0;
     switch (function) {
     case _FC_READ_COILS:
-        if ((address + nb) > mb_mapping->nb_bits) {
-            if (ctx->debug) {
-                fprintf(stderr, "Illegal data address %0X in read_bits\n",
-                        address + nb);
-            }
-            return MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
-        } else {
-            data_length = (nb / 8) + ((nb % 8) ? 1 : 0);
-            CHECK_READ_DATA_SIZE;
-            response_io_status(address, nb, mb_mapping->tab_bits, rsp_buf, 0);
-            *size = data_length;
-        }
+        rc = modbus_read_any_bits(ctx, address, nb,
+                rsp_buf, size, mb_mapping->nb_bits,
+                mb_mapping->tab_bits, "read_bits");
+        if(rc != 0) return rc;
         break;
     case _FC_READ_DISCRETE_INPUTS:
-        /* Similar to coil status (but too many arguments to use a
-         * function) */
-        if ((address + nb) > mb_mapping->nb_input_bits) {
-            if (ctx->debug) {
-                fprintf(stderr,
-                        "Illegal data address %0X in read_input_bits\n",
-                        address + nb);
-            }
-            return MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
-        } else {
-            data_length = (nb / 8) + ((nb % 8) ? 1 : 0);
-            CHECK_READ_DATA_SIZE;
-            response_io_status(address, nb, mb_mapping->tab_input_bits,
-                    rsp_buf, 0);
-            *size = data_length;
-        }
+        rc = modbus_read_any_bits(ctx, address, nb,
+                rsp_buf, size, mb_mapping->nb_input_bits,
+                mb_mapping->tab_input_bits, "read_input_bits");
+        if(rc != 0) return rc;
         break;
     case _FC_READ_HOLDING_REGISTERS:
     case _FC_WRITE_AND_READ_REGISTERS:
@@ -1704,6 +1686,27 @@ static int modbus_read_any_registers(modbus_t *ctx, uint16_t address, int nb,
             rsp_buf[rsp_idx++] = tab_registers[i] >> 8;
             rsp_buf[rsp_idx++] = tab_registers[i] & 0xFF;
         }
+        *size = data_length;
+    }
+    return 0;
+}
+
+static int modbus_read_any_bits(modbus_t *ctx, uint16_t address, int nb,
+        uint8_t *rsp_buf, int *size, int nb_bits,
+        uint8_t *tab_bits, const char *function_name)
+{
+    int data_length;
+
+    if ((address + nb) > nb_bits) {
+        if (ctx->debug) {
+            fprintf(stderr, "Illegal data address %0X in %s\n",
+                    address + nb, function_name);
+        }
+        return MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
+    } else {
+        data_length = (nb / 8) + ((nb % 8) ? 1 : 0);
+        CHECK_READ_DATA_SIZE;
+        response_io_status(address, nb, tab_bits, rsp_buf, 0);
         *size = data_length;
     }
     return 0;
