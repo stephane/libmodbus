@@ -55,6 +55,9 @@ typedef enum {
 
 static modbus_callback_read_t default_read;
 static modbus_callback_write_t default_write;
+static int modbus_read_any_registers(modbus_t *ctx, uint16_t address, int nb,
+        uint8_t *rsp_buf, int *size, int nb_registers,
+        uint16_t *tab_registers, const char *function_name);
 
 const char *modbus_strerror(int errnum) {
     switch (errnum) {
@@ -703,6 +706,9 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         nb = 1;
         break;
     }
+
+    printf("function %d address %d number %d address_write %d number_write %d data_offset %d\n",
+            function, address, nb, address_write, nb_write, data_offset);
 
     rsp_length = ctx->backend->build_response_basis(&sft, rsp);
     rsp_size = MAX_MESSAGE_LENGTH - rsp_length - 1;
@@ -1512,6 +1518,7 @@ size_t strlcpy(char *dest, const char *src, size_t dest_size)
 static int default_read(modbus_t *ctx, int function, uint16_t address, int nb,
         uint8_t *rsp_buf, int *size, const modbus_mapping_t *mb_mapping) {
     int data_length;
+    int rc = 0;
     switch (function) {
     case _FC_READ_COILS:
         if ((address + nb) > mb_mapping->nb_bits) {
@@ -1547,47 +1554,20 @@ static int default_read(modbus_t *ctx, int function, uint16_t address, int nb,
         break;
     case _FC_READ_HOLDING_REGISTERS:
     case _FC_WRITE_AND_READ_REGISTERS:
-        if ((address + nb) > mb_mapping->nb_registers) {
-            if (ctx->debug) {
-                fprintf(stderr, "Illegal data address %0X in read_registers\n",
-                        address + nb);
-            }
-            return MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
-        } else {
-            int i, rsp_idx;
-
-            data_length = nb << 1;
-            CHECK_READ_DATA_SIZE;
-            rsp_idx = 0;
-            for (i = address; i < address + nb; i++) {
-                rsp_buf[rsp_idx++] = mb_mapping->tab_registers[i] >> 8;
-                rsp_buf[rsp_idx++] = mb_mapping->tab_registers[i] & 0xFF;
-            }
-            *size = data_length;
-        }
+        rc = modbus_read_any_registers(ctx, address, nb,
+                rsp_buf, size, mb_mapping->nb_registers,
+                mb_mapping->tab_registers,
+                (function == _FC_WRITE_AND_READ_REGISTERS) ? "read_registers" : "write_and_read_registers"
+                        );
+        if(rc != 0) return rc;
         break;
     case _FC_READ_INPUT_REGISTERS:
-        /* Similar to holding registers (but too many arguments to use a
-         * function) */
-        if ((address + nb) > mb_mapping->nb_input_registers) {
-            if (ctx->debug) {
-                fprintf(stderr,
-                        "Illegal data address %0X in read_input_registers\n",
-                        address + nb);
-            }
-            return MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
-        } else {
-            int i, rsp_idx;
-
-            data_length = nb << 1;
-            CHECK_READ_DATA_SIZE;
-            rsp_idx = 0;
-            for (i = address; i < address + nb; i++) {
-                rsp_buf[rsp_idx++] = mb_mapping->tab_input_registers[i] >> 8;
-                rsp_buf[rsp_idx++] = mb_mapping->tab_input_registers[i] & 0xFF;
-            }
-            *size = data_length;
-        }
+        rc = modbus_read_any_registers(ctx, address, nb,
+                rsp_buf, size, mb_mapping->nb_input_registers,
+                mb_mapping->tab_input_registers,
+                (function == _FC_WRITE_AND_READ_REGISTERS) ? "read_registers" : "write_and_read_registers"
+                        );
+        if(rc != 0) return rc;
         break;
     default:
         if (ctx->debug) {
@@ -1700,5 +1680,31 @@ static int default_write(modbus_t *ctx, int function, uint16_t address, int nb,
         return MODBUS_EXCEPTION_ILLEGAL_FUNCTION;
     }
 
+    return 0;
+}
+
+static int modbus_read_any_registers(modbus_t *ctx, uint16_t address, int nb,
+        uint8_t *rsp_buf, int *size, int nb_registers,
+        uint16_t *tab_registers, const char *function_name)
+{
+    if ((address + nb) > nb_registers) {
+        if (ctx->debug) {
+            fprintf(stderr, "Illegal data address %0X in %s\n",
+                    address + nb, function_name);
+        }
+        return MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
+    } else {
+        int i, rsp_idx;
+        int data_length;
+
+        data_length = nb << 1;
+        CHECK_READ_DATA_SIZE;
+        rsp_idx = 0;
+        for (i = address; i < address + nb; i++) {
+            rsp_buf[rsp_idx++] = tab_registers[i] >> 8;
+            rsp_buf[rsp_idx++] = tab_registers[i] & 0xFF;
+        }
+        *size = data_length;
+    }
     return 0;
 }
