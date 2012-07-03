@@ -1586,6 +1586,7 @@ static int default_read(modbus_t *ctx, int function, uint16_t address, int nb,
                 rsp_buf[rsp_idx++] = mb_mapping->tab_input_registers[i] >> 8;
                 rsp_buf[rsp_idx++] = mb_mapping->tab_input_registers[i] & 0xFF;
             }
+            *size = data_length;
         }
         break;
     default:
