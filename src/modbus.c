@@ -1712,25 +1712,67 @@ static int modbus_read_any_bits(modbus_t *ctx, uint16_t address, int nb,
     return 0;
 }
 
-int modbus_set_response_register(uint8_t *rsp_buf, int *size,
+int modbus_response_set_register(uint8_t *rsp_buf, int *size,
 	uint16_t base_address, int address, uint16_t value)
 {
     int index = 2 * (address - base_address);
 
-    /* FIXME: Need to check bounds first... */
+    if (index+1 >= *size)
+      return MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
+
     rsp_buf[index++] = value >> 8;
     rsp_buf[index] = value & 0xFF;
 
     return 0;
 }
 
-int modbus_get_request_register(uint8_t *req_buf, int size,
+int modbus_request_get_register(uint8_t *req_buf, int size,
 	uint16_t base_address, int address, uint16_t *value)
 {
     int index = 2 * (address - base_address);
 
-    /* FIXME: Need to check bounds first... */
+    if (index+1 >= size)
+      return MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
+
     *value = (req_buf[index] << 8) + req_buf[index+1];
+
+    return 0;
+}
+
+int modbus_response_set_bit(uint8_t *rsp_buf, int *size,
+	uint16_t base_address, int address, uint16_t value)
+{
+    int index = (address - base_address) / 8;
+    int shift = (address - base_address) % 8;
+    uint8_t bit;
+
+    if (index >= *size)
+      return MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
+
+    bit = 0x01 << shift;
+    if (value)
+	rsp_buf[index] |= bit;
+    else
+	rsp_buf[index] &=~ bit;
+
+    rsp_buf[index] = value >> 8;
+
+    return 0;
+}
+
+int modbus_request_get_bit(uint8_t *req_buf, int size,
+	uint16_t base_address, int address, uint16_t *value)
+{
+    int index = (address - base_address) / 8;
+    int shift = (address - base_address) % 8;
+    uint8_t bit;
+
+    if (index >= size)
+      return MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
+
+    bit = 0x01 << shift;
+
+    *value = (req_buf[index] & bit) == bit;
 
     return 0;
 }
