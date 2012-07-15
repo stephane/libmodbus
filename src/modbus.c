@@ -1711,3 +1711,26 @@ static int modbus_read_any_bits(modbus_t *ctx, uint16_t address, int nb,
     }
     return 0;
 }
+
+int modbus_set_response_register(uint8_t *rsp_buf, int *size,
+	uint16_t base_address, int address, uint16_t value)
+{
+    int index = 2 * (address - base_address);
+
+    /* FIXME: Need to check bounds first... */
+    rsp_buf[index++] = value >> 8;
+    rsp_buf[index] = value & 0xFF;
+
+    return 0;
+}
+
+int modbus_get_request_register(uint8_t *req_buf, int size,
+	uint16_t base_address, int address, uint16_t *value)
+{
+    int index = 2 * (address - base_address);
+
+    /* FIXME: Need to check bounds first... */
+    *value = (req_buf[index] << 8) + req_buf[index+1];
+
+    return 0;
+}
