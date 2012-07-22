@@ -714,7 +714,23 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
             function, address, nb, address_write, nb_write, data_offset);
 
     rsp_length = ctx->backend->build_response_basis(&sft, rsp);
-    rsp_size = MAX_MESSAGE_LENGTH - rsp_length - 1;
+
+    switch (function) {
+    case _FC_READ_COILS:
+    case _FC_WRITE_MULTIPLE_COILS:
+    case _FC_READ_DISCRETE_INPUTS:
+	rsp_size = (nb + 7) / 8;
+        break;
+    case _FC_WRITE_AND_READ_REGISTERS:
+    case _FC_READ_HOLDING_REGISTERS:
+    case _FC_READ_INPUT_REGISTERS:
+    case _FC_WRITE_MULTIPLE_REGISTERS:
+    case _FC_WRITE_SINGLE_COIL:
+    case _FC_WRITE_SINGLE_REGISTER:
+	rsp_size = nb<<1;
+        break;
+    }
+
 
     switch (function) {
     case _FC_WRITE_AND_READ_REGISTERS:
@@ -1750,12 +1766,11 @@ int modbus_response_set_bit(uint8_t *rsp_buf, int *size,
       return MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
 
     bit = 0x01 << shift;
+
     if (value)
 	rsp_buf[index] |= bit;
     else
 	rsp_buf[index] &=~ bit;
-
-    rsp_buf[index] = value >> 8;
 
     return 0;
 }
