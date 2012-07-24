@@ -35,9 +35,9 @@
 #define LIBMODBUS_VERSION_STRING "@LIBMODBUS_VERSION@"
 
 /* Numerically encoded version, like 0x010203 */
-#define LIBMODBUS_VERSION_HEX ((LIBMODBUS_MAJOR_VERSION << 24) |        \
-                               (LIBMODBUS_MINOR_VERSION << 16) |        \
-                               (LIBMODBUS_MICRO_VERSION << 8))
+#define LIBMODBUS_VERSION_HEX ((LIBMODBUS_VERSION_MAJOR << 24) |  \
+                               (LIBMODBUS_VERSION_MINOR << 16) |  \
+                               (LIBMODBUS_VERSION_MICRO << 8))
 
 /* Evaluates to True if the version is greater than @major, @minor and @micro
  */
