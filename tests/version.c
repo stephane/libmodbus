@@ -20,7 +20,7 @@
 
 int main(void)
 {
-    printf("Compiled with libmodbus version %s\n", LIBMODBUS_VERSION_STRING);
+    printf("Compiled with libmodbus version %s (%08X)\n", LIBMODBUS_VERSION_STRING, LIBMODBUS_VERSION_HEX);
     printf("Linked with libmodbus version %d.%d.%d\n",
            libmodbus_version_major, libmodbus_version_minor, libmodbus_version_micro);
 
