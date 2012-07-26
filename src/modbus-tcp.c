@@ -199,9 +199,36 @@ static int _modbus_tcp_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
         }
         errno = EMBBADDATA;
         return -1;
-    } else {
-        return 0;
     }
+
+    /* Check Protocol ID */
+    if (req[2] != rsp[2] || req[3] != rsp[3]) {
+        if (ctx->debug) {
+            fprintf(stderr, "Invalid Protocol ID received 0x%X (not 0x%X)\n",
+                    (rsp[2] << 8) + rsp[3], (req[2] << 8) + req[3]);
+        }
+        errno = EMBBADDATA;
+        return -1;
+    }
+
+    /* 
+     * Check that the Modbus/TCP header length field, matches?  Not really
+     * necessary, because check_confirmation has already confirmed that the
+     * Modbus/TCP code (eg. read holding registers) is correct.  So, don't
+     * bother to check it here.  We don't need to support "unknown" (new) Modbus
+     * codes.
+     */
+
+    /* Check Unit ID */
+    if (req[6] != rsp[6]) {
+        if (ctx->debug) {
+            fprintf(stderr, "Invalid Unit ID received 0x%X (not 0x%X)\n",
+                    (int)rsp[6], (int)req[6]);
+        }
+        errno = EMBBADDATA;
+        return -1;
+    }
+    return 0;
 }
 
 static int _modbus_tcp_set_ipv4_options(int s)
@@ -250,7 +277,7 @@ static int _modbus_tcp_set_ipv4_options(int s)
 }
 
 static int _connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen,
-                    struct timeval *tv)
+                    const struct timeval *tv)
 {
     int rc;
 
@@ -259,11 +286,12 @@ static int _connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen,
         fd_set wset;
         int optval;
         socklen_t optlen = sizeof(optval);
+        struct timeval to = *tv;
 
         /* Wait to be available in writing */
         FD_ZERO(&wset);
         FD_SET(sockfd, &wset);
-        rc = select(sockfd + 1, NULL, &wset, NULL, tv);
+        rc = select(sockfd + 1, NULL, &wset, NULL, &to);
         if (rc <= 0) {
             /* Timeout or fail */
             return -1;
@@ -642,10 +670,13 @@ int modbus_tcp_pi_accept(modbus_t *ctx, int *socket)
     return ctx->s;
 }
 
-static int _modbus_tcp_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int length_to_read)
+static int _modbus_tcp_select(modbus_t *ctx, fd_set *rset, const struct timeval *tv, int length_to_read)
 {
+    // Take a copy of the original response_timeout; select will adjust this on
+    // each loop, but we don't want to interfere with the original value!
+    struct timeval to = *tv;
     int s_rc;
-    while ((s_rc = select(ctx->s+1, rset, NULL, NULL, tv)) == -1) {
+    while ((s_rc = select(ctx->s+1, rset, NULL, NULL, &to)) == -1) {
         if (errno == EINTR) {
             if (ctx->debug) {
                 fprintf(stderr, "A non blocked signal was caught\n");

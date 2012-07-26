@@ -493,6 +493,11 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
     }
 
     rsp_length_computed = compute_response_length_from_request(ctx, req);
+    if (ctx->debug) {
+        fprintf(stderr,
+                "Computed response length %d; actual response length %d\n",
+                rsp_length_computed, rsp_length );
+    }
 
     /* Exception code */
     if (function >= 0x80) {
@@ -526,7 +531,7 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
         if (function != req[offset]) {
             if (ctx->debug) {
                 fprintf(stderr,
-                        "Received function not corresponding to the requestd (0x%X != 0x%X)\n",
+                        "Received function not corresponding to the request (0x%X != 0x%X)\n",
                         function, req[offset]);
             }
             if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_PROTOCOL) {
@@ -585,6 +590,14 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
             errno = EMBBADDATA;
             rc = -1;
         }
+
+        /*
+         * TODO: For Write Register(s), check for incorrect register and count
+         * in response (not matching request).  Presently, this will allow
+         * incorrect write responses, containing non-matching register and
+         * count.
+         */
+
     } else {
         if (ctx->debug) {
             fprintf(stderr,
