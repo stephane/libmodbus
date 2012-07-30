@@ -189,6 +189,7 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
 
                 if ((errno == EBADF || errno == ECONNRESET || errno == EPIPE)) {
                     modbus_close(ctx);
+                    usleep(100 * 1000); // Be polite to other tasks
                     modbus_connect(ctx);
                 } else {
                     _sleep_and_flush(ctx);
