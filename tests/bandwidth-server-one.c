@@ -22,6 +22,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#if !defined(_WIN32)
+#define closesocket(s) close(s)
+#endif
 
 #include <modbus.h>
 
@@ -92,7 +95,7 @@ int main(int argc, char *argv[])
     printf("Quit the loop: %s\n", modbus_strerror(errno));
 
     modbus_mapping_free(mb_mapping);
-    close(socket);
+    closesocket(socket);
     modbus_free(ctx);
 
     return 0;
