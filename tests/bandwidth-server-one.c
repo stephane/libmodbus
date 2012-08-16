@@ -1,5 +1,5 @@
 /*
- * Copyright © 2008-2010 Stéphane Raimbault <stephane.raimbault@gmail.com>
+ * Copyright © 2008-2012 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,11 +22,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
-#if !defined(_WIN32)
-#define closesocket(s) close(s)
-#endif
 
 #include <modbus.h>
+
+#if defined(_WIN32)
+#define close closesocket
+#endif
 
 enum {
     TCP,
@@ -91,7 +92,7 @@ int main(int argc, char *argv[])
     printf("Quit the loop: %s\n", modbus_strerror(errno));
 
     modbus_mapping_free(mb_mapping);
-    closesocket(socket);
+    close(socket);
     modbus_free(ctx);
 
     return 0;
