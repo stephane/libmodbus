@@ -22,7 +22,8 @@ missing
 m4/
 libmodbus.pc
 libmodbus.spec
-modbus-version.h
+src/modbus-version.h
+src/win32/modbus.dll.manifest
 .deps
 .libs
 *.la

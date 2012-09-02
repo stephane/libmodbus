@@ -139,6 +139,7 @@ AC_CONFIG_FILES([
         Makefile
         src/Makefile
         src/modbus-version.h
+        src/win32/modbus.dll.manifest
         doc/Makefile
         tests/Makefile
         libmodbus.pc
