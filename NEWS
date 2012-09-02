@@ -1,3 +1,11 @@
+libmodbus 3.1.1 (2012-XX-XX)
+============================
+
+- Add Visual Studio 2008 project files by oldfaber
+- Fix missing argument in synopsis section of modbus_rtu_set_serial_mode
+- Fix wrong constant names to create version number
+- More compilation fixes for Windows by oldfaber.
+
 libmodbus 3.1.0 (2012-06-22)
 ============================
 
