@@ -39,7 +39,7 @@ FILETYPE VFT_APP
    VALUE "InternalName", "modbus.dll\x0"
    VALUE "LegalCopyright", "© See libmodbus.org\x0"
    VALUE "OriginalFilename", "modbus.dll\x0"
-   VALUE "ProductName", "Modbus\x0"
+   VALUE "ProductName", "libmodbus\x0"
   }
  }
  BLOCK "VarFileInfo"
