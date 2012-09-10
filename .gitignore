@@ -29,6 +29,7 @@ src/win32/modbus.dll.manifest
 *.la
 *.lo
 stamp-h1
+stamp-h2
 *.o
 *~
 tests/bandwidth-client
