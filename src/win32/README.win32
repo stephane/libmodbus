@@ -1,17 +1,17 @@
 Intro
 -----
 
-This directory contains the project file for Visual Studio 2008 to build a
-modbus.dll.
+
+This directory contains the project file for Visual Studio 2008 to build 
+modbus.dll and the import library modbus.lib.
+
 
 The project file searches for D:/include/msvc_std to find stdint.h.
 See ../../README.md
 
-config.h and modbus-version.h were generated using a Windows native experimental
-port of zsh and Microsoft cl.
 
+config.h and ../modbus-version.h are generated using configure.js.
+Run 
+    cscript configurs.js
+to generate these files.
 
-TODO
-----
-
-Fix the ugly need to have config.h and modbus-version.h in this directory.

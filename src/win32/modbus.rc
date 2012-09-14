@@ -1,7 +1,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include "config.h"
-#include "modbus-version.h"
+#include "../modbus-version.h"
 
 #define VERSTRING PACKAGE_VERSION
 
