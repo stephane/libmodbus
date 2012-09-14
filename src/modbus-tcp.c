@@ -201,15 +201,17 @@ static int _modbus_tcp_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
         return -1;
     }
 
-    /* Check Protocol ID */
-    if (req[2] != rsp[2] || req[3] != rsp[3]) {
-        if (ctx->debug) {
-            fprintf(stderr, "Invalid Protocol ID received 0x%X (not 0x%X)\n",
-                    (rsp[2] << 8) + rsp[3], (req[2] << 8) + req[3]);
-        }
-        errno = EMBBADDATA;
-        return -1;
-    }
+    /* TODO: Check Protocol ID
+     *
+     * if (req[2] != rsp[2] || req[3] != rsp[3]) {
+     *     if (ctx->debug) {
+     *         fprintf(stderr, "Invalid Protocol ID received 0x%X (not 0x%X)\n",
+     *                 (rsp[2] << 8) + rsp[3], (req[2] << 8) + req[3]);
+     *     }
+     *     errno = EMBBADDATA;
+     *     return -1;
+     * }
+     */
 
     /* 
      * Check that the Modbus/TCP header length field, matches?  Not really
@@ -219,15 +221,17 @@ static int _modbus_tcp_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
      * codes.
      */
 
-    /* Check Unit ID */
-    if (req[6] != rsp[6]) {
-        if (ctx->debug) {
-            fprintf(stderr, "Invalid Unit ID received 0x%X (not 0x%X)\n",
-                    (int)rsp[6], (int)req[6]);
-        }
-        errno = EMBBADDATA;
-        return -1;
-    }
+    /* TODO: Check Unit ID
+     * 
+     * if (req[6] != rsp[6]) {
+     *     if (ctx->debug) {
+     *         fprintf(stderr, "Invalid Unit ID received 0x%X (not 0x%X)\n",
+     *                 (int)rsp[6], (int)req[6]);
+     *     }
+     *     errno = EMBBADDATA;
+     *     return -1;
+     * }
+     */
     return 0;
 }
 

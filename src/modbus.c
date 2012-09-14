@@ -493,11 +493,6 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
     }
 
     rsp_length_computed = compute_response_length_from_request(ctx, req);
-    if (ctx->debug) {
-        fprintf(stderr,
-                "Computed response length %d; actual response length %d\n",
-                rsp_length_computed, rsp_length );
-    }
 
     /* Exception code */
     if (function >= 0x80) {
