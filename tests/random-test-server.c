@@ -60,6 +60,7 @@ int main(void)
 
     printf("Quit the loop: %s\n", modbus_strerror(errno));
 
+    close(socket);
     modbus_mapping_free(mb_mapping);
     modbus_close(ctx);
     modbus_free(ctx);
