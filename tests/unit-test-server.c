@@ -84,6 +84,31 @@ int main(int argc, char*argv[])
         return -1;
     }
 
+    /* Unit tests of modbus_mapping_new (tests would not be sufficient if two nb_* were identical) */
+    if (mb_mapping->nb_bits != UT_BITS_ADDRESS + UT_BITS_NB) {
+        printf("Invalid nb bits (%d != %d)\n", UT_BITS_ADDRESS + UT_BITS_NB, mb_mapping->nb_bits);
+        modbus_free(ctx);
+        return -1;
+    }
+
+    if (mb_mapping->nb_input_bits != UT_INPUT_BITS_ADDRESS + UT_INPUT_BITS_NB) {
+        printf("Invalid nb input bits: %d\n", UT_INPUT_BITS_ADDRESS + UT_INPUT_BITS_NB);
+        modbus_free(ctx);
+        return -1;
+    }
+
+    if (mb_mapping->nb_registers != UT_REGISTERS_ADDRESS + UT_REGISTERS_NB) {
+        printf("Invalid nb registers: %d\n", UT_REGISTERS_ADDRESS + UT_REGISTERS_NB);
+        modbus_free(ctx);
+        return -1;
+    }
+
+    if (mb_mapping->nb_input_registers != UT_INPUT_REGISTERS_ADDRESS + UT_INPUT_REGISTERS_NB) {
+        printf("Invalid bb input registers: %d\n", UT_INPUT_REGISTERS_ADDRESS + UT_INPUT_REGISTERS_NB);
+        modbus_free(ctx);
+        return -1;
+    }
+
     /* Examples from PI_MODBUS_300.pdf.
        Only the read-only input values are assigned. */
 

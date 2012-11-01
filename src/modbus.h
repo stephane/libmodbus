@@ -190,8 +190,8 @@ EXPORT int modbus_write_and_read_registers(modbus_t *ctx, int write_addr, int wr
                                            uint16_t *dest);
 EXPORT int modbus_report_slave_id(modbus_t *ctx, uint8_t *dest);
 
-EXPORT modbus_mapping_t* modbus_mapping_new(int nb_coil_status, int nb_input_status,
-                                            int nb_holding_registers, int nb_input_registers);
+EXPORT modbus_mapping_t* modbus_mapping_new(int nb_bits, int nb_input_bits,
+                                            int nb_registers, int nb_input_registers);
 EXPORT void modbus_mapping_free(modbus_mapping_t *mb_mapping);
 
 EXPORT int modbus_send_raw_request(modbus_t *ctx, uint8_t *raw_req, int raw_req_length);
