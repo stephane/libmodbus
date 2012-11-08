@@ -654,6 +654,11 @@ int _modbus_tcp_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int leng
     return s_rc;
 }
 
+void _modbus_tcp_free(modbus_t *ctx) {
+    free(ctx->backend_data);
+    free(ctx);
+}
+
 const modbus_backend_t _modbus_tcp_backend = {
     _MODBUS_BACKEND_TYPE_TCP,
     _MODBUS_TCP_HEADER_LENGTH,
@@ -672,7 +677,8 @@ const modbus_backend_t _modbus_tcp_backend = {
     _modbus_tcp_connect,
     _modbus_tcp_close,
     _modbus_tcp_flush,
-    _modbus_tcp_select
+    _modbus_tcp_select,
+    _modbus_tcp_free
 };
 
 
@@ -694,7 +700,8 @@ const modbus_backend_t _modbus_tcp_pi_backend = {
     _modbus_tcp_pi_connect,
     _modbus_tcp_close,
     _modbus_tcp_flush,
-    _modbus_tcp_select
+    _modbus_tcp_select,
+    _modbus_tcp_free
 };
 
 modbus_t* modbus_new_tcp(const char *ip, int port)

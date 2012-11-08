@@ -1462,8 +1462,7 @@ void modbus_free(modbus_t *ctx)
     if (ctx == NULL)
         return;
 
-    free(ctx->backend_data);
-    free(ctx);
+    ctx->backend->free(ctx);
 }
 
 void modbus_set_debug(modbus_t *ctx, int boolean)
