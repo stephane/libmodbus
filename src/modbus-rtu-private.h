@@ -59,16 +59,8 @@ struct win32_ser {
 #endif /* _WIN32 */
 
 typedef struct _modbus_rtu {
-    /* Device: "/dev/ttyS0", "/dev/ttyUSB0" or "/dev/tty.USA19*" on Mac OS X for
-       KeySpan USB<->Serial adapters this string had to be made bigger on OS X
-       as the directory+file name was bigger than 19 bytes. Making it 67 bytes
-       for now, but OS X does support 256 byte file names. May become a problem
-       in the future. */
-#if defined(__APPLE_CC__)
-    char device[64];
-#else
-    char device[16];
-#endif
+    /* Device: "/dev/ttyS0", "/dev/ttyUSB0" or "/dev/tty.USA19*" on Mac OS X. */
+    char *device;
     /* Bauds: 9600, 19200, 57600, 115200, etc */
     int baud;
     /* Data bit */

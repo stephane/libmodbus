@@ -987,6 +987,12 @@ int _modbus_rtu_select(modbus_t *ctx, fd_set *rset,
     return s_rc;
 }
 
+void _modbus_rtu_free(modbus_t *ctx) {
+    free(((modbus_rtu_t*)ctx->backend_data)->device);
+    free(ctx->backend_data);
+    free(ctx);
+}
+
 const modbus_backend_t _modbus_rtu_backend = {
     _MODBUS_BACKEND_TYPE_RTU,
     _MODBUS_RTU_HEADER_LENGTH,
@@ -1005,7 +1011,8 @@ const modbus_backend_t _modbus_rtu_backend = {
     _modbus_rtu_connect,
     _modbus_rtu_close,
     _modbus_rtu_flush,
-    _modbus_rtu_select
+    _modbus_rtu_select,
+    _modbus_rtu_free
 };
 
 modbus_t* modbus_new_rtu(const char *device,
@@ -1014,8 +1021,7 @@ modbus_t* modbus_new_rtu(const char *device,
 {
     modbus_t *ctx;
     modbus_rtu_t *ctx_rtu;
-    size_t dest_size;
-    size_t ret_size;
+    size_t device_size;
 
     ctx = (modbus_t *) malloc(sizeof(modbus_t));
     _modbus_init_common(ctx);
@@ -1024,21 +1030,16 @@ modbus_t* modbus_new_rtu(const char *device,
     ctx->backend_data = (modbus_rtu_t *) malloc(sizeof(modbus_rtu_t));
     ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
 
-    dest_size = sizeof(ctx_rtu->device);
-    ret_size = strlcpy(ctx_rtu->device, device, dest_size);
-    if (ret_size == 0) {
+    device_size = sizeof(device);
+    if (device_size == 0) {
         fprintf(stderr, "The device string is empty\n");
         modbus_free(ctx);
         errno = EINVAL;
         return NULL;
     }
 
-    if (ret_size >= dest_size) {
-        fprintf(stderr, "The device string has been truncated\n");
-        modbus_free(ctx);
-        errno = EINVAL;
-        return NULL;
-    }
+    ctx_rtu->device = (char *) malloc(device_size);
+    strcpy(ctx_rtu->device, device);
 
     ctx_rtu->baud = baud;
     if (parity == 'N' || parity == 'E' || parity == 'O') {
