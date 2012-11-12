@@ -46,7 +46,7 @@ rm -f %{buildroot}/%{_libdir}/*.la
 %files
 %defattr(-,root,root)
 
-%doc AUTHORS MIGRATION NEWS COPYING* README.rst
+%doc AUTHORS MIGRATION NEWS COPYING* README.md
 
 %{_libdir}/libmodbus.so.*
 
