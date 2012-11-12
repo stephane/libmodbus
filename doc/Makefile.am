@@ -1,3 +1,6 @@
+EXTRA_DIST = asciidoc.conf
+CLEANFILES =
+
 MAN3 = \
         modbus_close.3 \
         modbus_connect.3 \
@@ -58,7 +61,7 @@ dist_man_MANS = $(MAN_DOC)
 doc: $(MAN_DOC)
 endif
 
-EXTRA_DIST = asciidoc.conf $(MAN_TXT)
+EXTRA_DIST += $(MAN_TXT)
 if BUILD_DOC
 EXTRA_DIST += $(MAN_HTML)
 html: $(MAN_HTML)
@@ -84,8 +87,5 @@ SUFFIXES=.html .txt .xml .1 .3 .7
 .xml.7:
 	xmlto man $<
 
-clean:
-	rm -f *.1 *.3 *.7
-	rm -f *.html
-
+CLEANFILES += *.1 *.3 *.7 *.html
 endif
