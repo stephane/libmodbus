@@ -38,7 +38,7 @@ select the common packages (gcc, automake, libtool, etc).
 Testing
 -------
 
-Some tests are provided in the `tests` directory, you can freely edit the source
+Some tests are provided in *tests* directory, you can freely edit the source
 code to fit your needs (it's Free Sofware :).
 
 See *tests/README* for a description of each program.
