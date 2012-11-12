@@ -29,7 +29,7 @@ AC_INIT([libmodbus],
         [http://libmodbus.org/])
 AC_CONFIG_SRCDIR([src/modbus.c])
 AC_CONFIG_AUX_DIR([build-aux])
-AM_INIT_AUTOMAKE([check-news foreign 1.11 -Wall -Wno-portability silent-rules tar-pax no-dist-gzip dist-xz subdir-objects])
+AM_INIT_AUTOMAKE([check-news foreign 1.11 -Wall -Wno-portability silent-rules tar-pax subdir-objects])
 AC_PROG_CC_STDC
 AC_USE_SYSTEM_EXTENSIONS
 AC_SYS_LARGEFILE
