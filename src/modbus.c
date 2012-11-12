@@ -102,7 +102,7 @@ void _error_print(modbus_t *ctx, const char *context)
     }
 }
 
-int _sleep_and_flush(modbus_t *ctx)
+static int _sleep_and_flush(modbus_t *ctx)
 {
 #ifdef _WIN32
     /* usleep doesn't exist on Windows */
@@ -496,7 +496,7 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
 
     /* Exception code */
     if (function >= 0x80) {
-        if (rsp_length == (offset + 2 + ctx->backend->checksum_length) &&
+        if (rsp_length == (offset + 2 + (int)ctx->backend->checksum_length) &&
             req[offset] == (rsp[offset] - 0x80)) {
             /* Valid exception code received */
 

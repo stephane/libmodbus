@@ -29,7 +29,7 @@
 
 #define G_MSEC_PER_SEC 1000
 
-uint32_t gettime_ms(void)
+static uint32_t gettime_ms(void)
 {
     struct timeval tv;
 #if !defined(_MSC_VER)

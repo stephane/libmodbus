@@ -157,14 +157,14 @@ static uint16_t crc16(uint8_t *buffer, uint16_t buffer_length)
     return (crc_hi << 8 | crc_lo);
 }
 
-int _modbus_rtu_prepare_response_tid(const uint8_t *req, int *req_length)
+static int _modbus_rtu_prepare_response_tid(const uint8_t *req, int *req_length)
 {
     (*req_length) -= _MODBUS_RTU_CHECKSUM_LENGTH;
     /* No TID */
     return 0;
 }
 
-int _modbus_rtu_send_msg_pre(uint8_t *req, int req_length)
+static int _modbus_rtu_send_msg_pre(uint8_t *req, int req_length)
 {
     uint16_t crc = crc16(req, req_length);
     req[req_length++] = crc >> 8;
@@ -260,7 +260,7 @@ static int win32_ser_read(struct win32_ser *ws, uint8_t *p_msg,
 }
 #endif
 
-void _modbus_rtu_ioctl_rts(int fd, int on)
+static void _modbus_rtu_ioctl_rts(int fd, int on)
 {
 #if HAVE_DECL_TIOCM_RTS
     int flags;
@@ -275,7 +275,7 @@ void _modbus_rtu_ioctl_rts(int fd, int on)
 #endif
 }
 
-ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
+static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
 {
 #if defined(_WIN32)
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
@@ -309,7 +309,7 @@ ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
 #endif
 }
 
-int _modbus_rtu_receive(modbus_t *ctx, uint8_t *req)
+static int _modbus_rtu_receive(modbus_t *ctx, uint8_t *req)
 {
     int rc;
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
@@ -332,7 +332,7 @@ int _modbus_rtu_receive(modbus_t *ctx, uint8_t *req)
     return rc;
 }
 
-ssize_t _modbus_rtu_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length)
+static ssize_t _modbus_rtu_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length)
 {
 #if defined(_WIN32)
     return win32_ser_read(&((modbus_rtu_t *)ctx->backend_data)->w_ser, rsp, rsp_length);
@@ -341,10 +341,10 @@ ssize_t _modbus_rtu_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length)
 #endif
 }
 
-int _modbus_rtu_flush(modbus_t *);
+static int _modbus_rtu_flush(modbus_t *);
 
-int _modbus_rtu_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
-                                       const uint8_t *rsp, int rsp_length)
+static int _modbus_rtu_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
+                                              const uint8_t *rsp, int rsp_length)
 {
     /* Check responding slave is the slave we requested (except for broacast
      * request) */
@@ -364,8 +364,8 @@ int _modbus_rtu_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
 /* The check_crc16 function shall return 0 is the message is ignored and the
    message length if the CRC is valid. Otherwise it shall return -1 and set
    errno to EMBADCRC. */
-int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
-                                const int msg_length)
+static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
+                                       const int msg_length)
 {
     uint16_t crc_calculated;
     uint16_t crc_received;
@@ -917,7 +917,7 @@ int modbus_rtu_get_rts(modbus_t *ctx) {
     }
 }
 
-void _modbus_rtu_close(modbus_t *ctx)
+static void _modbus_rtu_close(modbus_t *ctx)
 {
     /* Closes the file descriptor in RTU mode */
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
@@ -937,7 +937,7 @@ void _modbus_rtu_close(modbus_t *ctx)
 #endif
 }
 
-int _modbus_rtu_flush(modbus_t *ctx)
+static int _modbus_rtu_flush(modbus_t *ctx)
 {
 #if defined(_WIN32)
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
@@ -948,7 +948,7 @@ int _modbus_rtu_flush(modbus_t *ctx)
 #endif
 }
 
-int _modbus_rtu_select(modbus_t *ctx, fd_set *rset,
+static int _modbus_rtu_select(modbus_t *ctx, fd_set *rset,
                        struct timeval *tv, int length_to_read)
 {
     int s_rc;
@@ -987,7 +987,7 @@ int _modbus_rtu_select(modbus_t *ctx, fd_set *rset,
     return s_rc;
 }
 
-void _modbus_rtu_free(modbus_t *ctx) {
+static void _modbus_rtu_free(modbus_t *ctx) {
     free(((modbus_rtu_t*)ctx->backend_data)->device);
     free(ctx->backend_data);
     free(ctx);
