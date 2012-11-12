@@ -16,8 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-/* For accept4 when available */
-#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -97,9 +95,9 @@ static int _modbus_set_slave(modbus_t *ctx, int slave)
 }
 
 /* Builds a TCP request header */
-int _modbus_tcp_build_request_basis(modbus_t *ctx, int function,
-                                    int addr, int nb,
-                                    uint8_t *req)
+static int _modbus_tcp_build_request_basis(modbus_t *ctx, int function,
+                                           int addr, int nb,
+                                           uint8_t *req)
 {
     modbus_tcp_t *ctx_tcp = ctx->backend_data;
 
@@ -129,7 +127,7 @@ int _modbus_tcp_build_request_basis(modbus_t *ctx, int function,
 }
 
 /* Builds a TCP response header */
-int _modbus_tcp_build_response_basis(sft_t *sft, uint8_t *rsp)
+static int _modbus_tcp_build_response_basis(sft_t *sft, uint8_t *rsp)
 {
     /* Extract from MODBUS Messaging on TCP/IP Implementation
        Guide V1.0b (page 23/46):
@@ -152,12 +150,12 @@ int _modbus_tcp_build_response_basis(sft_t *sft, uint8_t *rsp)
 }
 
 
-int _modbus_tcp_prepare_response_tid(const uint8_t *req, int *req_length)
+static int _modbus_tcp_prepare_response_tid(const uint8_t *req, int *req_length)
 {
     return (req[0] << 8) + req[1];
 }
 
-int _modbus_tcp_send_msg_pre(uint8_t *req, int req_length)
+static int _modbus_tcp_send_msg_pre(uint8_t *req, int req_length)
 {
     /* Substract the header length to the message length */
     int mbap_length = req_length - 6;
@@ -168,7 +166,7 @@ int _modbus_tcp_send_msg_pre(uint8_t *req, int req_length)
     return req_length;
 }
 
-ssize_t _modbus_tcp_send(modbus_t *ctx, const uint8_t *req, int req_length)
+static ssize_t _modbus_tcp_send(modbus_t *ctx, const uint8_t *req, int req_length)
 {
     /* MSG_NOSIGNAL
        Requests not to send SIGPIPE on errors on stream oriented
@@ -177,20 +175,20 @@ ssize_t _modbus_tcp_send(modbus_t *ctx, const uint8_t *req, int req_length)
     return send(ctx->s, (const char*)req, req_length, MSG_NOSIGNAL);
 }
 
-int _modbus_tcp_receive(modbus_t *ctx, uint8_t *req) {
+static int _modbus_tcp_receive(modbus_t *ctx, uint8_t *req) {
     return _modbus_receive_msg(ctx, req, MSG_INDICATION);
 }
 
-ssize_t _modbus_tcp_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length) {
+static ssize_t _modbus_tcp_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length) {
     return recv(ctx->s, (char *)rsp, rsp_length, 0);
 }
 
-int _modbus_tcp_check_integrity(modbus_t *ctx, uint8_t *msg, const int msg_length)
+static int _modbus_tcp_check_integrity(modbus_t *ctx, uint8_t *msg, const int msg_length)
 {
     return msg_length;
 }
 
-int _modbus_tcp_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
+static int _modbus_tcp_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
                                        const uint8_t *rsp, int rsp_length)
 {
     /* Check TID */
@@ -398,13 +396,13 @@ static int _modbus_tcp_pi_connect(modbus_t *ctx)
 }
 
 /* Closes the network connection and socket in TCP mode */
-void _modbus_tcp_close(modbus_t *ctx)
+static void _modbus_tcp_close(modbus_t *ctx)
 {
     shutdown(ctx->s, SHUT_RDWR);
     close(ctx->s);
 }
 
-int _modbus_tcp_flush(modbus_t *ctx)
+static int _modbus_tcp_flush(modbus_t *ctx)
 {
     int rc;
     int rc_sum = 0;
@@ -630,7 +628,7 @@ int modbus_tcp_pi_accept(modbus_t *ctx, int *socket)
     return ctx->s;
 }
 
-int _modbus_tcp_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int length_to_read)
+static int _modbus_tcp_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int length_to_read)
 {
     int s_rc;
     while ((s_rc = select(ctx->s+1, rset, NULL, NULL, tv)) == -1) {
@@ -654,7 +652,7 @@ int _modbus_tcp_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int leng
     return s_rc;
 }
 
-void _modbus_tcp_free(modbus_t *ctx) {
+static void _modbus_tcp_free(modbus_t *ctx) {
     free(ctx->backend_data);
     free(ctx);
 }
