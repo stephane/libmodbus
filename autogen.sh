@@ -1,2 +1,2 @@
 #! /bin/sh
-autoreconf -v --install --force || exit 1
+autoreconf --install --symlink --force || exit 1
