@@ -1030,7 +1030,8 @@ modbus_t* modbus_new_rtu(const char *device,
     ctx->backend_data = (modbus_rtu_t *) malloc(sizeof(modbus_rtu_t));
     ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
 
-    device_size = sizeof(device);
+    /* Device name and \0 */
+    device_size = (strlen(device) + 1) * sizeof(char);
     if (device_size == 0) {
         fprintf(stderr, "The device string is empty\n");
         modbus_free(ctx);
