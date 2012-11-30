@@ -27,8 +27,7 @@ var error = 0;
 
 /* Helper function, transforms the option variable into the 'Enabled'
    or 'Disabled' string. */
-function boolToStr(opt)
-{
+function boolToStr(opt) {
 	if (opt == false)
 		return "no";
 	else if (opt == true)
@@ -39,8 +38,7 @@ function boolToStr(opt)
 
 /* Helper function, transforms the argument string into a boolean
    value. */
-function strToBool(opt)
-{
+function strToBool(opt) {
 	if (opt == 0 || opt == "no")
 		return false;
 	else if (opt == 1 || opt == "yes")
@@ -50,8 +48,7 @@ function strToBool(opt)
 }
 
 /* Displays the details about how to use this script. */
-function usage()
-{
+function usage() {
 	var txt;
 	txt = "Usage:\n";
 	txt += "  cscript " + WScript.ScriptName + " <options>\n";
@@ -59,26 +56,25 @@ function usage()
 	txt += "Options can be specified in the form <option>=<value>, where the value is\n";
 	txt += "either 'yes' or 'no', if not stated otherwise.\n\n";
 	txt += "\nModbus library configure options, default value given in parentheses:\n\n";
-	txt += "  test-run:  Run configure without creating files (" + (testRun? "yes" : "no")  + ")\n";
+	txt += "  dry-run:  Run configure without creating files (" + (testRun? "yes" : "no")  + ")\n";
 	txt += "\nWin32 build options, default value given in parentheses:\n\n";
-	txt += "  compiler:   Compiler to be used [msvc|mingw|bcb] (" + compiler + ")\n";
+	txt += "  compiler: Compiler to be used [msvc|mingw] (" + compiler + ")\n";
 	WScript.Echo(txt);
 }
 
 /* read the version from the configuration file */
-function readVersion()
-{
+function readVersion() {
 	var fso, cf, ln, s;
 	fso = new ActiveXObject("Scripting.FileSystemObject");
 	cf = fso.OpenTextFile(configFile, 1);
 	while (cf.AtEndOfStream != true) {
 		ln = cf.ReadLine();
 		s = new String(ln);
-		if       (s.search(/^m4_define\(\[libmodbus_version_major/) != -1) {
+		if (s.search(/^m4_define\(\[libmodbus_version_major/) != -1) {
 			verMajor = s.substr(s.indexOf(",") + 3, 1)
-		} else if(s.search(/^m4_define\(\[libmodbus_version_minor/) != -1) {
+		} else if (s.search(/^m4_define\(\[libmodbus_version_minor/) != -1) {
 			verMinor = s.substr(s.indexOf(",") + 3, 1)
-		} else if(s.search(/^m4_define\(\[libmodbus_version_micro/) != -1) {
+		} else if (s.search(/^m4_define\(\[libmodbus_version_micro/) != -1) {
 			verMicro = s.substr(s.indexOf(",") + 3, 1)
 		}
 	}
@@ -86,8 +82,7 @@ function readVersion()
 }
 
 /* create the versioned file */
-function createVersionedFile(newfile, unversioned)
-{
+function createVersionedFile(newfile, unversioned) {
 	var fso, ofi, of, ln, s;
 	fso = new ActiveXObject("Scripting.FileSystemObject");
 	ofi = fso.OpenTextFile(unversioned, 1);
@@ -97,7 +92,7 @@ function createVersionedFile(newfile, unversioned)
 	while (ofi.AtEndOfStream != true) {
 		ln = ofi.ReadLine();
 		s = new String(ln);
-		if        (!testRun && s.search(/\@LIBMODBUS_VERSION_MAJOR\@/) != -1) {
+		if (!testRun && s.search(/\@LIBMODBUS_VERSION_MAJOR\@/) != -1) {
 			of.WriteLine(s.replace(/\@LIBMODBUS_VERSION_MAJOR\@/, verMajor));
 		} else if (!testRun && s.search(/\@LIBMODBUS_VERSION_MINOR\@/) != -1) {
 			of.WriteLine(s.replace(/\@LIBMODBUS_VERSION_MINOR\@/, verMinor));
@@ -126,8 +121,6 @@ for (i = 0; (i < WScript.Arguments.length) && (error == 0); i++) {
 	var arg, opt;
 	arg = WScript.Arguments(i);
 	opt = arg.substring(0, arg.indexOf("="));
-	if (opt.length == 0)
-		opt = arg.substring(0, arg.indexOf(":"));
 	if (opt.length > 0) {
 		if (opt == "dry-run")
 			testRun = strToBool(arg.substring(opt.length + 1, arg.length));
@@ -184,7 +177,7 @@ if (error != 0) {
 }
 
 // Display the final configuration. 
-var txtOut = "\nLIBMODBUS configuration completed\n";
+var txtOut = "\nLibmodbus configuration completed\n";
 WScript.Echo(txtOut);
 
 
