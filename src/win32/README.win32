@@ -12,6 +12,8 @@ See ../../README.md
 
 config.h and ../modbus-version.h are generated using configure.js.
 Run 
-    cscript configurs.js
-to generate these files.
+    cscript configure.js
+or 
+    wscript configure.js
+or double click configure.js to generate these files.
 
