@@ -26,7 +26,7 @@ QNX and Windows.
 Installation
 ------------
 
-To instal, just run the usual dance, `./configure && make install` and run
+To install, just run the usual dance, `./configure && make install` and run
 `./autogen.sh` first if the `configure.sh` is not present.
 
 If you want to compile with Microsoft Visual Studio, you need to install
@@ -39,7 +39,7 @@ Testing
 -------
 
 Some tests are provided in *tests* directory, you can freely edit the source
-code to fit your needs (it's Free Sofware :).
+code to fit your needs (it's Free Software :).
 
 See *tests/README* for a description of each program.
 
