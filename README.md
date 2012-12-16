@@ -35,6 +35,9 @@ If you want to compile with Microsoft Visual Studio, you need to install
 To compile under Windows, install [MinGW](http://www.mingw.org/) and MSYS then
 select the common packages (gcc, automake, libtool, etc).
 
+To compile under OS X with [homebrew](http://mxcl.github.com/homebrew/), you will need
+to install the following dependencies first: `brew install autoconf automake libtool`.
+
 Testing
 -------
 
