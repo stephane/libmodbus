@@ -26,8 +26,8 @@ QNX and Windows.
 Installation
 ------------
 
-To install, just run the usual dance, `./configure && make install` and run
-`./autogen.sh` first if the `configure.sh` is not present.
+To install, just run the usual dance, `./configure && make install`. Run
+`./autogen.sh` first to generate the `configure` script.
 
 If you want to compile with Microsoft Visual Studio, you need to install
 <http://code.google.com/p/msinttypes/> to fill the absence of stdint.h.
