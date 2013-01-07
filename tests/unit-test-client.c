@@ -32,8 +32,8 @@ enum {
 
 int main(int argc, char *argv[])
 {
-    uint8_t *tab_rp_bits;
-    uint16_t *tab_rp_registers;
+    uint8_t *tab_rp_bits = 0;
+    uint16_t *tab_rp_registers = 0;
     uint16_t *tab_rp_registers_bad;
     modbus_t *ctx;
     int i;
@@ -81,11 +81,29 @@ int main(int argc, char *argv[])
           modbus_set_slave(ctx, SERVER_ID);
     }
 
+
+    /* Save original timeout before/after connect, and ensure it isn't mutated */
+    printf("\nTEST TIMEOUT MUTATION (CONNECT):\n");
+
+    modbus_get_response_timeout(ctx, &old_response_timeout);
+
     if (modbus_connect(ctx) == -1) {
         fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
         modbus_free(ctx);
         return -1;
     }
+    modbus_get_response_timeout(ctx, &response_timeout);
+    rc = memcmp( &response_timeout, &old_response_timeout, sizeof response_timeout );
+    if (rc == 0) {
+        printf("OK\n");
+    } else {
+        printf("FAILED: modbus_t::response_timeout has been modified by %fs\n", 
+               ((double)response_timeout.tv_sec + (double)response_timeout.tv_usec / 1000000)
+               - ((double)old_response_timeout.tv_sec + (double)old_response_timeout.tv_usec / 1000000));
+        goto close;
+    }
+
+    
 
     /* Allocate and initialize the memory to store the bits */
     nb_points = (UT_BITS_NB > UT_INPUT_BITS_NB) ? UT_BITS_NB : UT_INPUT_BITS_NB;

@@ -290,12 +290,14 @@ static int _connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen,
         fd_set wset;
         int optval;
         socklen_t optlen = sizeof(optval);
-        struct timeval to = *tv;
+        struct timeval to;
+        if ( tv )
+            to = *tv;
 
         /* Wait to be available in writing */
         FD_ZERO(&wset);
         FD_SET(sockfd, &wset);
-        rc = select(sockfd + 1, NULL, &wset, NULL, &to);
+        rc = select(sockfd + 1, NULL, &wset, NULL, ( tv ? &to : NULL ));
         if (rc <= 0) {
             /* Timeout or fail */
             return -1;
@@ -676,11 +678,16 @@ int modbus_tcp_pi_accept(modbus_t *ctx, int *socket)
 
 static int _modbus_tcp_select(modbus_t *ctx, fd_set *rset, const struct timeval *tv, int length_to_read)
 {
-    // Take a copy of the original response_timeout; select will adjust this on
-    // each loop, but we don't want to interfere with the original value!
-    struct timeval to = *tv;
+    // Take a copy of the original timeval supplied (eg. may be a pointer to
+    // _modbus::response_timeout); select will adjust this on each loop (on
+    // certain platforms), but we don't want to interfere with the original
+    // value!  Note: may be NULL (indicates no timeout)
     int s_rc;
-    while ((s_rc = select(ctx->s+1, rset, NULL, NULL, &to)) == -1) {
+    struct timeval to;
+    if ( tv )
+        to = *tv;
+
+    while ((s_rc = select(ctx->s+1, rset, NULL, NULL, ( tv ? &to : NULL ))) == -1) {
         if (errno == EINTR) {
             if (ctx->debug) {
                 fprintf(stderr, "A non blocked signal was caught\n");
