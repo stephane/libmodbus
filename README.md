@@ -26,8 +26,8 @@ QNX and Windows.
 Installation
 ------------
 
-To instal, just run the usual dance, `./configure && make install` and run
-`./autogen.sh` first if the `configure.sh` is not present.
+To install, just run the usual dance, `./configure && make install`. Run
+`./autogen.sh` first to generate the `configure` script.
 
 If you want to compile with Microsoft Visual Studio, you need to install
 <http://code.google.com/p/msinttypes/> to fill the absence of stdint.h.
@@ -35,11 +35,14 @@ If you want to compile with Microsoft Visual Studio, you need to install
 To compile under Windows, install [MinGW](http://www.mingw.org/) and MSYS then
 select the common packages (gcc, automake, libtool, etc).
 
+To compile under OS X with [homebrew](http://mxcl.github.com/homebrew/), you will need
+to install the following dependencies first: `brew install autoconf automake libtool`.
+
 Testing
 -------
 
 Some tests are provided in *tests* directory, you can freely edit the source
-code to fit your needs (it's Free Sofware :).
+code to fit your needs (it's Free Software :).
 
 See *tests/README* for a description of each program.
 
