@@ -280,16 +280,30 @@ static int _modbus_tcp_set_ipv4_options(int s)
     return 0;
 }
 
+/*
+ * A TCP/IP "Eager Connection" setup allows a connect() call to complete after a
+ * server listen(), but before it invokes accept().  Therefore, this select
+ * complete as quickly as the client's and server's kernel TCP/IP will allow --
+ * regardless of whether the server has a delay between detecting readability on
+ * its listen socket and invoking accept().  This resulted in a subtle defect,
+ * difficult to detect in a LAN environment; passing the incoming timeval
+ * pointer directly to select would allow select to modify it by whatever
+ * (usually small) time was required to complete the connection -- permanently
+ * altering the supplied timeval.  In the case of _connect, this was the
+ * modbus_t::response_timeout.  Ensure we don't ever allow modification of the
+ * supplied timeval.
+ */
 static int _connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen,
                     const struct timeval *tv)
 {
     int rc;
-
     rc = connect(sockfd, addr, addrlen);
     if (rc == -1 && errno == EINPROGRESS) {
         fd_set wset;
         int optval;
         socklen_t optlen = sizeof(optval);
+        /* Select is allowed to modify its timeout timeval; take a copy.
+         * WARNING: may be NULL (indicates no timeout) */
         struct timeval to;
         if ( tv )
             to = *tv;
@@ -299,7 +313,9 @@ static int _connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen,
         FD_SET(sockfd, &wset);
         rc = select(sockfd + 1, NULL, &wset, NULL, ( tv ? &to : NULL ));
         if (rc <= 0) {
-            /* Timeout or fail */
+            /* Timeout or fail; ensures errno is always set on timeout! */
+            if (rc == 0)
+                errno = ETIMEDOUT;
             return -1;
         }
 
@@ -357,6 +373,10 @@ static int _modbus_tcp_connect(modbus_t *ctx)
     addr.sin_port = htons(ctx_tcp->port);
     addr.sin_addr.s_addr = inet_addr(ctx_tcp->ip);
     rc = _connect(ctx->s, (struct sockaddr *)&addr, sizeof(addr), &ctx->response_timeout);
+    if (ctx->debug) {
+        printf("Connecting to %s:%d; %s\n", ctx_tcp->ip, ctx_tcp->port,
+               (( rc == -1 ) ? strerror( errno ) : "successful" ));
+    }
     if (rc == -1) {
         close(ctx->s);
         return -1;
@@ -678,11 +698,9 @@ int modbus_tcp_pi_accept(modbus_t *ctx, int *socket)
 
 static int _modbus_tcp_select(modbus_t *ctx, fd_set *rset, const struct timeval *tv, int length_to_read)
 {
-    // Take a copy of the original timeval supplied (eg. may be a pointer to
-    // _modbus::response_timeout); select will adjust this on each loop (on
-    // certain platforms), but we don't want to interfere with the original
-    // value!  Note: may be NULL (indicates no timeout)
     int s_rc;
+    // Select is allowed to modify its timeout timeval; take a copy
+    // Note: may be NULL (indicates no timeout)
     struct timeval to;
     if ( tv )
         to = *tv;

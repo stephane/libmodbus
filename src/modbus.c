@@ -358,6 +358,9 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
          * received */
         p_tv = NULL;
     } else {
+        /* Wait for the initial message payload, for up to the full
+         * response_timeout; if incomplete, subsequent characters must be
+         * received within ctx->byte_timeout (enforced below) */
         tv.tv_sec = ctx->response_timeout.tv_sec;
         tv.tv_usec = ctx->response_timeout.tv_usec;
         p_tv = &tv;
