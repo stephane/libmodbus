@@ -218,7 +218,8 @@ static int _modbus_tcp_set_ipv4_options(int s)
         return -1;
     }
 
-    /* If the OS does not offer SOCK_NONBLOCK, fall back to setting FIONBIO to make sockets non-blocking */
+    /* If the OS does not offer SOCK_NONBLOCK, fall back to setting FIONBIO to
+     * make sockets non-blocking */
     /* Do not care about the return value, this is optional */
 #if !defined(SOCK_NONBLOCK) && defined(FIONBIO)
 #ifdef OS_WIN32
@@ -230,7 +231,7 @@ static int _modbus_tcp_set_ipv4_options(int s)
     ioctl(s, FIONBIO, &option);
 #endif
 #endif
-    
+
 #ifndef OS_WIN32
     /**
      * Cygwin defines IPTOS_LOWDELAY but can't handle that flag so it's
