@@ -185,6 +185,7 @@ EXPORT int modbus_write_bit(modbus_t *ctx, int coil_addr, int status);
 EXPORT int modbus_write_register(modbus_t *ctx, int reg_addr, int value);
 EXPORT int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *data);
 EXPORT int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *data);
+EXPORT int modbus_mask_write_register(modbus_t *ctx, int addr, uint16_t and, uint16_t or);
 EXPORT int modbus_write_and_read_registers(modbus_t *ctx, int write_addr, int write_nb,
                                            const uint16_t *src, int read_addr, int read_nb,
                                            uint16_t *dest);
