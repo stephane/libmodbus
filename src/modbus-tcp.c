@@ -1,5 +1,5 @@
 /*
- * Copyright © 2001-2011 Stéphane Raimbault <stephane.raimbault@gmail.com>
+ * Copyright © 2001-2013 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -255,7 +255,12 @@ static int _connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen,
     int rc;
 
     rc = connect(sockfd, addr, addrlen);
+
+#ifdef OS_WIN32
+    if (rc == -1 && WSAGetLastError() == WSAEINPROGRESS) {
+#else
     if (rc == -1 && errno == EINPROGRESS) {
+#endif
         fd_set wset;
         int optval;
         socklen_t optlen = sizeof(optval);
