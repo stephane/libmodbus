@@ -157,6 +157,9 @@ static unsigned int compute_response_length_from_request(modbus_t *ctx, uint8_t 
         /* The response is device specific (the header provides the
            length) */
         return MSG_LENGTH_UNDEFINED;
+    case _FC_MASK_WRITE_REGISTER:
+        length = 7;
+        break;
     default:
         length = 5;
     }
@@ -253,6 +256,8 @@ static uint8_t compute_meta_length_after_function(int function,
         } else if (function == _FC_WRITE_MULTIPLE_COILS ||
                    function == _FC_WRITE_MULTIPLE_REGISTERS) {
             length = 5;
+        } else if (function == _FC_MASK_WRITE_REGISTER) {
+            length = 6;
         } else if (function == _FC_WRITE_AND_READ_REGISTERS) {
             length = 9;
         } else {
@@ -267,6 +272,9 @@ static uint8_t compute_meta_length_after_function(int function,
         case _FC_WRITE_MULTIPLE_COILS:
         case _FC_WRITE_MULTIPLE_REGISTERS:
             length = 4;
+            break;
+        case _FC_MASK_WRITE_REGISTER:
+            length = 6;
             break;
         default:
             length = 1;
@@ -870,7 +878,26 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         errno = ENOPROTOOPT;
         return -1;
         break;
+    case _FC_MASK_WRITE_REGISTER:
+        if (address >= mb_mapping->nb_registers) {
+            if (ctx->debug) {
+                fprintf(stderr, "Illegal data address %0X in write_register\n",
+                        address);
+            }
+            rsp_length = response_exception(
+                ctx, &sft,
+                MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
+        } else {
+            uint16_t data = mb_mapping->tab_registers[address];
+            uint16_t and = (req[offset + 3] << 8) + req[offset + 4];
+            uint16_t or = (req[offset + 5] << 8) + req[offset + 6];
 
+            data = (data & and) | (or & (~and));
+            mb_mapping->tab_registers[address] = data;
+            memcpy(rsp, req, req_length);
+            rsp_length = req_length;
+        }
+        break;
     case _FC_WRITE_AND_READ_REGISTERS: {
         int nb = (req[offset + 3] << 8) + req[offset + 4];
         uint16_t address_write = (req[offset + 5] << 8) + req[offset + 6];
@@ -1252,6 +1279,37 @@ int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *src)
     rc = send_msg(ctx, req, req_length);
     if (rc > 0) {
         uint8_t rsp[MAX_MESSAGE_LENGTH];
+
+        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        if (rc == -1)
+            return -1;
+
+        rc = check_confirmation(ctx, req, rsp, rc);
+    }
+
+    return rc;
+}
+
+int modbus_mask_write_register(modbus_t *ctx, int addr, uint16_t and, uint16_t or)
+{
+    int rc;
+    int req_length;
+    uint8_t req[_MIN_REQ_LENGTH];
+
+    req_length = ctx->backend->build_request_basis(ctx, _FC_MASK_WRITE_REGISTER, addr, 0, req);
+
+    /* HACKISH, count is not used */
+    req_length -=2;
+
+    req[req_length++] = and >> 8;
+    req[req_length++] = and & 0x00ff;
+    req[req_length++] = or >> 8;
+    req[req_length++] = or & 0x00ff;
+
+    rc = send_msg(ctx, req, req_length);
+    if (rc > 0) {
+        /* Used by write_bit and write_register */
+        uint8_t rsp[_MIN_REQ_LENGTH];
 
         rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
         if (rc == -1)
