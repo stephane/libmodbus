@@ -14,6 +14,7 @@ MAN3 = \
         modbus_get_socket.3 \
         modbus_mapping_free.3 \
         modbus_mapping_new.3 \
+        modbus_mask_write_register.3 \
         modbus_new_rtu.3 \
         modbus_new_tcp_pi.3 \
         modbus_new_tcp.3 \
