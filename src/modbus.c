@@ -1290,7 +1290,7 @@ int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *src)
     return rc;
 }
 
-int modbus_mask_write_register(modbus_t *ctx, int addr, uint16_t and, uint16_t or)
+int modbus_mask_write_register(modbus_t *ctx, int addr, uint16_t and_mask, uint16_t or_mask)
 {
     int rc;
     int req_length;
@@ -1301,10 +1301,10 @@ int modbus_mask_write_register(modbus_t *ctx, int addr, uint16_t and, uint16_t o
     /* HACKISH, count is not used */
     req_length -=2;
 
-    req[req_length++] = and >> 8;
-    req[req_length++] = and & 0x00ff;
-    req[req_length++] = or >> 8;
-    req[req_length++] = or & 0x00ff;
+    req[req_length++] = and_mask >> 8;
+    req[req_length++] = and_mask & 0x00ff;
+    req[req_length++] = or_mask >> 8;
+    req[req_length++] = or_mask & 0x00ff;
 
     rc = send_msg(ctx, req, req_length);
     if (rc > 0) {
