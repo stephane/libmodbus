@@ -1,5 +1,5 @@
 /*
- * Copyright © 2001-2013 Stéphane Raimbault <stephane.raimbault@gmail.com>
+ * Copyright © 2001-2013 Stephane Raimbault <stephane.raimbault@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,14 +28,6 @@
 
 #if defined(_WIN32)
 # define OS_WIN32
-/* ws2_32.dll has getaddrinfo and freeaddrinfo on Windows XP and later.
- * minwg32 headers check WINVER before allowing the use of these */
-# ifndef WINVER
-# define WINVER 0x0501
-# endif
-# include <ws2tcpip.h>
-# define SHUT_RDWR 2
-# define close closesocket
 #else
 # include <sys/socket.h>
 # include <sys/ioctl.h>
@@ -62,6 +54,16 @@
 #include "modbus-tcp-private.h"
 
 #ifdef OS_WIN32
+
+/* ws2_32.dll has getaddrinfo and freeaddrinfo on Windows XP and later.
+ * minwg32 headers check WINVER before allowing the use of these */
+# ifndef WINVER
+# define WINVER 0x0501
+# endif
+# include <ws2tcpip.h>
+# define SHUT_RDWR 2
+# define close closesocket
+
 static int _modbus_tcp_init_win32(void)
 {
     /* Initialise Windows Socket API */
@@ -224,8 +226,10 @@ static int _modbus_tcp_set_ipv4_options(int s)
 #if !defined(SOCK_NONBLOCK) && defined(FIONBIO)
 #ifdef OS_WIN32
     /* Setting FIONBIO expects an unsigned long according to MSDN */
-    unsigned long ioctloption = 1;
-    ioctlsocket(s, FIONBIO, &ioctloption);
+    {
+        unsigned ioctloption = 1;
+        ioctlsocket(s, FIONBIO, &ioctloption);
+    }
 #else
     option = 1;
     ioctl(s, FIONBIO, &option);
