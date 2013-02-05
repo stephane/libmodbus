@@ -260,31 +260,34 @@ static int _connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen,
 
     rc = connect(sockfd, addr, addrlen);
 
+    if (rc == -1) {
 #ifdef OS_WIN32
-    if (rc == -1 && WSAGetLastError() == WSAEINPROGRESS) {
+        int socket_error = WSAGetLastError();
+        if (socket_error == WSAEINPROGRESS || socket_error == WSAEWOULDBLOCK) {
 #else
-    if (rc == -1 && errno == EINPROGRESS) {
+        if (errno == EINPROGRESS) {
 #endif
-        fd_set wset;
-        int optval;
-        socklen_t optlen = sizeof(optval);
+            fd_set wset;
+            int optval;
+            socklen_t optlen = sizeof(optval);
 
-        /* Wait to be available in writing */
-        FD_ZERO(&wset);
-        FD_SET(sockfd, &wset);
-        rc = select(sockfd + 1, NULL, &wset, NULL, tv);
-        if (rc <= 0) {
-            /* Timeout or fail */
-            return -1;
-        }
+            /* Wait to be available in writing */
+            FD_ZERO(&wset);
+            FD_SET(sockfd, &wset);
+            rc = select(sockfd + 1, NULL, &wset, NULL, tv);
+            if (rc <= 0) {
+                /* Timeout or fail */
+                return -1;
+            }
 
-        /* The connection is established if SO_ERROR and optval are set to 0 */
-        rc = getsockopt(sockfd, SOL_SOCKET, SO_ERROR, (void *)&optval, &optlen);
-        if (rc == 0 && optval == 0) {
-            return 0;
-        } else {
-            errno = ECONNREFUSED;
-            return -1;
+            /* The connection is established if SO_ERROR and optval are set to 0 */
+            rc = getsockopt(sockfd, SOL_SOCKET, SO_ERROR, (void *)&optval, &optlen);
+            if (rc == 0 && optval == 0) {
+                return 0;
+            } else {
+                errno = ECONNREFUSED;
+                return -1;
+            }
         }
     }
     return rc;
