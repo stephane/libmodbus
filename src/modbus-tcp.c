@@ -28,14 +28,6 @@
 
 #if defined(_WIN32)
 # define OS_WIN32
-/* ws2_32.dll has getaddrinfo and freeaddrinfo on Windows XP and later.
- * minwg32 headers check WINVER before allowing the use of these */
-# ifndef WINVER
-# define WINVER 0x0501
-# endif
-# include <ws2tcpip.h>
-# define SHUT_RDWR 2
-# define close closesocket
 #else
 # include <sys/socket.h>
 # include <sys/ioctl.h>
@@ -62,6 +54,16 @@
 #include "modbus-tcp-private.h"
 
 #ifdef OS_WIN32
+
+/* ws2_32.dll has getaddrinfo and freeaddrinfo on Windows XP and later.
+ * minwg32 headers check WINVER before allowing the use of these */
+# ifndef WINVER
+# define WINVER 0x0501
+# endif
+# include <ws2tcpip.h>
+# define SHUT_RDWR 2
+# define close closesocket
+
 static int _modbus_tcp_init_win32(void)
 {
     /* Initialise Windows Socket API */
@@ -224,8 +226,10 @@ static int _modbus_tcp_set_ipv4_options(int s)
 #if !defined(SOCK_NONBLOCK) && defined(FIONBIO)
 #ifdef OS_WIN32
     /* Setting FIONBIO expects an unsigned long according to MSDN */
-    unsigned long ioctloption = 1;
-    ioctlsocket(s, FIONBIO, &ioctloption);
+    {
+        unsigned ioctloption = 1;
+        ioctlsocket(s, FIONBIO, &ioctloption);
+    }
 #else
     option = 1;
     ioctl(s, FIONBIO, &option);
@@ -256,31 +260,34 @@ static int _connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen,
 
     rc = connect(sockfd, addr, addrlen);
 
+    if (rc == -1) {
 #ifdef OS_WIN32
-    if (rc == -1 && WSAGetLastError() == WSAEINPROGRESS) {
+        int socket_error = WSAGetLastError();
+        if (socket_error == WSAEINPROGRESS || socket_error == WSAEWOULDBLOCK) {
 #else
-    if (rc == -1 && errno == EINPROGRESS) {
+        if (errno == EINPROGRESS) {
 #endif
-        fd_set wset;
-        int optval;
-        socklen_t optlen = sizeof(optval);
+            fd_set wset;
+            int optval;
+            socklen_t optlen = sizeof(optval);
 
-        /* Wait to be available in writing */
-        FD_ZERO(&wset);
-        FD_SET(sockfd, &wset);
-        rc = select(sockfd + 1, NULL, &wset, NULL, tv);
-        if (rc <= 0) {
-            /* Timeout or fail */
-            return -1;
-        }
+            /* Wait to be available in writing */
+            FD_ZERO(&wset);
+            FD_SET(sockfd, &wset);
+            rc = select(sockfd + 1, NULL, &wset, NULL, tv);
+            if (rc <= 0) {
+                /* Timeout or fail */
+                return -1;
+            }
 
-        /* The connection is established if SO_ERROR and optval are set to 0 */
-        rc = getsockopt(sockfd, SOL_SOCKET, SO_ERROR, (void *)&optval, &optlen);
-        if (rc == 0 && optval == 0) {
-            return 0;
-        } else {
-            errno = ECONNREFUSED;
-            return -1;
+            /* The connection is established if SO_ERROR and optval are set to 0 */
+            rc = getsockopt(sockfd, SOL_SOCKET, SO_ERROR, (void *)&optval, &optlen);
+            if (rc == 0 && optval == 0) {
+                return 0;
+            } else {
+                errno = ECONNREFUSED;
+                return -1;
+            }
         }
     }
     return rc;

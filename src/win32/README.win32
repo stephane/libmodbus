@@ -1,7 +1,7 @@
 Intro
 -----
 
-This directory contains the project file for Visual Studio 2008 to build a
+This directory contains the project files for Visual Studio to build a
 modbus.dll.
 
 The project file searches for D:/include/msvc_std to find stdint.h.
