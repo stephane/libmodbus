@@ -14,9 +14,10 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_mask_write_register()_ function shall modify the value of the 
+The _modbus_mask_write_register()_ function shall modify the value of the
 holding register at the address 'addr' of the remote device using the algorithm:
-new value = (current value AND 'and') OR ('or' AND (NOT 'and'))
+
+  new value = (current value AND 'and') OR ('or' AND (NOT 'and'))
 
 The function uses the Modbus function code 0x16 (mask single register).
 
@@ -35,5 +36,6 @@ linkmb:modbus_write_registers[3]
 
 AUTHORS
 -------
+Martijn de Gouw <martijn.de.gouw@prodrive.nl>
 The libmodbus documentation was written by Stéphane Raimbault
 <stephane.raimbault@gmail.com>
