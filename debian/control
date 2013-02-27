@@ -16,6 +16,16 @@ Description: A Modbus library
  .
  This package contains the libmodbus shared library.
 
+Package: libmodbus-dbg
+Section: debug
+Priority: extra
+Architecture: any
+Depends: libmodbus5 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Description: A Modbus library (debugging symbols)
+ libmodbus is a C library designed to provide a fast and robust implementation
+ of the Modbus protocol. It runs on Linux, Mac OS X, FreeBSD, QNX and Windows.
+ .
+ This package contains debugging symbols for libmodbus.
 
 Package: libmodbus-dev
 Section: libdevel
