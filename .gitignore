@@ -49,3 +49,4 @@ debian/libmodbus-dev/
 debian/libmodbus5/
 debian/stamp-*
 debian/tmp/
+debian/libmodbus-dbg/
