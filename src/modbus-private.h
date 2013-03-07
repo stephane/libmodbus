@@ -132,6 +132,22 @@ void _modbus_init_common(modbus_t *ctx);
 void _error_print(modbus_t *ctx, const char *context);
 int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type);
 
+/* error masks */
+#define PR_ERROR      0x01
+#define PR_MBERR      0x02
+#define PR_MESSAGE    0x04
+#define PR_DATA       0x08
+#define PR_WARN       0x10
+#define PR_ALL        0xFF
+
+/* debug reporting function */
+#if defined(__GNUC__)
+# define FORMAT_TYPE __attribute__ ((format(__printf__,3,4)))
+#else
+# define FORMAT_TYPE
+#endif
+void dbgprintf(int level_mask, int level, const char *fmt, ...) FORMAT_TYPE;
+
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *dest, const char *src, size_t dest_size);
 #endif
