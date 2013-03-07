@@ -53,7 +53,7 @@
 				EnableIntrinsicFunctions="true"
 				WholeProgramOptimization="false"
 				AdditionalIncludeDirectories="..\src;..;.;D:/include/msvc_std"
-				PreprocessorDefinitions="HAVE_CONFIG_H;DLLBUILD;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NONSTDC_NO_DEPRECATE=1"
+				PreprocessorDefinitions="W32DEBUG;HAVE_CONFIG_H;DLLBUILD;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NONSTDC_NO_DEPRECATE=1"
 				MinimalRebuild="false"
 				ExceptionHandling="0"
 				BasicRuntimeChecks="2"
