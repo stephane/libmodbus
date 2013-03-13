@@ -41,6 +41,7 @@ int main(int argc, char *argv[])
     int nb_points;
     int rc;
     float real;
+    uint32_t ireal;
     struct timeval old_response_timeout;
     struct timeval response_timeout;
     int use_backend;
@@ -325,8 +326,9 @@ int main(int argc, char *argv[])
         tab_rp_registers[0] == (UT_IREAL & 0xFFFF)) {
         printf("OK\n");
     } else {
-        printf("FAILED (%x != %x)\n",
-               *((uint32_t *)tab_rp_registers), UT_IREAL);
+        ireal = (uint32_t) tab_rp_registers[0] & 0xFFFF;
+        ireal |= (uint32_t) tab_rp_registers[1] << 16;
+        printf("FAILED (%x != %x)\n", ireal, UT_IREAL);
         goto close;
     }
 
