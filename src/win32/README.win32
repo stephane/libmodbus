@@ -16,3 +16,5 @@ or
 or
    double click configure.js to generate these files.
 
+To get project file for Visual Studio 2005 open copy of file modbus.vcproj in
+editor and change attribute `Version` of `VisualStudioProject` tag to "8,00".
