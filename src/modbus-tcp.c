@@ -33,9 +33,6 @@
 # ifndef WINVER
 # define WINVER 0x0501
 # endif
-# include <ws2tcpip.h>
-# define SHUT_RDWR 2
-# define close closesocket
 #else
 # include <sys/socket.h>
 # include <sys/ioctl.h>
@@ -62,6 +59,9 @@
 #include "modbus-tcp-private.h"
 
 #ifdef OS_WIN32
+# include <ws2tcpip.h>
+# define SHUT_RDWR 2
+# define close closesocket
 static int _modbus_tcp_init_win32(void)
 {
     /* Initialise Windows Socket API */
