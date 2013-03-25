@@ -325,6 +325,8 @@ int main(int argc, char *argv[])
         tab_rp_registers[0] == (UT_IREAL & 0xFFFF)) {
         printf("OK\n");
     } else {
+        /* Avoid *((uint32_t *)tab_rp_registers)
+         * https://github.com/stephane/libmodbus/pull/104 */
         ireal = (uint32_t) tab_rp_registers[0] & 0xFFFF;
         ireal |= (uint32_t) tab_rp_registers[1] << 16;
         printf("FAILED (%x != %x)\n", ireal, UT_IREAL);
