@@ -33,6 +33,8 @@
 # ifndef WINVER
 # define WINVER 0x0501
 # endif
+/* Already set in modbus-tcp.h but it seems order matters in VS2005 */
+# include <winsock2.h>
 # include <ws2tcpip.h>
 # define SHUT_RDWR 2
 # define close closesocket
