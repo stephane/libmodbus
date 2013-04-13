@@ -24,6 +24,7 @@
 #endif
 #include <string.h>
 #include <assert.h>
+#include <byteswap.h>
 
 #include "modbus.h"
 
@@ -75,7 +76,7 @@ uint8_t modbus_get_byte_from_bits(const uint8_t *src, int index,
     return value;
 }
 
-/* Get a float from 4 bytes in Modbus format */
+/* Get a float from 4 bytes in Modbus format (ABCD) */
 float modbus_get_float(const uint16_t *src)
 {
     float f;
@@ -87,12 +88,35 @@ float modbus_get_float(const uint16_t *src)
     return f;
 }
 
-/* Set a float to 4 bytes in Modbus format */
+/* Get a float from 4 bytes in swapped Modbus format (DCBA) */
+float modbus_get_float_swapped(const uint16_t *src)
+{
+    float f;
+    uint32_t i;
+
+    i = bswap_32((((uint32_t)src[1]) << 16) + src[0]);
+    memcpy(&f, &i, sizeof(float));
+
+    return f;
+}
+
+/* Set a float to 4 bytes in Modbus format (ABCD) */
 void modbus_set_float(float f, uint16_t *dest)
 {
     uint32_t i;
 
     memcpy(&i, &f, sizeof(uint32_t));
+    dest[0] = (uint16_t)i;
+    dest[1] = (uint16_t)(i >> 16);
+}
+
+/* Set a float to 4 bytes in swapped Modbus format (DCBA) */
+void modbus_set_float_swapped(float f, uint16_t *dest)
+{
+    uint32_t i;
+
+    memcpy(&i, &f, sizeof(uint32_t));
+    i = bswap_32(i);
     dest[0] = (uint16_t)i;
     dest[1] = (uint16_t)(i >> 16);
 }

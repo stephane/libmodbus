@@ -319,7 +319,7 @@ int main(int argc, char *argv[])
 
     printf("\nTEST FLOATS\n");
     /** FLOAT **/
-    printf("1/2 Set float: ");
+    printf("1/4 Set float: ");
     modbus_set_float(UT_REAL, tab_rp_registers);
     if (tab_rp_registers[1] == (UT_IREAL >> 16) &&
         tab_rp_registers[0] == (UT_IREAL & 0xFFFF)) {
@@ -333,7 +333,7 @@ int main(int argc, char *argv[])
         goto close;
     }
 
-    printf("2/2 Get float: ");
+    printf("2/4 Get float: ");
     real = modbus_get_float(tab_rp_registers);
     if (real == UT_REAL) {
         printf("OK\n");
@@ -342,6 +342,26 @@ int main(int argc, char *argv[])
         goto close;
     }
 
+    printf("3/4 Set float swapped: ");
+    modbus_set_float_swapped(UT_REAL, tab_rp_registers);
+    if (tab_rp_registers[1] == (UT_IREAL_SWAPPED >> 16) &&
+        tab_rp_registers[0] == (UT_IREAL_SWAPPED & 0xFFFF)) {
+        printf("OK\n");
+    } else {
+        ireal = (uint32_t) tab_rp_registers[0] & 0xFFFF;
+        ireal |= (uint32_t) tab_rp_registers[1] << 16;
+        printf("FAILED (%x != %x)\n", ireal, UT_IREAL_SWAPPED);
+        goto close;
+    }
+
+    printf("4/4 Get float swapped: ");
+    real = modbus_get_float_swapped(tab_rp_registers);
+    if (real == UT_REAL) {
+        printf("OK\n");
+    } else {
+        printf("FAILED (%f != %f)\n", real, UT_REAL);
+        goto close;
+    }
     printf("\nAt this point, error messages doesn't mean the test has failed\n");
 
     /** ILLEGAL DATA ADDRESS **/
