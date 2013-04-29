@@ -166,6 +166,7 @@ EXPORT void modbus_get_byte_timeout(modbus_t *ctx, struct timeval *timeout);
 EXPORT void modbus_set_byte_timeout(modbus_t *ctx, const struct timeval *timeout);
 
 EXPORT int modbus_get_header_length(modbus_t *ctx);
+EXPORT int modbus_get_checksum_length(modbus_t *ctx);
 
 EXPORT int modbus_connect(modbus_t *ctx);
 EXPORT void modbus_close(modbus_t *ctx);
@@ -206,6 +207,8 @@ EXPORT int modbus_reply(modbus_t *ctx, const uint8_t *req,
                         int req_length, modbus_mapping_t *mb_mapping);
 EXPORT int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
                                   unsigned int exception_code);
+EXPORT int modbus_reply_raw_response(modbus_t *ctx, const uint8_t *req,
+                                     int req_length, uint8_t *raw_rsp, int raw_rsp_length);
 
 /**
  * UTILS FUNCTIONS
