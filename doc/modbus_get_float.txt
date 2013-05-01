@@ -28,8 +28,8 @@ The _modbus_get_float()_ function shall return a float.
 SEE ALSO
 --------
 linkmb:modbus_set_float[3]
-linkmb:modbus_set_float_swapped[3]
-linkmb:modbus_get_float_swapped[3]
+linkmb:modbus_set_float_dcba[3]
+linkmb:modbus_get_float_dcba[3]
 
 AUTHORS
 -------

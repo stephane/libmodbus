@@ -88,8 +88,8 @@ float modbus_get_float(const uint16_t *src)
     return f;
 }
 
-/* Get a float from 4 bytes in swapped Modbus format (DCBA) */
-float modbus_get_float_swapped(const uint16_t *src)
+/* Get a float from 4 bytes in inversed Modbus format (DCBA) */
+float modbus_get_float_dcba(const uint16_t *src)
 {
     float f;
     uint32_t i;
@@ -110,8 +110,8 @@ void modbus_set_float(float f, uint16_t *dest)
     dest[1] = (uint16_t)(i >> 16);
 }
 
-/* Set a float to 4 bytes in swapped Modbus format (DCBA) */
-void modbus_set_float_swapped(float f, uint16_t *dest)
+/* Set a float to 4 bytes in inversed Modbus format (DCBA) */
+void modbus_set_float_dcba(float f, uint16_t *dest)
 {
     uint32_t i;
 

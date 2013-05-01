@@ -27,8 +27,8 @@ The is no return values.
 SEE ALSO
 --------
 linkmb:modbus_set_float[3]
-linkmb:modbus_set_float_swapped[3]
-linkmb:modbus_get_float_swapped[3]
+linkmb:modbus_set_float_dcba[3]
+linkmb:modbus_get_float_dcba[3]
 
 AUTHORS
 -------

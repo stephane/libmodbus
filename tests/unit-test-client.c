@@ -342,20 +342,20 @@ int main(int argc, char *argv[])
         goto close;
     }
 
-    printf("3/4 Set float swapped: ");
-    modbus_set_float_swapped(UT_REAL, tab_rp_registers);
-    if (tab_rp_registers[1] == (UT_IREAL_SWAPPED >> 16) &&
-        tab_rp_registers[0] == (UT_IREAL_SWAPPED & 0xFFFF)) {
+    printf("3/4 Set float in DBCA order: ");
+    modbus_set_float_dcba(UT_REAL, tab_rp_registers);
+    if (tab_rp_registers[1] == (UT_IREAL_DCBA >> 16) &&
+        tab_rp_registers[0] == (UT_IREAL_DCBA & 0xFFFF)) {
         printf("OK\n");
     } else {
         ireal = (uint32_t) tab_rp_registers[0] & 0xFFFF;
         ireal |= (uint32_t) tab_rp_registers[1] << 16;
-        printf("FAILED (%x != %x)\n", ireal, UT_IREAL_SWAPPED);
+        printf("FAILED (%x != %x)\n", ireal, UT_IREAL_DCBA);
         goto close;
     }
 
-    printf("4/4 Get float swapped: ");
-    real = modbus_get_float_swapped(tab_rp_registers);
+    printf("4/4 Get float in DCBA order: ");
+    real = modbus_get_float_dcba(tab_rp_registers);
     if (real == UT_REAL) {
         printf("OK\n");
     } else {
