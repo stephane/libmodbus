@@ -191,6 +191,8 @@ int main(int argc, char*argv[])
     }
     modbus_mapping_free(mb_mapping);
     free(query);
+    /* For RTU */
+    modbus_close(ctx);
     modbus_free(ctx);
 
     return 0;

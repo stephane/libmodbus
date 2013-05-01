@@ -418,8 +418,10 @@ static int _modbus_tcp_pi_connect(modbus_t *ctx)
 /* Closes the network connection and socket in TCP mode */
 static void _modbus_tcp_close(modbus_t *ctx)
 {
-    shutdown(ctx->s, SHUT_RDWR);
-    close(ctx->s);
+    if (ctx->s != -1) {
+        shutdown(ctx->s, SHUT_RDWR);
+        close(ctx->s);
+    }
 }
 
 static int _modbus_tcp_flush(modbus_t *ctx)

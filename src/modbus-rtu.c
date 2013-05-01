@@ -925,7 +925,7 @@ int modbus_rtu_get_rts(modbus_t *ctx) {
 
 static void _modbus_rtu_close(modbus_t *ctx)
 {
-    /* Closes the file descriptor in RTU mode */
+    /* Restore line settings and close file descriptor in RTU mode */
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
 
 #if defined(_WIN32)
@@ -938,8 +938,10 @@ static void _modbus_rtu_close(modbus_t *ctx)
         fprintf(stderr, "ERROR Error while closing handle (LastError %d)\n",
                 (int)GetLastError());
 #else
-    tcsetattr(ctx->s, TCSANOW, &(ctx_rtu->old_tios));
-    close(ctx->s);
+    if (ctx->s != -1) {
+        tcsetattr(ctx->s, TCSANOW, &(ctx_rtu->old_tios));
+        close(ctx->s);
+    }
 #endif
 }
 
