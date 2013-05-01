@@ -152,8 +152,8 @@ Handling of bits and bytes::
 Set or get float numbers::
     linkmb:modbus_get_float[3]
     linkmb:modbus_set_float[3]
-    linkmb:modbus_get_float_swapped[3]
-    linkmb:modbus_set_float_swapped[3]
+    linkmb:modbus_get_float_dcba[3]
+    linkmb:modbus_set_float_dcba[3]
 
 
 Connection
