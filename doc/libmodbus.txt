@@ -139,6 +139,8 @@ Functions for data manipulation::
     linkmb:modbus_get_byte_from_bits[3]
     linkmb:modbus_get_float[3]
     linkmb:modbus_set_float[3]
+    linkmb:modbus_get_float_swapped[3]
+    linkmb:modbus_set_float_swapped[3]
 
 
 Connection
