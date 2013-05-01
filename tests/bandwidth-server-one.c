@@ -1,5 +1,5 @@
 /*
- * Copyright © 2008-2012 Stéphane Raimbault <stephane.raimbault@gmail.com>
+ * Copyright © 2008-2013 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,9 +36,9 @@ enum {
 
 int main(int argc, char *argv[])
 {
-    int socket;
-    modbus_t *ctx;
-    modbus_mapping_t *mb_mapping;
+    int socket = -1;
+    modbus_t *ctx = NULL;
+    modbus_mapping_t *mb_mapping = NULL;
     int rc;
     int use_backend;
 
@@ -92,7 +92,11 @@ int main(int argc, char *argv[])
     printf("Quit the loop: %s\n", modbus_strerror(errno));
 
     modbus_mapping_free(mb_mapping);
-    close(socket);
+    if (socket != -1) {
+        close(socket);
+    }
+    /* For RTU, skipped by TCP (no TCP connect) */
+    modbus_close(ctx);
     modbus_free(ctx);
 
     return 0;
