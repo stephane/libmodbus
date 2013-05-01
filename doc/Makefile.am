@@ -9,6 +9,7 @@ MAN3 = \
         modbus_get_byte_from_bits.3 \
         modbus_get_byte_timeout.3 \
         modbus_get_float.3 \
+        modbus_get_float_swapped.3 \
         modbus_get_header_length.3 \
         modbus_get_response_timeout.3 \
         modbus_get_socket.3 \
@@ -39,6 +40,7 @@ MAN3 = \
         modbus_set_debug.3 \
         modbus_set_error_recovery.3 \
         modbus_set_float.3 \
+        modbus_set_float_swapped.3 \
         modbus_set_response_timeout.3 \
         modbus_set_slave.3 \
         modbus_set_socket.3 \
