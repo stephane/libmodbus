@@ -478,6 +478,9 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     case 9600:
         dcb.BaudRate = CBR_9600;
         break;
+    case 14400:
+        dcb.BaudRate = CBR_14400;
+        break;
     case 19200:
         dcb.BaudRate = CBR_19200;
         break;
@@ -491,7 +494,23 @@ static int _modbus_rtu_connect(modbus_t *ctx)
         dcb.BaudRate = CBR_115200;
         break;
     case 230400:
+        /* CBR_230400 - not defined */
         dcb.BaudRate = 230400;
+        break;
+    case 250000:
+        dcb.BaudRate = 250000;
+        break;
+    case 460800:
+        dcb.BaudRate = 460800;
+        break;
+    case 500000:
+        dcb.BaudRate = 500000;
+        break;
+    case 921600:
+        dcb.BaudRate = 921600;
+        break;
+    case 1000000:
+        dcb.BaudRate = 1000000;
         break;
     default:
         dcb.BaudRate = CBR_9600;
@@ -614,15 +633,76 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     case 38400:
         speed = B38400;
         break;
+#ifdef B57600
     case 57600:
         speed = B57600;
         break;
+#endif
+#ifdef B115200
     case 115200:
         speed = B115200;
         break;
+#endif
+#ifdef B230400
     case 230400:
         speed = B230400;
         break;
+#endif
+#ifdef B460800
+    case 460800:
+        speed = B460800;
+        break;
+#endif
+#ifdef B500000
+    case 500000:
+        speed = B500000;
+        break;
+#endif
+#ifdef B576000
+    case 576000:
+        speed = B576000;
+        break;
+#endif
+#ifdef B921600
+    case 921600:
+        speed = B921600;
+        break;
+#endif
+#ifdef B1000000
+    case 1000000:
+        speed = B1000000;
+        break;
+#endif
+#ifdef B1152000
+   case 1152000:
+        speed = B1152000;
+        break;
+#endif
+#ifdef B1500000
+    case 1500000:
+        speed = B1500000;
+        break;
+#endif
+#ifdef B2500000
+    case 2500000:
+        speed = B2500000;
+        break;
+#endif
+#ifdef B3000000
+    case 3000000:
+        speed = B3000000;
+        break;
+#endif
+#ifdef B3500000
+    case 3500000:
+        speed = B3500000;
+        break;
+#endif
+#ifdef B4000000
+    case 4000000:
+        speed = B4000000;
+        break;
+#endif
     default:
         speed = B9600;
         if (ctx->debug) {
