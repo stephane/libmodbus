@@ -102,7 +102,7 @@ void _error_print(modbus_t *ctx, const char *context)
     }
 }
 
-static int _sleep_and_flush(modbus_t *ctx)
+static void _sleep_response_timeout(modbus_t *ctx)
 {
 #ifdef _WIN32
     /* usleep doesn't exist on Windows */
@@ -117,7 +117,6 @@ static int _sleep_and_flush(modbus_t *ctx)
     while (nanosleep(&request, &remaining) == -1 && errno == EINTR)
         request = remaining;
 #endif
-    return modbus_flush(ctx);
 }
 
 int modbus_flush(modbus_t *ctx)
@@ -192,9 +191,11 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
 
                 if ((errno == EBADF || errno == ECONNRESET || errno == EPIPE)) {
                     modbus_close(ctx);
+                    _sleep_response_timeout(ctx);
                     modbus_connect(ctx);
                 } else {
-                    _sleep_and_flush(ctx);
+                    _sleep_response_timeout(ctx);
+                    modbus_flush(ctx);
                 }
                 errno = saved_errno;
             }
@@ -379,7 +380,8 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
                 int saved_errno = errno;
 
                 if (errno == ETIMEDOUT) {
-                    _sleep_and_flush(ctx);
+                    _sleep_response_timeout(ctx);
+                    modbus_flush(ctx);
                 } else if (errno == EBADF) {
                     modbus_close(ctx);
                     modbus_connect(ctx);
@@ -494,7 +496,8 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
         rc = ctx->backend->pre_check_confirmation(ctx, req, rsp, rsp_length);
         if (rc == -1) {
             if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_PROTOCOL) {
-                _sleep_and_flush(ctx);
+                _sleep_response_timeout(ctx);
+                modbus_flush(ctx);
             }
             return -1;
         }
@@ -538,7 +541,8 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
                         function, req[offset]);
             }
             if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_PROTOCOL) {
-                _sleep_and_flush(ctx);
+                _sleep_response_timeout(ctx);
+                modbus_flush(ctx);
             }
             errno = EMBBADDATA;
             return -1;
@@ -587,7 +591,8 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
             }
 
             if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_PROTOCOL) {
-                _sleep_and_flush(ctx);
+                _sleep_response_timeout(ctx);
+                modbus_flush(ctx);
             }
 
             errno = EMBBADDATA;
@@ -600,7 +605,8 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
                     rsp_length, rsp_length_computed);
         }
         if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_PROTOCOL) {
-            _sleep_and_flush(ctx);
+            _sleep_response_timeout(ctx);
+            modbus_flush(ctx);
         }
         errno = EMBBADDATA;
         rc = -1;
