@@ -1,3 +1,13 @@
+libmodbus 3.0.4 (2012-05-08)
+============================
+
+- autogen.sh creates symlinks instead of copies
+- Add missing m4 directory (closes #103)
+- Fix alignment problem on ARMv5 platform
+  Thanks to Alexander Dahl
+- Remove useless test on error_recovery argument
+  Thanks to Carlos Tangerino
+
 libmodbus 3.0.3 (2012-05-25)
 ============================
 
