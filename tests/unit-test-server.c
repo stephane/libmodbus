@@ -32,7 +32,7 @@ enum {
 
 int main(int argc, char*argv[])
 {
-    int socket;
+    int socket = -1;
     modbus_t *ctx;
     modbus_mapping_t *mb_mapping;
     int rc;
@@ -187,7 +187,9 @@ int main(int argc, char*argv[])
     printf("Quit the loop: %s\n", modbus_strerror(errno));
 
     if (use_backend == TCP) {
-        close(socket);
+        if (socket != -1) {
+            close(socket);
+        }
     }
     modbus_mapping_free(mb_mapping);
     free(query);
