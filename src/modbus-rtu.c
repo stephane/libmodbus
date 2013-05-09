@@ -567,8 +567,6 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     /* Don't want errors to be blocking */
     dcb.fAbortOnError = FALSE;
 
-    /* TODO: any other flags!? */
-
     /* Setup port */
     if (!SetCommState(ctx_rtu->w_ser.fd, &dcb)) {
         fprintf(stderr, "ERROR Error setting new configuration (LastError %d)\n",
@@ -900,6 +898,11 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 
 int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode)
 {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
 #if HAVE_DECL_TIOCSRS485
         modbus_rtu_t *ctx_rtu = ctx->backend_data;
@@ -939,7 +942,13 @@ int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode)
     return -1;
 }
 
-int modbus_rtu_get_serial_mode(modbus_t *ctx) {
+int modbus_rtu_get_serial_mode(modbus_t *ctx)
+{
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
 #if HAVE_DECL_TIOCSRS485
         modbus_rtu_t *ctx_rtu = ctx->backend_data;
@@ -959,6 +968,11 @@ int modbus_rtu_get_serial_mode(modbus_t *ctx) {
 
 int modbus_rtu_set_rts(modbus_t *ctx, int mode)
 {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
 #if HAVE_DECL_TIOCM_RTS
         modbus_rtu_t *ctx_rtu = ctx->backend_data;
@@ -985,7 +999,13 @@ int modbus_rtu_set_rts(modbus_t *ctx, int mode)
     return -1;
 }
 
-int modbus_rtu_get_rts(modbus_t *ctx) {
+int modbus_rtu_get_rts(modbus_t *ctx)
+{
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
 #if HAVE_DECL_TIOCM_RTS
         modbus_rtu_t *ctx_rtu = ctx->backend_data;

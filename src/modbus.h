@@ -156,14 +156,14 @@ typedef enum
 
 EXPORT int modbus_set_slave(modbus_t* ctx, int slave);
 EXPORT int modbus_set_error_recovery(modbus_t *ctx, modbus_error_recovery_mode error_recovery);
-EXPORT void modbus_set_socket(modbus_t *ctx, int socket);
+EXPORT int modbus_set_socket(modbus_t *ctx, int socket);
 EXPORT int modbus_get_socket(modbus_t *ctx);
 
-EXPORT void modbus_get_response_timeout(modbus_t *ctx, struct timeval *timeout);
-EXPORT void modbus_set_response_timeout(modbus_t *ctx, const struct timeval *timeout);
+EXPORT int modbus_get_response_timeout(modbus_t *ctx, struct timeval *timeout);
+EXPORT int modbus_set_response_timeout(modbus_t *ctx, const struct timeval *timeout);
 
-EXPORT void modbus_get_byte_timeout(modbus_t *ctx, struct timeval *timeout);
-EXPORT void modbus_set_byte_timeout(modbus_t *ctx, const struct timeval *timeout);
+EXPORT int modbus_get_byte_timeout(modbus_t *ctx, struct timeval *timeout);
+EXPORT int modbus_set_byte_timeout(modbus_t *ctx, const struct timeval *timeout);
 
 EXPORT int modbus_get_header_length(modbus_t *ctx);
 
@@ -173,7 +173,7 @@ EXPORT void modbus_close(modbus_t *ctx);
 EXPORT void modbus_free(modbus_t *ctx);
 
 EXPORT int modbus_flush(modbus_t *ctx);
-EXPORT void modbus_set_debug(modbus_t *ctx, int boolean);
+EXPORT int modbus_set_debug(modbus_t *ctx, int boolean);
 
 EXPORT const char *modbus_strerror(int errnum);
 
