@@ -985,6 +985,9 @@ int modbus_rtu_set_rts(modbus_t *ctx, int mode)
             _modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
 
             return 0;
+        } else {
+            errno = EINVAL;
+            return -1;
         }
 #else
         if (ctx->debug) {
