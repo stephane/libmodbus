@@ -9,7 +9,7 @@ modbus_get_byte_timeout - get timeout between bytes
 
 SYNOPSIS
 --------
-*void modbus_get_byte_timeout(modbus_t *'ctx', struct timeval *'timeout');*
+*int modbus_get_byte_timeout(modbus_t *'ctx', struct timeval *'timeout');*
 
 
 DESCRIPTION
@@ -20,7 +20,7 @@ between two consecutive bytes of the same message in the 'timeout' argument.
 
 RETURN VALUE
 ------------
-There is no return values.
+The function shall return 0 if successful. Otherwise it shall return -1 and set errno.
 
 
 EXAMPLE

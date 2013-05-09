@@ -121,6 +121,11 @@ static void _sleep_response_timeout(modbus_t *ctx)
 
 int modbus_flush(modbus_t *ctx)
 {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     int rc = ctx->backend->flush(ctx);
     if (rc != -1 && ctx->debug) {
         /* Not all backends are able to return the number of bytes flushed */
@@ -216,6 +221,11 @@ int modbus_send_raw_request(modbus_t *ctx, uint8_t *raw_req, int raw_req_length)
     sft_t sft;
     uint8_t req[MAX_MESSAGE_LENGTH];
     int req_length;
+
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
 
     if (raw_req_length < 2) {
         /* The raw request must contain function and slave at least */
@@ -468,6 +478,11 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
 /* Receive the request from a modbus master */
 int modbus_receive(modbus_t *ctx, uint8_t *req)
 {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     return ctx->backend->receive(ctx, req);
 }
 
@@ -481,6 +496,11 @@ int modbus_receive(modbus_t *ctx, uint8_t *req)
 */
 int modbus_receive_confirmation(modbus_t *ctx, uint8_t *rsp)
 {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     return _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
 }
 
@@ -671,6 +691,11 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
     uint8_t rsp[MAX_MESSAGE_LENGTH];
     int rsp_length = 0;
     sft_t sft;
+
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
 
     sft.slave = slave;
     sft.function = function;
@@ -960,6 +985,11 @@ int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
     int dummy_length = 99;
     sft_t sft;
 
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     sft.slave = slave;
     sft.function = function + 0x80;;
     sft.t_id = ctx->backend->prepare_response_tid(req, &dummy_length);
@@ -1025,6 +1055,11 @@ int modbus_read_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest)
 {
     int rc;
 
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     if (nb > MODBUS_MAX_READ_BITS) {
         if (ctx->debug) {
             fprintf(stderr,
@@ -1048,6 +1083,11 @@ int modbus_read_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest)
 int modbus_read_input_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest)
 {
     int rc;
+
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
 
     if (nb > MODBUS_MAX_READ_BITS) {
         if (ctx->debug) {
@@ -1119,6 +1159,11 @@ int modbus_read_registers(modbus_t *ctx, int addr, int nb, uint16_t *dest)
 {
     int status;
 
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     if (nb > MODBUS_MAX_READ_REGISTERS) {
         if (ctx->debug) {
             fprintf(stderr,
@@ -1139,6 +1184,11 @@ int modbus_read_input_registers(modbus_t *ctx, int addr, int nb,
                                 uint16_t *dest)
 {
     int status;
+
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
 
     if (nb > MODBUS_MAX_READ_REGISTERS) {
         fprintf(stderr,
@@ -1162,6 +1212,11 @@ static int write_single(modbus_t *ctx, int function, int addr, int value)
     int req_length;
     uint8_t req[_MIN_REQ_LENGTH];
 
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     req_length = ctx->backend->build_request_basis(ctx, function, addr, value, req);
 
     rc = send_msg(ctx, req, req_length);
@@ -1182,6 +1237,11 @@ static int write_single(modbus_t *ctx, int function, int addr, int value)
 /* Turns ON or OFF a single bit of the remote device */
 int modbus_write_bit(modbus_t *ctx, int addr, int status)
 {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     return write_single(ctx, _FC_WRITE_SINGLE_COIL, addr,
                         status ? 0xFF00 : 0);
 }
@@ -1189,6 +1249,11 @@ int modbus_write_bit(modbus_t *ctx, int addr, int status)
 /* Writes a value in one register of the remote device */
 int modbus_write_register(modbus_t *ctx, int addr, int value)
 {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     return write_single(ctx, _FC_WRITE_SINGLE_REGISTER, addr, value);
 }
 
@@ -1201,8 +1266,12 @@ int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *src)
     int req_length;
     int bit_check = 0;
     int pos = 0;
-
     uint8_t req[MAX_MESSAGE_LENGTH];
+
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
 
     if (nb > MODBUS_MAX_WRITE_BITS) {
         if (ctx->debug) {
@@ -1258,8 +1327,12 @@ int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *src)
     int i;
     int req_length;
     int byte_count;
-
     uint8_t req[MAX_MESSAGE_LENGTH];
+
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
 
     if (nb > MODBUS_MAX_WRITE_REGISTERS) {
         if (ctx->debug) {
@@ -1341,6 +1414,11 @@ int modbus_write_and_read_registers(modbus_t *ctx,
     uint8_t req[MAX_MESSAGE_LENGTH];
     uint8_t rsp[MAX_MESSAGE_LENGTH];
 
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     if (write_nb > MODBUS_MAX_RW_WRITE_REGISTERS) {
         if (ctx->debug) {
             fprintf(stderr,
@@ -1409,6 +1487,11 @@ int modbus_report_slave_id(modbus_t *ctx, uint8_t *dest)
     int req_length;
     uint8_t req[_MIN_REQ_LENGTH];
 
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     req_length = ctx->backend->build_request_basis(ctx, _FC_REPORT_SLAVE_ID,
                                                    0, 0, req);
 
@@ -1460,56 +1543,111 @@ void _modbus_init_common(modbus_t *ctx)
 /* Define the slave number */
 int modbus_set_slave(modbus_t *ctx, int slave)
 {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     return ctx->backend->set_slave(ctx, slave);
 }
 
 int modbus_set_error_recovery(modbus_t *ctx,
                               modbus_error_recovery_mode error_recovery)
 {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     /* The type of modbus_error_recovery_mode is unsigned enum */
     ctx->error_recovery = (uint8_t) error_recovery;
     return 0;
 }
 
-void modbus_set_socket(modbus_t *ctx, int socket)
+int modbus_set_socket(modbus_t *ctx, int socket)
 {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     ctx->s = socket;
+    return 0;
 }
 
 int modbus_get_socket(modbus_t *ctx)
 {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     return ctx->s;
 }
 
 /* Get the timeout interval used to wait for a response */
-void modbus_get_response_timeout(modbus_t *ctx, struct timeval *timeout)
+int modbus_get_response_timeout(modbus_t *ctx, struct timeval *timeout)
 {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     *timeout = ctx->response_timeout;
+    return 0;
 }
 
-void modbus_set_response_timeout(modbus_t *ctx, const struct timeval *timeout)
+int modbus_set_response_timeout(modbus_t *ctx, const struct timeval *timeout)
 {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     ctx->response_timeout = *timeout;
+    return 0;
 }
 
 /* Get the timeout interval between two consecutive bytes of a message */
-void modbus_get_byte_timeout(modbus_t *ctx, struct timeval *timeout)
+int modbus_get_byte_timeout(modbus_t *ctx, struct timeval *timeout)
 {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     *timeout = ctx->byte_timeout;
+    return 0;
 }
 
-void modbus_set_byte_timeout(modbus_t *ctx, const struct timeval *timeout)
+int modbus_set_byte_timeout(modbus_t *ctx, const struct timeval *timeout)
 {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     ctx->byte_timeout = *timeout;
+    return 0;
 }
 
 int modbus_get_header_length(modbus_t *ctx)
 {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     return ctx->backend->header_length;
 }
 
 int modbus_connect(modbus_t *ctx)
 {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     return ctx->backend->connect(ctx);
 }
 
@@ -1529,9 +1667,15 @@ void modbus_free(modbus_t *ctx)
     ctx->backend->free(ctx);
 }
 
-void modbus_set_debug(modbus_t *ctx, int boolean)
+int modbus_set_debug(modbus_t *ctx, int boolean)
 {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     ctx->debug = boolean;
+    return 0;
 }
 
 /* Allocates 4 arrays to store bits, input bits, registers and inputs

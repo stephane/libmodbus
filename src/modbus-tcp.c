@@ -467,7 +467,14 @@ int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
     int new_socket;
     int yes;
     struct sockaddr_in addr;
-    modbus_tcp_t *ctx_tcp = ctx->backend_data;
+    modbus_tcp_t *ctx_tcp;
+
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    ctx_tcp = ctx->backend_data;
 
 #ifdef OS_WIN32
     if (_modbus_tcp_init_win32() == -1) {
@@ -514,7 +521,14 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
     const char *node;
     const char *service;
     int new_socket;
-    modbus_tcp_pi_t *ctx_tcp_pi = ctx->backend_data;
+    modbus_tcp_pi_t *ctx_tcp_pi;
+
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    ctx_tcp_pi = ctx->backend_data;
 
     if (ctx_tcp_pi->node[0] == 0)
         node = NULL; /* == any */
@@ -609,6 +623,11 @@ int modbus_tcp_accept(modbus_t *ctx, int *socket)
     struct sockaddr_in addr;
     socklen_t addrlen;
 
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     addrlen = sizeof(addr);
 #ifdef HAVE_ACCEPT4
     /* Inherit socket flags and use accept4 call */
@@ -635,6 +654,11 @@ int modbus_tcp_pi_accept(modbus_t *ctx, int *socket)
 {
     struct sockaddr_storage addr;
     socklen_t addrlen;
+
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
 
     addrlen = sizeof(addr);
     ctx->s = accept(*socket, (void *)&addr, &addrlen);
