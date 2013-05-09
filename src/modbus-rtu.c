@@ -1041,6 +1041,7 @@ static void _modbus_rtu_close(modbus_t *ctx)
     if (ctx->s != -1) {
         tcsetattr(ctx->s, TCSANOW, &(ctx_rtu->old_tios));
         close(ctx->s);
+        ctx->s = -1;
     }
 #endif
 }

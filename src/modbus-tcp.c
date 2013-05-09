@@ -318,6 +318,7 @@ static int _modbus_tcp_connect(modbus_t *ctx)
     rc = _modbus_tcp_set_ipv4_options(ctx->s);
     if (rc == -1) {
         close(ctx->s);
+        ctx->s = -1;
         return -1;
     }
 
@@ -331,6 +332,7 @@ static int _modbus_tcp_connect(modbus_t *ctx)
     rc = _connect(ctx->s, (struct sockaddr *)&addr, sizeof(addr), &ctx->response_timeout);
     if (rc == -1) {
         close(ctx->s);
+        ctx->s = -1;
         return -1;
     }
 
@@ -421,6 +423,7 @@ static void _modbus_tcp_close(modbus_t *ctx)
     if (ctx->s != -1) {
         shutdown(ctx->s, SHUT_RDWR);
         close(ctx->s);
+        ctx->s = -1;
     }
 }
 
@@ -616,8 +619,8 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
 }
 
 /* On success, the function return a non-negative integer that is a descriptor
-   for the accepted socket. On error, -1 is returned, and errno is set
-   appropriately. */
+for the accepted socket. On error, socket is set to -1, -1 is returned and errno
+is set appropriately. */
 int modbus_tcp_accept(modbus_t *ctx, int *socket)
 {
     struct sockaddr_in addr;
@@ -638,7 +641,7 @@ int modbus_tcp_accept(modbus_t *ctx, int *socket)
 
     if (ctx->s == -1) {
         close(*socket);
-        *socket = 0;
+        *socket = -1;
         return -1;
     }
 
@@ -664,7 +667,7 @@ int modbus_tcp_pi_accept(modbus_t *ctx, int *socket)
     ctx->s = accept(*socket, (void *)&addr, &addrlen);
     if (ctx->s == -1) {
         close(*socket);
-        *socket = 0;
+        *socket = -1;
     }
 
     if (ctx->debug) {
