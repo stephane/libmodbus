@@ -35,12 +35,14 @@
 #define NB_CONNECTION    5
 
 modbus_t *ctx = NULL;
-int server_socket;
+int server_socket = -1;
 modbus_mapping_t *mb_mapping;
 
 static void close_sigint(int dummy)
 {
-    close(server_socket);
+    if (server_socket != -1) {
+        close(server_socket);
+    }
     modbus_free(ctx);
     modbus_mapping_free(mb_mapping);
 

@@ -26,7 +26,7 @@
 
 int main(void)
 {
-    int socket;
+    int socket = -1;
     modbus_t *ctx;
     modbus_mapping_t *mb_mapping;
 
@@ -60,7 +60,9 @@ int main(void)
 
     printf("Quit the loop: %s\n", modbus_strerror(errno));
 
-    close(socket);
+    if (socket != -1) {
+        close(socket);
+    }
     modbus_mapping_free(mb_mapping);
     modbus_close(ctx);
     modbus_free(ctx);
