@@ -1,10 +1,44 @@
 libmodbus 3.1.1 (2012-XX-XX)
 ============================
 
+- Fix socket value on init/close
+- Returns -1 on invalid mode in modbus_rtu_set_rts
+- Protect all public functions against invalid context
+- Sleep for delay of response timeout before reconnect (closes #77).
+  Thanks to Karl Palsson.
+- Baud rate until 4,000,000 (POSIX), 1,000,000 (Windows) (closes #93)
+- New modbus_get|set_float_dcba to get|set float in inversed byte order
+- Remove unsupported -Wtype-limits for GCC < 4.3.5 (closes #109)
+- Enable out-of-source build. Thanks to Yegor Yefremov.
+- Fix alignment problem on ARMv5 platform
+- Improvement to Debian package. Thanks to Alexander Klauer.
+- Improve support of VS 2005. Thanks to Petr Gladkiy.
+- Add documentation for modbus_mask_write_register (closes #91).
+  Thanks to Martijn de Gouw.
+- Avoid C99 declaration in win32 section code (closes #92).
+  Thanks to oldfaber and endrelovas.
+- Add a windows scripting host configure file.
+  Thanks to oldfaber and Stéphane Raimbault.
+- Fix typo in modbus_strerror documentation. Thanks to Mirko Rajkovaca.
+- Rename reserved C++ keywords of modbus_mask_write_register.
+  Thanks Tobias Doerffel.
+- Another quick workaround for deficient OS (closes #63)
+- Add support for Mask Write Register
+- Fix missing close on socket in random-test-server.
+  Thanks to Damian Zieliński.
+- Use nonblocking sockets on Win32 and OS X/iOS too.
+  Thanks to Julian Raschke.
+- Fix all compilations warnings spotted by new compilation flags
+- Major update of build system
+- Calculate RTS activation time by send length
+- Dynamic memory allocation of device name (closes #11)
+- Add unit tests for modbus_mapping_new
 - Add Visual Studio 2008 project files by oldfaber
 - Fix missing argument in synopsis section of modbus_rtu_set_serial_mode
 - Fix wrong constant names to create version number
 - More compilation fixes for Windows by oldfaber.
+- Fix wrong constant names to create version number.
+  Thanks to Denis Davydov.
 
 libmodbus 3.1.0 (2012-06-22)
 ============================
@@ -31,6 +65,16 @@ RTS flow control.
 - Added slave ID check for response messages (Alex Stapleton)
 - RTS flow control with modbus_rtu_set_rts and modbus_rtu_get_rts
   functions by Torello Querci <tquerci@gmail.com> and Stéphane Raimbault.
+
+libmodbus 3.0.4 (2012-05-08)
+============================
+
+- autogen.sh creates symlinks instead of copies
+- Add missing m4 directory (closes #103)
+- Fix alignment problem on ARMv5 platform
+  Thanks to Alexander Dahl
+- Remove useless test on error_recovery argument
+  Thanks to Carlos Tangerino
 
 libmodbus 3.0.3 (2012-05-25)
 ============================
