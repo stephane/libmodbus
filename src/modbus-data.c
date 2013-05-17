@@ -24,9 +24,34 @@
 #endif
 #include <string.h>
 #include <assert.h>
-#include <byteswap.h>
 
 #include "modbus.h"
+
+#if defined(HAVE_BYTESWAP_H)
+#  include <byteswap.h>
+#endif
+
+#if defined(__GNUC__)
+#  define GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__ * 10)
+#  if GCC_VERSION >= 430
+// Since GCC >= 4.30, GCC provides __builtin_bswapXX() alternatives so we switch to them
+#    undef bswap_32
+#    define bswap_32 __builtin_bswap32
+#  endif
+#endif
+
+#if !defined (bswap_16) || !defined (bswap_32)
+#   warning "Fallback on C functions for bswap_32"
+static inline uint16_t bswap_16(uint16_t x)
+{
+    return (x >> 8) | (x << 8);
+}
+
+static inline uint32_t bswap_32(uint32_t x)
+{
+    return (bswap_16(x & 0xffff) << 16) | (bswap_16(x >> 16));
+}
+#endif
 
 /* Sets many bits from a single byte value (all 8 bits of the byte value are
    set) */
