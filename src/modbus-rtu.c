@@ -260,9 +260,9 @@ static int win32_ser_read(struct win32_ser *ws, uint8_t *p_msg,
 }
 #endif
 
+#if HAVE_DECL_TIOCM_RTS
 static void _modbus_rtu_ioctl_rts(int fd, int on)
 {
-#if HAVE_DECL_TIOCM_RTS
     int flags;
 
     ioctl(fd, TIOCMGET, &flags);
@@ -272,8 +272,8 @@ static void _modbus_rtu_ioctl_rts(int fd, int on)
         flags &= ~TIOCM_RTS;
     }
     ioctl(fd, TIOCMSET, &flags);
-#endif
 }
+#endif
 
 static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
 {
