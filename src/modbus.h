@@ -173,7 +173,7 @@ EXPORT void modbus_close(modbus_t *ctx);
 EXPORT void modbus_free(modbus_t *ctx);
 
 EXPORT int modbus_flush(modbus_t *ctx);
-EXPORT int modbus_set_debug(modbus_t *ctx, int boolean);
+EXPORT int modbus_set_debug(modbus_t *ctx, int flag);
 
 EXPORT const char *modbus_strerror(int errnum);
 
