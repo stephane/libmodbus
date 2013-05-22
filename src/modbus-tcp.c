@@ -226,8 +226,11 @@ static int _modbus_tcp_set_ipv4_options(int s)
     option = 1;
 #if !defined(SOCK_NONBLOCK) && defined(FIONBIO)
 #ifdef OS_WIN32
-    /* Setting FIONBIO expects an unsigned long according to MSDN */
-    ioctlsocket(s, FIONBIO, &option);
+    {
+        /* Setting FIONBIO expects an unsigned long according to MSDN */
+        u_long loption = 1;
+        ioctlsocket(s, FIONBIO, &loption);
+    }
 #else
     ioctl(s, FIONBIO, &option);
 #endif
