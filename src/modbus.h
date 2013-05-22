@@ -111,6 +111,20 @@ enum {
     MODBUS_EXCEPTION_MAX
 };
 
+/* Function codes */
+#define _FC_READ_COILS                0x01
+#define _FC_READ_DISCRETE_INPUTS      0x02
+#define _FC_READ_HOLDING_REGISTERS    0x03
+#define _FC_READ_INPUT_REGISTERS      0x04
+#define _FC_WRITE_SINGLE_COIL         0x05
+#define _FC_WRITE_SINGLE_REGISTER     0x06
+#define _FC_READ_EXCEPTION_STATUS     0x07
+#define _FC_WRITE_MULTIPLE_COILS      0x0F
+#define _FC_WRITE_MULTIPLE_REGISTERS  0x10
+#define _FC_REPORT_SLAVE_ID           0x11
+#define _FC_MASK_WRITE_REGISTER       0x16
+#define _FC_WRITE_AND_READ_REGISTERS  0x17
+
 #define EMBXILFUN  (MODBUS_ENOBASE + MODBUS_EXCEPTION_ILLEGAL_FUNCTION)
 #define EMBXILADD  (MODBUS_ENOBASE + MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS)
 #define EMBXILVAL  (MODBUS_ENOBASE + MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE)
@@ -136,7 +150,50 @@ extern const unsigned int libmodbus_version_micro;
 
 typedef struct _modbus modbus_t;
 
-typedef struct {
+typedef struct _modbus_mapping modbus_mapping_t;
+
+/**
+ * Prototype for function to handle read access.
+ *
+ * The function can read the data from anywhere, it does not have to use
+ * the mapping structure. The resulting bytes must be written to rsp_buf.
+ * On entry *size is filled with the number of bytes available in the buffer,
+ * the variable must return the number of bytes actually written.
+ *
+ * @param [in] function MODBUS function code
+ * @param [in] address MODBUS address of first register/bit
+ * @param [in] nb number of registers/bits
+ * @param [out] rsp_buf buffer for response data excluding length field
+ * @param [in;out] size pass available size in bytes and return number of bytes written into buffer
+ * @param [in] mb_mapping mapping structure
+ * @param [in;out] user_data a user data pointer
+ *
+ * @return 0 on success, exception code on error.
+ */
+typedef int (modbus_callback_read_t)(modbus_t *ctx, int function, uint16_t address, int nb,
+                                    uint8_t *rsp_buf, int *size, const modbus_mapping_t *mb_mapping, void *user_data);
+
+/**
+ * Prototype for function to handle write access.
+ *
+ * The function can write the data anywhere it does not have to use
+ * the mapping structure. The data from the request are passed as
+ * req_buf, size contains the number of valid bytes in the buffer.
+ *
+ * @param [in] function MODBUS function code
+ * @param [in] address MODBUS address of first register/bit
+ * @param [in] nb number of registers/bits
+ * @param [in] req_buf buffer with data from request
+ * @param [in] size number of data bytes in request
+ * @param [in;out] mb_mapping mapping structure
+ * @param [in;out] user_data a user data pointer
+ *
+ * @return 0 on success, exception code on error.
+ */
+typedef int (modbus_callback_write_t)(modbus_t *ctx, int function, uint16_t address, int nb,
+                                    const uint8_t *req_buf, int size, modbus_mapping_t *mb_mapping, void *user_data);
+
+struct _modbus_mapping {
     int nb_bits;
     int nb_input_bits;
     int nb_input_registers;
@@ -145,7 +202,10 @@ typedef struct {
     uint8_t *tab_input_bits;
     uint16_t *tab_input_registers;
     uint16_t *tab_registers;
-} modbus_mapping_t;
+    modbus_callback_read_t *cb_read;
+    modbus_callback_write_t *cb_write;
+    void *user_data;
+};
 
 typedef enum
 {
@@ -193,6 +253,12 @@ EXPORT int modbus_report_slave_id(modbus_t *ctx, uint8_t *dest);
 
 EXPORT modbus_mapping_t* modbus_mapping_new(int nb_bits, int nb_input_bits,
                                             int nb_registers, int nb_input_registers);
+
+EXPORT int modbus_add_callback(modbus_mapping_t *mb_mapping,
+                            modbus_callback_read_t *cb_read,
+                            modbus_callback_write_t *cb_write,
+                            void *user_data);
+
 EXPORT void modbus_mapping_free(modbus_mapping_t *mb_mapping);
 
 EXPORT int modbus_send_raw_request(modbus_t *ctx, uint8_t *raw_req, int raw_req_length);
@@ -229,6 +295,14 @@ EXPORT float modbus_get_float(const uint16_t *src);
 EXPORT float modbus_get_float_dcba(const uint16_t *src);
 EXPORT void modbus_set_float(float f, uint16_t *dest);
 EXPORT void modbus_set_float_dcba(float f, uint16_t *dest);
+int modbus_response_set_register(uint8_t *rsp_buf, int *size,
+                                uint16_t base_address, int address, uint16_t value);
+int modbus_request_get_register(uint8_t *req_buf, int size,
+                                uint16_t base_address, int address, uint16_t *value);
+int modbus_response_set_bit(uint8_t *rsp_buf, int *size,
+                            uint16_t base_address, int address, uint16_t value);
+int modbus_request_get_bit(uint8_t *req_buf, int size,
+                        uint16_t base_address, int address, uint16_t *value);
 
 #include "modbus-tcp.h"
 #include "modbus-rtu.h"

@@ -621,7 +621,7 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
 /* On success, the function return a non-negative integer that is a descriptor
 for the accepted socket. On error, socket is set to -1, -1 is returned and errno
 is set appropriately. */
-int modbus_tcp_accept(modbus_t *ctx, int *socket)
+int modbus_tcp_accept(modbus_t *ctx, int *sock)
 {
     struct sockaddr_in addr;
     socklen_t addrlen;
@@ -634,14 +634,14 @@ int modbus_tcp_accept(modbus_t *ctx, int *socket)
     addrlen = sizeof(addr);
 #ifdef HAVE_ACCEPT4
     /* Inherit socket flags and use accept4 call */
-    ctx->s = accept4(*socket, (struct sockaddr *)&addr, &addrlen, SOCK_CLOEXEC);
+    ctx->s = accept4(*sock, (struct sockaddr *)&addr, &addrlen, SOCK_CLOEXEC);
 #else
-    ctx->s = accept(*socket, (struct sockaddr *)&addr, &addrlen);
+    ctx->s = accept(*sock, (struct sockaddr *)&addr, &addrlen);
 #endif
 
     if (ctx->s == -1) {
-        close(*socket);
-        *socket = -1;
+        close(*sock);
+        *sock = -1;
         return -1;
     }
 
@@ -653,7 +653,7 @@ int modbus_tcp_accept(modbus_t *ctx, int *socket)
     return ctx->s;
 }
 
-int modbus_tcp_pi_accept(modbus_t *ctx, int *socket)
+int modbus_tcp_pi_accept(modbus_t *ctx, int *sock)
 {
     struct sockaddr_storage addr;
     socklen_t addrlen;
@@ -664,10 +664,10 @@ int modbus_tcp_pi_accept(modbus_t *ctx, int *socket)
     }
 
     addrlen = sizeof(addr);
-    ctx->s = accept(*socket, (void *)&addr, &addrlen);
+    ctx->s = accept(*sock, (void *)&addr, &addrlen);
     if (ctx->s == -1) {
-        close(*socket);
-        *socket = -1;
+        close(*sock);
+        *sock = -1;
     }
 
     if (ctx->debug) {
