@@ -749,9 +749,6 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         break;
     }
 
-    printf("function %d address %d number %d address_write %d number_write %d data_offset %d\n",
-            function, address, nb, address_write, nb_write, data_offset);
-
     rsp_length = ctx->backend->build_response_basis(&sft, rsp);
 
     switch (function) {
