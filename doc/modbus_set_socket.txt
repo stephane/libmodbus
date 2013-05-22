@@ -9,7 +9,7 @@ modbus_set_socket - set socket of the context
 
 SYNOPSIS
 --------
-*int modbus_set_socket(modbus_t *'ctx', int 'socket');*
+*int modbus_set_socket(modbus_t *'ctx', int 's');*
 
 
 DESCRIPTION

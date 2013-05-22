@@ -53,11 +53,11 @@ MODBUS_BEGIN_DECLS
 
 EXPORT modbus_t* modbus_new_tcp(const char *ip_address, int port);
 EXPORT int modbus_tcp_listen(modbus_t *ctx, int nb_connection);
-EXPORT int modbus_tcp_accept(modbus_t *ctx, int *socket);
+EXPORT int modbus_tcp_accept(modbus_t *ctx, int *s);
 
 EXPORT modbus_t* modbus_new_tcp_pi(const char *node, const char *service);
 EXPORT int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection);
-EXPORT int modbus_tcp_pi_accept(modbus_t *ctx, int *socket);
+EXPORT int modbus_tcp_pi_accept(modbus_t *ctx, int *s);
 
 MODBUS_END_DECLS
 

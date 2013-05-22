@@ -156,7 +156,7 @@ typedef enum
 
 EXPORT int modbus_set_slave(modbus_t* ctx, int slave);
 EXPORT int modbus_set_error_recovery(modbus_t *ctx, modbus_error_recovery_mode error_recovery);
-EXPORT int modbus_set_socket(modbus_t *ctx, int socket);
+EXPORT int modbus_set_socket(modbus_t *ctx, int s);
 EXPORT int modbus_get_socket(modbus_t *ctx);
 
 EXPORT int modbus_get_response_timeout(modbus_t *ctx, struct timeval *timeout);

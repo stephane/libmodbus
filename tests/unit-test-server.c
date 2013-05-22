@@ -32,7 +32,7 @@ enum {
 
 int main(int argc, char*argv[])
 {
-    int socket = -1;
+    int s = -1;
     modbus_t *ctx;
     modbus_mapping_t *mb_mapping;
     int rc;
@@ -124,11 +124,11 @@ int main(int argc, char*argv[])
     }
 
     if (use_backend == TCP) {
-        socket = modbus_tcp_listen(ctx, 1);
-        modbus_tcp_accept(ctx, &socket);
+        s = modbus_tcp_listen(ctx, 1);
+        modbus_tcp_accept(ctx, &s);
     } else if (use_backend == TCP_PI) {
-        socket = modbus_tcp_pi_listen(ctx, 1);
-        modbus_tcp_pi_accept(ctx, &socket);
+        s = modbus_tcp_pi_listen(ctx, 1);
+        modbus_tcp_pi_accept(ctx, &s);
     } else {
         rc = modbus_connect(ctx);
         if (rc == -1) {
@@ -187,8 +187,8 @@ int main(int argc, char*argv[])
     printf("Quit the loop: %s\n", modbus_strerror(errno));
 
     if (use_backend == TCP) {
-        if (socket != -1) {
-            close(socket);
+        if (s != -1) {
+            close(s);
         }
     }
     modbus_mapping_free(mb_mapping);
