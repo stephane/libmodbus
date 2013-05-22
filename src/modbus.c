@@ -858,40 +858,6 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
             rsp_length = req_length;
         }
         break;
-    case _FC_WRITE_AND_READ_REGISTERS: {
-        int nb = (req[offset + 3] << 8) + req[offset + 4];
-        uint16_t address_write = (req[offset + 5] << 8) + req[offset + 6];
-        int nb_write = (req[offset + 7] << 8) + req[offset + 8];
-
-        if ((address + nb) > mb_mapping->nb_registers ||
-            (address_write + nb_write) > mb_mapping->nb_registers) {
-            if (ctx->debug) {
-                fprintf(stderr,
-                        "Illegal data read address %0X or write address %0X write_and_read_registers\n",
-                        address + nb, address_write + nb_write);
-            }
-            rsp_length = response_exception(ctx, &sft,
-                                            MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
-        } else {
-            int i, j;
-            rsp_length = ctx->backend->build_response_basis(&sft, rsp);
-            rsp[rsp_length++] = nb << 1;
-
-            /* Write first.
-               10 and 11 are the offset of the first values to write */
-            for (i = address_write, j = 10; i < address_write + nb_write; i++, j += 2) {
-                mb_mapping->tab_registers[i] =
-                    (req[offset + j] << 8) + req[offset + j + 1];
-            }
-
-            /* and read the data for the response */
-            for (i = address; i < address + nb; i++) {
-                rsp[rsp_length++] = mb_mapping->tab_registers[i] >> 8;
-                rsp[rsp_length++] = mb_mapping->tab_registers[i] & 0xFF;
-            }
-        }
-    }
-        break;
     default:
         rsp_length = response_exception(ctx, &sft,
                 MODBUS_EXCEPTION_ILLEGAL_FUNCTION, rsp);

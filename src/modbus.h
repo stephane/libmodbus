@@ -122,6 +122,7 @@ enum {
 #define _FC_WRITE_MULTIPLE_COILS      0x0F
 #define _FC_WRITE_MULTIPLE_REGISTERS  0x10
 #define _FC_REPORT_SLAVE_ID           0x11
+#define _FC_MASK_WRITE_REGISTER       0x16
 #define _FC_WRITE_AND_READ_REGISTERS  0x17
 
 #define EMBXILFUN  (MODBUS_ENOBASE + MODBUS_EXCEPTION_ILLEGAL_FUNCTION)
@@ -290,6 +291,14 @@ EXPORT float modbus_get_float(const uint16_t *src);
 EXPORT float modbus_get_float_dcba(const uint16_t *src);
 EXPORT void modbus_set_float(float f, uint16_t *dest);
 EXPORT void modbus_set_float_dcba(float f, uint16_t *dest);
+int modbus_response_set_register(uint8_t *rsp_buf, int *size,
+                                uint16_t base_address, int address, uint16_t value);
+int modbus_request_get_register(uint8_t *req_buf, int size,
+                                uint16_t base_address, int address, uint16_t *value);
+int modbus_response_set_bit(uint8_t *rsp_buf, int *size,
+                            uint16_t base_address, int address, uint16_t value);
+int modbus_request_get_bit(uint8_t *req_buf, int size,
+                        uint16_t base_address, int address, uint16_t *value);
 
 #include "modbus-tcp.h"
 #include "modbus-rtu.h"
