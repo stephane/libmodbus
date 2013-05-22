@@ -53,14 +53,16 @@ typedef enum {
     _STEP_DATA
 } _step_t;
 
-static modbus_callback_read_t modbus_default_read;
-static modbus_callback_write_t modbus_default_write;
 static int modbus_read_any_registers(modbus_t *ctx, uint16_t address, int nb,
         uint8_t *rsp_buf, int *size, int nb_registers,
         uint16_t *tab_registers, const char *function_name);
 static int modbus_read_any_bits(modbus_t *ctx, uint16_t address, int nb,
         uint8_t *rsp_buf, int *size, int nb_bits,
         uint8_t *tab_bits, const char *function_name);
+static int modbus_write(modbus_t *ctx, int function, uint16_t address, int nb,
+                        const uint8_t *req_buf, int size, modbus_mapping_t *mb_mapping);
+static int modbus_read(modbus_t *ctx, int function, uint16_t address, int nb,
+                    uint8_t *rsp_buf, int *size, const modbus_mapping_t *mb_mapping);
 
 const char *modbus_strerror(int errnum) {
     switch (errnum) {
@@ -706,8 +708,6 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
     int nb_write = 0;
     uint16_t address_write = 0;
     int data_offset = 0;
-    modbus_callback_read_t *cb_read = modbus_default_read;
-    modbus_callback_write_t *cb_write = modbus_default_write;
 
     if (ctx == NULL) {
         errno = EINVAL;
@@ -717,13 +717,6 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
     sft.slave = slave;
     sft.function = function;
     sft.t_id = ctx->backend->prepare_response_tid(req, &req_length);
-
-    if (mb_mapping->cb_read != NULL) {
-        cb_read = mb_mapping->cb_read;
-    }
-    if (mb_mapping->cb_write != NULL) {
-        cb_write = mb_mapping->cb_write;
-    }
 
     switch (function) {
     case _FC_WRITE_AND_READ_REGISTERS:
@@ -772,10 +765,10 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
     case _FC_WRITE_AND_READ_REGISTERS:
         data_offset = offset + 10;
         /* Write first, then read */
-        rc = cb_write(ctx, function, address_write, nb_write,
+        rc = modbus_write(ctx, function, address_write, nb_write,
                 req + data_offset, req_length - data_offset, mb_mapping);
         if (rc == 0) {
-            rc = cb_read(ctx, function, address, nb, rsp + rsp_length + 1,
+            rc = modbus_read(ctx, function, address, nb, rsp + rsp_length + 1,
                     &rsp_size, mb_mapping);
         }
         if (rc != 0) {
@@ -790,7 +783,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
     case _FC_READ_HOLDING_REGISTERS:
     case _FC_READ_INPUT_REGISTERS:
         /* read operations */
-        rc = cb_read(ctx, function, address, nb, rsp + rsp_length + 1,
+        rc = modbus_read(ctx, function, address, nb, rsp + rsp_length + 1,
                 &rsp_size, mb_mapping);
         if (rc != 0) {
             rsp_length = response_exception(ctx, &sft, rc, rsp);
@@ -804,7 +797,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
     case _FC_WRITE_SINGLE_COIL:
     case _FC_WRITE_SINGLE_REGISTER:
         /* write operations */
-        rc = cb_write(ctx, function, address, nb, req + data_offset,
+        rc = modbus_write(ctx, function, address, nb, req + data_offset,
                 req_length - data_offset, mb_mapping);
         if (rc != 0) {
             rsp_length = response_exception(ctx, &sft, rc, rsp);
@@ -1771,7 +1764,7 @@ size_t strlcpy(char *dest, const char *src, size_t dest_size)
         } \
 } while(0)
 
-static int modbus_default_read(modbus_t *ctx, int function, uint16_t address, int nb,
+static int modbus_read(modbus_t *ctx, int function, uint16_t address, int nb,
         uint8_t *rsp_buf, int *size, const modbus_mapping_t *mb_mapping) {
     int rc = 0;
     switch (function) {
@@ -1813,6 +1806,12 @@ static int modbus_default_read(modbus_t *ctx, int function, uint16_t address, in
         }
         return MODBUS_EXCEPTION_ILLEGAL_FUNCTION;
     }
+
+    if (mb_mapping->cb_read != NULL) {
+        mb_mapping->cb_read(ctx, function, address, nb,
+                            rsp_buf, size, mb_mapping);
+    }
+
     return 0;
 }
 
@@ -1827,7 +1826,7 @@ static int modbus_default_read(modbus_t *ctx, int function, uint16_t address, in
         } \
 } while(0)
 
-static int modbus_default_write(modbus_t *ctx, int function, uint16_t address, int nb,
+static int modbus_write(modbus_t *ctx, int function, uint16_t address, int nb,
         const uint8_t *req_buf, int size, modbus_mapping_t *mb_mapping) {
     switch (function) {
     case _FC_WRITE_SINGLE_COIL:
@@ -1913,6 +1912,11 @@ static int modbus_default_write(modbus_t *ctx, int function, uint16_t address, i
                     function);
         }
         return MODBUS_EXCEPTION_ILLEGAL_FUNCTION;
+    }
+
+    if (mb_mapping->cb_write != NULL) {
+        mb_mapping->cb_write(ctx, function, address, nb,
+                            req_buf, size, mb_mapping);
     }
 
     return 0;
