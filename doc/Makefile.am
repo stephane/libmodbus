@@ -1,3 +1,6 @@
+EXTRA_DIST = asciidoc.conf
+CLEANFILES =
+
 MAN3 = \
         modbus_close.3 \
         modbus_connect.3 \
@@ -6,11 +9,13 @@ MAN3 = \
         modbus_get_byte_from_bits.3 \
         modbus_get_byte_timeout.3 \
         modbus_get_float.3 \
+        modbus_get_float_dcba.3 \
         modbus_get_header_length.3 \
         modbus_get_response_timeout.3 \
         modbus_get_socket.3 \
         modbus_mapping_free.3 \
         modbus_mapping_new.3 \
+        modbus_mask_write_register.3 \
         modbus_new_rtu.3 \
         modbus_new_tcp_pi.3 \
         modbus_new_tcp.3 \
@@ -35,6 +40,7 @@ MAN3 = \
         modbus_set_debug.3 \
         modbus_set_error_recovery.3 \
         modbus_set_float.3 \
+        modbus_set_float_dcba.3 \
         modbus_set_response_timeout.3 \
         modbus_set_slave.3 \
         modbus_set_socket.3 \
@@ -58,7 +64,7 @@ dist_man_MANS = $(MAN_DOC)
 doc: $(MAN_DOC)
 endif
 
-EXTRA_DIST = asciidoc.conf $(MAN_TXT)
+EXTRA_DIST += $(MAN_TXT)
 if BUILD_DOC
 EXTRA_DIST += $(MAN_HTML)
 html: $(MAN_HTML)
@@ -84,8 +90,5 @@ SUFFIXES=.html .txt .xml .1 .3 .7
 .xml.7:
 	xmlto man $<
 
-clean:
-	rm -f *.1 *.3 *.7
-	rm -f *.html
-
+CLEANFILES += *.1 *.3 *.7 *.html
 endif

@@ -9,7 +9,7 @@ modbus_strerror - return the error message
 
 SYNOPSIS
 --------
-*const char *modbus_strerror(*int 'errnum');*
+*const char *modbus_strerror(int 'errnum');*
 
 
 DESCRIPTION

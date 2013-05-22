@@ -1,0 +1,55 @@
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include "config.h"
+#include "../modbus-version.h"
+
+#define VERSTRING PACKAGE_VERSION
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION LIBMODBUS_VERSION_MAJOR, LIBMODBUS_VERSION_MINOR, LIBMODBUS_VERSION_MICRO, 2
+PRODUCTVERSION LIBMODBUS_VERSION_MAJOR, LIBMODBUS_VERSION_MINOR, LIBMODBUS_VERSION_MICRO, 2
+#if defined(DEBUG) || defined(W32DEBUG)
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+FILEOS VOS_NT_WINDOWS32
+FILETYPE VFT_DLL
+{
+ BLOCK "StringFileInfo"
+ {
+  BLOCK "000004E4"
+  {
+   VALUE "CompanyName", "\x0"
+   VALUE "FileDescription", "libmodbus DLL\x0"
+#if defined(__MINGW32__) && !defined(__MINGW64__)
+   VALUE "FileVersion", VERSTRING " (gcc)"
+#endif
+#if defined(__MINGW64__)
+   VALUE "FileVersion", VERSTRING " (gcc64)"
+#endif
+#if defined(_MSC_VER)
+# if defined(MSC64)
+   VALUE "FileVersion", VERSTRING " (cl64)"
+# else
+   VALUE "FileVersion", VERSTRING " (cl)"
+# endif
+#endif
+   VALUE "InternalName", "modbus.dll"
+   VALUE "LegalCopyright", "© See libmodbus.org"
+   VALUE "OriginalFilename", "modbus.dll"
+   VALUE "ProductName", "libmodbus"
+  }
+ }
+ BLOCK "VarFileInfo"
+ {
+   VALUE "Translation", 0x0, 1252
+ }
+}
+
+// Manifest
+#if (_MSC_VER >= 1400)
+// CAVEAT: the manifest has a version string THAT MUST MATCH the DLL version
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "modbus.dll.manifest"
+#endif

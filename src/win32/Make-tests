@@ -1,0 +1,62 @@
+# Windows makefile
+# --
+#       use mingw make
+#       Get make-3.82-5-mingw32-bin.tar.lzma from
+#       http://sourceforge.net/projects/mingw/files/MinGW/Extension/make/make-3.82-mingw32/
+# --
+#       Set CC=gcc or CC=cl for the pre-defined compilers
+#       before using this Makefile
+# --
+# Compile and link the bandwidth and random tests.
+# Build modbus.dll and the import library before building the tests
+# modbus.lib/libmodbus.a (the import library) should be in this directory
+# modbus.dll should be in this directory or in path
+
+INCLUDES:=-I../.. -I.. -I.
+
+ifeq ($(CC),cl)
+DEFS+=-D_CRT_SECURE_NO_DEPRECATE=1 -D_CRT_NONSTDC_NO_DEPRECATE=1
+CFLAGS=-Zi -W3 -MT -ID:/include/msvc_std
+LDOPTS=-link -incremental:NO 
+LDLIBS=-Fe$@ ws2_32.lib modbus.lib $(LDOPTS)
+RES:=res
+RCOUT=
+endif
+
+ifeq ($(CC),gcc)
+CFLAGS=-g -Wall -O -static -static-libgcc
+LDLIBS=-o$@ -lws2_32 -luser32 -L. -lmodbus
+LDOPTS=
+RES:=o
+RCOUT=-o$@
+endif
+
+CFLAGS+=-DHAVE_CONFIG_H $(DEFS) $(INCLUDES)
+
+.SUFFIXES:
+.SUFFIXES: .c .rc .$(RES) .$(oo)
+
+# pattern rule for resources
+%.$(RES) : %.rc
+	$(RC) $< $(RCOUT)
+
+vpath %.c ../../tests
+vpath %.h ../src
+
+all: random-test-client random-test-server bandwidth-client bandwidth-server-one
+
+random-test-client: random-test-client.c
+	$(LINK.c) $^ $(LDLIBS)
+
+random-test-server: random-test-server.c
+	$(LINK.c) $^ $(LDLIBS)
+
+bandwidth-server-one: bandwidth-server-one.c
+	$(LINK.c) $^ $(LDLIBS)
+
+bandwidth-client: bandwidth-client.c
+	$(LINK.c) $^ $(LDLIBS)
+
+
+clean:
+	-@cmd "/c del /Q /S $(OBJS) *.o *.obj *.exe *.pdb *.ilk *.ncb *.res *.dll *.exp *.lib *.ncb *.a *.map *.asm" > NUL: 2>&1

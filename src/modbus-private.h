@@ -62,6 +62,7 @@ MODBUS_BEGIN_DECLS
 #define _FC_WRITE_MULTIPLE_COILS      0x0F
 #define _FC_WRITE_MULTIPLE_REGISTERS  0x10
 #define _FC_REPORT_SLAVE_ID           0x11
+#define _FC_MASK_WRITE_REGISTER       0x16
 #define _FC_WRITE_AND_READ_REGISTERS  0x17
 
 typedef enum {
@@ -111,6 +112,7 @@ typedef struct _modbus_backend {
     void (*close) (modbus_t *ctx);
     int (*flush) (modbus_t *ctx);
     int (*select) (modbus_t *ctx, fd_set *rset, struct timeval *tv, int msg_length);
+    void (*free) (modbus_t *ctx);
 } modbus_backend_t;
 
 struct _modbus {

@@ -42,7 +42,9 @@
 #define _MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH 10000
 
 #if defined(_WIN32)
+#if !defined(ENOTSUP)
 #define ENOTSUP WSAEOPNOTSUPP
+#endif
 
 /* WIN32: struct containing serial handle and a receive buffer */
 #define PY_BUF_SIZE 512
@@ -57,16 +59,8 @@ struct win32_ser {
 #endif /* _WIN32 */
 
 typedef struct _modbus_rtu {
-    /* Device: "/dev/ttyS0", "/dev/ttyUSB0" or "/dev/tty.USA19*" on Mac OS X for
-       KeySpan USB<->Serial adapters this string had to be made bigger on OS X
-       as the directory+file name was bigger than 19 bytes. Making it 67 bytes
-       for now, but OS X does support 256 byte file names. May become a problem
-       in the future. */
-#if defined(__APPLE_CC__)
-    char device[64];
-#else
-    char device[16];
-#endif
+    /* Device: "/dev/ttyS0", "/dev/ttyUSB0" or "/dev/tty.USA19*" on Mac OS X. */
+    char *device;
     /* Bauds: 9600, 19200, 57600, 115200, etc */
     int baud;
     /* Data bit */
@@ -87,6 +81,7 @@ typedef struct _modbus_rtu {
 #endif
 #if HAVE_DECL_TIOCM_RTS
     int rts;
+    int onebyte_time;
 #endif
     /* To handle many slaves on the same link */
     int confirmation_to_ignore;

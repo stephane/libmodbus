@@ -37,5 +37,13 @@ unit_test_client_LDADD = $(common_ldflags)
 version_SOURCES = version.c
 version_LDADD = $(common_ldflags)
 
-INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
+AM_CPPFLAGS = \
+    -include $(top_builddir)/config.h \
+    -DSYSCONFDIR=\""$(sysconfdir)"\" \
+    -DLIBEXECDIR=\""$(libexecdir)"\" \
+    -I${top_srcdir}/src \
+    -I${top_builddir}/src
+
+AM_CFLAGS = ${my_CFLAGS}
+
 CLEANFILES = *~
