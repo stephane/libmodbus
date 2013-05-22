@@ -40,13 +40,17 @@
 #  endif
 #endif
 
-#if !defined (bswap_16) || !defined (bswap_32)
-#   warning "Fallback on C functions for bswap_32"
+#if !defined(bswap_32)
+
+#if !defined(bswap_16)
+#   warning "Fallback on C functions for bswap_16"
 static inline uint16_t bswap_16(uint16_t x)
 {
     return (x >> 8) | (x << 8);
 }
+#endif
 
+#   warning "Fallback on C functions for bswap_32"
 static inline uint32_t bswap_32(uint32_t x)
 {
     return (bswap_16(x & 0xffff) << 16) | (bswap_16(x >> 16));
