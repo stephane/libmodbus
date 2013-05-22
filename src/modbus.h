@@ -34,7 +34,7 @@
 
 #include "modbus-version.h"
 
-#if defined(_WIN32)
+#if defined(_MSC_VER)
 # if defined(DLLBUILD)
 /* define DLLBUILD when building the DLL */
 #  define EXPORT __declspec(dllexport)
