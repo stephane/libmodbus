@@ -1565,14 +1565,14 @@ int modbus_set_error_recovery(modbus_t *ctx,
     return 0;
 }
 
-int modbus_set_socket(modbus_t *ctx, int socket)
+int modbus_set_socket(modbus_t *ctx, int s)
 {
     if (ctx == NULL) {
         errno = EINVAL;
         return -1;
     }
 
-    ctx->s = socket;
+    ctx->s = s;
     return 0;
 }
 
