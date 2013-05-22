@@ -1649,6 +1649,8 @@ modbus_mapping_t* modbus_mapping_new(int nb_bits, int nb_input_bits,
                nb_input_registers * sizeof(uint16_t));
     }
 
+    mb_mapping->user_data = NULL;
+
     return mb_mapping;
 }
 
@@ -1667,8 +1669,9 @@ void modbus_mapping_free(modbus_mapping_t *mb_mapping)
 }
 
 int modbus_add_callback(modbus_mapping_t *mb_mapping,
-		modbus_callback_read_t *cb_read,
-		modbus_callback_write_t *cb_write)
+                        modbus_callback_read_t *cb_read,
+                        modbus_callback_write_t *cb_write,
+                        void *user_data)
 {
 	if(mb_mapping == NULL) {
 		errno = EINVAL;
@@ -1676,6 +1679,7 @@ int modbus_add_callback(modbus_mapping_t *mb_mapping,
 	}
 	mb_mapping->cb_read = cb_read;
 	mb_mapping->cb_write = cb_write;
+    mb_mapping->user_data = user_data;
 
 	return 0;
 }
@@ -1775,7 +1779,7 @@ static int modbus_read(modbus_t *ctx, int function, uint16_t address, int nb,
 
     if (mb_mapping->cb_read != NULL) {
         mb_mapping->cb_read(ctx, function, address, nb,
-                            rsp_buf, size, mb_mapping);
+                            rsp_buf, size, mb_mapping, mb_mapping->user_data);
     }
 
     return 0;
@@ -1882,7 +1886,7 @@ static int modbus_write(modbus_t *ctx, int function, uint16_t address, int nb,
 
     if (mb_mapping->cb_write != NULL) {
         mb_mapping->cb_write(ctx, function, address, nb,
-                            req_buf, size, mb_mapping);
+                            req_buf, size, mb_mapping, mb_mapping->user_data);
     }
 
     return 0;
