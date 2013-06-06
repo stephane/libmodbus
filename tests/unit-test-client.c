@@ -24,11 +24,6 @@
 
 #include "unit-test.h"
 
-enum {
-    TCP,
-    TCP_PI,
-    RTU
-};
 
 int main(int argc, char *argv[])
 {

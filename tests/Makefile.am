@@ -28,10 +28,14 @@ random_test_server_LDADD = $(common_ldflags)
 random_test_client_SOURCES = random-test-client.c
 random_test_client_LDADD = $(common_ldflags)
 
-unit_test_server_SOURCES = unit-test-server.c unit-test.h
+unit_test_server_SOURCES = unit-test-server.c \
+                           unit-test.c \
+                           unit-test.h
 unit_test_server_LDADD = $(common_ldflags)
 
-unit_test_client_SOURCES = unit-test-client.c unit-test.h
+unit_test_client_SOURCES = unit-test-client.c \
+                           unit-test.c \
+                           unit-test.h
 unit_test_client_LDADD = $(common_ldflags)
 
 version_SOURCES = version.c

@@ -36,33 +36,51 @@
 #define SERVER_ID         17
 #define INVALID_SERVER_ID 18
 
-const uint16_t UT_BITS_ADDRESS = 0x13;
-const uint16_t UT_BITS_NB = 0x25;
-const uint8_t UT_BITS_TAB[] = { 0xCD, 0x6B, 0xB2, 0x0E, 0x1B };
+extern const uint16_t UT_BITS_ADDRESS;
+extern const uint16_t UT_BITS_NB;
+extern const uint8_t UT_BITS_TAB[5];
 
-const uint16_t UT_INPUT_BITS_ADDRESS = 0xC4;
-const uint16_t UT_INPUT_BITS_NB = 0x16;
-const uint8_t UT_INPUT_BITS_TAB[] = { 0xAC, 0xDB, 0x35 };
+extern const uint16_t UT_INPUT_BITS_ADDRESS;
+extern const uint16_t UT_INPUT_BITS_NB;
+extern const uint8_t UT_INPUT_BITS_TAB[3];
 
-const uint16_t UT_REGISTERS_ADDRESS = 0x6B;
+extern const uint16_t UT_REGISTERS_ADDRESS;
 /* Raise a manual exception when this address is used for the first byte */
-const uint16_t UT_REGISTERS_ADDRESS_SPECIAL = 0x6C;
+extern const uint16_t UT_REGISTERS_ADDRESS_SPECIAL;
 /* The response of the server will contains an invalid TID or slave */
-const uint16_t UT_REGISTERS_ADDRESS_INVALID_TID_OR_SLAVE = 0x6D;
+extern const uint16_t UT_REGISTERS_ADDRESS_INVALID_TID_OR_SLAVE;
 
-const uint16_t UT_REGISTERS_NB = 0x3;
-const uint16_t UT_REGISTERS_TAB[] = { 0x022B, 0x0001, 0x0064 };
+extern const uint16_t UT_REGISTERS_NB;
+extern const uint16_t UT_REGISTERS_TAB[3];
 /* If the following value is used, a bad response is sent.
    It's better to test with a lower value than
    UT_REGISTERS_NB_POINTS to try to raise a segfault. */
-const uint16_t UT_REGISTERS_NB_SPECIAL = 0x2;
+extern const uint16_t UT_REGISTERS_NB_SPECIAL;
 
-const uint16_t UT_INPUT_REGISTERS_ADDRESS = 0x08;
-const uint16_t UT_INPUT_REGISTERS_NB = 0x1;
-const uint16_t UT_INPUT_REGISTERS_TAB[] = { 0x000A };
+extern const uint16_t UT_INPUT_REGISTERS_ADDRESS;
+extern const uint16_t UT_INPUT_REGISTERS_NB;
+extern const uint16_t UT_INPUT_REGISTERS_TAB[1];
 
-const float UT_REAL = 916.540649;
-const uint32_t UT_IREAL = 0x4465229a;
-const uint32_t UT_IREAL_DCBA = 0x9a226544;
+extern const float UT_REAL;
+extern const uint32_t UT_IREAL;
+extern const uint32_t UT_IREAL_DCBA;
+
+enum {
+    TCP,
+    TCP_PI,
+    RTU
+};
+
+typedef struct {
+    int                 socket;
+    modbus_t*           ctx;
+    modbus_mapping_t*   mb_mapping;
+    int                 use_backend;
+} unit_test_server_t;
+
+
+int unit_test_server_listen(unit_test_server_t*);
+int unit_test_server_run(unit_test_server_t*);
+
 
 #endif /* _UNIT_TEST_H_ */
