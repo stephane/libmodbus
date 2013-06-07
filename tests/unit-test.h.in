@@ -33,6 +33,8 @@
 # endif
 #endif
 
+#include <modbus.h>
+
 #define SERVER_ID         17
 #define INVALID_SERVER_ID 18
 
@@ -81,6 +83,7 @@ typedef struct {
 
 int unit_test_server_listen(unit_test_server_t*);
 int unit_test_server_run(unit_test_server_t*);
+int unit_test_client_start(int backend);
 
 
 #endif /* _UNIT_TEST_H_ */

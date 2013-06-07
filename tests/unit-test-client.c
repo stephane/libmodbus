@@ -25,22 +25,10 @@
 #include "unit-test.h"
 
 
+
 int main(int argc, char *argv[])
 {
-    uint8_t *tab_rp_bits;
-    uint16_t *tab_rp_registers;
-    uint16_t *tab_rp_registers_bad;
-    modbus_t *ctx;
-    int i;
-    uint8_t value;
-    int nb_points;
-    int rc;
-    float real;
-    uint32_t ireal;
-    struct timeval old_response_timeout;
-    struct timeval response_timeout;
     int use_backend;
-
     if (argc > 1) {
         if (strcmp(argv[1], "tcp") == 0) {
             use_backend = TCP;
@@ -56,6 +44,23 @@ int main(int argc, char *argv[])
         /* By default */
         use_backend = TCP;
     }
+    return unit_test_client_start(use_backend);
+}
+
+int unit_test_client_start(int use_backend)
+{
+    uint8_t *tab_rp_bits;
+    uint16_t *tab_rp_registers;
+    uint16_t *tab_rp_registers_bad;
+    modbus_t *ctx;
+    int i;
+    uint8_t value;
+    int nb_points;
+    int rc;
+    float real;
+    uint32_t ireal;
+    struct timeval old_response_timeout;
+    struct timeval response_timeout;
 
     if (use_backend == TCP) {
         ctx = modbus_new_tcp("127.0.0.1", 1502);
