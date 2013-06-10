@@ -110,7 +110,9 @@ fi
 AC_CHECK_DECLS([TIOCSRS485], [], [], [[#include <sys/ioctl.h>]])
 # Check for RTS flags
 AC_CHECK_DECLS([TIOCM_RTS], [], [], [[#include <sys/ioctl.h>]])
-
+# Check for pthreads used by unit tests
+AX_PTHREAD #([ax_pthread_ok=yes],[ax_pthread_ok=no])
+AM_CONDITIONAL([USE_PTHREAD],[test x$ax_pthread_ok = "xyes"])
 # Wtype-limits is not supported by gcc 4.2 (default on recent Mac OS X)
 my_CFLAGS="-Wall \
 -Wmissing-declarations -Wmissing-prototypes \
