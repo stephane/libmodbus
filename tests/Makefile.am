@@ -1,5 +1,8 @@
 EXTRA_DIST = README
 
+# Very basic test
+TESTS = version
+
 noinst_PROGRAMS = \
 	bandwidth-server-one \
 	bandwidth-server-many-up \
@@ -8,6 +11,7 @@ noinst_PROGRAMS = \
 	random-test-client \
 	unit-test-server \
 	unit-test-client \
+    unit-test-harness \
 	version
 
 common_ldflags = \
@@ -37,6 +41,17 @@ unit_test_client_SOURCES = unit-test-client.c \
                            unit-test.c \
                            unit-test.h
 unit_test_client_LDADD = $(common_ldflags)
+
+if USE_PTHREAD
+unit_test_harness_CC = $(PTHREAD_CC)
+unit_test_harness_CFLAGS = $(PTHREAD_CFLAGS)
+unit_test_harness_SOURCES = unit-test-harness.c \
+                            unit-test.c \
+                            unit-test.h
+
+unit_test_harness_LDADD = $(common_ldflags) $(PTHREAD_LIBS)
+TESTS += unit-test-harness
+endif
 
 version_SOURCES = version.c
 version_LDADD = $(common_ldflags)
