@@ -43,19 +43,31 @@
 #if !defined(bswap_32)
 
 #if !defined(bswap_16)
+#if defined(_MSC_VER)
+#define bsawp_16(x) _byteswap_ushort((x))
+#else
+#if defined(_GNUC__)
 #pragma message ("Fallback on C functions for bswap_16")
+#endif //defined(_GNUC__)
 static uint16_t bswap_16(uint16_t x)
 {
     return (x >> 8) | (x << 8);
 }
-#endif
+#endif //defined(_MSC_VER)
+#endif //!defined(bswap_16)
 
+#if defined(_MSC_VER)
+#define bswap_32(x) _byteswap_ulong((unsigned long)(x))
+#else
+#if defined(_GNUC__)
 #pragma message ("Fallback on C functions for bswap_32")
+#endif //defined(_GNUC__)
 static uint32_t bswap_32(uint32_t x)
 {
     return (bswap_16(x & 0xffff) << 16) | (bswap_16(x >> 16));
 }
-#endif
+#endif //defined(_MSC_VER)
+#endif //!defined(bswap_32)
 
 /* Sets many bits from a single byte value (all 8 bits of the byte value are
    set) */
