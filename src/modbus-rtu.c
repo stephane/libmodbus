@@ -1133,25 +1133,23 @@ modbus_t* modbus_new_rtu(const char *device,
 {
     modbus_t *ctx;
     modbus_rtu_t *ctx_rtu;
-    size_t device_size;
 
     ctx = (modbus_t *) malloc(sizeof(modbus_t));
     _modbus_init_common(ctx);
-
     ctx->backend = &_modbus_rtu_backend;
     ctx->backend_data = (modbus_rtu_t *) malloc(sizeof(modbus_rtu_t));
     ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
 
-    /* Device name and \0 */
-    device_size = (strlen(device) + 1) * sizeof(char);
-    if (device_size == 0) {
+    /* Check device argument */
+    if (device == NULL || (*device) == 0) {
         fprintf(stderr, "The device string is empty\n");
         modbus_free(ctx);
         errno = EINVAL;
         return NULL;
     }
 
-    ctx_rtu->device = (char *) malloc(device_size);
+    /* Device name and \0 */
+    ctx_rtu->device = (char *) malloc((strlen(device) + 1) * sizeof(char));
     strcpy(ctx_rtu->device, device);
 
     ctx_rtu->baud = baud;
