@@ -28,21 +28,21 @@ MODBUS_BEGIN_DECLS
  */
 #define MODBUS_RTU_MAX_ADU_LENGTH  256
 
-EXPORT modbus_t* modbus_new_rtu(const char *device, int baud, char parity,
+MODBUS_API modbus_t* modbus_new_rtu(const char *device, int baud, char parity,
                                 int data_bit, int stop_bit);
 
 #define MODBUS_RTU_RS232 0
 #define MODBUS_RTU_RS485 1
 
-EXPORT int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode);
-EXPORT int modbus_rtu_get_serial_mode(modbus_t *ctx);
+MODBUS_API int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode);
+MODBUS_API int modbus_rtu_get_serial_mode(modbus_t *ctx);
 
 #define MODBUS_RTU_RTS_NONE   0
 #define MODBUS_RTU_RTS_UP     1
 #define MODBUS_RTU_RTS_DOWN   2
 
-EXPORT int modbus_rtu_set_rts(modbus_t *ctx, int mode);
-EXPORT int modbus_rtu_get_rts(modbus_t *ctx);
+MODBUS_API int modbus_rtu_set_rts(modbus_t *ctx, int mode);
+MODBUS_API int modbus_rtu_get_rts(modbus_t *ctx);
 
 MODBUS_END_DECLS
 
