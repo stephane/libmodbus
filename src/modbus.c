@@ -1468,8 +1468,6 @@ int modbus_write_and_read_registers(modbus_t *ctx,
             return -1;
 
         offset = ctx->backend->header_length;
-
-        /* If rc is negative, the loop is jumped ! */
         for (i = 0; i < rc; i++) {
             /* shift reg hi_byte to temp OR with lo_byte */
             dest[i] = (rsp[offset + 2 + (i << 1)] << 8) |
