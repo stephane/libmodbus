@@ -348,7 +348,7 @@ static int _modbus_rtu_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
 {
     /* Check responding slave is the slave we requested (except for broacast
      * request) */
-    if (req[0] != 0 && req[0] != rsp[0]) {
+    if (req[0] != rsp[0] && req[0] != MODBUS_BROADCAST_ADDRESS) {
         if (ctx->debug) {
             fprintf(stderr,
                     "The responding slave %d isn't the requested slave %d",
