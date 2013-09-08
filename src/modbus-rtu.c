@@ -351,7 +351,7 @@ static int _modbus_rtu_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
     if (req[0] != rsp[0] && req[0] != MODBUS_BROADCAST_ADDRESS) {
         if (ctx->debug) {
             fprintf(stderr,
-                    "The responding slave %d isn't the requested slave %d",
+                    "The responding slave %d isn't the requested slave %d\n",
                     rsp[0], req[0]);
         }
         errno = EMBBADSLAVE;
@@ -371,13 +371,13 @@ static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
     uint16_t crc_received;
     int slave = msg[0];
 
-    /* Filter on the Modbus unit identifier (slave) in RTU mode */
+    /* Filter on the Modbus unit identifier (slave) in RTU mode to avoid useless
+     * CRC computing. */
     if (slave != ctx->slave && slave != MODBUS_BROADCAST_ADDRESS) {
-        /* Ignores the request (not for me) */
         if (ctx->debug) {
             printf("Request for slave %d ignored (not %d)\n", slave, ctx->slave);
         }
-
+        /* Following call to check_confirmation handles this error */
         return 0;
     }
 
