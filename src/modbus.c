@@ -1135,7 +1135,7 @@ static int write_single(modbus_t *ctx, int function, int addr, int value)
     rc = send_msg(ctx, req, req_length);
     if (rc > 0) {
         /* Used by write_bit and write_register */
-        uint8_t rsp[_MIN_REQ_LENGTH];
+        uint8_t rsp[MAX_MESSAGE_LENGTH];
 
         rc = receive_msg(ctx, rsp, MSG_CONFIRMATION);
         if (rc == -1)
