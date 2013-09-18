@@ -121,12 +121,14 @@ static void _sleep_response_timeout(modbus_t *ctx)
 
 int modbus_flush(modbus_t *ctx)
 {
+int rc;
+
     if (ctx == NULL) {
         errno = EINVAL;
         return -1;
     }
 
-    int rc = ctx->backend->flush(ctx);
+    rc = ctx->backend->flush(ctx);
     if (rc != -1 && ctx->debug) {
         /* Not all backends are able to return the number of bytes flushed */
         printf("Bytes flushed (%d)\n", rc);
