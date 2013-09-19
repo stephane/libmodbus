@@ -277,6 +277,10 @@ static void _modbus_rtu_ioctl_rts(int fd, int on)
 
 static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
 {
+    uint8_t c;
+    /* Make input buffer empty */
+    while (read(ctx->s, &c, 1));
+    
 #if defined(_WIN32)
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
     DWORD n_bytes = 0;
