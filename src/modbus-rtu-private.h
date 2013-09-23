@@ -49,12 +49,12 @@
 /* WIN32: struct containing serial handle and a receive buffer */
 #define PY_BUF_SIZE 512
 struct win32_ser {
-	/* File handle */
-	HANDLE fd;
-	/* Receive buffer */
-	uint8_t buf[PY_BUF_SIZE];
-	/* Received chars */
-	DWORD n_bytes;
+    /* File handle */
+    HANDLE fd;
+    /* Receive buffer */
+    uint8_t buf[PY_BUF_SIZE];
+    /* Received chars */
+    DWORD n_bytes;
 };
 #endif /* _WIN32 */
 
