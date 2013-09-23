@@ -35,12 +35,14 @@
 #define NB_CONNECTION    5
 
 modbus_t *ctx = NULL;
-int server_socket;
+int server_socket = -1;
 modbus_mapping_t *mb_mapping;
 
 static void close_sigint(int dummy)
 {
-    close(server_socket);
+    if (server_socket != -1) {
+        close(server_socket);
+    }
     modbus_free(ctx);
     modbus_mapping_free(mb_mapping);
 
@@ -49,11 +51,11 @@ static void close_sigint(int dummy)
 
 int main(void)
 {
+    uint8_t query[MODBUS_TCP_MAX_ADU_LENGTH];
     int master_socket;
     int rc;
     fd_set refset;
     fd_set rdset;
-
     /* Maximum file descriptor number */
     int fdmax;
 
@@ -91,49 +93,48 @@ int main(void)
          * read */
         for (master_socket = 0; master_socket <= fdmax; master_socket++) {
 
-            if (FD_ISSET(master_socket, &rdset)) {
-                if (master_socket == server_socket) {
-                    /* A client is asking a new connection */
-                    socklen_t addrlen;
-                    struct sockaddr_in clientaddr;
-                    int newfd;
+            if (!FD_ISSET(master_socket, &rdset)) {
+                continue;
+            }
 
-                    /* Handle new connections */
-                    addrlen = sizeof(clientaddr);
-                    memset(&clientaddr, 0, sizeof(clientaddr));
-                    newfd = accept(server_socket, (struct sockaddr *)&clientaddr, &addrlen);
-                    if (newfd == -1) {
-                        perror("Server accept() error");
-                    } else {
-                        FD_SET(newfd, &refset);
+            if (master_socket == server_socket) {
+                /* A client is asking a new connection */
+                socklen_t addrlen;
+                struct sockaddr_in clientaddr;
+                int newfd;
 
-                        if (newfd > fdmax) {
-                            /* Keep track of the maximum */
-                            fdmax = newfd;
-                        }
-                        printf("New connection from %s:%d on socket %d\n",
-                               inet_ntoa(clientaddr.sin_addr), clientaddr.sin_port, newfd);
-                    }
+                /* Handle new connections */
+                addrlen = sizeof(clientaddr);
+                memset(&clientaddr, 0, sizeof(clientaddr));
+                newfd = accept(server_socket, (struct sockaddr *)&clientaddr, &addrlen);
+                if (newfd == -1) {
+                    perror("Server accept() error");
                 } else {
-                    /* An already connected master has sent a new query */
-                    uint8_t query[MODBUS_TCP_MAX_ADU_LENGTH];
+                    FD_SET(newfd, &refset);
 
-                    modbus_set_socket(ctx, master_socket);
-                    rc = modbus_receive(ctx, query);
-                    if (rc > 0) {
-                        modbus_reply(ctx, query, rc, mb_mapping);
-                    } else if (rc == -1) {
-                        /* This example server in ended on connection closing or
-                         * any errors. */
-                        printf("Connection closed on socket %d\n", master_socket);
-                        close(master_socket);
+                    if (newfd > fdmax) {
+                        /* Keep track of the maximum */
+                        fdmax = newfd;
+                    }
+                    printf("New connection from %s:%d on socket %d\n",
+                           inet_ntoa(clientaddr.sin_addr), clientaddr.sin_port, newfd);
+                }
+            } else {
+                modbus_set_socket(ctx, master_socket);
+                rc = modbus_receive(ctx, query);
+                if (rc > 0) {
+                    modbus_reply(ctx, query, rc, mb_mapping);
+                } else if (rc == -1) {
+                    /* This example server in ended on connection closing or
+                     * any errors. */
+                    printf("Connection closed on socket %d\n", master_socket);
+                    close(master_socket);
 
-                        /* Remove from reference set */
-                        FD_CLR(master_socket, &refset);
+                    /* Remove from reference set */
+                    FD_CLR(master_socket, &refset);
 
-                        if (master_socket == fdmax) {
-                            fdmax--;
-                        }
+                    if (master_socket == fdmax) {
+                        fdmax--;
                     }
                 }
             }

@@ -9,7 +9,7 @@ modbus_set_socket - set socket of the context
 
 SYNOPSIS
 --------
-*void modbus_set_socket(modbus_t *'ctx', int 'socket');*
+*int modbus_set_socket(modbus_t *'ctx', int 's');*
 
 
 DESCRIPTION
@@ -21,7 +21,7 @@ connections to the same server.
 
 RETURN VALUE
 ------------
-There is no return values.
+The function shall return 0 if successful. Otherwise it shall return -1 and set errno.
 
 
 EXAMPLE

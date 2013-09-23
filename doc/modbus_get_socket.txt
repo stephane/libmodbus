@@ -20,7 +20,8 @@ descriptor of the libmodbus context.
 
 RETURN VALUE
 ------------
-The current socket or file descriptor of the context.
+The function returns the current socket or file descriptor of the context if
+successful. Otherwise it shall return -1 and set errno.
 
 
 SEE ALSO

@@ -8,15 +8,16 @@ modbus_set_debug - set debug flag of the context
 
 SYNOPSIS
 --------
-*void modbus_set_debug(modbus_t *'ctx', int 'boolean');*
+*int modbus_set_debug(modbus_t *'ctx', int 'flag');*
 
 
 DESCRIPTION
 -----------
 The _modbus_set_debug()_ function shall set the debug flag of the *modbus_t*
-context by using the argument 'boolean'. When the 'boolean' value is set to
-'TRUE', many verbose messages are displayed on stdout and stderr. For example,
-this flag is useful to display the bytes of the Modbus messages.
+context by using the argument 'flag'. By default, the boolean flag is set to
+'FALSE'. When the 'flag' value is set to 'TRUE', many verbose messages are
+displayed on stdout and stderr. For example, this flag is useful to display the
+bytes of the Modbus messages.
 
 [verse]
 ___________________
@@ -28,7 +29,7 @@ ___________________
 
 RETURN VALUE
 ------------
-There is no return values.
+The function shall return 0 if successful. Otherwise it shall return -1 and set errno.
 
 
 AUTHORS

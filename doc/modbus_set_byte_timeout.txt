@@ -22,9 +22,10 @@ If the timeout value has a tv_sec of -1 then this timeout will not be used at
 all. This results in modbus_set_response_timeout governing the entire timeout
 duration of an operation.
 
+
 RETURN VALUE
 ------------
-There is no return values.
+The function shall return 0 if successful. Otherwise it shall return -1 and set errno.
 
 
 SEE ALSO

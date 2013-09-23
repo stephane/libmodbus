@@ -27,6 +27,36 @@
 
 #include "modbus.h"
 
+#if defined(HAVE_BYTESWAP_H)
+#  include <byteswap.h>
+#endif
+
+#if defined(__GNUC__)
+#  define GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__ * 10)
+#  if GCC_VERSION >= 430
+// Since GCC >= 4.30, GCC provides __builtin_bswapXX() alternatives so we switch to them
+#    undef bswap_32
+#    define bswap_32 __builtin_bswap32
+#  endif
+#endif
+
+#if !defined(bswap_32)
+
+#if !defined(bswap_16)
+#   warning "Fallback on C functions for bswap_16"
+static inline uint16_t bswap_16(uint16_t x)
+{
+    return (x >> 8) | (x << 8);
+}
+#endif
+
+#   warning "Fallback on C functions for bswap_32"
+static inline uint32_t bswap_32(uint32_t x)
+{
+    return (bswap_16(x & 0xffff) << 16) | (bswap_16(x >> 16));
+}
+#endif
+
 /* Sets many bits from a single byte value (all 8 bits of the byte value are
    set) */
 void modbus_set_bits_from_byte(uint8_t *dest, int index, const uint8_t value)
@@ -75,7 +105,7 @@ uint8_t modbus_get_byte_from_bits(const uint8_t *src, int index,
     return value;
 }
 
-/* Get a float from 4 bytes in Modbus format */
+/* Get a float from 4 bytes in Modbus format (ABCD) */
 float modbus_get_float(const uint16_t *src)
 {
     float f;
@@ -87,12 +117,35 @@ float modbus_get_float(const uint16_t *src)
     return f;
 }
 
-/* Set a float to 4 bytes in Modbus format */
+/* Get a float from 4 bytes in inversed Modbus format (DCBA) */
+float modbus_get_float_dcba(const uint16_t *src)
+{
+    float f;
+    uint32_t i;
+
+    i = bswap_32((((uint32_t)src[1]) << 16) + src[0]);
+    memcpy(&f, &i, sizeof(float));
+
+    return f;
+}
+
+/* Set a float to 4 bytes in Modbus format (ABCD) */
 void modbus_set_float(float f, uint16_t *dest)
 {
     uint32_t i;
 
     memcpy(&i, &f, sizeof(uint32_t));
+    dest[0] = (uint16_t)i;
+    dest[1] = (uint16_t)(i >> 16);
+}
+
+/* Set a float to 4 bytes in inversed Modbus format (DCBA) */
+void modbus_set_float_dcba(float f, uint16_t *dest)
+{
+    uint32_t i;
+
+    memcpy(&i, &f, sizeof(uint32_t));
+    i = bswap_32(i);
     dest[0] = (uint16_t)i;
     dest[1] = (uint16_t)(i >> 16);
 }

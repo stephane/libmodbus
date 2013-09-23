@@ -226,8 +226,11 @@ static int _modbus_tcp_set_ipv4_options(int s)
     option = 1;
 #if !defined(SOCK_NONBLOCK) && defined(FIONBIO)
 #ifdef OS_WIN32
-    /* Setting FIONBIO expects an unsigned long according to MSDN */
-    ioctlsocket(s, FIONBIO, &option);
+    {
+        /* Setting FIONBIO expects an unsigned long according to MSDN */
+        u_long loption = 1;
+        ioctlsocket(s, FIONBIO, &loption);
+    }
 #else
     ioctl(s, FIONBIO, &option);
 #endif
@@ -318,6 +321,7 @@ static int _modbus_tcp_connect(modbus_t *ctx)
     rc = _modbus_tcp_set_ipv4_options(ctx->s);
     if (rc == -1) {
         close(ctx->s);
+        ctx->s = -1;
         return -1;
     }
 
@@ -331,6 +335,7 @@ static int _modbus_tcp_connect(modbus_t *ctx)
     rc = _connect(ctx->s, (struct sockaddr *)&addr, sizeof(addr), &ctx->response_timeout);
     if (rc == -1) {
         close(ctx->s);
+        ctx->s = -1;
         return -1;
     }
 
@@ -418,8 +423,11 @@ static int _modbus_tcp_pi_connect(modbus_t *ctx)
 /* Closes the network connection and socket in TCP mode */
 static void _modbus_tcp_close(modbus_t *ctx)
 {
-    shutdown(ctx->s, SHUT_RDWR);
-    close(ctx->s);
+    if (ctx->s != -1) {
+        shutdown(ctx->s, SHUT_RDWR);
+        close(ctx->s);
+        ctx->s = -1;
+    }
 }
 
 static int _modbus_tcp_flush(modbus_t *ctx)
@@ -462,10 +470,17 @@ static int _modbus_tcp_flush(modbus_t *ctx)
 /* Listens for any request from one or many modbus masters in TCP */
 int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
 {
-    int new_socket;
+    int new_s;
     int yes;
     struct sockaddr_in addr;
-    modbus_tcp_t *ctx_tcp = ctx->backend_data;
+    modbus_tcp_t *ctx_tcp;
+
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    ctx_tcp = ctx->backend_data;
 
 #ifdef OS_WIN32
     if (_modbus_tcp_init_win32() == -1) {
@@ -473,15 +488,15 @@ int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
     }
 #endif
 
-    new_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (new_socket == -1) {
+    new_s = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (new_s == -1) {
         return -1;
     }
 
     yes = 1;
-    if (setsockopt(new_socket, SOL_SOCKET, SO_REUSEADDR,
+    if (setsockopt(new_s, SOL_SOCKET, SO_REUSEADDR,
                    (char *) &yes, sizeof(yes)) == -1) {
-        close(new_socket);
+        close(new_s);
         return -1;
     }
 
@@ -490,17 +505,17 @@ int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
     /* If the modbus port is < to 1024, we need the setuid root. */
     addr.sin_port = htons(ctx_tcp->port);
     addr.sin_addr.s_addr = INADDR_ANY;
-    if (bind(new_socket, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
-        close(new_socket);
+    if (bind(new_s, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
+        close(new_s);
         return -1;
     }
 
-    if (listen(new_socket, nb_connection) == -1) {
-        close(new_socket);
+    if (listen(new_s, nb_connection) == -1) {
+        close(new_s);
         return -1;
     }
 
-    return new_socket;
+    return new_s;
 }
 
 int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
@@ -511,8 +526,15 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
     struct addrinfo ai_hints;
     const char *node;
     const char *service;
-    int new_socket;
-    modbus_tcp_pi_t *ctx_tcp_pi = ctx->backend_data;
+    int new_s;
+    modbus_tcp_pi_t *ctx_tcp_pi;
+
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    ctx_tcp_pi = ctx->backend_data;
 
     if (ctx_tcp_pi->node[0] == 0)
         node = NULL; /* == any */
@@ -545,7 +567,7 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
         return -1;
     }
 
-    new_socket = -1;
+    new_s = -1;
     for (ai_ptr = ai_list; ai_ptr != NULL; ai_ptr = ai_ptr->ai_next) {
         int s;
 
@@ -587,37 +609,42 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
             continue;
         }
 
-        new_socket = s;
+        new_s = s;
         break;
     }
     freeaddrinfo(ai_list);
 
-    if (new_socket < 0) {
+    if (new_s < 0) {
         return -1;
     }
 
-    return new_socket;
+    return new_s;
 }
 
 /* On success, the function return a non-negative integer that is a descriptor
-   for the accepted socket. On error, -1 is returned, and errno is set
-   appropriately. */
-int modbus_tcp_accept(modbus_t *ctx, int *socket)
+for the accepted socket. On error, socket is set to -1, -1 is returned and errno
+is set appropriately. */
+int modbus_tcp_accept(modbus_t *ctx, int *s)
 {
     struct sockaddr_in addr;
     socklen_t addrlen;
 
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     addrlen = sizeof(addr);
 #ifdef HAVE_ACCEPT4
     /* Inherit socket flags and use accept4 call */
-    ctx->s = accept4(*socket, (struct sockaddr *)&addr, &addrlen, SOCK_CLOEXEC);
+    ctx->s = accept4(*s, (struct sockaddr *)&addr, &addrlen, SOCK_CLOEXEC);
 #else
-    ctx->s = accept(*socket, (struct sockaddr *)&addr, &addrlen);
+    ctx->s = accept(*s, (struct sockaddr *)&addr, &addrlen);
 #endif
 
     if (ctx->s == -1) {
-        close(*socket);
-        *socket = 0;
+        close(*s);
+        *s = -1;
         return -1;
     }
 
@@ -629,16 +656,21 @@ int modbus_tcp_accept(modbus_t *ctx, int *socket)
     return ctx->s;
 }
 
-int modbus_tcp_pi_accept(modbus_t *ctx, int *socket)
+int modbus_tcp_pi_accept(modbus_t *ctx, int *s)
 {
     struct sockaddr_storage addr;
     socklen_t addrlen;
 
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
     addrlen = sizeof(addr);
-    ctx->s = accept(*socket, (void *)&addr, &addrlen);
+    ctx->s = accept(*s, (void *)&addr, &addrlen);
     if (ctx->s == -1) {
-        close(*socket);
-        *socket = 0;
+        close(*s);
+        *s = -1;
     }
 
     if (ctx->debug) {
