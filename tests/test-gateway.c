@@ -54,14 +54,17 @@ int main(void)
         int data_start_index;
         int raw_length;
         int exception;
+        int slave;
 
         rc = modbus_receive(ctx, query);
         if (rc > 0) {
             exception = 0;
             query_length = rc;
             data_start_index = modbus_get_header_length(ctx) - 1;
+            slave = query[data_start_index];
             raw_length = rc - data_start_index - modbus_get_checksum_length(ctx);
             modbus_flush(ctx_rtu);
+            modbus_set_slave(ctx_rtu, slave);
             if (modbus_send_raw_request(ctx_rtu, query + data_start_index, raw_length) != -1) {
                 rc = modbus_receive_confirmation(ctx_rtu, response);
                 if ( rc != -1) {
@@ -76,7 +79,7 @@ int main(void)
                 exception = errno;
             }
 
-            if (!exception) {
+            if (exception != 0) {
                 if (exception > MODBUS_ENOBASE && MODBUS_ENOBASE < (MODBUS_ENOBASE + MODBUS_EXCEPTION_MAX)) {
                     exception -= MODBUS_ENOBASE;
                 } else {
