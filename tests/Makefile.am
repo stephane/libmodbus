@@ -9,6 +9,7 @@ noinst_PROGRAMS = \
 	unit-test-server \
 	unit-test-client \
 	test-gateway \
+	test-gateway-many-up \
 	version
 
 common_ldflags = \
@@ -37,6 +38,9 @@ unit_test_client_LDADD = $(common_ldflags)
 
 test_gateway_SOURCES = test-gateway.c
 test_gateway_LDADD = $(common_ldflags)
+
+test_gateway_many_up_SOURCES = test-gateway-many-up.c
+test_gateway_many_up_LDADD = $(common_ldflags)
 
 version_SOURCES = version.c
 version_LDADD = $(common_ldflags)
