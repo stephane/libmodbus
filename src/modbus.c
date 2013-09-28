@@ -246,12 +246,12 @@ int modbus_send_raw_request(modbus_t *ctx, uint8_t *raw_req, int raw_req_length)
  */
 
 /* Computes the length to read after the function received */
-static uint8_t compute_meta_length_after_function(int function,
-                                                  msg_type_t msg_type)
+static uint8_t compute_meta_length_after_function(modbus_t *ctx, int function,
+                                                  modbus_msg_type_t msg_type)
 {
     int length;
 
-    if (msg_type == MSG_INDICATION) {
+    if (msg_type == MODBUS_MSG_INDICATION) {
         if (function <= MODBUS_FC_WRITE_SINGLE_REGISTER) {
             length = 4;
         } else if (function == MODBUS_FC_WRITE_MULTIPLE_COILS ||
@@ -266,7 +266,7 @@ static uint8_t compute_meta_length_after_function(int function,
             length = 0;
         }
     } else {
-        /* MSG_CONFIRMATION */
+        /* MODBUS_MSG_CONFIRMATION */
         switch (function) {
         case MODBUS_FC_WRITE_SINGLE_COIL:
         case MODBUS_FC_WRITE_SINGLE_REGISTER:
@@ -282,17 +282,21 @@ static uint8_t compute_meta_length_after_function(int function,
         }
     }
 
+    if (ctx->callback[MODBUS_CALLBACK_COMPUTE_META_LENGTH]) {
+        ctx->callback[MODBUS_CALLBACK_COMPUTE_META_LENGTH](ctx, function, msg_type, &length);
+    }
+
     return length;
 }
 
 /* Computes the length to read after the meta information (address, count, etc) */
 static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
-                                          msg_type_t msg_type)
+                                          modbus_msg_type_t msg_type)
 {
     int function = msg[ctx->backend->header_length];
     int length;
 
-    if (msg_type == MSG_INDICATION) {
+    if (msg_type == MODBUS_MSG_INDICATION) {
         switch (function) {
         case MODBUS_FC_WRITE_MULTIPLE_COILS:
         case MODBUS_FC_WRITE_MULTIPLE_REGISTERS:
@@ -334,7 +338,7 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
    - read() or recv() error codes
 */
 
-int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
+int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, modbus_msg_type_t msg_type)
 {
     int rc;
     fd_set rset;
@@ -345,7 +349,7 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     _step_t step;
 
     if (ctx->debug) {
-        if (msg_type == MSG_INDICATION) {
+        if (msg_type == MODBUS_MSG_INDICATION) {
             printf("Waiting for a indication...\n");
         } else {
             printf("Waiting for a confirmation...\n");
@@ -362,7 +366,7 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     step = _STEP_FUNCTION;
     length_to_read = ctx->backend->header_length + 1;
 
-    if (msg_type == MSG_INDICATION) {
+    if (msg_type == MODBUS_MSG_INDICATION) {
         /* Wait for a message, we don't know when the message will be
          * received */
         p_tv = NULL;
@@ -494,7 +498,7 @@ int modbus_receive_confirmation(modbus_t *ctx, uint8_t *rsp)
         return -1;
     }
 
-    return _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+    return _modbus_receive_msg(ctx, rsp, MODBUS_MSG_CONFIRMATION);
 }
 
 static int check_confirmation(modbus_t *ctx, uint8_t *req,
@@ -1106,7 +1110,7 @@ static int read_io_status(modbus_t *ctx, int function,
         int offset;
         int offset_end;
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = _modbus_receive_msg(ctx, rsp, MODBUS_MSG_CONFIRMATION);
         if (rc == -1)
             return -1;
 
@@ -1215,7 +1219,7 @@ static int read_registers(modbus_t *ctx, int function, int addr, int nb,
         int offset;
         int i;
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = _modbus_receive_msg(ctx, rsp, MODBUS_MSG_CONFIRMATION);
         if (rc == -1)
             return -1;
 
@@ -1306,7 +1310,7 @@ static int write_single(modbus_t *ctx, int function, int addr, int value)
         /* Used by write_bit and write_register */
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = _modbus_receive_msg(ctx, rsp, MODBUS_MSG_CONFIRMATION);
         if (rc == -1)
             return -1;
 
@@ -1391,7 +1395,7 @@ int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *src)
     if (rc > 0) {
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = _modbus_receive_msg(ctx, rsp, MODBUS_MSG_CONFIRMATION);
         if (rc == -1)
             return -1;
 
@@ -1441,7 +1445,7 @@ int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *src)
     if (rc > 0) {
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = _modbus_receive_msg(ctx, rsp, MODBUS_MSG_CONFIRMATION);
         if (rc == -1)
             return -1;
 
@@ -1474,7 +1478,7 @@ int modbus_mask_write_register(modbus_t *ctx, int addr, uint16_t and_mask, uint1
         /* Used by write_bit and write_register */
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = _modbus_receive_msg(ctx, rsp, MODBUS_MSG_CONFIRMATION);
         if (rc == -1)
             return -1;
 
@@ -1544,7 +1548,7 @@ int modbus_write_and_read_registers(modbus_t *ctx,
     if (rc > 0) {
         int offset;
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = _modbus_receive_msg(ctx, rsp, MODBUS_MSG_CONFIRMATION);
         if (rc == -1)
             return -1;
 
@@ -1588,7 +1592,7 @@ int modbus_report_slave_id(modbus_t *ctx, int max_dest, uint8_t *dest)
         int offset;
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = _modbus_receive_msg(ctx, rsp, MODBUS_MSG_CONFIRMATION);
         if (rc == -1)
             return -1;
 

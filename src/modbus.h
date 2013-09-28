@@ -219,6 +219,18 @@ MODBUS_API int modbus_reply(modbus_t *ctx, const uint8_t *req,
 MODBUS_API int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
                                       unsigned int exception_code);
 
+/*
+ *  ---------- Request     Indication ----------
+ *  | Client | ---------------------->| Server |
+ *  ---------- Confirmation  Response ----------
+ */
+typedef enum {
+    /* Request message on the server side */
+    MODBUS_MSG_INDICATION,
+    /* Request message on the client side */
+    MODBUS_MSG_CONFIRMATION
+} modbus_msg_type_t;
+
 /**
  * UTILS FUNCTIONS
  **/
