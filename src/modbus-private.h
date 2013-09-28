@@ -86,6 +86,7 @@ struct _modbus {
     int error_recovery;
     struct timeval response_timeout;
     struct timeval byte_timeout;
+    modbus_callback_t callback[MODBUS_CALLBACK_MAX];
     const modbus_backend_t *backend;
     void *backend_data;
 };

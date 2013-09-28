@@ -107,6 +107,24 @@ static void _sleep_response_timeout(modbus_t *ctx)
 #endif
 }
 
+/* Assign a callback function pointer to context */
+int modbus_register_callback(modbus_t *ctx, modbus_callback_type_t cb_type, modbus_callback_t cb)
+{
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    /* prevent abuse */
+    if (cb_type >= MODBUS_CALLBACK_MAX) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    ctx->callback[cb_type] = cb;
+    return 0;
+}
+
 int modbus_flush(modbus_t *ctx)
 {
     int rc;
@@ -319,6 +337,10 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
         }
     }
 
+    if (ctx->callback[MODBUS_CALLBACK_COMPUTE_DATA_LENGTH]) {
+        ctx->callback[MODBUS_CALLBACK_COMPUTE_DATA_LENGTH](ctx, msg, msg_type, &length);
+    }
+
     length += ctx->backend->checksum_length;
 
     return length;
@@ -432,6 +454,7 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, modbus_msg_type_t msg_type)
             case _STEP_FUNCTION:
                 /* Function code position */
                 length_to_read = compute_meta_length_after_function(
+                    ctx,
                     msg[ctx->backend->header_length],
                     msg_type);
                 if (length_to_read != 0) {

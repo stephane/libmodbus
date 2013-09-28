@@ -231,6 +231,17 @@ typedef enum {
     MODBUS_MSG_CONFIRMATION
 } modbus_msg_type_t;
 
+typedef enum
+{
+    MODBUS_CALLBACK_COMPUTE_META_LENGTH,
+    MODBUS_CALLBACK_COMPUTE_DATA_LENGTH,
+    MODBUS_CALLBACK_MAX
+} modbus_callback_type_t;
+
+typedef int (*modbus_callback_t)(modbus_t *ctx, ...);
+
+MODBUS_API int modbus_register_callback(modbus_t *ctx, modbus_callback_type_t cb_type, modbus_callback_t cb);
+
 /**
  * UTILS FUNCTIONS
  **/
