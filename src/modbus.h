@@ -90,7 +90,8 @@ MODBUS_BEGIN_DECLS
  */
 #define MODBUS_MAX_READ_REGISTERS          125
 #define MODBUS_MAX_WRITE_REGISTERS         123
-#define MODBUS_MAX_RW_WRITE_REGISTERS      121
+#define MODBUS_MAX_WR_WRITE_REGISTERS      121
+#define MODBUS_MAX_WR_READ_REGISTERS       125
 
 /* Random number to avoid errno conflicts */
 #define MODBUS_ENOBASE 112345678

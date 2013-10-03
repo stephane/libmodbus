@@ -1,5 +1,5 @@
 /*
- * Copyright © 2008-2010 Stéphane Raimbault <stephane.raimbault@gmail.com>
+ * Copyright © 2008-2013 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -255,8 +255,8 @@ int main(int argc, char *argv[])
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
                                0, tab_rp_registers);
     printf("3/5 modbus_read_registers (0): ");
-    if (rc != 0) {
-        printf("FAILED (nb points %d)\n", rc);
+    if (rc != -1) {
+        printf("FAILED (nb_points %d)\n", rc);
         goto close;
     }
     printf("OK\n");
@@ -270,7 +270,8 @@ int main(int argc, char *argv[])
        into tab_rp_registers. So the read registers must set to 0, except the
        first one because there is an offset of 1 register on write. */
     rc = modbus_write_and_read_registers(ctx,
-                                         UT_REGISTERS_ADDRESS + 1, UT_REGISTERS_NB - 1,
+                                         UT_REGISTERS_ADDRESS + 1,
+                                         UT_REGISTERS_NB - 1,
                                          tab_rp_registers,
                                          UT_REGISTERS_ADDRESS,
                                          UT_REGISTERS_NB,
@@ -430,8 +431,8 @@ int main(int argc, char *argv[])
         goto close;
     }
 
-    rc = modbus_write_registers(ctx, UT_REGISTERS_ADDRESS + UT_REGISTERS_NB,
-                                UT_REGISTERS_NB, tab_rp_registers);
+    rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS + UT_REGISTERS_NB,
+                               UT_REGISTERS_NB, tab_rp_registers);
     printf("* modbus_write_registers: ");
     if (rc == -1 && errno == EMBXILADD) {
         printf("OK\n");
@@ -439,7 +440,6 @@ int main(int argc, char *argv[])
         printf("FAILED\n");
         goto close;
     }
-
 
     /** TOO MANY DATA **/
     printf("\nTEST TOO MANY DATA ERROR:\n");
@@ -535,7 +535,7 @@ int main(int argc, char *argv[])
          * indication for another slave is received, a confirmation must follow */
 
 
-        /* Send a pair of indication/confimration to the slave with a different
+        /* Send a pair of indication/confirmation to the slave with a different
          * slave ID to simulate a communication on a RS485 bus. At first, the
          * slave will see the indication message then the confirmation, and it must
          * ignore both. */
@@ -699,13 +699,23 @@ int main(int argc, char *argv[])
     }
 
     /** RAW REQUEST */
-    printf("\nTEST RAW REQUEST:\n");
+    printf("\nTEST RAW REQUESTS:\n");
     {
+        int j;
         const int RAW_REQ_LENGTH = 6;
-        uint8_t raw_req[] = { (use_backend == RTU) ? SERVER_ID : 0xFF,
-                              0x03, 0x00, 0x01, 0x0, 0x05 };
+        uint8_t raw_req[] = {
+            (use_backend == RTU) ? SERVER_ID : 0xFF,
+            0x03, 0x00, 0x01, 0x0, 0x05,
+        };
         int req_length;
         uint8_t rsp[MODBUS_TCP_MAX_ADU_LENGTH];
+        int tab_function[] = {0x01, 0x02, 0x03, 0x04};
+        int tab_nb_max[] = {
+            MODBUS_MAX_READ_BITS + 1,
+            MODBUS_MAX_READ_BITS + 1,
+            MODBUS_MAX_READ_REGISTERS + 1,
+            MODBUS_MAX_READ_REGISTERS + 1
+        };
 
         req_length = modbus_send_raw_request(ctx, raw_req,
                                              RAW_REQ_LENGTH * sizeof(uint8_t));
@@ -729,6 +739,44 @@ int main(int argc, char *argv[])
         } else {
             printf("FAILED (%d)\n", rc);
             goto close;
+        }
+
+        /* Try to crash server with raw requests to bypass checks of client. */
+
+        /* Address */
+        raw_req[2] = 0;
+        raw_req[3] = 0;
+
+        /* Try to read more values than a response could hold for all data
+         * types.
+         */
+        for (i=0; i<4; i++) {
+            raw_req[1] = tab_function[i];
+
+            for (j=0; j<2; j++) {
+                if (j == 0) {
+                    /* Try to read zero values on first iteration */
+                    raw_req[4] = 0x00;
+                    raw_req[5] = 0x00;
+                } else {
+                    /* Try to read max values + 1 on second iteration */
+                    raw_req[4] = (tab_nb_max[i] >> 8) & 0xFF;
+                    raw_req[5] = tab_nb_max[i] & 0xFF;
+                }
+
+                req_length = modbus_send_raw_request(ctx, raw_req,
+                                                     RAW_REQ_LENGTH * sizeof(uint8_t));
+                printf("* try an exploit on function %d: ", tab_function[i]);
+                rc  = modbus_receive_confirmation(ctx, rsp);
+                if (rc == 9 &&
+                    rsp[7] == (0x80 + tab_function[i]) &&
+                    rsp[8] == MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE) {
+                    printf("OK\n");
+                } else {
+                    printf("FAILED\n");
+                    goto close;
+                }
+            }
         }
     }
 

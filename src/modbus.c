@@ -706,7 +706,16 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
     case _FC_READ_COILS: {
         int nb = (req[offset + 3] << 8) + req[offset + 4];
 
-        if ((address + nb) > mb_mapping->nb_bits) {
+        if (nb < 1 || MODBUS_MAX_READ_BITS < nb) {
+            if (ctx->debug) {
+                fprintf(stderr,
+                        "Illegal nb of values %d in read_bits (max %d)\n",
+                        nb, MODBUS_MAX_READ_BITS);
+            }
+            rsp_length = response_exception(
+                ctx, &sft,
+                MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp);
+        } else if ((address + nb) > mb_mapping->nb_bits) {
             if (ctx->debug) {
                 fprintf(stderr, "Illegal data address %0X in read_bits\n",
                         address + nb);
@@ -728,7 +737,16 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
          * function) */
         int nb = (req[offset + 3] << 8) + req[offset + 4];
 
-        if ((address + nb) > mb_mapping->nb_input_bits) {
+        if (nb < 1 || MODBUS_MAX_READ_BITS < nb) {
+            if (ctx->debug) {
+                fprintf(stderr,
+                        "Illegal nb of values %d in read_input_bits (max %d)\n",
+                        nb, MODBUS_MAX_READ_BITS);
+            }
+            rsp_length = response_exception(
+                ctx, &sft,
+                MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp);
+        } else if ((address + nb) > mb_mapping->nb_input_bits) {
             if (ctx->debug) {
                 fprintf(stderr, "Illegal data address %0X in read_input_bits\n",
                         address + nb);
@@ -748,7 +766,16 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
     case _FC_READ_HOLDING_REGISTERS: {
         int nb = (req[offset + 3] << 8) + req[offset + 4];
 
-        if ((address + nb) > mb_mapping->nb_registers) {
+        if (nb < 1 || MODBUS_MAX_READ_REGISTERS < nb) {
+            if (ctx->debug) {
+                fprintf(stderr,
+                        "Illegal nb of values %d in read_holding_registers (max %d)\n",
+                        nb, MODBUS_MAX_READ_REGISTERS);
+            }
+            rsp_length = response_exception(
+                ctx, &sft,
+                MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp);
+        } else if ((address + nb) > mb_mapping->nb_registers) {
             if (ctx->debug) {
                 fprintf(stderr, "Illegal data address %0X in read_registers\n",
                         address + nb);
@@ -773,7 +800,16 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
          * function) */
         int nb = (req[offset + 3] << 8) + req[offset + 4];
 
-        if ((address + nb) > mb_mapping->nb_input_registers) {
+        if (nb < 1 || MODBUS_MAX_READ_REGISTERS < nb) {
+            if (ctx->debug) {
+                fprintf(stderr,
+                        "Illegal number of values %d in read_input_registers (max %d)\n",
+                        nb, MODBUS_MAX_READ_REGISTERS);
+            }
+            rsp_length = response_exception(
+                ctx, &sft,
+                MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp);
+        } else if ((address + nb) > mb_mapping->nb_input_registers) {
             if (ctx->debug) {
                 fprintf(stderr, "Illegal data address %0X in read_input_registers\n",
                         address + nb);
@@ -796,7 +832,8 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
     case _FC_WRITE_SINGLE_COIL:
         if (address >= mb_mapping->nb_bits) {
             if (ctx->debug) {
-                fprintf(stderr, "Illegal data address %0X in write_bit\n",
+                fprintf(stderr,
+                        "Illegal data address %0X in write_bit\n",
                         address);
             }
             rsp_length = response_exception(
@@ -934,9 +971,22 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         int nb = (req[offset + 3] << 8) + req[offset + 4];
         uint16_t address_write = (req[offset + 5] << 8) + req[offset + 6];
         int nb_write = (req[offset + 7] << 8) + req[offset + 8];
+        int nb_write_bytes = req[offset + 9];
 
-        if ((address + nb) > mb_mapping->nb_registers ||
-            (address_write + nb_write) > mb_mapping->nb_registers) {
+        if (nb_write < 1 || MODBUS_MAX_WR_WRITE_REGISTERS < nb_write ||
+            nb < 1 || MODBUS_MAX_WR_READ_REGISTERS < nb ||
+            nb_write_bytes != nb_write * 2) {
+            if (ctx->debug) {
+                fprintf(stderr,
+                        "Illegal nb of values (W%d, R%d) in write_and_read_registers (max W%d, R%d)\n",
+                        nb_write, nb,
+                        MODBUS_MAX_WR_WRITE_REGISTERS, MODBUS_MAX_WR_READ_REGISTERS);
+            }
+            rsp_length = response_exception(
+                ctx, &sft,
+                MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp);
+        } else if ((address + nb) > mb_mapping->nb_registers ||
+                   (address_write + nb_write) > mb_mapping->nb_registers) {
             if (ctx->debug) {
                 fprintf(stderr,
                         "Illegal data read address %0X or write address %0X write_and_read_registers\n",
@@ -1420,21 +1470,21 @@ int modbus_write_and_read_registers(modbus_t *ctx,
         return -1;
     }
 
-    if (write_nb > MODBUS_MAX_RW_WRITE_REGISTERS) {
+    if (write_nb > MODBUS_MAX_WR_WRITE_REGISTERS) {
         if (ctx->debug) {
             fprintf(stderr,
                     "ERROR Too many registers to write (%d > %d)\n",
-                    write_nb, MODBUS_MAX_RW_WRITE_REGISTERS);
+                    write_nb, MODBUS_MAX_WR_WRITE_REGISTERS);
         }
         errno = EMBMDATA;
         return -1;
     }
 
-    if (read_nb > MODBUS_MAX_READ_REGISTERS) {
+    if (read_nb > MODBUS_MAX_WR_READ_REGISTERS) {
         if (ctx->debug) {
             fprintf(stderr,
                     "ERROR Too many registers requested (%d > %d)\n",
-                    read_nb, MODBUS_MAX_READ_REGISTERS);
+                    read_nb, MODBUS_MAX_WR_READ_REGISTERS);
         }
         errno = EMBMDATA;
         return -1;
