@@ -30,6 +30,8 @@ enum {
     RTU
 };
 
+int test_raw_request(modbus_t *, int);
+
 int main(int argc, char *argv[])
 {
     uint8_t *tab_rp_bits;
@@ -699,85 +701,8 @@ int main(int argc, char *argv[])
     }
 
     /** RAW REQUEST */
-    printf("\nTEST RAW REQUESTS:\n");
-    {
-        int j;
-        const int RAW_REQ_LENGTH = 6;
-        uint8_t raw_req[] = {
-            (use_backend == RTU) ? SERVER_ID : 0xFF,
-            0x03, 0x00, 0x01, 0x0, 0x05,
-        };
-        int req_length;
-        uint8_t rsp[MODBUS_TCP_MAX_ADU_LENGTH];
-        int tab_function[] = {0x01, 0x02, 0x03, 0x04};
-        int tab_nb_max[] = {
-            MODBUS_MAX_READ_BITS + 1,
-            MODBUS_MAX_READ_BITS + 1,
-            MODBUS_MAX_READ_REGISTERS + 1,
-            MODBUS_MAX_READ_REGISTERS + 1
-        };
-
-        req_length = modbus_send_raw_request(ctx, raw_req,
-                                             RAW_REQ_LENGTH * sizeof(uint8_t));
-
-        printf("* modbus_send_raw_request: ");
-        if ((use_backend == RTU && req_length == (RAW_REQ_LENGTH + 2)) ||
-            ((use_backend == TCP || use_backend == TCP_PI) &&
-             req_length == (RAW_REQ_LENGTH + 6))) {
-            printf("OK\n");
-        } else {
-            printf("FAILED (%d)\n", req_length);
-            goto close;
-        }
-
-        printf("* modbus_receive_confirmation: ");
-        rc  = modbus_receive_confirmation(ctx, rsp);
-        if ((use_backend == RTU && rc == 15) ||
-            ((use_backend == TCP || use_backend == TCP_PI) &&
-             rc == 19)) {
-            printf("OK\n");
-        } else {
-            printf("FAILED (%d)\n", rc);
-            goto close;
-        }
-
-        /* Try to crash server with raw requests to bypass checks of client. */
-
-        /* Address */
-        raw_req[2] = 0;
-        raw_req[3] = 0;
-
-        /* Try to read more values than a response could hold for all data
-         * types.
-         */
-        for (i=0; i<4; i++) {
-            raw_req[1] = tab_function[i];
-
-            for (j=0; j<2; j++) {
-                if (j == 0) {
-                    /* Try to read zero values on first iteration */
-                    raw_req[4] = 0x00;
-                    raw_req[5] = 0x00;
-                } else {
-                    /* Try to read max values + 1 on second iteration */
-                    raw_req[4] = (tab_nb_max[i] >> 8) & 0xFF;
-                    raw_req[5] = tab_nb_max[i] & 0xFF;
-                }
-
-                req_length = modbus_send_raw_request(ctx, raw_req,
-                                                     RAW_REQ_LENGTH * sizeof(uint8_t));
-                printf("* try an exploit on function %d: ", tab_function[i]);
-                rc  = modbus_receive_confirmation(ctx, rsp);
-                if (rc == 9 &&
-                    rsp[7] == (0x80 + tab_function[i]) &&
-                    rsp[8] == MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE) {
-                    printf("OK\n");
-                } else {
-                    printf("FAILED\n");
-                    goto close;
-                }
-            }
-        }
+    if (test_raw_request(ctx, use_backend) == -1) {
+        goto close;
     }
 
     printf("\nALL TESTS PASS WITH SUCCESS.\n");
@@ -791,5 +716,90 @@ close:
     modbus_close(ctx);
     modbus_free(ctx);
 
+    return 0;
+}
+
+int test_raw_request(modbus_t *ctx, int use_backend)
+{
+    int rc;
+    int i, j;
+    const int RAW_REQ_LENGTH = 6;
+    uint8_t raw_req[] = {
+        (use_backend == RTU) ? SERVER_ID : 0xFF,
+        0x03, 0x00, 0x01, 0x0, 0x05,
+    };
+    int req_length;
+    uint8_t rsp[MODBUS_TCP_MAX_ADU_LENGTH];
+    int tab_function[] = {0x01, 0x02, 0x03, 0x04};
+    int tab_nb_max[] = {
+        MODBUS_MAX_READ_BITS + 1,
+        MODBUS_MAX_READ_BITS + 1,
+        MODBUS_MAX_READ_REGISTERS + 1,
+        MODBUS_MAX_READ_REGISTERS + 1
+    };
+
+    printf("\nTEST RAW REQUESTS:\n");
+
+    req_length = modbus_send_raw_request(ctx, raw_req,
+                                         RAW_REQ_LENGTH * sizeof(uint8_t));
+
+    printf("* modbus_send_raw_request: ");
+    if ((use_backend == RTU && req_length == (RAW_REQ_LENGTH + 2)) ||
+        ((use_backend == TCP || use_backend == TCP_PI) &&
+         req_length == (RAW_REQ_LENGTH + 6))) {
+        printf("OK\n");
+    } else {
+        printf("FAILED (%d)\n", req_length);
+        return -1;
+    }
+
+    printf("* modbus_receive_confirmation: ");
+    rc  = modbus_receive_confirmation(ctx, rsp);
+    if ((use_backend == RTU && rc == 15) ||
+        ((use_backend == TCP || use_backend == TCP_PI) &&
+         rc == 19)) {
+        printf("OK\n");
+    } else {
+        printf("FAILED (%d)\n", rc);
+        return -1;
+    }
+
+    /* Try to crash server with raw requests to bypass checks of client. */
+
+    /* Address */
+    raw_req[2] = 0;
+    raw_req[3] = 0;
+
+    /* Try to read more values than a response could hold for all data
+     * types.
+     */
+    for (i=0; i<4; i++) {
+        raw_req[1] = tab_function[i];
+
+        for (j=0; j<2; j++) {
+            if (j == 0) {
+                /* Try to read zero values on first iteration */
+                raw_req[4] = 0x00;
+                raw_req[5] = 0x00;
+            } else {
+                /* Try to read max values + 1 on second iteration */
+                raw_req[4] = (tab_nb_max[i] >> 8) & 0xFF;
+                raw_req[5] = tab_nb_max[i] & 0xFF;
+            }
+
+            req_length = modbus_send_raw_request(ctx, raw_req,
+                                                 RAW_REQ_LENGTH * sizeof(uint8_t));
+            printf("* try an exploit on function %d: ", tab_function[i]);
+            rc  = modbus_receive_confirmation(ctx, rsp);
+            if (rc == 9 &&
+                rsp[7] == (0x80 + tab_function[i]) &&
+                rsp[8] == MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE) {
+                printf("OK\n");
+            } else {
+                printf("FAILED\n");
+                return -1;
+            }
+        }
+    }
     return 0;
 }
