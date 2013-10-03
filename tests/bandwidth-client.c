@@ -179,9 +179,9 @@ int main(int argc, char *argv[])
     printf("* %d KiB/s\n", rate);
     printf("\n\n");
 
-    printf("READ AND WRITE REGISTERS\n\n");
+    printf("WRITE AND READ REGISTERS\n\n");
 
-    nb_points = MODBUS_MAX_RW_WRITE_REGISTERS;
+    nb_points = MODBUS_MAX_WR_WRITE_REGISTERS;
     start = gettime_ms();
     for (i=0; i<n_loop; i++) {
         rc = modbus_write_and_read_registers(ctx,
