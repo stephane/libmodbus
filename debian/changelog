@@ -1,3 +1,9 @@
+libmodbus (3.0.5-1) unstable; urgency=high
+
+  * New upstream release
+
+ -- Stéphane Raimbault <stephane.raimbault@gmail.com>  Sun, 06 Oct 2013 23:29:57 +0200
+
 libmodbus (3.0.4-1) unstable; urgency=low
 
   * New upstream release
