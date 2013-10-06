@@ -256,7 +256,7 @@ int main(int argc, char *argv[])
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
                                0, tab_rp_registers);
     printf("3/5 modbus_read_registers (0): ");
-    if (rc != 0) {
+    if (rc != -1 && errno == EMBMDATA) {
         printf("FAILED (nb points %d)\n", rc);
         goto close;
     }
