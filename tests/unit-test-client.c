@@ -725,9 +725,31 @@ int test_raw_request(modbus_t *ctx, int use_backend)
     int i, j;
     const int RAW_REQ_LENGTH = 6;
     uint8_t raw_req[] = {
+        /* slave */
         (use_backend == RTU) ? SERVER_ID : 0xFF,
+        /* function, addr 1, 5 values */
         0x03, 0x00, 0x01, 0x0, 0x05,
     };
+    /* Write and read registers request */
+    uint8_t raw_rw_req[] = {
+        /* slave */
+        (use_backend == RTU) ? SERVER_ID : 0xFF,
+        /* function, addr to read, nb to read */
+        0x17,
+        /* Read */
+        0, 0,
+        (MODBUS_MAX_WR_READ_REGISTERS + 1) >> 8,
+        (MODBUS_MAX_WR_READ_REGISTERS + 1) & 0xFF,
+        /* Write */
+        0, 0,
+        0, 1,
+        /* Write byte count */
+        1 * 2,
+        /* One data to write... */
+        0x12, 0x34
+    };
+    /* See issue #143, test with MAX_WR_WRITE_REGISTERS */
+
     int req_length;
     uint8_t rsp[MODBUS_TCP_MAX_ADU_LENGTH];
     int tab_function[] = {0x01, 0x02, 0x03, 0x04};
@@ -789,7 +811,11 @@ int test_raw_request(modbus_t *ctx, int use_backend)
 
             req_length = modbus_send_raw_request(ctx, raw_req,
                                                  RAW_REQ_LENGTH * sizeof(uint8_t));
-            printf("* try an exploit on function %d: ", tab_function[i]);
+            if (j == 0) {
+                printf("* try to read 0 values with function %d: ", tab_function[i]);
+            } else {
+                printf("* try an exploit with function %d: ", tab_function[i]);
+            }
             rc  = modbus_receive_confirmation(ctx, rsp);
             if (rc == 9 &&
                 rsp[7] == (0x80 + tab_function[i]) &&
@@ -801,5 +827,36 @@ int test_raw_request(modbus_t *ctx, int use_backend)
             }
         }
     }
+
+    /* Modbus write and read multiple registers */
+    i = 0;
+    tab_function[i] = 0x17;
+    for (j=0; j<2; j++) {
+        if (j == 0) {
+            /* Try to read zero values on first iteration */
+            raw_rw_req[4] = 0x00;
+            raw_rw_req[5] = 0x00;
+        } else {
+            /* Try to read max values + 1 on second iteration */
+            raw_rw_req[4] = (MODBUS_MAX_WR_READ_REGISTERS + 1) >> 8;
+            raw_rw_req[5] = (MODBUS_MAX_WR_READ_REGISTERS + 1) & 0xFF;
+        }
+        req_length = modbus_send_raw_request(ctx, raw_rw_req, 13 * sizeof(uint8_t));
+        if (j == 0) {
+            printf("* try to read 0 values with function %d: ", tab_function[i]);
+        } else {
+            printf("* try an exploit with function %d: ", tab_function[i]);
+        }
+        rc = modbus_receive_confirmation(ctx, rsp);
+        if (rc == 9 &&
+            rsp[7] == (0x80 + tab_function[i]) &&
+            rsp[8] == MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE) {
+            printf("OK\n");
+        } else {
+            printf("FAILED\n");
+            return -1;
+        }
+    }
+
     return 0;
 }
