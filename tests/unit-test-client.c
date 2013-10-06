@@ -749,7 +749,6 @@ int test_raw_request(modbus_t *ctx, int use_backend)
         0x12, 0x34
     };
     /* See issue #143, test with MAX_WR_WRITE_REGISTERS */
-
     int req_length;
     uint8_t rsp[MODBUS_TCP_MAX_ADU_LENGTH];
     int tab_function[] = {0x01, 0x02, 0x03, 0x04};
@@ -759,16 +758,24 @@ int test_raw_request(modbus_t *ctx, int use_backend)
         MODBUS_MAX_READ_REGISTERS + 1,
         MODBUS_MAX_READ_REGISTERS + 1
     };
+    int length;
+    int offset;
+    const int EXCEPTION_RC = 2;
+
+    if (use_backend == RTU) {
+        length = 3;
+        offset = 1;
+    } else {
+        length = 7;
+        offset = 7;
+    }
 
     printf("\nTEST RAW REQUESTS:\n");
 
     req_length = modbus_send_raw_request(ctx, raw_req,
                                          RAW_REQ_LENGTH * sizeof(uint8_t));
-
     printf("* modbus_send_raw_request: ");
-    if ((use_backend == RTU && req_length == (RAW_REQ_LENGTH + 2)) ||
-        ((use_backend == TCP || use_backend == TCP_PI) &&
-         req_length == (RAW_REQ_LENGTH + 6))) {
+    if (req_length == (length + 5)) {
         printf("OK\n");
     } else {
         printf("FAILED (%d)\n", req_length);
@@ -777,9 +784,7 @@ int test_raw_request(modbus_t *ctx, int use_backend)
 
     printf("* modbus_receive_confirmation: ");
     rc  = modbus_receive_confirmation(ctx, rsp);
-    if ((use_backend == RTU && rc == 15) ||
-        ((use_backend == TCP || use_backend == TCP_PI) &&
-         rc == 19)) {
+    if (rc == (length + 12)) {
         printf("OK\n");
     } else {
         printf("FAILED (%d)\n", rc);
@@ -817,9 +822,9 @@ int test_raw_request(modbus_t *ctx, int use_backend)
                 printf("* try an exploit with function %d: ", tab_function[i]);
             }
             rc  = modbus_receive_confirmation(ctx, rsp);
-            if (rc == 9 &&
-                rsp[7] == (0x80 + tab_function[i]) &&
-                rsp[8] == MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE) {
+            if (rc == (length + EXCEPTION_RC) &&
+                rsp[offset] == (0x80 + tab_function[i]) &&
+                rsp[offset + 1] == MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE) {
                 printf("OK\n");
             } else {
                 printf("FAILED\n");
@@ -848,9 +853,9 @@ int test_raw_request(modbus_t *ctx, int use_backend)
             printf("* try an exploit with function %d: ", tab_function[i]);
         }
         rc = modbus_receive_confirmation(ctx, rsp);
-        if (rc == 9 &&
-            rsp[7] == (0x80 + tab_function[i]) &&
-            rsp[8] == MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE) {
+        if (rc == length + EXCEPTION_RC &&
+            rsp[offset] == (0x80 + tab_function[i]) &&
+            rsp[offset + 1] == MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE) {
             printf("OK\n");
         } else {
             printf("FAILED\n");
