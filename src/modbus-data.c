@@ -59,25 +59,25 @@ static inline uint32_t bswap_32(uint32_t x)
 
 /* Sets many bits from a single byte value (all 8 bits of the byte value are
    set) */
-void modbus_set_bits_from_byte(uint8_t *dest, int index, const uint8_t value)
+void modbus_set_bits_from_byte(uint8_t *dest, int idx, const uint8_t value)
 {
     int i;
 
     for (i=0; i < 8; i++) {
-        dest[index+i] = (value & (1 << i)) ? 1 : 0;
+        dest[idx+i] = (value & (1 << i)) ? 1 : 0;
     }
 }
 
-/* Sets many bits from a table of bytes (only the bits between index and
-   index + nb_bits are set) */
-void modbus_set_bits_from_bytes(uint8_t *dest, int index, unsigned int nb_bits,
+/* Sets many bits from a table of bytes (only the bits between idx and
+   idx + nb_bits are set) */
+void modbus_set_bits_from_bytes(uint8_t *dest, int idx, unsigned int nb_bits,
                                 const uint8_t *tab_byte)
 {
     unsigned int i;
     int shift = 0;
 
-    for (i = index; i < index + nb_bits; i++) {
-        dest[i] = tab_byte[(i - index) / 8] & (1 << shift) ? 1 : 0;
+    for (i = idx; i < idx + nb_bits; i++) {
+        dest[i] = tab_byte[(i - idx) / 8] & (1 << shift) ? 1 : 0;
         /* gcc doesn't like: shift = (++shift) % 8; */
         shift++;
         shift %= 8;
@@ -86,7 +86,7 @@ void modbus_set_bits_from_bytes(uint8_t *dest, int index, unsigned int nb_bits,
 
 /* Gets the byte value from many bits.
    To obtain a full byte, set nb_bits to 8. */
-uint8_t modbus_get_byte_from_bits(const uint8_t *src, int index,
+uint8_t modbus_get_byte_from_bits(const uint8_t *src, int idx,
                                   unsigned int nb_bits)
 {
     unsigned int i;
@@ -99,7 +99,7 @@ uint8_t modbus_get_byte_from_bits(const uint8_t *src, int index,
     }
 
     for (i=0; i < nb_bits; i++) {
-        value |= (src[index+i] << i);
+        value |= (src[idx+i] << i);
     }
 
     return value;
