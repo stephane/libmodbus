@@ -4,7 +4,7 @@ modbus_tcp_listen(3)
 
 NAME
 ----
-modbus_tcp_listen - create and listen a TCP Modbus socket
+modbus_tcp_listen - create and listen a TCP Modbus socket (IPv4)
 
 
 SYNOPSIS
@@ -26,19 +26,17 @@ successful. Otherwise it shall return -1 and set errno.
 
 EXAMPLE
 -------
-For a detailed example, see source file bandwith-server-many-up.c provided in
-tests directory.
+For detailed examples, see source files in tests directory:
+
+- unit-test-server.c, simple but handle only one connection
+- bandwith-server-many-up.c, handles several connections at once
+
 
 [source,c]
 -------------------
 ...
 
 ctx = modbus_new_tcp("127.0.0.1", 502);
-if (modbus_connect(ctx) == -1) {
-    fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
-    modbus_free(ctx);
-    return -1;
-}
 
 /* Handle until 10 established connections */
 server_socket = modbus_tcp_listen(ctx, 10);
