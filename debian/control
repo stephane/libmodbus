@@ -3,7 +3,7 @@ Priority: extra
 Maintainer: Ivo De Decker <Ivo.DeDecker@UGent.be>
 Standards-Version: 3.9.1
 Section: libs
-Build-Depends: debhelper (>= 6), cdbs (>= 0.4.43), autotools-dev, libtool, asciidoc, xmlto
+Build-Depends: debhelper (>= 6), cdbs (>= 0.4.43), autotools-dev, libtool, asciidoc, xmlto, autoconf2.13, automake
 Homepage: http://libmodbus.org/
 
 Package: libmodbus5
