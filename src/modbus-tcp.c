@@ -621,9 +621,6 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
     return new_s;
 }
 
-/* On success, the function return a non-negative integer that is a descriptor
-for the accepted socket. On error, socket is set to -1, -1 is returned and errno
-is set appropriately. */
 int modbus_tcp_accept(modbus_t *ctx, int *s)
 {
     struct sockaddr_in addr;
