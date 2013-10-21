@@ -59,7 +59,6 @@ int main(int argc, char *argv[])
 
     if (use_backend == TCP) {
         ctx = modbus_new_tcp("127.0.0.1", 1502);
-        modbus_set_debug(ctx, TRUE);
         s = modbus_tcp_listen(ctx, 1);
         modbus_tcp_accept(ctx, &s);
 
@@ -69,7 +68,8 @@ int main(int argc, char *argv[])
         modbus_connect(ctx);
     }
 
-    mb_mapping = modbus_mapping_new(1000, 1000, 1000, 1000);
+    mb_mapping = modbus_mapping_new(MODBUS_MAX_READ_BITS, 0,
+                                    MODBUS_MAX_READ_REGISTERS, 0);
     if (mb_mapping == NULL) {
         fprintf(stderr, "Failed to allocate the mapping: %s\n",
                 modbus_strerror(errno));
