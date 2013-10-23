@@ -21,6 +21,10 @@ message, the header or CRC of the selected backend, so 'raw_req' must start and
 contain at least a slave/unit identifier and a function code. This function can
 be used to send request not handled by the library.
 
+The public header of libmodbus provides a list of supported Modbus functions
+codes, prefixed by `MODBUS_FC_` (eg. MODBUS_FC_READ_HOLDING_REGISTERS), to help
+build of raw requests.
+
 
 RETURN VALUE
 ------------
@@ -35,7 +39,7 @@ EXAMPLE
 -------------------
 modbus_t *ctx;
 /* Read 5 holding registers from address 1 */
-uint8_t raw_req[] = { 0xFF, 0x03, 0x00, 0x01, 0x0, 0x05 };
+uint8_t raw_req[] = { 0xFF, MODBUS_FC_READ_HOLDING_REGISTERS, 0x00, 0x01, 0x0, 0x05 };
 int req_length;
 uint8_t rsp[MODBUS_TCP_MAX_ADU_LENGTH];
 

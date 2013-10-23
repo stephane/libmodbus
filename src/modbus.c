@@ -141,27 +141,27 @@ static unsigned int compute_response_length_from_request(modbus_t *ctx, uint8_t 
     const int offset = ctx->backend->header_length;
 
     switch (req[offset]) {
-    case _FC_READ_COILS:
-    case _FC_READ_DISCRETE_INPUTS: {
+    case MODBUS_FC_READ_COILS:
+    case MODBUS_FC_READ_DISCRETE_INPUTS: {
         /* Header + nb values (code from write_bits) */
         int nb = (req[offset + 3] << 8) | req[offset + 4];
         length = 2 + (nb / 8) + ((nb % 8) ? 1 : 0);
     }
         break;
-    case _FC_WRITE_AND_READ_REGISTERS:
-    case _FC_READ_HOLDING_REGISTERS:
-    case _FC_READ_INPUT_REGISTERS:
+    case MODBUS_FC_WRITE_AND_READ_REGISTERS:
+    case MODBUS_FC_READ_HOLDING_REGISTERS:
+    case MODBUS_FC_READ_INPUT_REGISTERS:
         /* Header + 2 * nb values */
         length = 2 + 2 * (req[offset + 3] << 8 | req[offset + 4]);
         break;
-    case _FC_READ_EXCEPTION_STATUS:
+    case MODBUS_FC_READ_EXCEPTION_STATUS:
         length = 3;
         break;
-    case _FC_REPORT_SLAVE_ID:
+    case MODBUS_FC_REPORT_SLAVE_ID:
         /* The response is device specific (the header provides the
            length) */
         return MSG_LENGTH_UNDEFINED;
-    case _FC_MASK_WRITE_REGISTER:
+    case MODBUS_FC_MASK_WRITE_REGISTER:
         length = 7;
         break;
     default:
@@ -262,29 +262,29 @@ static uint8_t compute_meta_length_after_function(int function,
     int length;
 
     if (msg_type == MSG_INDICATION) {
-        if (function <= _FC_WRITE_SINGLE_REGISTER) {
+        if (function <= MODBUS_FC_WRITE_SINGLE_REGISTER) {
             length = 4;
-        } else if (function == _FC_WRITE_MULTIPLE_COILS ||
-                   function == _FC_WRITE_MULTIPLE_REGISTERS) {
+        } else if (function == MODBUS_FC_WRITE_MULTIPLE_COILS ||
+                   function == MODBUS_FC_WRITE_MULTIPLE_REGISTERS) {
             length = 5;
-        } else if (function == _FC_MASK_WRITE_REGISTER) {
+        } else if (function == MODBUS_FC_MASK_WRITE_REGISTER) {
             length = 6;
-        } else if (function == _FC_WRITE_AND_READ_REGISTERS) {
+        } else if (function == MODBUS_FC_WRITE_AND_READ_REGISTERS) {
             length = 9;
         } else {
-            /* _FC_READ_EXCEPTION_STATUS, _FC_REPORT_SLAVE_ID */
+            /* MODBUS_FC_READ_EXCEPTION_STATUS, MODBUS_FC_REPORT_SLAVE_ID */
             length = 0;
         }
     } else {
         /* MSG_CONFIRMATION */
         switch (function) {
-        case _FC_WRITE_SINGLE_COIL:
-        case _FC_WRITE_SINGLE_REGISTER:
-        case _FC_WRITE_MULTIPLE_COILS:
-        case _FC_WRITE_MULTIPLE_REGISTERS:
+        case MODBUS_FC_WRITE_SINGLE_COIL:
+        case MODBUS_FC_WRITE_SINGLE_REGISTER:
+        case MODBUS_FC_WRITE_MULTIPLE_COILS:
+        case MODBUS_FC_WRITE_MULTIPLE_REGISTERS:
             length = 4;
             break;
-        case _FC_MASK_WRITE_REGISTER:
+        case MODBUS_FC_MASK_WRITE_REGISTER:
             length = 6;
             break;
         default:
@@ -304,11 +304,11 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
 
     if (msg_type == MSG_INDICATION) {
         switch (function) {
-        case _FC_WRITE_MULTIPLE_COILS:
-        case _FC_WRITE_MULTIPLE_REGISTERS:
+        case MODBUS_FC_WRITE_MULTIPLE_COILS:
+        case MODBUS_FC_WRITE_MULTIPLE_REGISTERS:
             length = msg[ctx->backend->header_length + 5];
             break;
-        case _FC_WRITE_AND_READ_REGISTERS:
+        case MODBUS_FC_WRITE_AND_READ_REGISTERS:
             length = msg[ctx->backend->header_length + 9];
             break;
         default:
@@ -316,9 +316,9 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
         }
     } else {
         /* MSG_CONFIRMATION */
-        if (function <= _FC_READ_INPUT_REGISTERS ||
-            function == _FC_REPORT_SLAVE_ID ||
-            function == _FC_WRITE_AND_READ_REGISTERS) {
+        if (function <= MODBUS_FC_READ_INPUT_REGISTERS ||
+            function == MODBUS_FC_REPORT_SLAVE_ID ||
+            function == MODBUS_FC_WRITE_AND_READ_REGISTERS) {
             length = msg[ctx->backend->header_length + 1];
         } else {
             length = 0;
@@ -570,8 +570,8 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
 
         /* Check the number of values is corresponding to the request */
         switch (function) {
-        case _FC_READ_COILS:
-        case _FC_READ_DISCRETE_INPUTS:
+        case MODBUS_FC_READ_COILS:
+        case MODBUS_FC_READ_DISCRETE_INPUTS:
             /* Read functions, 8 values in a byte (nb
              * of values in the request and byte count in
              * the response. */
@@ -579,20 +579,20 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
             req_nb_value = (req_nb_value / 8) + ((req_nb_value % 8) ? 1 : 0);
             rsp_nb_value = rsp[offset + 1];
             break;
-        case _FC_WRITE_AND_READ_REGISTERS:
-        case _FC_READ_HOLDING_REGISTERS:
-        case _FC_READ_INPUT_REGISTERS:
+        case MODBUS_FC_WRITE_AND_READ_REGISTERS:
+        case MODBUS_FC_READ_HOLDING_REGISTERS:
+        case MODBUS_FC_READ_INPUT_REGISTERS:
             /* Read functions 1 value = 2 bytes */
             req_nb_value = (req[offset + 3] << 8) + req[offset + 4];
             rsp_nb_value = (rsp[offset + 1] / 2);
             break;
-        case _FC_WRITE_MULTIPLE_COILS:
-        case _FC_WRITE_MULTIPLE_REGISTERS:
+        case MODBUS_FC_WRITE_MULTIPLE_COILS:
+        case MODBUS_FC_WRITE_MULTIPLE_REGISTERS:
             /* N Write functions */
             req_nb_value = (req[offset + 3] << 8) + req[offset + 4];
             rsp_nb_value = (rsp[offset + 3] << 8) | rsp[offset + 4];
             break;
-        case _FC_REPORT_SLAVE_ID:
+        case MODBUS_FC_REPORT_SLAVE_ID:
             /* Report slave ID (bytes received) */
             req_nb_value = rsp_nb_value = rsp[offset + 1];
             break;
@@ -703,7 +703,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
     sft.t_id = ctx->backend->prepare_response_tid(req, &req_length);
 
     switch (function) {
-    case _FC_READ_COILS: {
+    case MODBUS_FC_READ_COILS: {
         int nb = (req[offset + 3] << 8) + req[offset + 4];
 
         if (nb < 1 || MODBUS_MAX_READ_BITS < nb) {
@@ -732,7 +732,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         }
     }
         break;
-    case _FC_READ_DISCRETE_INPUTS: {
+    case MODBUS_FC_READ_DISCRETE_INPUTS: {
         /* Similar to coil status (but too many arguments to use a
          * function) */
         int nb = (req[offset + 3] << 8) + req[offset + 4];
@@ -763,7 +763,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         }
     }
         break;
-    case _FC_READ_HOLDING_REGISTERS: {
+    case MODBUS_FC_READ_HOLDING_REGISTERS: {
         int nb = (req[offset + 3] << 8) + req[offset + 4];
 
         if (nb < 1 || MODBUS_MAX_READ_REGISTERS < nb) {
@@ -795,7 +795,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         }
     }
         break;
-    case _FC_READ_INPUT_REGISTERS: {
+    case MODBUS_FC_READ_INPUT_REGISTERS: {
         /* Similar to holding registers (but too many arguments to use a
          * function) */
         int nb = (req[offset + 3] << 8) + req[offset + 4];
@@ -829,7 +829,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         }
     }
         break;
-    case _FC_WRITE_SINGLE_COIL:
+    case MODBUS_FC_WRITE_SINGLE_COIL:
         if (address >= mb_mapping->nb_bits) {
             if (ctx->debug) {
                 fprintf(stderr,
@@ -858,7 +858,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
             }
         }
         break;
-    case _FC_WRITE_SINGLE_REGISTER:
+    case MODBUS_FC_WRITE_SINGLE_REGISTER:
         if (address >= mb_mapping->nb_registers) {
             if (ctx->debug) {
                 fprintf(stderr, "Illegal data address %0X in write_register\n",
@@ -875,7 +875,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
             rsp_length = req_length;
         }
         break;
-    case _FC_WRITE_MULTIPLE_COILS: {
+    case MODBUS_FC_WRITE_MULTIPLE_COILS: {
         int nb = (req[offset + 3] << 8) + req[offset + 4];
 
         if ((address + nb) > mb_mapping->nb_bits) {
@@ -897,7 +897,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         }
     }
         break;
-    case _FC_WRITE_MULTIPLE_REGISTERS: {
+    case MODBUS_FC_WRITE_MULTIPLE_REGISTERS: {
         int nb = (req[offset + 3] << 8) + req[offset + 4];
 
         if ((address + nb) > mb_mapping->nb_registers) {
@@ -923,7 +923,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         }
     }
         break;
-    case _FC_REPORT_SLAVE_ID: {
+    case MODBUS_FC_REPORT_SLAVE_ID: {
         int str_len;
         int byte_count_pos;
 
@@ -940,14 +940,14 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         rsp[byte_count_pos] = rsp_length - byte_count_pos - 1;
     }
         break;
-    case _FC_READ_EXCEPTION_STATUS:
+    case MODBUS_FC_READ_EXCEPTION_STATUS:
         if (ctx->debug) {
             fprintf(stderr, "FIXME Not implemented\n");
         }
         errno = ENOPROTOOPT;
         return -1;
         break;
-    case _FC_MASK_WRITE_REGISTER:
+    case MODBUS_FC_MASK_WRITE_REGISTER:
         if (address >= mb_mapping->nb_registers) {
             if (ctx->debug) {
                 fprintf(stderr, "Illegal data address %0X in write_register\n",
@@ -967,7 +967,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
             rsp_length = req_length;
         }
         break;
-    case _FC_WRITE_AND_READ_REGISTERS: {
+    case MODBUS_FC_WRITE_AND_READ_REGISTERS: {
         int nb = (req[offset + 3] << 8) + req[offset + 4];
         uint16_t address_write = (req[offset + 5] << 8) + req[offset + 6];
         int nb_write = (req[offset + 7] << 8) + req[offset + 8];
@@ -1121,7 +1121,7 @@ int modbus_read_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest)
         return -1;
     }
 
-    rc = read_io_status(ctx, _FC_READ_COILS, addr, nb, dest);
+    rc = read_io_status(ctx, MODBUS_FC_READ_COILS, addr, nb, dest);
 
     if (rc == -1)
         return -1;
@@ -1150,7 +1150,7 @@ int modbus_read_input_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest)
         return -1;
     }
 
-    rc = read_io_status(ctx, _FC_READ_DISCRETE_INPUTS, addr, nb, dest);
+    rc = read_io_status(ctx, MODBUS_FC_READ_DISCRETE_INPUTS, addr, nb, dest);
 
     if (rc == -1)
         return -1;
@@ -1225,7 +1225,7 @@ int modbus_read_registers(modbus_t *ctx, int addr, int nb, uint16_t *dest)
         return -1;
     }
 
-    status = read_registers(ctx, _FC_READ_HOLDING_REGISTERS,
+    status = read_registers(ctx, MODBUS_FC_READ_HOLDING_REGISTERS,
                             addr, nb, dest);
     return status;
 }
@@ -1249,7 +1249,7 @@ int modbus_read_input_registers(modbus_t *ctx, int addr, int nb,
         return -1;
     }
 
-    status = read_registers(ctx, _FC_READ_INPUT_REGISTERS,
+    status = read_registers(ctx, MODBUS_FC_READ_INPUT_REGISTERS,
                             addr, nb, dest);
 
     return status;
@@ -1293,7 +1293,7 @@ int modbus_write_bit(modbus_t *ctx, int addr, int status)
         return -1;
     }
 
-    return write_single(ctx, _FC_WRITE_SINGLE_COIL, addr,
+    return write_single(ctx, MODBUS_FC_WRITE_SINGLE_COIL, addr,
                         status ? 0xFF00 : 0);
 }
 
@@ -1305,7 +1305,7 @@ int modbus_write_register(modbus_t *ctx, int addr, int value)
         return -1;
     }
 
-    return write_single(ctx, _FC_WRITE_SINGLE_REGISTER, addr, value);
+    return write_single(ctx, MODBUS_FC_WRITE_SINGLE_REGISTER, addr, value);
 }
 
 /* Write the bits of the array in the remote device */
@@ -1334,7 +1334,7 @@ int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *src)
     }
 
     req_length = ctx->backend->build_request_basis(ctx,
-                                                   _FC_WRITE_MULTIPLE_COILS,
+                                                   MODBUS_FC_WRITE_MULTIPLE_COILS,
                                                    addr, nb, req);
     byte_count = (nb / 8) + ((nb % 8) ? 1 : 0);
     req[req_length++] = byte_count;
@@ -1396,7 +1396,7 @@ int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *src)
     }
 
     req_length = ctx->backend->build_request_basis(ctx,
-                                                   _FC_WRITE_MULTIPLE_REGISTERS,
+                                                   MODBUS_FC_WRITE_MULTIPLE_REGISTERS,
                                                    addr, nb, req);
     byte_count = nb * 2;
     req[req_length++] = byte_count;
@@ -1426,7 +1426,9 @@ int modbus_mask_write_register(modbus_t *ctx, int addr, uint16_t and_mask, uint1
     int req_length;
     uint8_t req[_MIN_REQ_LENGTH];
 
-    req_length = ctx->backend->build_request_basis(ctx, _FC_MASK_WRITE_REGISTER, addr, 0, req);
+    req_length = ctx->backend->build_request_basis(ctx,
+                                                   MODBUS_FC_MASK_WRITE_REGISTER,
+                                                   addr, 0, req);
 
     /* HACKISH, count is not used */
     req_length -=2;
@@ -1454,8 +1456,10 @@ int modbus_mask_write_register(modbus_t *ctx, int addr, uint16_t and_mask, uint1
 /* Write multiple registers from src array to remote device and read multiple
    registers from remote device to dest array. */
 int modbus_write_and_read_registers(modbus_t *ctx,
-                                    int write_addr, int write_nb, const uint16_t *src,
-                                    int read_addr, int read_nb, uint16_t *dest)
+                                    int write_addr, int write_nb,
+                                    const uint16_t *src,
+                                    int read_addr, int read_nb,
+                                    uint16_t *dest)
 
 {
     int rc;
@@ -1490,7 +1494,7 @@ int modbus_write_and_read_registers(modbus_t *ctx,
         return -1;
     }
     req_length = ctx->backend->build_request_basis(ctx,
-                                                   _FC_WRITE_AND_READ_REGISTERS,
+                                                   MODBUS_FC_WRITE_AND_READ_REGISTERS,
                                                    read_addr, read_nb, req);
 
     req[req_length++] = write_addr >> 8;
@@ -1541,7 +1545,7 @@ int modbus_report_slave_id(modbus_t *ctx, uint8_t *dest)
         return -1;
     }
 
-    req_length = ctx->backend->build_request_basis(ctx, _FC_REPORT_SLAVE_ID,
+    req_length = ctx->backend->build_request_basis(ctx, MODBUS_FC_REPORT_SLAVE_ID,
                                                    0, 0, req);
 
     /* HACKISH, addr and count are not used */
