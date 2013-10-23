@@ -728,14 +728,14 @@ int test_raw_request(modbus_t *ctx, int use_backend)
         /* slave */
         (use_backend == RTU) ? SERVER_ID : 0xFF,
         /* function, addr 1, 5 values */
-        0x03, 0x00, 0x01, 0x0, 0x05,
+        MODBUS_FC_READ_HOLDING_REGISTERS, 0x00, 0x01, 0x0, 0x05,
     };
     /* Write and read registers request */
     uint8_t raw_rw_req[] = {
         /* slave */
         (use_backend == RTU) ? SERVER_ID : 0xFF,
         /* function, addr to read, nb to read */
-        0x17,
+        MODBUS_FC_WRITE_AND_READ_REGISTERS,
         /* Read */
         0, 0,
         (MODBUS_MAX_WR_READ_REGISTERS + 1) >> 8,
@@ -751,7 +751,12 @@ int test_raw_request(modbus_t *ctx, int use_backend)
     /* See issue #143, test with MAX_WR_WRITE_REGISTERS */
     int req_length;
     uint8_t rsp[MODBUS_TCP_MAX_ADU_LENGTH];
-    int tab_function[] = {0x01, 0x02, 0x03, 0x04};
+    int tab_function[] = {
+        MODBUS_FC_READ_COILS,
+        MODBUS_FC_READ_DISCRETE_INPUTS,
+        MODBUS_FC_READ_HOLDING_REGISTERS,
+        MODBUS_FC_READ_INPUT_REGISTERS
+    };
     int tab_nb_max[] = {
         MODBUS_MAX_READ_BITS + 1,
         MODBUS_MAX_READ_BITS + 1,
@@ -835,7 +840,7 @@ int test_raw_request(modbus_t *ctx, int use_backend)
 
     /* Modbus write and read multiple registers */
     i = 0;
-    tab_function[i] = 0x17;
+    tab_function[i] = MODBUS_FC_WRITE_AND_READ_REGISTERS;
     for (j=0; j<2; j++) {
         if (j == 0) {
             /* Try to read zero values on first iteration */
