@@ -1086,6 +1086,8 @@ int modbus_rtu_set_rts_gpio(modbus_t *ctx, int mode, char *gpio_directory)
         fprintf(stderr, "Could not open \"%s\" for reading, errno: %d.\n", gpio_direction_filename, errno);
         return -1;
     }
+    
+    free(gpio_direction_filename);
 
     // Get GPIO port direction
     char buff[4];
@@ -1215,6 +1217,7 @@ static int _modbus_rtu_select(modbus_t *ctx, fd_set *rset,
 
 static void _modbus_rtu_free(modbus_t *ctx) {
     free(((modbus_rtu_t*)ctx->backend_data)->device);
+    free(((modbus_rtu_t*)ctx->backend_data)->gpio_value_filename);
     free(ctx->backend_data);
     free(ctx);
 }

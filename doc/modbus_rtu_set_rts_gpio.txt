@@ -33,7 +33,7 @@ This function can only be used with a context using a RTU backend.
 
 RETURN VALUE
 ------------
-The _modbus_rtu_set_rts()_ function shall return 0 if successful. Otherwise it
+The _modbus_rtu_set_rts_gpio()_ function shall return 0 if successful. Otherwise it
 shall return -1 and set errno to one of the values defined below.
 
 
