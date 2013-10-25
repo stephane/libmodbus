@@ -40,8 +40,11 @@ MODBUS_API int modbus_rtu_get_serial_mode(modbus_t *ctx);
 #define MODBUS_RTU_RTS_NONE   0
 #define MODBUS_RTU_RTS_UP     1
 #define MODBUS_RTU_RTS_DOWN   2
+#define MODBUS_RTU_RTS_GPIO_UP   3
+#define MODBUS_RTU_RTS_GPIO_DOWN 4
 
 MODBUS_API int modbus_rtu_set_rts(modbus_t *ctx, int mode);
+MODBUS_API int modbus_rtu_set_rts_gpio(modbus_t *ctx, int mode, char *gpio_directory);
 MODBUS_API int modbus_rtu_get_rts(modbus_t *ctx);
 
 MODBUS_END_DECLS
