@@ -21,6 +21,8 @@ libmodbus_la_SOURCES = \
         modbus-tcp.c \
         modbus-tcp.h \
         modbus-tcp-private.h \
+        default_mapping.c \
+        default_mapping.h \
         modbus-version.h
 
 libmodbus_la_LDFLAGS = -no-undefined \

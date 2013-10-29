@@ -119,7 +119,7 @@ int main(int argc, char*argv[])
 
     /** INPUT REGISTERS **/
     for (i=0; i < UT_INPUT_REGISTERS_NB; i++) {
-        mb_mapping->tab_input_registers[UT_INPUT_REGISTERS_ADDRESS+i] =
+        ((uint16_t *)mb_mapping->tab_input_registers)[UT_INPUT_REGISTERS_ADDRESS+i] =
             UT_INPUT_REGISTERS_TAB[i];;
     }
 

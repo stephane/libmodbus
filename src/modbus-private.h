@@ -132,6 +132,8 @@ void _modbus_init_common(modbus_t *ctx);
 void _error_print(modbus_t *ctx, const char *context);
 int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type);
 
+void _reply_debug_print(int function, int address, int nbr, int error);
+char *_str_func(int mb_function);
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *dest, const char *src, size_t dest_size);
 #endif
