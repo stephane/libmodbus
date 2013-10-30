@@ -104,6 +104,7 @@ void _error_print(modbus_t *ctx, const char *context)
 
 static void _sleep_response_timeout(modbus_t *ctx)
 {
+    /* Response timeout is always positive */
 #ifdef _WIN32
     /* usleep doesn't exist on Windows */
     Sleep((ctx->response_timeout.tv_sec * 1000) +
@@ -112,10 +113,10 @@ static void _sleep_response_timeout(modbus_t *ctx)
     /* usleep source code */
     struct timespec request, remaining;
     request.tv_sec = ctx->response_timeout.tv_sec;
-    request.tv_nsec = ((long int)ctx->response_timeout.tv_usec % 1000000)
-        * 1000;
-    while (nanosleep(&request, &remaining) == -1 && errno == EINTR)
+    request.tv_nsec = ((long int)ctx->response_timeout.tv_usec) * 1000;
+    while (nanosleep(&request, &remaining) == -1 && errno == EINTR) {
         request = remaining;
+    }
 #endif
 }
 
@@ -459,7 +460,7 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
             }
         }
 
-        if (length_to_read > 0 && ctx->byte_timeout.tv_sec != -1) {
+        if (length_to_read > 0 && ctx->byte_timeout.tv_sec >= 0 && ctx->byte_timeout.tv_usec >= 0) {
             /* If there is no character in the buffer, the allowed timeout
                interval between two consecutive bytes is defined by
                byte_timeout */
@@ -467,6 +468,8 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
             tv.tv_usec = ctx->byte_timeout.tv_usec;
             p_tv = &tv;
         }
+        /* else timeout isn't set again, the full response must be read before
+           expiration of response timeout (for CONFIRMATION only) */
     }
 
     if (ctx->debug)
@@ -1639,48 +1642,54 @@ int modbus_get_socket(modbus_t *ctx)
 }
 
 /* Get the timeout interval used to wait for a response */
-int modbus_get_response_timeout(modbus_t *ctx, struct timeval *timeout)
+int modbus_get_response_timeout(modbus_t *ctx, long *to_sec, long *to_usec)
 {
     if (ctx == NULL) {
         errno = EINVAL;
         return -1;
     }
 
-    *timeout = ctx->response_timeout;
+    *to_sec = ctx->response_timeout.tv_sec;
+    *to_usec = ctx->response_timeout.tv_usec;
     return 0;
 }
 
-int modbus_set_response_timeout(modbus_t *ctx, const struct timeval *timeout)
+int modbus_set_response_timeout(modbus_t *ctx, long to_sec, long to_usec)
 {
-    if (ctx == NULL) {
+    if (ctx == NULL ||
+        to_sec < 0 || to_usec < 0 || to_usec > 999999) {
         errno = EINVAL;
         return -1;
     }
 
-    ctx->response_timeout = *timeout;
+    ctx->response_timeout.tv_sec = to_sec;
+    ctx->response_timeout.tv_usec = to_usec;
     return 0;
 }
 
 /* Get the timeout interval between two consecutive bytes of a message */
-int modbus_get_byte_timeout(modbus_t *ctx, struct timeval *timeout)
+int modbus_get_byte_timeout(modbus_t *ctx, long *to_sec, long *to_usec)
 {
     if (ctx == NULL) {
         errno = EINVAL;
         return -1;
     }
 
-    *timeout = ctx->byte_timeout;
+    *to_sec = ctx->byte_timeout.tv_sec;
+    *to_usec = ctx->byte_timeout.tv_usec;
     return 0;
 }
 
-int modbus_set_byte_timeout(modbus_t *ctx, const struct timeval *timeout)
+int modbus_set_byte_timeout(modbus_t *ctx, long to_sec, long to_usec)
 {
-    if (ctx == NULL) {
+    /* Byte timeout can be disabled with negative values */
+    if (ctx == NULL || to_usec > 999999) {
         errno = EINVAL;
         return -1;
     }
 
-    ctx->byte_timeout = *timeout;
+    ctx->byte_timeout.tv_sec = to_sec;
+    ctx->byte_timeout.tv_usec = to_usec;
     return 0;
 }
 
