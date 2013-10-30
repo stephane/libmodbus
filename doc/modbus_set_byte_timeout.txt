@@ -9,23 +9,35 @@ modbus_set_byte_timeout - set timeout between bytes
 
 SYNOPSIS
 --------
-*void modbus_set_byte_timeout(modbus_t *'ctx', struct timeval *'timeout');*
+*void modbus_set_byte_timeout(modbus_t *'ctx', long 'to_sec', long 'to_usec');*
 
 
 DESCRIPTION
 -----------
 The _modbus_set_byte_timeout()_ function shall set the timeout interval between
-two consecutive bytes of the same message. If the delay between is longer than
-the given timeout, an error will be raised.
+two consecutive bytes of the same message. If the delay between bytes is longer
+than the given timeout, the 'ETIMEDOUT' error will be raised by the the function
+waiting for a response.
 
-If the timeout value has a tv_sec of -1 then this timeout will not be used at
-all. This results in modbus_set_response_timeout governing the entire timeout
-duration of an operation.
+The value of _to_usec_ argument must be in the range 0 to 999999.
+
+If _to_sec_ is set to -1 then this timeout will not be used at all. In this
+case, _modbus_set_response_timeout()_ governs the entire handling of the
+response, the full confirmation response must be received before expiration of
+the response timeout. When a byte timeout is set, the response timeout is only
+used to wait for the first byte of the respone.
 
 
 RETURN VALUE
 ------------
-The function shall return 0 if successful. Otherwise it shall return -1 and set errno.
+The function shall return 0 if successful. Otherwise it shall return -1 and set
+errno.
+
+
+ERRORS
+------
+*EINVAL*::
+The argument _ctx_ is NULL or _to_usec_ is not smaller than 1000000.
 
 
 SEE ALSO

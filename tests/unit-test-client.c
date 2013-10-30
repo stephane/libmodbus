@@ -44,8 +44,8 @@ int main(int argc, char *argv[])
     int rc;
     float real;
     uint32_t ireal;
-    struct timeval old_response_timeout;
-    struct timeval response_timeout;
+    long old_response_timeout_sec;
+    long old_response_timeout_usec;
     int use_backend;
 
     if (argc > 1) {
@@ -647,27 +647,82 @@ int main(int argc, char *argv[])
     }
 
     /* Save original timeout */
-    modbus_get_response_timeout(ctx, &old_response_timeout);
+    modbus_get_response_timeout(ctx, &old_response_timeout_sec, &old_response_timeout_usec);
 
-    /* Define a new and too short timeout */
-    response_timeout.tv_sec = 0;
-    response_timeout.tv_usec = 0;
-    modbus_set_response_timeout(ctx, &response_timeout);
+    rc = modbus_set_response_timeout(ctx, -1, 0);
+    printf("1/6 Invalid response timeout (negative): ");
+    if (rc == -1 && errno == EINVAL) {
+        printf("OK\n");
+    } else {
+        printf("FAILED\n");
+        goto close;
+    }
 
+    rc = modbus_set_response_timeout(ctx, 0, 1000000);
+    printf("2/6 Invalid response timeout (too large): ");
+    if (rc == -1 && errno == EINVAL) {
+        printf("OK\n");
+    } else {
+        printf("FAILED\n");
+        goto close;
+    }
+
+    rc = modbus_set_byte_timeout(ctx, 0, 1000000);
+    printf("3/6 Invalid byte timeout (too large): ");
+    if (rc == -1 && errno == EINVAL) {
+        printf("OK\n");
+    } else {
+        printf("FAILED\n");
+        goto close;
+    }
+
+    modbus_set_response_timeout(ctx, 0, 0);
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
                                UT_REGISTERS_NB, tab_rp_registers);
-    printf("4/4 Too short timeout: ");
+    printf("4/6 Zero response timeout: ");
     if (rc == -1 && errno == ETIMEDOUT) {
         printf("OK\n");
     } else {
         printf("FAILED (can fail on slow systems or Windows)\n");
     }
 
-    /* Restore original timeout */
-    modbus_set_response_timeout(ctx, &old_response_timeout);
-
     /* A wait and flush operation is done by the error recovery code of
-     * libmodbus */
+     * libmodbus but after a sleep of current response timeout
+     * so 0 can't be too short!
+     */
+    usleep(old_response_timeout_sec * 1000000 + old_response_timeout_usec);
+    modbus_flush(ctx);
+
+    /* Trigger a special behaviour on server to wait for 0.5 second before
+     * replying whereas allowed timeout is 0.2 second */
+    modbus_set_response_timeout(ctx, 0, 200000);
+    rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS_SLEEP_500_MS,
+                               1, tab_rp_registers);
+    printf("5/6 Too short response timeout (0.2s < 0.5s): ");
+    if (rc == -1 && errno == ETIMEDOUT) {
+        printf("OK\n");
+    } else {
+        printf("FAILED\n");
+        goto close;
+    }
+
+    /* Wait for reply (0.2 + 0.4 > 0.5 s) and flush before continue */
+    usleep(400000);
+    modbus_flush(ctx);
+
+    modbus_set_response_timeout(ctx, 0, 600000);
+    rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS_SLEEP_500_MS,
+                               1, tab_rp_registers);
+    printf("6/6 Adequate response timeout (0.6s > 0.5s): ");
+    if (rc == 1) {
+        printf("OK\n");
+    } else {
+        printf("FAILED\n");
+        goto close;
+    }
+
+    /* Restore original timeout */
+    modbus_set_response_timeout(ctx, old_response_timeout_sec, old_response_timeout_usec);
 
     /** BAD RESPONSE **/
     printf("\nTEST BAD RESPONSE ERROR:\n");
@@ -675,6 +730,7 @@ int main(int argc, char *argv[])
     /* Allocate only the required space */
     tab_rp_registers_bad = (uint16_t *) malloc(
         UT_REGISTERS_NB_SPECIAL * sizeof(uint16_t));
+
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
                                UT_REGISTERS_NB_SPECIAL, tab_rp_registers_bad);
     printf("* modbus_read_registers: ");
@@ -684,14 +740,13 @@ int main(int argc, char *argv[])
         printf("FAILED\n");
         goto close;
     }
-
     free(tab_rp_registers_bad);
 
     /** MANUAL EXCEPTION **/
     printf("\nTEST MANUAL EXCEPTION:\n");
-
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS_SPECIAL,
                                UT_REGISTERS_NB, tab_rp_registers);
+
     printf("* modbus_read_registers at special address: ");
     if (rc == -1 && errno == EMBXSBUSY) {
         printf("OK\n");

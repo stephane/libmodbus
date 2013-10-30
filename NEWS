@@ -1,3 +1,23 @@
+libmodbus 3.1.2 (2013-XX-XX)
+============================
+
+This release introduces API changes on modbus_get_byte_timeout,
+modbus_get_response_timeout, modbus_set_byte_timeout,
+modbus_set_response_timeout to ease writing of language bindings.
+
+- New API to set/get response and byte timeouts.
+  New unit tests and updated documentation.
+- Export Modbus function codes supported by libmodbus
+- Fix bandwidth-server-one (closes #152)
+- Check debug flag in RTU code
+- Sync packaging with official from Debian (closes #134)
+- Remove warnings caused by shadowed 'index' variable.
+  Thanks to Åke Forslund.
+- Use accept4 in TCP PI if available
+- Add documentation for tcp[_pi]_accept (closes #31)
+- Fix mistake in modbus_tcp_listen documentation
+- Add documentation for modbus_tcp_pi_listen
+
 libmodbus 3.1.1 (2013-10-06)
 ============================
 

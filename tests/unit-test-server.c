@@ -175,6 +175,10 @@ int main(int argc, char*argv[])
                 printf("Reply with an invalid TID or slave\n");
                 modbus_send_raw_request(ctx, raw_req, RAW_REQ_LENGTH * sizeof(uint8_t));
                 continue;
+            } else if (MODBUS_GET_INT16_FROM_INT8(query, header_length + 1)
+                       == UT_REGISTERS_ADDRESS_SLEEP_500_MS) {
+                printf("Sleep 0.5 s before replying\n");
+                usleep(500000);
             }
         }
 

@@ -9,34 +9,33 @@ modbus_get_response_timeout - get timeout for response
 
 SYNOPSIS
 --------
-*int modbus_get_response_timeout(modbus_t *'ctx', struct timeval *'timeout');*
+*int modbus_get_response_timeout(modbus_t *'ctx', long *'to_sec', long *'to_usec');*
 
 
 DESCRIPTION
 -----------
-The _modbus_get_response_timeout()_ function shall store the timeout interval
-used to wait for a response in the 'timeout' argument.
+The _modbus_get_response_timeout()_ function shall return the timeout interval
+used to wait for a response in the _to_sec_ and _to_usec_ arguments.
 
 
 RETURN VALUE
 ------------
-The function shall return 0 if successful. Otherwise it shall return -1 and set errno.
+The function shall return 0 if successful. Otherwise it shall return -1 and set
+errno.
 
 
 EXAMPLE
 -------
 [source,c]
 -------------------
-struct timeval old_response_timeout;
-struct timeval response_timeout;
+long old_response_to_sec;
+long old_response_to_usec;
 
 /* Save original timeout */
-modbus_get_response_timeout(ctx, &old_response_timeout);
+modbus_get_response_timeout(ctx, &old_response_to_sec, &old_response_to_usec);
 
 /* Define a new and too short timeout! */
-response_timeout.tv_sec = 0;
-response_timeout.tv_usec = 0;
-modbus_set_response_timeout(ctx, &response_timeout);
+modbus_set_response_timeout(ctx, 0, 0);
 -------------------
 
 

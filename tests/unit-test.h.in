@@ -50,6 +50,8 @@ const uint16_t UT_REGISTERS_ADDRESS = 0x16B;
 const uint16_t UT_REGISTERS_ADDRESS_SPECIAL = 0x6C;
 /* The response of the server will contains an invalid TID or slave */
 const uint16_t UT_REGISTERS_ADDRESS_INVALID_TID_OR_SLAVE = 0x6D;
+/* The server will wait for 1 second before replying to test timeout */
+const uint16_t UT_REGISTERS_ADDRESS_SLEEP_500_MS = 0x6E;
 
 const uint16_t UT_REGISTERS_NB = 0x3;
 const uint16_t UT_REGISTERS_TAB[] = { 0x022B, 0x0001, 0x0064 };
