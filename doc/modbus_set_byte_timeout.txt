@@ -25,7 +25,7 @@ If _to_sec_ is set to -1 then this timeout will not be used at all. In this
 case, _modbus_set_response_timeout()_ governs the entire handling of the
 response, the full confirmation response must be received before expiration of
 the response timeout. When a byte timeout is set, the response timeout is only
-used to wait for the first byte of the respone.
+used to wait for the first byte of the response.
 
 
 RETURN VALUE
