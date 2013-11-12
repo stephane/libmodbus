@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _MODBUS_VERSION_H_
-#define _MODBUS_VERSION_H_
+#ifndef MODBUS_VERSION_H
+#define MODBUS_VERSION_H
 
 /* The major version, (1, if %LIBMODBUS_VERSION is 1.2.3) */
 #define LIBMODBUS_VERSION_MAJOR (@LIBMODBUS_VERSION_MAJOR@)
@@ -49,4 +49,4 @@
       LIBMODBUS_VERSION_MINOR == (minor) &&             \
       LIBMODBUS_VERSION_MICRO >= (micro)))
 
-#endif /* _MODBUS_VERSION_H_ */
+#endif /* MODBUS_VERSION_H */
