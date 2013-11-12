@@ -16,8 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef _MODBUS_RTU_H_
-#define _MODBUS_RTU_H_
+#ifndef MODBUS_RTU_H
+#define MODBUS_RTU_H
 
 #include "modbus.h"
 
@@ -46,4 +46,4 @@ MODBUS_API int modbus_rtu_get_rts(modbus_t *ctx);
 
 MODBUS_END_DECLS
 
-#endif /* _MODBUS_RTU_H_ */
+#endif /* MODBUS_RTU_H */

@@ -16,8 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef _MODBUS_TCP_H_
-#define _MODBUS_TCP_H_
+#ifndef MODBUS_TCP_H
+#define MODBUS_TCP_H
 
 #include "modbus.h"
 
@@ -61,4 +61,4 @@ MODBUS_API int modbus_tcp_pi_accept(modbus_t *ctx, int *s);
 
 MODBUS_END_DECLS
 
-#endif /* _MODBUS_TCP_H_ */
+#endif /* MODBUS_TCP_H */

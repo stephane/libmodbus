@@ -16,8 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef _MODBUS_H_
-#define _MODBUS_H_
+#ifndef MODBUS_H
+#define MODBUS_H
 
 /* Add this for macros that defined unix flavor */
 #if (defined(__unix__) || defined(unix)) && !defined(USG)
@@ -248,4 +248,4 @@ MODBUS_API void modbus_set_float_dcba(float f, uint16_t *dest);
 
 MODBUS_END_DECLS
 
-#endif  /* _MODBUS_H_ */
+#endif  /* MODBUS_H */
