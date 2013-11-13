@@ -9,7 +9,7 @@ modbus_get_response_timeout - get timeout for response
 
 SYNOPSIS
 --------
-*int modbus_get_response_timeout(modbus_t *'ctx', long *'to_sec', long *'to_usec');*
+*int modbus_get_response_timeout(modbus_t *'ctx', uint32_t *'to_sec', uint32_t *'to_usec');*
 
 
 DESCRIPTION
@@ -28,8 +28,8 @@ EXAMPLE
 -------
 [source,c]
 -------------------
-long old_response_to_sec;
-long old_response_to_usec;
+uint32_t old_response_to_sec;
+uint32_t old_response_to_usec;
 
 /* Save original timeout */
 modbus_get_response_timeout(ctx, &old_response_to_sec, &old_response_to_usec);
