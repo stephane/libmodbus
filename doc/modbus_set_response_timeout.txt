@@ -9,18 +9,18 @@ modbus_set_response_timeout - set timeout for response
 
 SYNOPSIS
 --------
-*int modbus_set_response_timeout(modbus_t *'ctx', long 'to_sec', long 'to_usec');*
+*int modbus_set_response_timeout(modbus_t *'ctx', uint32_t 'to_sec', uint32_t 'to_usec');*
 
 
 DESCRIPTION
 -----------
 
 The _modbus_set_response_timeout()_ function shall set the timeout interval used
-to wait for a response. When a byte timeout is set, if the waiting before
-receiving the first byte of response is longer than the given timeout, the
-'ETIMEDOUT' error will be raised by the function waiting for a response. When
-byte timeout is disabled, the full confirmation response must be received before
-expiration of the response timeout.
+to wait for a response. When a byte timeout is set, if elapsed time for the
+first byte of response is longer than the given timeout, an 'ETIMEDOUT' error
+will be raised by the function waiting for a response. When byte timeout is
+disabled, the full confirmation response must be received before expiration of
+the response timeout.
 
 The value of to_usec argument must be in the range 0 to 999999.
 
@@ -34,22 +34,22 @@ errno.
 ERRORS
 ------
 *EINVAL*::
-The argument _ctx_ is NULL or _to_sec_/_to_usec_ aren't equal or greater than 0 or
-_to_usec_ is not smaller than 1000000.
+The argument _ctx_ is NULL, or both _to_sec_ and _to_usec_ are zero, or _to_usec_
+is larger than 1000000.
 
 
 EXAMPLE
 -------
 [source,c]
 -------------------
-long old_response_to_sec;
-long old_response_to_usec;
+uint32_t old_response_to_sec;
+uint32_t old_response_to_usec;
 
 /* Save original timeout */
 modbus_get_response_timeout(ctx, &old_response_to_sec, &old_response_to_usec);
 
-/* Define a new and too short timeout! */
-modbus_set_response_timeout(ctx, 0, 0);
+/* Define a new timeout of 200ms */
+modbus_set_response_timeout(ctx, 0, 200000);
 -------------------
 
 

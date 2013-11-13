@@ -9,7 +9,7 @@ modbus_get_byte_timeout - get timeout between bytes
 
 SYNOPSIS
 --------
-*int modbus_get_byte_timeout(modbus_t *'ctx', long *'to_sec', long *'to_usec');*
+*int modbus_get_byte_timeout(modbus_t *'ctx', uint32_t *'to_sec', uint32_t *'to_usec');*
 
 
 DESCRIPTION
@@ -29,8 +29,8 @@ EXAMPLE
 -------
 [source,c]
 -------------------
-long to_sec;
-long to_usec;
+uint32_t to_sec;
+uint32_t to_usec;
 
 /* Save original timeout */
 modbus_get_byte_timeout(ctx, &to_sec, &to_usec);

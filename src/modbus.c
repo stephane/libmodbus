@@ -462,7 +462,8 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
             }
         }
 
-        if (length_to_read > 0 && ctx->byte_timeout.tv_sec >= 0 && ctx->byte_timeout.tv_usec >= 0) {
+        if (length_to_read > 0 &&
+            (ctx->byte_timeout.tv_sec > 0 || ctx->byte_timeout.tv_usec > 0)) {
             /* If there is no character in the buffer, the allowed timeout
                interval between two consecutive bytes is defined by
                byte_timeout */
@@ -1644,7 +1645,7 @@ int modbus_get_socket(modbus_t *ctx)
 }
 
 /* Get the timeout interval used to wait for a response */
-int modbus_get_response_timeout(modbus_t *ctx, long *to_sec, long *to_usec)
+int modbus_get_response_timeout(modbus_t *ctx, uint32_t *to_sec, uint32_t *to_usec)
 {
     if (ctx == NULL) {
         errno = EINVAL;
@@ -1656,10 +1657,10 @@ int modbus_get_response_timeout(modbus_t *ctx, long *to_sec, long *to_usec)
     return 0;
 }
 
-int modbus_set_response_timeout(modbus_t *ctx, long to_sec, long to_usec)
+int modbus_set_response_timeout(modbus_t *ctx, uint32_t to_sec, uint32_t to_usec)
 {
     if (ctx == NULL ||
-        to_sec < 0 || to_usec < 0 || to_usec > 999999) {
+        (to_sec == 0 && to_usec == 0) || to_usec > 999999) {
         errno = EINVAL;
         return -1;
     }
@@ -1670,7 +1671,7 @@ int modbus_set_response_timeout(modbus_t *ctx, long to_sec, long to_usec)
 }
 
 /* Get the timeout interval between two consecutive bytes of a message */
-int modbus_get_byte_timeout(modbus_t *ctx, long *to_sec, long *to_usec)
+int modbus_get_byte_timeout(modbus_t *ctx, uint32_t *to_sec, uint32_t *to_usec)
 {
     if (ctx == NULL) {
         errno = EINVAL;
@@ -1682,9 +1683,9 @@ int modbus_get_byte_timeout(modbus_t *ctx, long *to_sec, long *to_usec)
     return 0;
 }
 
-int modbus_set_byte_timeout(modbus_t *ctx, long to_sec, long to_usec)
+int modbus_set_byte_timeout(modbus_t *ctx, uint32_t to_sec, uint32_t to_usec)
 {
-    /* Byte timeout can be disabled with negative values */
+    /* Byte timeout can be disabled when both values are zero */
     if (ctx == NULL || to_usec > 999999) {
         errno = EINVAL;
         return -1;
