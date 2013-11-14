@@ -34,7 +34,7 @@ registers if successful. Otherwise it shall return -1 and set errno.
 
 ERRORS
 ------
-EMBMDATA::
+*EMBMDATA*::
 Too many registers requested, Too many registers to write
 
 

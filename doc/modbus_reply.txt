@@ -33,7 +33,7 @@ successful. Otherwise it shall return -1 and set errno.
 
 ERRORS
 ------
-EMBMDATA::
+*EMBMDATA*::
 Sending has failed
 
 See also the errors returned by the syscall used to send the response (eg. send

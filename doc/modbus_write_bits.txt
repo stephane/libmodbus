@@ -29,7 +29,7 @@ successful. Otherwise it shall return -1 and set errno.
 
 ERRORS
 ------
-EMBMDATA::
+*EMBMDATA*::
 Writing too many bits
 
 
