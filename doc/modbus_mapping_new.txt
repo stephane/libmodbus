@@ -32,7 +32,7 @@ successful. Otherwise it shall return NULL and set errno.
 
 ERRORS
 ------
-ENOMEM::
+*ENOMEM*::
 Not enough memory
 
 
