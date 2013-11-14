@@ -1073,12 +1073,18 @@ static int _modbus_rtu_flush(modbus_t *ctx)
 }
 
 static int _modbus_rtu_select(modbus_t *ctx, fd_set *rset,
-                       struct timeval *tv, int length_to_read)
+                       const struct timeval *tv, int length_to_read)
 {
     int s_rc;
+    // Select is allowed to modify its timeout timeval; take a copy
+    // Note: may be NULL (indicates no timeout)
+    struct timeval to;
+    if ( tv )
+        to = *tv;
+
 #if defined(_WIN32)
     s_rc = win32_ser_select(&(((modbus_rtu_t*)ctx->backend_data)->w_ser),
-                            length_to_read, tv);
+                            length_to_read, ( tv ? &to : NULL ));
     if (s_rc == 0) {
         errno = ETIMEDOUT;
         return -1;
@@ -1088,7 +1094,7 @@ static int _modbus_rtu_select(modbus_t *ctx, fd_set *rset,
         return -1;
     }
 #else
-    while ((s_rc = select(ctx->s+1, rset, NULL, NULL, tv)) == -1) {
+    while ((s_rc = select(ctx->s+1, rset, NULL, NULL, ( tv ? &to : NULL ))) == -1) {
         if (errno == EINTR) {
             if (ctx->debug) {
                 fprintf(stderr, "A non blocked signal was caught\n");

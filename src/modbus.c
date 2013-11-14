@@ -380,6 +380,9 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
          * received */
         p_tv = NULL;
     } else {
+        /* Wait for the initial message payload, for up to the full
+         * response_timeout; if incomplete, subsequent characters must be
+         * received within ctx->byte_timeout (enforced below) */
         tv.tv_sec = ctx->response_timeout.tv_sec;
         tv.tv_usec = ctx->response_timeout.tv_usec;
         p_tv = &tv;
@@ -563,7 +566,7 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
         if (function != req[offset]) {
             if (ctx->debug) {
                 fprintf(stderr,
-                        "Received function not corresponding to the requestd (0x%X != 0x%X)\n",
+                        "Received function not corresponding to the request (0x%X != 0x%X)\n",
                         function, req[offset]);
             }
             if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_PROTOCOL) {
@@ -624,6 +627,14 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
             errno = EMBBADDATA;
             rc = -1;
         }
+
+        /*
+         * TODO: For Write Register(s), check for incorrect register and count
+         * in response (not matching request).  Presently, this will allow
+         * incorrect write responses, containing non-matching register and
+         * count.
+         */
+
     } else {
         if (ctx->debug) {
             fprintf(stderr,

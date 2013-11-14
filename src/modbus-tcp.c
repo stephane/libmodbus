@@ -201,9 +201,40 @@ static int _modbus_tcp_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
         }
         errno = EMBBADDATA;
         return -1;
-    } else {
-        return 0;
     }
+
+    /* TODO: Check Protocol ID
+     *
+     * if (req[2] != rsp[2] || req[3] != rsp[3]) {
+     *     if (ctx->debug) {
+     *         fprintf(stderr, "Invalid Protocol ID received 0x%X (not 0x%X)\n",
+     *                 (rsp[2] << 8) + rsp[3], (req[2] << 8) + req[3]);
+     *     }
+     *     errno = EMBBADDATA;
+     *     return -1;
+     * }
+     */
+
+    /* 
+     * Check that the Modbus/TCP header length field, matches?  Not really
+     * necessary, because check_confirmation has already confirmed that the
+     * Modbus/TCP code (eg. read holding registers) is correct.  So, don't
+     * bother to check it here.  We don't need to support "unknown" (new) Modbus
+     * codes.
+     */
+
+    /* TODO: Check Unit ID
+     * 
+     * if (req[6] != rsp[6]) {
+     *     if (ctx->debug) {
+     *         fprintf(stderr, "Invalid Unit ID received 0x%X (not 0x%X)\n",
+     *                 (int)rsp[6], (int)req[6]);
+     *     }
+     *     errno = EMBBADDATA;
+     *     return -1;
+     * }
+     */
+    return 0;
 }
 
 static int _modbus_tcp_set_ipv4_options(int s)
@@ -253,11 +284,23 @@ static int _modbus_tcp_set_ipv4_options(int s)
     return 0;
 }
 
+/*
+ * A TCP/IP "Eager Connection" setup allows a connect() call to complete after a
+ * server listen(), but before it invokes accept().  Therefore, this select
+ * complete as quickly as the client's and server's kernel TCP/IP will allow --
+ * regardless of whether the server has a delay between detecting readability on
+ * its listen socket and invoking accept().  This resulted in a subtle defect,
+ * difficult to detect in a LAN environment; passing the incoming timeval
+ * pointer directly to select would allow select to modify it by whatever
+ * (usually small) time was required to complete the connection -- permanently
+ * altering the supplied timeval.  In the case of _connect, this was the
+ * modbus_t::response_timeout.  Ensure we don't ever allow modification of the
+ * supplied timeval.
+ */
 static int _connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen,
-                    struct timeval *tv)
+                    const struct timeval *tv)
 {
     int rc;
-
     rc = connect(sockfd, addr, addrlen);
 
 #ifdef OS_WIN32
@@ -268,13 +311,20 @@ static int _connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen,
         fd_set wset;
         int optval;
         socklen_t optlen = sizeof(optval);
+        /* Select is allowed to modify its timeout timeval; take a copy.
+         * WARNING: may be NULL (indicates no timeout) */
+        struct timeval to;
+        if ( tv )
+            to = *tv;
 
         /* Wait to be available in writing */
         FD_ZERO(&wset);
         FD_SET(sockfd, &wset);
-        rc = select(sockfd + 1, NULL, &wset, NULL, tv);
+        rc = select(sockfd + 1, NULL, &wset, NULL, ( tv ? &to : NULL ));
         if (rc <= 0) {
-            /* Timeout or fail */
+            /* Timeout or fail; ensures errno is always set on timeout! */
+            if (rc == 0)
+                errno = ETIMEDOUT;
             return -1;
         }
 
@@ -333,6 +383,10 @@ static int _modbus_tcp_connect(modbus_t *ctx)
     addr.sin_port = htons(ctx_tcp->port);
     addr.sin_addr.s_addr = inet_addr(ctx_tcp->ip);
     rc = _connect(ctx->s, (struct sockaddr *)&addr, sizeof(addr), &ctx->response_timeout);
+    if (ctx->debug) {
+        printf("Connecting to %s:%d; %s\n", ctx_tcp->ip, ctx_tcp->port,
+               (( rc == -1 ) ? strerror( errno ) : "successful" ));
+    }
     if (rc == -1) {
         close(ctx->s);
         ctx->s = -1;
@@ -682,10 +736,16 @@ int modbus_tcp_pi_accept(modbus_t *ctx, int *s)
     return ctx->s;
 }
 
-static int _modbus_tcp_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int length_to_read)
+static int _modbus_tcp_select(modbus_t *ctx, fd_set *rset, const struct timeval *tv, int length_to_read)
 {
     int s_rc;
-    while ((s_rc = select(ctx->s+1, rset, NULL, NULL, tv)) == -1) {
+    // Select is allowed to modify its timeout timeval; take a copy
+    // Note: may be NULL (indicates no timeout)
+    struct timeval to;
+    if ( tv )
+        to = *tv;
+
+    while ((s_rc = select(ctx->s+1, rset, NULL, NULL, ( tv ? &to : NULL ))) == -1) {
         if (errno == EINTR) {
             if (ctx->debug) {
                 fprintf(stderr, "A non blocked signal was caught\n");
