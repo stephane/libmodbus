@@ -19,7 +19,6 @@ to obtain a description of the controller.
 
 The response stored in 'dest' contains:
 
-* the byte count of the response
 * the slave ID, this unique ID is in reality not unique at all so it's not
   possible to depend on it to know how the information are packed in the
   response.
