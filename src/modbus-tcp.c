@@ -264,7 +264,7 @@ static int _modbus_tcp_set_ipv4_options(int s)
 }
 
 static int _connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen,
-                    struct timeval *tv)
+                    const struct timeval *ro_tv)
 {
     int rc;
 
@@ -278,11 +278,12 @@ static int _connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen,
         fd_set wset;
         int optval;
         socklen_t optlen = sizeof(optval);
+        struct timeval tv = *ro_tv;
 
         /* Wait to be available in writing */
         FD_ZERO(&wset);
         FD_SET(sockfd, &wset);
-        rc = select(sockfd + 1, NULL, &wset, NULL, tv);
+        rc = select(sockfd + 1, NULL, &wset, NULL, &tv);
         if (rc <= 0) {
             /* Timeout or fail */
             return -1;

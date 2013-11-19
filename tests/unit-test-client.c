@@ -34,10 +34,10 @@ int test_raw_request(modbus_t *, int);
 
 int main(int argc, char *argv[])
 {
-    uint8_t *tab_rp_bits;
-    uint16_t *tab_rp_registers;
-    uint16_t *tab_rp_registers_bad;
-    modbus_t *ctx;
+    uint8_t *tab_rp_bits = NULL;
+    uint16_t *tab_rp_registers = NULL;
+    uint16_t *tab_rp_registers_bad = NULL;
+    modbus_t *ctx = NULL;
     int i;
     uint8_t value;
     int nb_points;
@@ -46,6 +46,8 @@ int main(int argc, char *argv[])
     uint32_t ireal;
     uint32_t old_response_to_sec;
     uint32_t old_response_to_usec;
+    uint32_t new_response_to_sec;
+    uint32_t new_response_to_usec;
     uint32_t old_byte_to_sec;
     uint32_t old_byte_to_usec;
     int use_backend;
@@ -86,10 +88,23 @@ int main(int argc, char *argv[])
           modbus_set_slave(ctx, SERVER_ID);
     }
 
+    modbus_get_response_timeout(ctx, &old_response_to_sec, &old_response_to_usec);
     if (modbus_connect(ctx) == -1) {
         fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
         modbus_free(ctx);
         return -1;
+    }
+    modbus_get_response_timeout(ctx, &new_response_to_sec, &new_response_to_usec);
+
+    printf("** UNIT TESTING **\n");
+
+    printf("1/1 No response timeout modification on connect: ");
+    if (old_response_to_sec == new_response_to_sec &&
+        old_response_to_usec == new_response_to_usec) {
+        printf("OK\n");
+    } else {
+        printf("FAILED\n");
+        goto close;
     }
 
     /* Allocate and initialize the memory to store the bits */
@@ -102,8 +117,6 @@ int main(int argc, char *argv[])
         UT_REGISTERS_NB : UT_INPUT_REGISTERS_NB;
     tab_rp_registers = (uint16_t *) malloc(nb_points * sizeof(uint16_t));
     memset(tab_rp_registers, 0, nb_points * sizeof(uint16_t));
-
-    printf("** UNIT TESTING **\n");
 
     printf("\nTEST WRITE/READ:\n");
 
