@@ -191,19 +191,29 @@ static int _modbus_tcp_check_integrity(modbus_t *ctx, uint8_t *msg, const int ms
 }
 
 static int _modbus_tcp_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
-                                       const uint8_t *rsp, int rsp_length)
+                                              const uint8_t *rsp, int rsp_length)
 {
-    /* Check TID */
+    /* Check transaction ID */
     if (req[0] != rsp[0] || req[1] != rsp[1]) {
         if (ctx->debug) {
-            fprintf(stderr, "Invalid TID received 0x%X (not 0x%X)\n",
+            fprintf(stderr, "Invalid transaction ID received 0x%X (not 0x%X)\n",
                     (rsp[0] << 8) + rsp[1], (req[0] << 8) + req[1]);
         }
         errno = EMBBADDATA;
         return -1;
-    } else {
-        return 0;
     }
+
+    /* Check protocol ID */
+    if (rsp[2] != 0x0 && rsp[3] != 0x0) {
+        if (ctx->debug) {
+            fprintf(stderr, "Invalid protocol ID received 0x%X (not 0x0)\n",
+                    (rsp[2] << 8) + rsp[3]);
+        }
+        errno = EMBBADDATA;
+        return -1;
+    }
+
+    return 0;
 }
 
 static int _modbus_tcp_set_ipv4_options(int s)
