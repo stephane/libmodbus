@@ -563,7 +563,7 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
         if (function != req[offset]) {
             if (ctx->debug) {
                 fprintf(stderr,
-                        "Received function not corresponding to the requestd (0x%X != 0x%X)\n",
+                        "Received function not corresponding to the request (0x%X != 0x%X)\n",
                         function, req[offset]);
             }
             if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_PROTOCOL) {
