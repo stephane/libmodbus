@@ -193,7 +193,7 @@ static void win32_ser_init(struct win32_ser *ws) {
 
 /* FIXME Try to remove length_to_read -> max_len argument, only used by win32 */
 static int win32_ser_select(struct win32_ser *ws, int max_len,
-                            struct timeval *tv) {
+                            const struct timeval *tv) {
     COMMTIMEOUTS comm_to;
     unsigned int msec = 0;
 
