@@ -27,6 +27,8 @@ The response stored in 'dest' contains:
 * additional data specific to each controller. For example, libmodbus returns
   the version of the library as a string.
 
+You must take care to allocate enough memory to store the results in 'dest'.
+
 
 RETURN VALUE
 ------------
@@ -38,7 +40,7 @@ EXAMPLE
 -------
 [source,c]
 -------------------
-uint8_t *tab_bytes;
+uint8_t tab_bytes[MODBUS_RTU_MAX_ADU_LENGTH];
 
 ...
 
