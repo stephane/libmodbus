@@ -9,7 +9,7 @@ modbus_report_slave_id - returns a description of the controller
 
 SYNOPSIS
 --------
-*int modbus_report_slave_id(modbus_t *'ctx', uint8_t *'dest');*
+*int modbus_report_slave_id(modbus_t *'ctx', int 'max_dest', uint8_t *'dest');*
 
 
 DESCRIPTION
@@ -26,25 +26,35 @@ The response stored in 'dest' contains:
 * additional data specific to each controller. For example, libmodbus returns
   the version of the library as a string.
 
+The function write at most 'max_dest' bytes from the response to 'dest'.
 
 RETURN VALUE
 ------------
 The _modbus_report_slave_id()_ function shall return the number of read data if
-successful. Otherwise it shall return -1 and set errno.
+successful.
 
+If the output was truncated due to the 'max_dest' limit then the return value is
+the number of bytes which would have been written to 'dest' if enough space had
+been available. Thus, a return value greater than 'max_dest' means that the
+response data was truncated.
+
+Otherwise it shall return -1 and set errno.
 
 EXAMPLE
 -------
 [source,c]
 -------------------
+uint8_t nb = 128;
 uint8_t *tab_bytes;
 
 ...
 
-rc = modbus_report_slave_id(ctx, tab_bytes);
+tab_bytes = (uint8_t *) malloc(nb * sizeof(uint8_t));
+rc = modbus_report_slave_id(ctx, nb, tab_bytes);
 if (rc > 1) {
     printf("Run Status Indicator: %s\n", tab_bytes[1] ? "ON" : "OFF");
 }
+free(tab_bytes);
 -------------------
 
 

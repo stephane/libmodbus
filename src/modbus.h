@@ -202,7 +202,7 @@ MODBUS_API int modbus_mask_write_register(modbus_t *ctx, int addr, uint16_t and_
 MODBUS_API int modbus_write_and_read_registers(modbus_t *ctx, int write_addr, int write_nb,
                                                const uint16_t *src, int read_addr, int read_nb,
                                                uint16_t *dest);
-MODBUS_API int modbus_report_slave_id(modbus_t *ctx, uint8_t *dest);
+MODBUS_API int modbus_report_slave_id(modbus_t *ctx, int max_dest, uint8_t *dest);
 
 MODBUS_API modbus_mapping_t* modbus_mapping_new(int nb_bits, int nb_input_bits,
                                             int nb_registers, int nb_input_registers);
