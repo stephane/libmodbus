@@ -21,7 +21,11 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <modbus.h>
-#include <sys/socket.h>
+#ifdef _WIN32
+# include <winsock2.h>
+#else
+# include <sys/socket.h>
+#endif
 
 #include "unit-test.h"
 
