@@ -44,17 +44,14 @@ EXAMPLE
 -------
 [source,c]
 -------------------
-uint8_t nb = 128;
-uint8_t *tab_bytes;
+uint8_t tab_bytes[MODBUS_MAX_PDU_LENGTH];
 
 ...
 
-tab_bytes = (uint8_t *) malloc(nb * sizeof(uint8_t));
-rc = modbus_report_slave_id(ctx, nb, tab_bytes);
+rc = modbus_report_slave_id(ctx, MODBUS_MAX_PDU_LENGTH, tab_bytes);
 if (rc > 1) {
     printf("Run Status Indicator: %s\n", tab_bytes[1] ? "ON" : "OFF");
 }
-free(tab_bytes);
 -------------------
 
 
