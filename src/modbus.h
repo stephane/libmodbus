@@ -105,6 +105,18 @@ MODBUS_BEGIN_DECLS
 #define MODBUS_MAX_WR_WRITE_REGISTERS      121
 #define MODBUS_MAX_WR_READ_REGISTERS       125
 
+/* The size of the MODBUS PDU is limited by the size constraint inherited from
+ * the first MODBUS implementation on Serial Line network (max. RS485 ADU = 256
+ * bytes). Therefore, MODBUS PDU for serial line communication = 256 - Server
+ * address (1 byte) - CRC (2 bytes) = 253 bytes.
+ *
+ * Consequently:
+ * - RS232 / RS485 ADU = 253 bytes + Server address (1 byte) + CRC (2 bytes) =
+ *   256 bytes.
+ * - TCP MODBUS ADU = 253 bytes + MBAP (7 bytes) = 260 bytes.
+ */
+#define MODBUS_MAX_PDU_LENGTH              253
+
 /* Random number to avoid errno conflicts */
 #define MODBUS_ENOBASE 112345678
 
