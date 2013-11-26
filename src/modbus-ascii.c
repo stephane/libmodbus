@@ -231,18 +231,15 @@ static ssize_t _modbus_ascii_send(modbus_t *ctx, const uint8_t *req, int req_len
     char ascii_req[3 + (MODBUS_ASCII_MAX_ADU_LENGTH * 2)];
     int send_lenghth;
 
-    k = 0;
-    for (i = 0; i < req_length; ++i) {
-        if (req[i] == ':' || req[i] == '\r' || req[i] == '\n') {
-            ascii_req[k++] = req[i];
-        } else {
-            ascii_req[k++] = nibble_to_hex_ascii(req[i] >> 4);
-            ascii_req[k++] = nibble_to_hex_ascii(req[i] & 0x0f);
-        }
+    ascii_req[0] = req[0]; // ':'
+    k = 1;
+    for (i = 1; i < req_length - 2; ++i) {
+        ascii_req[k++] = nibble_to_hex_ascii(req[i] >> 4);
+        ascii_req[k++] = nibble_to_hex_ascii(req[i] & 0x0f);
     }
+    ascii_req[k++] = req[i++]; // '\r'
+    ascii_req[k++] = req[i++]; // '\n'
     ascii_req[k] = '\0';
-
-    printf("---input %d \"%s\"\n", k, ascii_req);
 
 #if defined(_WIN32)
     modbus_ascii_t *ctx_ascii = ctx->backend_data;
@@ -309,7 +306,6 @@ static ssize_t _modbus_ascii_recv_char(modbus_t *ctx, char *p_char_rsp, uint8_t 
 #else
     size = read(ctx->s, p_char_rsp, 1);
 #endif
-    printf("%c", *p_char_rsp);
     return size;
 }
 
