@@ -40,21 +40,28 @@
 #  endif
 #endif
 
-#if !defined(bswap_32)
-
 #if !defined(bswap_16)
+# if defined(_MSC_VER)
+#  define bswap_16(x) _byteswap_ushort(x)
+# else
 #   warning "Fallback on C functions for bswap_16"
 static inline uint16_t bswap_16(uint16_t x)
 {
     return (x >> 8) | (x << 8);
 }
+# endif
 #endif
 
+#if !defined(bswap_32)
+# if defined(_MSC_VER)
+#  define bswap_32(x) _byteswap_ulong((unsigned long)(x))
+# else
 #   warning "Fallback on C functions for bswap_32"
 static inline uint32_t bswap_32(uint32_t x)
 {
     return (bswap_16(x & 0xffff) << 16) | (bswap_16(x >> 16));
 }
+# endif
 #endif
 
 /* Sets many bits from a single byte value (all 8 bits of the byte value are
