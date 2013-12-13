@@ -835,6 +835,16 @@ int main(int argc, char *argv[])
         goto close;
     }
 
+    /* Test init functions */
+    printf("\nTEST INVALID INITIALIZATION:\n");
+    ctx = modbus_new_rtu(NULL, 0, 'A', 0, 0);
+    if (ctx == NULL && errno == EINVAL) {
+        printf("OK\n");
+    } else {
+        printf("FAILED\n");
+        goto close;
+    }
+
     printf("\nALL TESTS PASS WITH SUCCESS.\n");
 
 close:
