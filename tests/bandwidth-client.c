@@ -33,16 +33,11 @@ static uint32_t gettime_ms(void)
 {
     struct timeval tv;
 #if !defined(_MSC_VER)
-    gettimeofday (&tv, NULL);
-#else
-    SYSTEMTIME st;
-
-    GetLocalTime(&st);
-    tv.tv_sec = st.wSecond;
-    tv.tv_usec = st.wMilliseconds * 1000;
-#endif
-
+    gettimeofday(&tv, NULL);
     return (uint32_t) tv.tv_sec * 1000 + tv.tv_usec / 1000;
+#else
+    return GetTickCount();
+#endif
 }
 
 enum {
