@@ -292,11 +292,11 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
         }
 
         _modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts == MODBUS_RTU_RTS_UP);
-        usleep(_MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
+        usleep(ctx_rtu->rts_delay);
 
         size = write(ctx->s, req, req_length);
 
-        usleep(ctx_rtu->onebyte_time * req_length + _MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
+        usleep(ctx_rtu->onebyte_time * req_length + ctx_rtu->rts_delay);
         _modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
 
         return size;
@@ -1036,6 +1036,57 @@ int modbus_rtu_get_rts(modbus_t *ctx)
     }
 }
 
+int modbus_rtu_set_rts_delay(modbus_t *ctx, int us)
+{
+    if (ctx == NULL || us < 0) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
+#if HAVE_DECL_TIOCM_RTS
+        modbus_rtu_t *ctx_rtu;
+        ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
+        ctx_rtu->rts_delay = us;
+        return 0;
+#else
+        if (ctx->debug) {
+            fprintf(stderr, "This function isn't supported on your platform\n");
+        }
+        errno = ENOTSUP;
+        return -1;
+#endif
+    } else {
+        errno = EINVAL;
+        return -1;
+    }
+}
+
+int modbus_rtu_get_rts_delay(modbus_t *ctx)
+{
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
+#if HAVE_DECL_TIOCM_RTS
+        modbus_rtu_t *ctx_rtu;
+        ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
+        return ctx_rtu->rts_delay;
+#else
+        if (ctx->debug) {
+            fprintf(stderr, "This function isn't supported on your platform\n");
+        }
+        errno = ENOTSUP;
+        return -1;
+#endif
+    } else {
+        errno = EINVAL;
+        return -1;
+    }
+}
+
 static void _modbus_rtu_close(modbus_t *ctx)
 {
     /* Restore line settings and close file descriptor in RTU mode */
@@ -1187,6 +1238,9 @@ modbus_t* modbus_new_rtu(const char *device,
 
     /* Calculate estimated time in micro second to send one byte */
     ctx_rtu->onebyte_time = (1000 * 1000) * (1 + data_bit + (parity == 'N' ? 0 : 1) + stop_bit) / baud;
+
+    /* The delay before and after transmission when toggling the RTS pin */
+    ctx_rtu->rts_delay = ctx_rtu->onebyte_time;
 #endif
 
     ctx_rtu->confirmation_to_ignore = FALSE;
