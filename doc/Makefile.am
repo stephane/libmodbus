@@ -29,6 +29,7 @@ TXT3 = \
         modbus_rtu_set_serial_mode.txt \
         modbus_rtu_get_rts.txt \
         modbus_rtu_set_rts.txt \
+        modbus_rtu_set_custom_rts.txt \
         modbus_send_raw_request.txt \
         modbus_set_bits_from_bytes.txt \
         modbus_set_bits_from_byte.txt \
