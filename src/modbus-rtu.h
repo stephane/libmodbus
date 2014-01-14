@@ -44,6 +44,8 @@ MODBUS_API int modbus_rtu_get_serial_mode(modbus_t *ctx);
 MODBUS_API int modbus_rtu_set_rts(modbus_t *ctx, int mode);
 MODBUS_API int modbus_rtu_get_rts(modbus_t *ctx);
 
+MODBUS_API int modbus_rtu_set_custom_rts(modbus_t *ctx, void (*set_rts) (modbus_t *ctx, int on));
+
 MODBUS_END_DECLS
 
 #endif /* MODBUS_RTU_H */
