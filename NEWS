@@ -1,10 +1,16 @@
-libmodbus 3.1.2 (2013-XX-XX)
+libmodbus 3.1.2 (2014-XX-XX)
 ============================
+
+If you still want to listen any addresses in your TCP IPv4 server, you must now
+set the IP address to NULL in modbus_new_tcp before listening. Now,
+modbus_tcp_listen only listen the IP address set in the Modbus context (see
+documentation).
 
 This release introduces API changes on modbus_get_byte_timeout,
 modbus_get_response_timeout, modbus_set_byte_timeout,
 modbus_set_response_timeout to ease writing of language bindings.
 
+- Filter of IP addresses in IPv4 server (closes #190)
 - Allow to listen any hosts in IPv6 (closes #32)
 - Define and public export of MODBUS_MAX_PDU_LENGTH (closes #167)
 - Truncate data from response in report_slave_id to new max arg (closes #167)

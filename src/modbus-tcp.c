@@ -515,7 +515,13 @@ int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
     addr.sin_family = AF_INET;
     /* If the modbus port is < to 1024, we need the setuid root. */
     addr.sin_port = htons(ctx_tcp->port);
-    addr.sin_addr.s_addr = INADDR_ANY;
+    if (ctx_tcp->ip[0] == '0') {
+        /* Listen any addresses */
+        addr.sin_addr.s_addr = INADDR_ANY;
+    } else {
+        /* Listen only specified IP address */
+        addr.sin_addr.s_addr = inet_addr(ctx_tcp->ip);
+    }
     if (bind(new_s, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
         close(new_s);
         return -1;
@@ -807,22 +813,25 @@ modbus_t* modbus_new_tcp(const char *ip, int port)
     ctx->backend_data = (modbus_tcp_t *) malloc(sizeof(modbus_tcp_t));
     ctx_tcp = (modbus_tcp_t *)ctx->backend_data;
 
-    dest_size = sizeof(char) * 16;
-    ret_size = strlcpy(ctx_tcp->ip, ip, dest_size);
-    if (ret_size == 0) {
-        fprintf(stderr, "The IP string is empty\n");
-        modbus_free(ctx);
-        errno = EINVAL;
-        return NULL;
-    }
+    if (ip != NULL) {
+        dest_size = sizeof(char) * 16;
+        ret_size = strlcpy(ctx_tcp->ip, ip, dest_size);
+        if (ret_size == 0) {
+            fprintf(stderr, "The IP string is empty\n");
+            modbus_free(ctx);
+            errno = EINVAL;
+            return NULL;
+        }
 
-    if (ret_size >= dest_size) {
-        fprintf(stderr, "The IP string has been truncated\n");
-        modbus_free(ctx);
-        errno = EINVAL;
-        return NULL;
+        if (ret_size >= dest_size) {
+            fprintf(stderr, "The IP string has been truncated\n");
+            modbus_free(ctx);
+            errno = EINVAL;
+            return NULL;
+        }
+    } else {
+        ctx_tcp->ip[0] = '0';
     }
-
     ctx_tcp->port = port;
     ctx_tcp->t_id = 0;
 
