@@ -553,17 +553,20 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
     }
 #endif
 
-    if (ctx_tcp_pi->node[0] == 0)
+    if (ctx_tcp_pi->node[0] == 0) {
         node = NULL; /* == any */
-    else
+    } else {
         node = ctx_tcp_pi->node;
+    }
 
-    if (ctx_tcp_pi->service[0] == 0)
+    if (ctx_tcp_pi->service[0] == 0) {
         service = "502";
-    else
+    } else {
         service = ctx_tcp_pi->service;
+    }
 
     memset(&ai_hints, 0, sizeof (ai_hints));
+    /* If node is not NULL, than the AI_PASSIVE flag is ignored. */
     ai_hints.ai_flags |= AI_PASSIVE;
 #ifdef AI_ADDRCONFIG
     ai_hints.ai_flags |= AI_ADDRCONFIG;
@@ -845,24 +848,35 @@ modbus_t* modbus_new_tcp_pi(const char *node, const char *service)
     ctx->backend_data = (modbus_tcp_pi_t *) malloc(sizeof(modbus_tcp_pi_t));
     ctx_tcp_pi = (modbus_tcp_pi_t *)ctx->backend_data;
 
-    dest_size = sizeof(char) * _MODBUS_TCP_PI_NODE_LENGTH;
-    ret_size = strlcpy(ctx_tcp_pi->node, node, dest_size);
-    if (ret_size == 0) {
-        fprintf(stderr, "The node string is empty\n");
-        modbus_free(ctx);
-        errno = EINVAL;
-        return NULL;
+    if (node == NULL) {
+        /* The node argument can be empty to indicate any hosts */
+        ctx_tcp_pi->node[0] = '0';
+    } else {
+        dest_size = sizeof(char) * _MODBUS_TCP_PI_NODE_LENGTH;
+        ret_size = strlcpy(ctx_tcp_pi->node, node, dest_size);
+        if (ret_size == 0) {
+            fprintf(stderr, "The node string is empty\n");
+            modbus_free(ctx);
+            errno = EINVAL;
+            return NULL;
+        }
+
+        if (ret_size >= dest_size) {
+            fprintf(stderr, "The node string has been truncated\n");
+            modbus_free(ctx);
+            errno = EINVAL;
+            return NULL;
+        }
     }
 
-    if (ret_size >= dest_size) {
-        fprintf(stderr, "The node string has been truncated\n");
-        modbus_free(ctx);
-        errno = EINVAL;
-        return NULL;
+    if (service != NULL) {
+        dest_size = sizeof(char) * _MODBUS_TCP_PI_SERVICE_LENGTH;
+        ret_size = strlcpy(ctx_tcp_pi->service, service, dest_size);
+    } else {
+        /* Empty service is not allowed, error catched below. */
+        ret_size = 0;
     }
 
-    dest_size = sizeof(char) * _MODBUS_TCP_PI_SERVICE_LENGTH;
-    ret_size = strlcpy(ctx_tcp_pi->service, service, dest_size);
     if (ret_size == 0) {
         fprintf(stderr, "The service string is empty\n");
         modbus_free(ctx);
