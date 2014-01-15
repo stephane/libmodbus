@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
                               MODBUS_ERROR_RECOVERY_PROTOCOL);
 
     if (use_backend == RTU) {
-          modbus_set_slave(ctx, SERVER_ID);
+        modbus_set_slave(ctx, SERVER_ID);
     }
 
     modbus_get_response_timeout(ctx, &old_response_to_sec, &old_response_to_usec);
