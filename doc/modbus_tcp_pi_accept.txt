@@ -14,16 +14,15 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-
-The _modbus_tcp_pi_accept()_ function shall extract the first connection on the
+The *modbus_tcp_pi_accept()* function shall extract the first connection on the
 queue of pending connections, create a new socket and store it in libmodbus
-context given in argument. If available, _accept4()_ with *SOCK_CLOEXEC* will be
-called instead of _accept()_.
+context given in argument. If available, _accept4()_ with `SOCK_CLOEXEC` will be
+called instead of *accept()*.
 
 
 RETURN VALUE
 ------------
-The _modbus_tcp_pi_accept()_ function shall return a new socket if successful.
+The function shall return a new socket if successful.
 Otherwise it shall return -1 and set errno.
 
 

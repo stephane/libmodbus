@@ -14,7 +14,7 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_get_response_timeout()_ function shall return the timeout interval
+The *modbus_get_response_timeout()* function shall return the timeout interval
 used to wait for a response in the _to_sec_ and _to_usec_ arguments.
 
 

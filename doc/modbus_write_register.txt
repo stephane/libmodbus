@@ -14,16 +14,16 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_write_register()_ function shall write the value of 'value'
-holding registers at the address 'addr' of the remote device.
+The *modbus_write_register()* function shall write the value of _value_
+holding registers at the address _addr_ of the remote device.
 
 The function uses the Modbus function code 0x06 (preset single register).
 
 
 RETURN VALUE
 ------------
-The _modbus_write_register()_ function shall return 1 if successful. Otherwise
-it shall return -1 and set errno.
+The function shall return 1 if successful. Otherwise it shall return -1 and set
+errno.
 
 
 SEE ALSO

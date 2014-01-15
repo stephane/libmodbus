@@ -14,7 +14,7 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_get_byte_timeout()_ function shall store the timeout interval
+The *modbus_get_byte_timeout()* function shall store the timeout interval
 between two consecutive bytes of the same message in the _to_sec_ and _to_usec_
 arguments.
 

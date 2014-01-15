@@ -14,7 +14,7 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_close()_ function shall close the connection established with the
+The *modbus_close()* function shall close the connection established with the
 backend set in the context.
 
 

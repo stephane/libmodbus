@@ -23,8 +23,8 @@ listen.
 
 RETURN VALUE
 ------------
-The *modbus_tcp_listen()* function shall return a new socket if
-successful. Otherwise it shall return -1 and set errno.
+The function shall return a new socket if successful. Otherwise it shall return
+-1 and set errno.
 
 
 EXAMPLE

@@ -14,9 +14,9 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_set_bits_from_byte_ function shall set many bits from a single byte.
-All 8 bits from the byte 'value' will be written to 'dest' array starting at
-'index' position.
+The *modbus_set_bits_from_byte()* function shall set many bits from a single byte.
+All 8 bits from the byte _value_ will be written to _dest_ array starting at
+_index_ position.
 
 
 RETURN VALUE

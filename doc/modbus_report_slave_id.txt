@@ -14,10 +14,10 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_report_slave_id()_ function shall send a request to the controller
+The *modbus_report_slave_id()* function shall send a request to the controller
 to obtain a description of the controller.
 
-The response stored in 'dest' contains:
+The response stored in _dest_ contains:
 
 * the slave ID, this unique ID is in reality not unique at all so it's not
   possible to depend on it to know how the information are packed in the
@@ -26,16 +26,15 @@ The response stored in 'dest' contains:
 * additional data specific to each controller. For example, libmodbus returns
   the version of the library as a string.
 
-The function write at most 'max_dest' bytes from the response to 'dest'.
+The function write at most _max_dest_ bytes from the response to _dest_.
 
 RETURN VALUE
 ------------
-The _modbus_report_slave_id()_ function shall return the number of read data if
-successful.
+The function shall return the number of read data if successful.
 
-If the output was truncated due to the 'max_dest' limit then the return value is
-the number of bytes which would have been written to 'dest' if enough space had
-been available. Thus, a return value greater than 'max_dest' means that the
+If the output was truncated due to the _max_dest_ limit then the return value is
+the number of bytes which would have been written to _dest_ if enough space had
+been available. Thus, a return value greater than _max_dest_ means that the
 response data was truncated.
 
 Otherwise it shall return -1 and set errno.
