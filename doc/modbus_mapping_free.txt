@@ -14,8 +14,8 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_mapping_free()_ function shall free the four arrays of mb_mapping_t
-structure and finally the mb_mapping_t referenced by 'mb_mapping'.
+The function shall free the four arrays of mb_mapping_t structure and finally
+the mb_mapping_t referenced by _mb_mapping_.
 
 
 RETURN VALUE

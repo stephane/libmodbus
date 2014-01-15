@@ -14,7 +14,7 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_mapping_new()_ function shall allocate four arrays to store bits,
+The *modbus_mapping_new()* function shall allocate four arrays to store bits,
 input bits, registers and inputs registers. The pointers are stored in
 modbus_mapping_t structure. All values of the arrays are initialized to zero.
 
@@ -26,8 +26,8 @@ This function is convenient to handle requests in a Modbus server/slave.
 
 RETURN VALUE
 ------------
-The _modbus_mapping_new()_ function shall return the new allocated structure if
-successful. Otherwise it shall return NULL and set errno.
+The function shall return the new allocated structure if successful. Otherwise
+it shall return NULL and set errno.
 
 
 ERRORS

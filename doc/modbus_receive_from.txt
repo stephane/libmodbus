@@ -14,15 +14,15 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_receive_from()_ function shall receive an indication request from
-the socket/file descriptor given in argument 'sockfd. This function is used by
+The *modbus_receive_from()* function shall receive an indication request from
+the socket/file descriptor given in argument _sockfd_. This function is used by
 Modbus slave/server to receive and analyze indication request sent by the
 masters/clients.
 
 
 RETURN VALUE
 ------------
-The _modbus_receive_from()_ function shall store the indication request in 'req'
+The function shall store the indication request in _req_
 and return the request length if sucessful. Otherwise it shall return -1 and set
 errno.
 

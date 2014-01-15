@@ -14,7 +14,7 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_set_socket()_ function shall set the socket or file descriptor in
+The *modbus_set_socket()* function shall set the socket or file descriptor in
 the libmodbus context. This function is useful for managing multiple client
 connections to the same server.
 

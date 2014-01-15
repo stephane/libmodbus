@@ -14,7 +14,7 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_get_socket()_ function shall return the current socket or file
+The *modbus_get_socket()* function shall return the current socket or file
 descriptor of the libmodbus context.
 
 

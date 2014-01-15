@@ -29,8 +29,8 @@ necessary to have administrator privileges.
 
 RETURN VALUE
 ------------
-The *modbus_new_tcp_pi()* function shall return a pointer to a *modbus_t* structure
-if successful. Otherwise it shall return NULL and set errno to one of the values
+The function shall return a pointer to a *modbus_t* structure if
+successful. Otherwise it shall return NULL and set errno to one of the values
 defined below.
 
 

@@ -14,7 +14,7 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_mask_write_register()_ function shall modify the value of the
+The *modbus_mask_write_register()* function shall modify the value of the
 holding register at the address 'addr' of the remote device using the algorithm:
 
   new value = (current value AND 'and') OR ('or' AND (NOT 'and'))
@@ -24,8 +24,8 @@ The function uses the Modbus function code 0x16 (mask single register).
 
 RETURN VALUE
 ------------
-The _modbus_mask_write_register()_ function shall return 1 if successful. Otherwise
-it shall return -1 and set errno.
+The function shall return 1 if successful. Otherwise it shall return -1 and set
+errno.
 
 
 SEE ALSO

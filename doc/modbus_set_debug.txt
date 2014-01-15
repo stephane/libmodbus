@@ -13,9 +13,9 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_set_debug()_ function shall set the debug flag of the *modbus_t*
-context by using the argument 'flag'. By default, the boolean flag is set to
-'FALSE'. When the 'flag' value is set to 'TRUE', many verbose messages are
+The *modbus_set_debug()* function shall set the debug flag of the *modbus_t*
+context by using the argument _flag_. By default, the boolean flag is set to
+`FALSE`. When the _flag_ value is set to `TRUE`, many verbose messages are
 displayed on stdout and stderr. For example, this flag is useful to display the
 bytes of the Modbus messages.
 

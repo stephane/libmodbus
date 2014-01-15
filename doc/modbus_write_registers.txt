@@ -14,17 +14,16 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_write_registers()_ function shall write the content of the 'nb'
-holding registers from the array 'src' at address 'addr' of the
-remote device.
+The *modbus_write_registers()* function shall write the content of the _nb_
+holding registers from the array _src_ at address _addr_ of the remote device.
 
 The function uses the Modbus function code 0x10 (preset multiple registers).
 
 
 RETURN VALUE
 ------------
-The _modbus_write_registers()_ function shall return the number of written
-registers if successful. Otherwise it shall return -1 and set errno.
+The function shall return the number of written registers if
+successful. Otherwise it shall return -1 and set errno.
 
 
 SEE ALSO

@@ -14,9 +14,8 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-
-The _modbus_rtu_get_rts()_ function shall get the current Request To Send mode
-of the libmodbus context 'ctx'. The possible returned values are:
+The *modbus_rtu_get_rts()* function shall get the current Request To Send mode
+of the libmodbus context _ctx_. The possible returned values are:
 
 * MODBUS_RTU_RTS_NONE
 * MODBUS_RTU_RTS_UP
@@ -27,8 +26,8 @@ This function can only be used with a context using a RTU backend.
 
 RETURN VALUE
 ------------
-The _modbus_rtu_get_rts()_ function shall return the current RTS mode if
-successful. Otherwise it shall return -1 and set errno.
+The function shall return the current RTS mode if successful. Otherwise it shall
+return -1 and set errno.
 
 
 ERRORS
