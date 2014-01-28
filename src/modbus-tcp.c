@@ -517,7 +517,7 @@ int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
     addr.sin_port = htons(ctx_tcp->port);
     if (ctx_tcp->ip[0] == '0') {
         /* Listen any addresses */
-        addr.sin_addr.s_addr = INADDR_ANY;
+        addr.sin_addr.s_addr = htonl(INADDR_ANY);
     } else {
         /* Listen only specified IP address */
         addr.sin_addr.s_addr = inet_addr(ctx_tcp->ip);
