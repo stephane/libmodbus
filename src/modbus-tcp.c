@@ -554,7 +554,7 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
     ctx_tcp_pi = ctx->backend_data;
 
 #ifdef OS_WIN32
-    if (modbustcp_init_win32() == -1) {
+    if (_modbus_tcp_init_win32() == -1) {
         return -1;
     }
 #endif
