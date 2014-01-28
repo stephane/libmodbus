@@ -268,11 +268,18 @@ static int _connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen,
 {
     int rc;
 
-    rc = connect(sockfd, addr, addrlen);
-
 #ifdef OS_WIN32
-    if (rc == -1 && WSAGetLastError() == WSAEINPROGRESS) {
+    int wsaError = 0;
+
+    rc = connect(sockfd, addr, addrlen);
+    if (rc == -1) {
+        wsaError = WSAGetLastError();
+    }
+
+    if (wsaError == WSAEWOULDBLOCK || wsaError == WSAEINPROGRESS) {
 #else
+
+    rc = connect(sockfd, addr, addrlen);
     if (rc == -1 && errno == EINPROGRESS) {
 #endif
         fd_set wset;
