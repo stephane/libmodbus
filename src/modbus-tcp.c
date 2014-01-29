@@ -266,20 +266,16 @@ static int _modbus_tcp_set_ipv4_options(int s)
 static int _connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen,
                     const struct timeval *ro_tv)
 {
-    int rc;
+    int rc = connect(sockfd, addr, addrlen);
 
 #ifdef OS_WIN32
     int wsaError = 0;
-
-    rc = connect(sockfd, addr, addrlen);
     if (rc == -1) {
         wsaError = WSAGetLastError();
     }
 
     if (wsaError == WSAEWOULDBLOCK || wsaError == WSAEINPROGRESS) {
 #else
-
-    rc = connect(sockfd, addr, addrlen);
     if (rc == -1 && errno == EINPROGRESS) {
 #endif
         fd_set wset;
