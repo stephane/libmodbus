@@ -31,7 +31,7 @@
 #include "modbus-rtu.h"
 #include "modbus-rtu-private.h"
 
-#if HAVE_DECL_TIOCSRS485 || HAVE_DECL_TIOCM_RTS
+#if HAVE_DECL_TIOCSRS485 || HAVE_DECL_TIOCM_RTS || HAVE_DECL_TIOCM_DTR
 #include <sys/ioctl.h>
 #endif
 
@@ -275,6 +275,21 @@ static void _modbus_rtu_ioctl_rts(int fd, int on)
 }
 #endif
 
+#if HAVE_DECL_TIOCM_DTR
+static void _modbus_rtu_ioctl_dtr(int fd, int on)
+{
+    int flags;
+
+    ioctl(fd, TIOCMGET, &flags);
+    if (on) {
+        flags |= TIOCM_DTR;
+    } else {
+        flags &= ~TIOCM_DTR;
+    }
+    ioctl(fd, TIOCMSET, &flags);
+}
+#endif
+
 static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
 {
 #if defined(_WIN32)
@@ -282,28 +297,45 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
     DWORD n_bytes = 0;
     return (WriteFile(ctx_rtu->w_ser.fd, req, req_length, &n_bytes, NULL)) ? (ssize_t)n_bytes : -1;
 #else
-#if HAVE_DECL_TIOCM_RTS
+#if !HAVE_DECL_TIOCM_RTS
+	if (ctx_rtu->rts == MODBUS_RTU_RTS_UP || ctx_rtu->rts == MODBUS_RTU_RTS_DOWN)
+		ctx_rtu->rts = MODBUS_RTU_RTS_NONE;
+#endif
+#if !HAVE_DECL_TIOCM_DTR
+	if (ctx_rtu->rts == MODBUS_RTU_DTR_UP || ctx_rtu->rts == MODBUS_RTU_DTR_DOWN)
+		ctx_rtu->rts = MODBUS_RTU_RTS_NONE;
+#endif
+
+#if HAVE_DECL_TIOCM_RTS || HAVE_DECL_TIOCM_DTR
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
     if (ctx_rtu->rts != MODBUS_RTU_RTS_NONE) {
         ssize_t size;
 
         if (ctx->debug) {
-            fprintf(stderr, "Sending request using RTS signal\n");
+            fprintf(stderr, "Sending request using RTS/DTR signal\n");
         }
 
-        _modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts == MODBUS_RTU_RTS_UP);
+		if (ctx_rtu->rts == MODBUS_RTU_RTS_UP || ctx_rtu->rts == MODBUS_RTU_RTS_DOWN) {
+			_modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts == MODBUS_RTU_RTS_UP);
+		} else  {
+			_modbus_rtu_ioctl_dtr(ctx->s, ctx_rtu->rts == MODBUS_RTU_DTR_UP);
+		}
         usleep(_MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
 
         size = write(ctx->s, req, req_length);
 
         usleep(ctx_rtu->onebyte_time * req_length + _MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
-        _modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
+		if (ctx_rtu->rts == MODBUS_RTU_RTS_UP || ctx_rtu->rts == MODBUS_RTU_RTS_DOWN) {
+			_modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
+		} else {
+			_modbus_rtu_ioctl_dtr(ctx->s, ctx_rtu->rts != MODBUS_RTU_DTR_UP);
+		}
 
         return size;
     } else {
 #endif
         return write(ctx->s, req, req_length);
-#if HAVE_DECL_TIOCM_RTS
+#if HAVE_DECL_TIOCM_RTS || HAVE_DECL_TIOCM_DTR
     }
 #endif
 #endif
@@ -984,15 +1016,22 @@ int modbus_rtu_set_rts(modbus_t *ctx, int mode)
     }
 
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
-#if HAVE_DECL_TIOCM_RTS
+#if HAVE_DECL_TIOCM_RTS || HAVE_DECL_TIOCM_DTR
         modbus_rtu_t *ctx_rtu = ctx->backend_data;
 
-        if (mode == MODBUS_RTU_RTS_NONE || mode == MODBUS_RTU_RTS_UP ||
-            mode == MODBUS_RTU_RTS_DOWN) {
+        if (mode == MODBUS_RTU_NONE     || mode == MODBUS_RTU_RTS_UP ||
+            mode == MODBUS_RTU_RTS_DOWN || mode == MODBUS_RTU_DTR_UP ||
+            mode == MODBUS_RTU_DTR_DOWN ) {
             ctx_rtu->rts = mode;
 
-            /* Set the RTS bit in order to not reserve the RS485 bus */
-            _modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
+            if (mode == MODBUS_RTU_RTS_UP || mode == MODBUS_RTU_RTS_DOWN) {
+                /* Set the RTS bit in order to not reserve the RS485 bus */
+                _modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
+            }
+            if (mode == MODBUS_RTU_DTR_UP || mode == MODBUS_RTU_DTR_DOWN) {
+                /* Set the RTS bit in order to not reserve the RS485 bus */
+                _modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts != MODBUS_RTU_DTR_UP);
+            }
 
             return 0;
         } else {
