@@ -13,7 +13,7 @@
 #
 m4_define([libmodbus_version_major], [3])
 m4_define([libmodbus_version_minor], [1])
-m4_define([libmodbus_version_micro], [0])
+m4_define([libmodbus_version_micro], [1])
 
 m4_define([libmodbus_release_status],
     [m4_if(m4_eval(libmodbus_version_minor % 2), [1], [snapshot], [release])])
@@ -99,6 +99,9 @@ AC_CHECK_DECLS([__CYGWIN__])
 # Checks for library functions.
 AC_FUNC_FORK
 AC_CHECK_FUNCS([accept4 getaddrinfo gettimeofday inet_ntoa memset select socket strerror strlcpy])
+
+# Required for MinGW with GCC v4.8.1 on Win7
+AC_DEFINE(WINVER, 0x0501, _)
 
 # Required for getaddrinfo (TCP PI - IPv6)
 AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)

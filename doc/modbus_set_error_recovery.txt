@@ -14,16 +14,16 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_set_error_recovery()_ function shall set the error recovery mode to
+The *modbus_set_error_recovery()* function shall set the error recovery mode to
 apply when the connection fails or the byte received is not expected. The
-argument 'error_recovery' may be bitwise-or'ed with zero or more of the
+argument _error_recovery_ may be bitwise-or'ed with zero or more of the
 following constants.
 
-By default there is no error recovery ('MODBUS_ERROR_RECOVERY_NONE') so the
+By default there is no error recovery (`MODBUS_ERROR_RECOVERY_NONE`) so the
 application is responsible for controlling the error values returned by
 libmodbus functions and for handling them if necessary.
 
-When 'MODBUS_ERROR_RECOVERY_LINK' is set, the library will attempt an
+When `MODBUS_ERROR_RECOVERY_LINK` is set, the library will attempt an
 reconnection after a delay defined by response timeout of the libmodbus context.
 This mode will try a infinite close/connect loop until success on send call and
 will just try one time to retablish the connection on select/read calls (if the
@@ -33,7 +33,7 @@ after a delay based on the current response timeout in some situations (eg.
 timeout of select call). The reconnection attempt can hang for several seconds
 if the network to the remote target unit is down.
 
-When 'MODBUS_ERROR_RECOVERY_PROTOCOL' is set, a sleep and flush sequence will be
+When `MODBUS_ERROR_RECOVERY_PROTOCOL` is set, a sleep and flush sequence will be
 used to cleanup the ongoing communication, this can occurs when the message
 length is invalid, the TID is wrong or the received function code is not the
 expected one. The response timeout delay will be used to sleep.
@@ -45,15 +45,14 @@ It's not recommended to enable error recovery for slave/server.
 
 RETURN VALUE
 ------------
-The _modbus_set_error_recovery()_ function shall return 0 if
-successful. Otherwise it shall return -1 and set errno to one of the values
-defined below.
+The function shall return 0 if successful. Otherwise it shall return -1 and set
+errno to one of the values defined below.
 
 
 ERRORS
 ------
 *EINVAL*::
-The value of the argument 'error_recovery' is not positive.
+The value of the argument _error_recovery_ is not positive.
 
 
 EXAMPLE

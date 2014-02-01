@@ -1,0 +1,67 @@
+modbus_tcp_pi_listen(3)
+=======================
+
+
+NAME
+----
+modbus_tcp_pi_listen - create and listen a TCP PI Modbus socket (IPv6)
+
+
+SYNOPSIS
+--------
+*int modbus_tcp_pi_listen(modbus_t *'ctx', int 'nb_connection');*
+
+
+DESCRIPTION
+-----------
+The *modbus_tcp_pi_listen()* function shall create a socket and listen to
+maximum _nb_connection_ incoming connections on the specified nodes.  The
+context *ctx* must be allocated and initialized with linkmb:modbus_new_tcp_pi[3]
+before to set the node to listen, if node is set to NULL, any addresses will be
+listen.
+
+
+RETURN VALUE
+------------
+The function shall return a new socket if successful. Otherwise it shall return
+-1 and set errno.
+
+
+EXAMPLE
+-------
+
+For detailed examples, see source files in tests directory:
+
+- unit-test-server.c, simple but handle only one connection
+
+[source,c]
+-------------------
+...
+
+ctx = modbus_new_tcp_pi("::0", "502");
+s = modbus_tcp_pi_listen(ctx, 1);
+modbus_tcp_pi_accept(ctx, &s);
+
+for (;;) {
+    rc = modbus_receive(ctx, query);
+    modbus_replay(ctx, query, rc, mb_mapping);
+}
+...
+
+mclose(s);
+modbus_free(ctx);
+-------------------
+
+- bandwith-server-many-up.c, handles several connections at once
+
+
+SEE ALSO
+--------
+linkmb:modbus_new_tcp_pi[3]
+linkmb:modbus_tcp_pi_accept[3]
+linkmb:modbus_tcp_listen[3]
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

@@ -16,8 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef _MODBUS_PRIVATE_H_
-#define _MODBUS_PRIVATE_H_
+#ifndef MODBUS_PRIVATE_H
+#define MODBUS_PRIVATE_H
 
 #ifndef _MSC_VER
 # include <stdint.h>
@@ -50,20 +50,6 @@ MODBUS_BEGIN_DECLS
 /* Timeouts in microsecond (0.5 s) */
 #define _RESPONSE_TIMEOUT    500000
 #define _BYTE_TIMEOUT        500000
-
-/* Function codes */
-#define _FC_READ_COILS                0x01
-#define _FC_READ_DISCRETE_INPUTS      0x02
-#define _FC_READ_HOLDING_REGISTERS    0x03
-#define _FC_READ_INPUT_REGISTERS      0x04
-#define _FC_WRITE_SINGLE_COIL         0x05
-#define _FC_WRITE_SINGLE_REGISTER     0x06
-#define _FC_READ_EXCEPTION_STATUS     0x07
-#define _FC_WRITE_MULTIPLE_COILS      0x0F
-#define _FC_WRITE_MULTIPLE_REGISTERS  0x10
-#define _FC_REPORT_SLAVE_ID           0x11
-#define _FC_MASK_WRITE_REGISTER       0x16
-#define _FC_WRITE_AND_READ_REGISTERS  0x17
 
 typedef enum {
     _MODBUS_BACKEND_TYPE_RTU=0,
@@ -138,4 +124,4 @@ size_t strlcpy(char *dest, const char *src, size_t dest_size);
 
 MODBUS_END_DECLS
 
-#endif  /* _MODBUS_PRIVATE_H_ */
+#endif  /* MODBUS_PRIVATE_H */

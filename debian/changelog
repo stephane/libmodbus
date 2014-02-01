@@ -1,3 +1,71 @@
+libmodbus (3.0.5-1) unstable; urgency=low
+
+  * New upstream release
+  * Refresh 01-add-length-checks.patch, as most changes have been superseded
+    upstream
+
+ -- Ivo De Decker <ivo.dedecker@ugent.be>  Mon, 07 Oct 2013 20:50:25 +0200
+
+libmodbus (3.0.4-1) unstable; urgency=low
+
+  * New upstream release
+  * Update standards-version to 3.9.4 (no changes)
+  * Enable parallel build
+  * Enable verbose build to show compiler flags to build log checks
+  * Update watch file to filter out unstable versions
+
+ -- Ivo De Decker <ivo.dedecker@ugent.be>  Sun, 30 Jun 2013 12:25:01 +0200
+
+libmodbus (3.0.3-4) unstable; urgency=low
+
+  * Upload to unstable
+  * Update watch file, thanks to Bart Martens
+
+ -- Ivo De Decker <ivo.dedecker@ugent.be>  Mon, 13 May 2013 21:07:59 +0200
+
+libmodbus (3.0.3-3) experimental; urgency=low
+
+  * Fix watch file
+  * Switch to debhelper
+  * Remove Build-Depends on cdbs
+  * Multiarch support
+
+ -- Ivo De Decker <ivo.dedecker@ugent.be>  Sun, 11 Nov 2012 19:16:34 +0100
+
+libmodbus (3.0.3-2) experimental; urgency=low
+
+  * Install upstream changelog correctly.
+
+ -- Ivo De Decker <ivo.dedecker@ugent.be>  Sat, 09 Jun 2012 16:26:41 +0200
+
+libmodbus (3.0.3-1) unstable; urgency=low
+
+  * Acknowledge NMU, thanks to Roland Stigge and Josef Holzmayr
+  * New upstream release
+  * Update standards-version to 3.9.3 (no changes)
+  * Move to debhelper compatibility level 9
+  * Add symbols file
+  * Add watch file
+
+ -- Ivo De Decker <ivo.dedecker@ugent.be>  Sat, 26 May 2012 14:19:39 +0200
+
+libmodbus (3.0.2-1.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Added patch: Fix crash by adding length checks (Closes: #664740)
+    thanks to Josef Holzmayr
+
+ -- Roland Stigge <stigge@antcom.de>  Fri, 30 Mar 2012 09:45:51 +0200
+
+libmodbus (3.0.2-1) unstable; urgency=low
+
+  * New upstream release
+  * Update standards-version to 3.9.2 (no changes)
+  * Use dh-autoreconf
+  * Update copyright years
+
+ -- Ivo De Decker <Ivo.DeDecker@UGent.be>  Mon, 20 Feb 2012 17:18:27 +0100
+
 libmodbus (3.0.1-2) unstable; urgency=low
 
   * Initial Debian release
@@ -65,4 +133,3 @@ libmodbus (2.0.0-1) hardy; urgency=low
   * Initial release.
 
  -- Stéphane Raimbault <stephane.raimbault@gmail.com>  Wed, 14 May 2008 22:30:53 +0200
-

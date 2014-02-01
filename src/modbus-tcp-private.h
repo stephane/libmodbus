@@ -16,8 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef _MODBUS_TCP_PRIVATE_H_
-#define _MODBUS_TCP_PRIVATE_H_
+#ifndef MODBUS_TCP_PRIVATE_H
+#define MODBUS_TCP_PRIVATE_H
 
 #define _MODBUS_TCP_HEADER_LENGTH      7
 #define _MODBUS_TCP_PRESET_REQ_LENGTH 12
@@ -53,4 +53,4 @@ typedef struct _modbus_tcp_pi {
     char service[_MODBUS_TCP_PI_SERVICE_LENGTH];
 } modbus_tcp_pi_t;
 
-#endif /* _MODBUS_TCP_PRIVATE_H_ */
+#endif /* MODBUS_TCP_PRIVATE_H */

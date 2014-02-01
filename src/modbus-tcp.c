@@ -191,19 +191,29 @@ static int _modbus_tcp_check_integrity(modbus_t *ctx, uint8_t *msg, const int ms
 }
 
 static int _modbus_tcp_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
-                                       const uint8_t *rsp, int rsp_length)
+                                              const uint8_t *rsp, int rsp_length)
 {
-    /* Check TID */
+    /* Check transaction ID */
     if (req[0] != rsp[0] || req[1] != rsp[1]) {
         if (ctx->debug) {
-            fprintf(stderr, "Invalid TID received 0x%X (not 0x%X)\n",
+            fprintf(stderr, "Invalid transaction ID received 0x%X (not 0x%X)\n",
                     (rsp[0] << 8) + rsp[1], (req[0] << 8) + req[1]);
         }
         errno = EMBBADDATA;
         return -1;
-    } else {
-        return 0;
     }
+
+    /* Check protocol ID */
+    if (rsp[2] != 0x0 && rsp[3] != 0x0) {
+        if (ctx->debug) {
+            fprintf(stderr, "Invalid protocol ID received 0x%X (not 0x0)\n",
+                    (rsp[2] << 8) + rsp[3]);
+        }
+        errno = EMBBADDATA;
+        return -1;
+    }
+
+    return 0;
 }
 
 static int _modbus_tcp_set_ipv4_options(int s)
@@ -254,25 +264,29 @@ static int _modbus_tcp_set_ipv4_options(int s)
 }
 
 static int _connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen,
-                    struct timeval *tv)
+                    const struct timeval *ro_tv)
 {
-    int rc;
-
-    rc = connect(sockfd, addr, addrlen);
+    int rc = connect(sockfd, addr, addrlen);
 
 #ifdef OS_WIN32
-    if (rc == -1 && WSAGetLastError() == WSAEINPROGRESS) {
+    int wsaError = 0;
+    if (rc == -1) {
+        wsaError = WSAGetLastError();
+    }
+
+    if (wsaError == WSAEWOULDBLOCK || wsaError == WSAEINPROGRESS) {
 #else
     if (rc == -1 && errno == EINPROGRESS) {
 #endif
         fd_set wset;
         int optval;
         socklen_t optlen = sizeof(optval);
+        struct timeval tv = *ro_tv;
 
         /* Wait to be available in writing */
         FD_ZERO(&wset);
         FD_SET(sockfd, &wset);
-        rc = select(sockfd + 1, NULL, &wset, NULL, tv);
+        rc = select(sockfd + 1, NULL, &wset, NULL, &tv);
         if (rc <= 0) {
             /* Timeout or fail */
             return -1;
@@ -504,7 +518,13 @@ int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
     addr.sin_family = AF_INET;
     /* If the modbus port is < to 1024, we need the setuid root. */
     addr.sin_port = htons(ctx_tcp->port);
-    addr.sin_addr.s_addr = INADDR_ANY;
+    if (ctx_tcp->ip[0] == '0') {
+        /* Listen any addresses */
+        addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    } else {
+        /* Listen only specified IP address */
+        addr.sin_addr.s_addr = inet_addr(ctx_tcp->ip);
+    }
     if (bind(new_s, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
         close(new_s);
         return -1;
@@ -536,17 +556,26 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
 
     ctx_tcp_pi = ctx->backend_data;
 
-    if (ctx_tcp_pi->node[0] == 0)
-        node = NULL; /* == any */
-    else
-        node = ctx_tcp_pi->node;
+#ifdef OS_WIN32
+    if (_modbus_tcp_init_win32() == -1) {
+        return -1;
+    }
+#endif
 
-    if (ctx_tcp_pi->service[0] == 0)
+    if (ctx_tcp_pi->node[0] == 0) {
+        node = NULL; /* == any */
+    } else {
+        node = ctx_tcp_pi->node;
+    }
+
+    if (ctx_tcp_pi->service[0] == 0) {
         service = "502";
-    else
+    } else {
         service = ctx_tcp_pi->service;
+    }
 
     memset(&ai_hints, 0, sizeof (ai_hints));
+    /* If node is not NULL, than the AI_PASSIVE flag is ignored. */
     ai_hints.ai_flags |= AI_PASSIVE;
 #ifdef AI_ADDRCONFIG
     ai_hints.ai_flags |= AI_ADDRCONFIG;
@@ -621,9 +650,6 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
     return new_s;
 }
 
-/* On success, the function return a non-negative integer that is a descriptor
-for the accepted socket. On error, socket is set to -1, -1 is returned and errno
-is set appropriately. */
 int modbus_tcp_accept(modbus_t *ctx, int *s)
 {
     struct sockaddr_in addr;
@@ -667,7 +693,12 @@ int modbus_tcp_pi_accept(modbus_t *ctx, int *s)
     }
 
     addrlen = sizeof(addr);
-    ctx->s = accept(*s, (void *)&addr, &addrlen);
+#ifdef HAVE_ACCEPT4
+    /* Inherit socket flags and use accept4 call */
+    ctx->s = accept4(*s, (struct sockaddr *)&addr, &addrlen, SOCK_CLOEXEC);
+#else
+    ctx->s = accept(*s, (struct sockaddr *)&addr, &addrlen);
+#endif
     if (ctx->s == -1) {
         close(*s);
         *s = -1;
@@ -785,22 +816,25 @@ modbus_t* modbus_new_tcp(const char *ip, int port)
     ctx->backend_data = (modbus_tcp_t *) malloc(sizeof(modbus_tcp_t));
     ctx_tcp = (modbus_tcp_t *)ctx->backend_data;
 
-    dest_size = sizeof(char) * 16;
-    ret_size = strlcpy(ctx_tcp->ip, ip, dest_size);
-    if (ret_size == 0) {
-        fprintf(stderr, "The IP string is empty\n");
-        modbus_free(ctx);
-        errno = EINVAL;
-        return NULL;
-    }
+    if (ip != NULL) {
+        dest_size = sizeof(char) * 16;
+        ret_size = strlcpy(ctx_tcp->ip, ip, dest_size);
+        if (ret_size == 0) {
+            fprintf(stderr, "The IP string is empty\n");
+            modbus_free(ctx);
+            errno = EINVAL;
+            return NULL;
+        }
 
-    if (ret_size >= dest_size) {
-        fprintf(stderr, "The IP string has been truncated\n");
-        modbus_free(ctx);
-        errno = EINVAL;
-        return NULL;
+        if (ret_size >= dest_size) {
+            fprintf(stderr, "The IP string has been truncated\n");
+            modbus_free(ctx);
+            errno = EINVAL;
+            return NULL;
+        }
+    } else {
+        ctx_tcp->ip[0] = '0';
     }
-
     ctx_tcp->port = port;
     ctx_tcp->t_id = 0;
 
@@ -826,24 +860,35 @@ modbus_t* modbus_new_tcp_pi(const char *node, const char *service)
     ctx->backend_data = (modbus_tcp_pi_t *) malloc(sizeof(modbus_tcp_pi_t));
     ctx_tcp_pi = (modbus_tcp_pi_t *)ctx->backend_data;
 
-    dest_size = sizeof(char) * _MODBUS_TCP_PI_NODE_LENGTH;
-    ret_size = strlcpy(ctx_tcp_pi->node, node, dest_size);
-    if (ret_size == 0) {
-        fprintf(stderr, "The node string is empty\n");
-        modbus_free(ctx);
-        errno = EINVAL;
-        return NULL;
+    if (node == NULL) {
+        /* The node argument can be empty to indicate any hosts */
+        ctx_tcp_pi->node[0] = '0';
+    } else {
+        dest_size = sizeof(char) * _MODBUS_TCP_PI_NODE_LENGTH;
+        ret_size = strlcpy(ctx_tcp_pi->node, node, dest_size);
+        if (ret_size == 0) {
+            fprintf(stderr, "The node string is empty\n");
+            modbus_free(ctx);
+            errno = EINVAL;
+            return NULL;
+        }
+
+        if (ret_size >= dest_size) {
+            fprintf(stderr, "The node string has been truncated\n");
+            modbus_free(ctx);
+            errno = EINVAL;
+            return NULL;
+        }
     }
 
-    if (ret_size >= dest_size) {
-        fprintf(stderr, "The node string has been truncated\n");
-        modbus_free(ctx);
-        errno = EINVAL;
-        return NULL;
+    if (service != NULL) {
+        dest_size = sizeof(char) * _MODBUS_TCP_PI_SERVICE_LENGTH;
+        ret_size = strlcpy(ctx_tcp_pi->service, service, dest_size);
+    } else {
+        /* Empty service is not allowed, error catched below. */
+        ret_size = 0;
     }
 
-    dest_size = sizeof(char) * _MODBUS_TCP_PI_SERVICE_LENGTH;
-    ret_size = strlcpy(ctx_tcp_pi->service, service, dest_size);
     if (ret_size == 0) {
         fprintf(stderr, "The service string is empty\n");
         modbus_free(ctx);

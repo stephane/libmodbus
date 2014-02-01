@@ -14,9 +14,9 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_set_bits_from_bytes_ function shall set bits by reading an array of
+The *modbus_set_bits_from_bytes* function shall set bits by reading an array of
 bytes. All the bits of the bytes read from the first position of the array
-'tab_byte' are written as bits in the 'dest' array starting at position 'index'.
+_tab_byte_ are written as bits in the _dest_ array starting at position _index_.
 
 
 RETURN VALUE

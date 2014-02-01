@@ -1,40 +1,31 @@
 Source: libmodbus
 Priority: extra
-Maintainer: Ivo De Decker <Ivo.DeDecker@UGent.be>
-Standards-Version: 3.9.1
+Maintainer: Ivo De Decker <ivo.dedecker@ugent.be>
+Standards-Version: 3.9.4
 Section: libs
-Build-Depends: debhelper (>= 6), cdbs (>= 0.4.43), autotools-dev, libtool, asciidoc, xmlto
+Build-Depends: debhelper (>= 9), asciidoc, xmlto, dh-autoreconf
 Homepage: http://libmodbus.org/
 
 Package: libmodbus5
-Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: A Modbus library
- libmodbus is a C library designed to provide a fast and robust implementation
- of the Modbus protocol. It runs on Linux, Mac OS X, FreeBSD, QNX and Windows.
+Pre-Depends: ${misc:Pre-Depends}
+Multi-Arch: same
+Description: library for the Modbus protocol
+ A Modbus library written in C, to send/receive data with a device which
+ respects the Modbus protocol. This library can use a serial port or an
+ Ethernet connection.
  .
- This package contains the libmodbus shared library.
-
-Package: libmodbus-dbg
-Section: debug
-Priority: extra
-Architecture: any
-Depends: libmodbus5 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
-Description: A Modbus library (debugging symbols)
- libmodbus is a C library designed to provide a fast and robust implementation
- of the Modbus protocol. It runs on Linux, Mac OS X, FreeBSD, QNX and Windows.
- .
- This package contains debugging symbols for libmodbus.
+ This package contains the shared library.
 
 Package: libmodbus-dev
 Section: libdevel
 Architecture: any
 Depends: libmodbus5 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
-Description: A Modbus library
- libmodbus is a C library designed to provide a fast and robust implementation
- of the Modbus protocol. It runs on Linux, Mac OS X, FreeBSD, QNX and Windows.
+Description: development files for the Modbus protocol library
+ A Modbus library written in C, to send/receive data with a device which
+ respects the Modbus protocol. This library can use a serial port or an
+ Ethernet connection.
  .
- This package contains libraries, header files and developer documentation
- needed for developing software which uses the libmodbus library.
+ This package contains the development files.
 

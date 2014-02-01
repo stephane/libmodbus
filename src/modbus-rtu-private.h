@@ -16,8 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef _MODBUS_RTU_PRIVATE_H_
-#define _MODBUS_RTU_PRIVATE_H_
+#ifndef MODBUS_RTU_PRIVATE_H
+#define MODBUS_RTU_PRIVATE_H
 
 #ifndef _MSC_VER
 #include <stdint.h>
@@ -49,12 +49,12 @@
 /* WIN32: struct containing serial handle and a receive buffer */
 #define PY_BUF_SIZE 512
 struct win32_ser {
-	/* File handle */
-	HANDLE fd;
-	/* Receive buffer */
-	uint8_t buf[PY_BUF_SIZE];
-	/* Received chars */
-	DWORD n_bytes;
+    /* File handle */
+    HANDLE fd;
+    /* Receive buffer */
+    uint8_t buf[PY_BUF_SIZE];
+    /* Received chars */
+    DWORD n_bytes;
 };
 #endif /* _WIN32 */
 
@@ -87,4 +87,4 @@ typedef struct _modbus_rtu {
     int confirmation_to_ignore;
 } modbus_rtu_t;
 
-#endif /* _MODBUS_RTU_PRIVATE_H_ */
+#endif /* MODBUS_RTU_PRIVATE_H */

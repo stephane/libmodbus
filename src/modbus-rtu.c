@@ -193,7 +193,7 @@ static void win32_ser_init(struct win32_ser *ws) {
 
 /* FIXME Try to remove length_to_read -> max_len argument, only used by win32 */
 static int win32_ser_select(struct win32_ser *ws, int max_len,
-                            struct timeval *tv) {
+                            const struct timeval *tv) {
     COMMTIMEOUTS comm_to;
     unsigned int msec = 0;
 
@@ -280,7 +280,7 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
 #if defined(_WIN32)
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
     DWORD n_bytes = 0;
-    return (WriteFile(ctx_rtu->w_ser.fd, req, req_length, &n_bytes, NULL)) ? n_bytes : -1;
+    return (WriteFile(ctx_rtu->w_ser.fd, req, req_length, &n_bytes, NULL)) ? (ssize_t)n_bytes : -1;
 #else
 #if HAVE_DECL_TIOCM_RTS
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
@@ -437,16 +437,20 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 
     /* Error checking */
     if (ctx_rtu->w_ser.fd == INVALID_HANDLE_VALUE) {
-        fprintf(stderr, "ERROR Can't open the device %s (LastError %d)\n",
-                ctx_rtu->device, (int)GetLastError());
+        if (ctx->debug) {
+            fprintf(stderr, "ERROR Can't open the device %s (LastError %d)\n",
+                    ctx_rtu->device, (int)GetLastError());
+        }
         return -1;
     }
 
     /* Save params */
     ctx_rtu->old_dcb.DCBlength = sizeof(DCB);
     if (!GetCommState(ctx_rtu->w_ser.fd, &ctx_rtu->old_dcb)) {
-        fprintf(stderr, "ERROR Error getting configuration (LastError %d)\n",
-                (int)GetLastError());
+        if (ctx->debug) {
+            fprintf(stderr, "ERROR Error getting configuration (LastError %d)\n",
+                    (int)GetLastError());
+        }
         CloseHandle(ctx_rtu->w_ser.fd);
         ctx_rtu->w_ser.fd = INVALID_HANDLE_VALUE;
         return -1;
@@ -514,8 +518,10 @@ static int _modbus_rtu_connect(modbus_t *ctx)
         break;
     default:
         dcb.BaudRate = CBR_9600;
-        printf("WARNING Unknown baud rate %d for %s (B9600 used)\n",
-               ctx_rtu->baud, ctx_rtu->device);
+        if (ctx->debug) {
+            fprintf(stderr, "WARNING Unknown baud rate %d for %s (B9600 used)\n",
+                    ctx_rtu->baud, ctx_rtu->device);
+        }
     }
 
     /* Data bits */
@@ -569,8 +575,10 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 
     /* Setup port */
     if (!SetCommState(ctx_rtu->w_ser.fd, &dcb)) {
-        fprintf(stderr, "ERROR Error setting new configuration (LastError %d)\n",
-                (int)GetLastError());
+        if (ctx->debug) {
+            fprintf(stderr, "ERROR Error setting new configuration (LastError %d)\n",
+                    (int)GetLastError());
+        }
         CloseHandle(ctx_rtu->w_ser.fd);
         ctx_rtu->w_ser.fd = INVALID_HANDLE_VALUE;
         return -1;
@@ -590,8 +598,10 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 
     ctx->s = open(ctx_rtu->device, flags);
     if (ctx->s == -1) {
-        fprintf(stderr, "ERROR Can't open the device %s (%s)\n",
-                ctx_rtu->device, strerror(errno));
+        if (ctx->debug) {
+            fprintf(stderr, "ERROR Can't open the device %s (%s)\n",
+                    ctx_rtu->device, strerror(errno));
+        }
         return -1;
     }
 
@@ -1033,13 +1043,15 @@ static void _modbus_rtu_close(modbus_t *ctx)
 
 #if defined(_WIN32)
     /* Revert settings */
-    if (!SetCommState(ctx_rtu->w_ser.fd, &ctx_rtu->old_dcb))
+    if (!SetCommState(ctx_rtu->w_ser.fd, &ctx_rtu->old_dcb) && ctx->debug) {
         fprintf(stderr, "ERROR Couldn't revert to configuration (LastError %d)\n",
                 (int)GetLastError());
+    }
 
-    if (!CloseHandle(ctx_rtu->w_ser.fd))
+    if (!CloseHandle(ctx_rtu->w_ser.fd) && ctx->debug) {
         fprintf(stderr, "ERROR Error while closing handle (LastError %d)\n",
                 (int)GetLastError());
+    }
 #else
     if (ctx->s != -1) {
         tcsetattr(ctx->s, TCSANOW, &(ctx_rtu->old_tios));
@@ -1054,7 +1066,7 @@ static int _modbus_rtu_flush(modbus_t *ctx)
 #if defined(_WIN32)
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
     ctx_rtu->w_ser.n_bytes = 0;
-    return (FlushFileBuffers(ctx_rtu->w_ser.fd) == FALSE);
+    return (PurgeComm(ctx_rtu->w_ser.fd, PURGE_RXCLEAR) == FALSE);
 #else
     return tcflush(ctx->s, TCIOFLUSH);
 #endif
@@ -1139,6 +1151,7 @@ modbus_t* modbus_new_rtu(const char *device,
     ctx->backend = &_modbus_rtu_backend;
     ctx->backend_data = (modbus_rtu_t *) malloc(sizeof(modbus_rtu_t));
     ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
+    ctx_rtu->device = NULL;
 
     /* Check device argument */
     if (device == NULL || (*device) == 0) {

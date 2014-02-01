@@ -14,22 +14,22 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_write_bits()_ function shall write the status of the 'nb' bits
-(coils) from 'src' at the address 'addr' of the remote device. The
-'src' array must contains bytes set to _TRUE_ or _FALSE_.
+The *modbus_write_bits()* function shall write the status of the _nb_ bits
+(coils) from _src_ at the address _addr_ of the remote device. The
+_src_ array must contains bytes set to `TRUE` or `FALSE`.
 
 The function uses the Modbus function code 0x0F (force multiple coils).
 
 
 RETURN VALUE
 ------------
-The _modbus_write_bits()_ function shall return the number of written bits if
-successful. Otherwise it shall return -1 and set errno.
+The function shall return the number of written bits if successful. Otherwise it
+shall return -1 and set errno.
 
 
 ERRORS
 ------
-EMBMDATA::
+*EMBMDATA*::
 Writing too many bits
 
 

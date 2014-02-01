@@ -14,14 +14,14 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_set_float_dcba()_ function shall set a float to 4 bytes in inversed
-Modbus format (DCBA order). The 'dest' array must be pointer on two 16 bits
+The *modbus_set_float_dcba()* function shall set a float to 4 bytes in inversed
+Modbus format (DCBA order). The _dest_ array must be pointer on two 16 bits
 values to be able to store the full result of the conversion.
 
 
 RETURN VALUE
 ------------
-The is no return values.
+There is no return values.
 
 
 SEE ALSO
