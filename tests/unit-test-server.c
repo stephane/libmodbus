@@ -156,12 +156,15 @@ int main(int argc, char*argv[])
 
         if (rc == -1) {
             /* Connection closed by the client or error */
+            /* We could answer with an exception on EMBBADDATA to indicate
+               illegal data for example */
             break;
         }
 
-
-        /* Read holding registers */
+        /* Special server behavior to test client */
         if (query[header_length] == 0x03) {
+            /* Read holding registers */
+
             if (MODBUS_GET_INT16_FROM_INT8(query, header_length + 3)
                 == UT_REGISTERS_NB_SPECIAL) {
                 printf("Set an incorrect number of values\n");

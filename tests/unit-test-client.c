@@ -30,7 +30,11 @@ enum {
     RTU
 };
 
-int test_raw_request(modbus_t *, int);
+int test_server(modbus_t *ctx, int use_backend);
+int send_crafted_request(modbus_t *ctx, int function,
+                         uint8_t *req, int req_size,
+                         uint16_t max_value, uint16_t bytes,
+                         int backend_length, int backend_offset);
 
 #define BUG_REPORT(_cond, _format, _args ...) \
     printf("\nLine %d: assertion error for '%s': " _format "\n", __LINE__, # _cond, ## _args)
@@ -205,7 +209,6 @@ int main(int argc, char *argv[])
     ASSERT_TRUE(rc == 1, "FAILED (nb points %d)\n", rc);
     ASSERT_TRUE(tab_rp_registers[0] == 0x1234, "FAILED (%0X != %0X)\n",
                 tab_rp_registers[0], 0x1234);
-
     /* End of single register */
 
     /* Many registers */
@@ -509,7 +512,7 @@ int main(int argc, char *argv[])
 
     /* A wait and flush operation is done by the error recovery code of
      * libmodbus but after a sleep of current response timeout
-     * so 0 can't be too short!
+     * so 0 can be too short!
      */
     usleep(old_response_to_sec * 1000000 + old_response_to_usec);
     modbus_flush(ctx);
@@ -590,8 +593,8 @@ int main(int argc, char *argv[])
     printf("* modbus_read_registers at special address: ");
     ASSERT_TRUE(rc == -1 && errno == EMBXSBUSY, "");
 
-    /** RAW REQUEST */
-    if (test_raw_request(ctx, use_backend) == -1) {
+    /** SERVER **/
+    if (test_server(ctx, use_backend) == -1) {
         goto close;
     }
 
@@ -617,19 +620,23 @@ close:
     return 0;
 }
 
-int test_raw_request(modbus_t *ctx, int use_backend)
+/* Send crafted requests to test server resilience
+   and ensure proper exceptions are returned. */
+int test_server(modbus_t *ctx, int use_backend)
 {
     int rc;
-    int i, j;
-    const int RAW_REQ_LENGTH = 6;
-    uint8_t raw_req[] = {
+    int i;
+    /* Read requests */
+    const int READ_RAW_REQ_LEN = 6;
+    uint8_t read_raw_req[] = {
         /* slave */
         (use_backend == RTU) ? SERVER_ID : 0xFF,
         /* function, addr 1, 5 values */
-        MODBUS_FC_READ_HOLDING_REGISTERS, 0x00, 0x01, 0x0, 0x05,
+        MODBUS_FC_READ_HOLDING_REGISTERS, 0x00, 0x01, 0x0, 0x05
     };
     /* Write and read registers request */
-    uint8_t raw_rw_req[] = {
+    const int RW_RAW_REQ_LEN = 13;
+    uint8_t rw_raw_req[] = {
         /* slave */
         (use_backend == RTU) ? SERVER_ID : 0xFF,
         /* function, addr to read, nb to read */
@@ -646,104 +653,138 @@ int test_raw_request(modbus_t *ctx, int use_backend)
         /* One data to write... */
         0x12, 0x34
     };
-    /* See issue #143, test with MAX_WR_WRITE_REGISTERS */
+    const int WRITE_RAW_REQ_LEN = 13;
+    uint8_t write_raw_req[] = {
+        /* slave */
+        (use_backend == RTU) ? SERVER_ID : 0xFF,
+        /* function will be set in the loop */
+        MODBUS_FC_WRITE_MULTIPLE_REGISTERS,
+        /* Address */
+        UT_REGISTERS_ADDRESS >> 8,
+        UT_REGISTERS_ADDRESS & 0xFF,
+        /* 3 values, 6 bytes */
+        0x00, 0x03, 0x06,
+        /* Dummy data to write */
+        0x02, 0x2B, 0x00, 0x01, 0x00, 0x64
+    };
     int req_length;
     uint8_t rsp[MODBUS_TCP_MAX_ADU_LENGTH];
-    int tab_function[] = {
+    int tab_read_function[] = {
         MODBUS_FC_READ_COILS,
         MODBUS_FC_READ_DISCRETE_INPUTS,
         MODBUS_FC_READ_HOLDING_REGISTERS,
         MODBUS_FC_READ_INPUT_REGISTERS
     };
-    int tab_nb_max[] = {
+    int tab_read_nb_max[] = {
         MODBUS_MAX_READ_BITS + 1,
         MODBUS_MAX_READ_BITS + 1,
         MODBUS_MAX_READ_REGISTERS + 1,
         MODBUS_MAX_READ_REGISTERS + 1
     };
-    int length;
-    int offset;
-    const int EXCEPTION_RC = 2;
+    int backend_length;
+    int backend_offset;
 
     if (use_backend == RTU) {
-        length = 3;
-        offset = 1;
+        backend_length = 3;
+        backend_offset = 1;
     } else {
-        length = 7;
-        offset = 7;
+        backend_length = 7;
+        backend_offset = 7;
     }
 
     printf("\nTEST RAW REQUESTS:\n");
 
-    req_length = modbus_send_raw_request(ctx, raw_req,
-                                         RAW_REQ_LENGTH * sizeof(uint8_t));
+    req_length = modbus_send_raw_request(ctx, read_raw_req, READ_RAW_REQ_LEN);
     printf("* modbus_send_raw_request: ");
-    ASSERT_TRUE(req_length == (length + 5), "FAILED (%d)\n", req_length);
+    ASSERT_TRUE(req_length == (backend_length + 5), "FAILED (%d)\n", req_length);
 
     printf("* modbus_receive_confirmation: ");
-    rc  = modbus_receive_confirmation(ctx, rsp);
-    ASSERT_TRUE(rc == (length + 12), "FAILED (%d)\n", rc);
-
-    /* Try to crash server with raw requests to bypass checks of client. */
-
-    /* Address */
-    raw_req[2] = 0;
-    raw_req[3] = 0;
+    rc = modbus_receive_confirmation(ctx, rsp);
+    ASSERT_TRUE(rc == (backend_length + 12), "FAILED (%d)\n", rc);
 
     /* Try to read more values than a response could hold for all data
      * types.
      */
     for (i=0; i<4; i++) {
-        raw_req[1] = tab_function[i];
-
-        for (j=0; j<2; j++) {
-            if (j == 0) {
-                /* Try to read zero values on first iteration */
-                raw_req[4] = 0x00;
-                raw_req[5] = 0x00;
-            } else {
-                /* Try to read max values + 1 on second iteration */
-                raw_req[4] = (tab_nb_max[i] >> 8) & 0xFF;
-                raw_req[5] = tab_nb_max[i] & 0xFF;
-            }
-
-            req_length = modbus_send_raw_request(ctx, raw_req,
-                                                 RAW_REQ_LENGTH * sizeof(uint8_t));
-            if (j == 0) {
-                printf("* try to read 0 values with function %d: ", tab_function[i]);
-            } else {
-                printf("* try an exploit with function %d: ", tab_function[i]);
-            }
-            rc  = modbus_receive_confirmation(ctx, rsp);
-            ASSERT_TRUE(rc == (length + EXCEPTION_RC) &&
-                        rsp[offset] == (0x80 + tab_function[i]) &&
-                        rsp[offset + 1] == MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, "");
-        }
+        rc = send_crafted_request(ctx, tab_read_function[i],
+                                  read_raw_req, READ_RAW_REQ_LEN,
+                                  tab_read_nb_max[i], 0,
+                                  backend_length, backend_offset);
+        if (rc == -1)
+            goto close;
     }
 
     /* Modbus write and read multiple registers */
-    i = 0;
-    tab_function[i] = MODBUS_FC_WRITE_AND_READ_REGISTERS;
-    for (j=0; j<2; j++) {
+    rc = send_crafted_request(ctx, MODBUS_FC_WRITE_AND_READ_REGISTERS,
+                              rw_raw_req, RW_RAW_REQ_LEN,
+                              MODBUS_MAX_WR_READ_REGISTERS + 1, 0,
+                              backend_length, backend_offset);
+    if (rc == -1)
+        goto close;
+
+    /* Modbus write multiple registers with large number of values but a set a
+       small number of bytes in requests (not nb * 2 as usual). */
+    rc = send_crafted_request(ctx, MODBUS_FC_WRITE_MULTIPLE_REGISTERS,
+                              write_raw_req, WRITE_RAW_REQ_LEN,
+                              MODBUS_MAX_WRITE_REGISTERS + 1, 6,
+                              backend_length, backend_offset);
+    if (rc == -1)
+        goto close;
+
+    rc = send_crafted_request(ctx, MODBUS_FC_WRITE_MULTIPLE_COILS,
+                              write_raw_req, WRITE_RAW_REQ_LEN,
+                              MODBUS_MAX_WRITE_BITS + 1, 6,
+                              backend_length, backend_offset);
+    if (rc == -1)
+        goto close;
+
+    return 0;
+close:
+    return -1;
+}
+
+
+int send_crafted_request(modbus_t *ctx, int function,
+                         uint8_t *req, int req_len,
+                         uint16_t max_value, uint16_t bytes,
+                         int backend_length, int backend_offset)
+{
+    const int EXCEPTION_RC = 2;
+    uint8_t rsp[MODBUS_TCP_MAX_ADU_LENGTH];
+
+    for (int j=0; j<2; j++) {
+        int rc;
+
+        req[1] = function;
         if (j == 0) {
-            /* Try to read zero values on first iteration */
-            raw_rw_req[4] = 0x00;
-            raw_rw_req[5] = 0x00;
+            /* Try to read or write zero values on first iteration */
+            req[4] = 0x00;
+            req[5] = 0x00;
+            if (bytes) {
+                /* Write query */
+                req[6] = 0x00;
+            }
         } else {
-            /* Try to read max values + 1 on second iteration */
-            raw_rw_req[4] = (MODBUS_MAX_WR_READ_REGISTERS + 1) >> 8;
-            raw_rw_req[5] = (MODBUS_MAX_WR_READ_REGISTERS + 1) & 0xFF;
+            /* Try to read or write max values + 1 on second iteration */
+            req[4] = (max_value >> 8) & 0xFF;
+            req[5] = max_value & 0xFF;
+            if (bytes) {
+                /* Write query (nb values * 2 to convert in bytes for registers) */
+                req[6] = bytes;
+            }
         }
-        req_length = modbus_send_raw_request(ctx, raw_rw_req, 13 * sizeof(uint8_t));
+
+        modbus_send_raw_request(ctx, req, req_len * sizeof(uint8_t));
         if (j == 0) {
-            printf("* try to read 0 values with function %d: ", tab_function[i]);
+            printf("* try function 0x%X: %s 0 values: ", function, bytes ? "write": "read");
         } else {
-            printf("* try an exploit with function %d: ", tab_function[i]);
+            printf("* try function 0x%X: %s %d values: ", function, bytes ? "write": "read",
+                   max_value);
         }
         rc = modbus_receive_confirmation(ctx, rsp);
-        ASSERT_TRUE(rc == length + EXCEPTION_RC &&
-                    rsp[offset] == (0x80 + tab_function[i]) &&
-                    rsp[offset + 1] == MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, "");
+        ASSERT_TRUE(rc == (backend_length + EXCEPTION_RC) &&
+                    rsp[backend_offset] == (0x80 + function) &&
+                    rsp[backend_offset + 1] == MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, "");
     }
 
     return 0;
