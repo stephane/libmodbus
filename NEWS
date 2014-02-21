@@ -1,3 +1,9 @@
+libmodbus 3.0.6 (2014-02-21)
+============================
+
+- Backport fix remote buffer overflow vulnerability on write requests
+- Replace deprecated INCLUDES by AM_CPPFLAGS
+
 libmodbus 3.0.5 (2013-10-06)
 ============================
 
