@@ -3,6 +3,8 @@
 *.o
 *.la
 *.lo
+*.log
+*.trs
 .deps
 .libs
 GPATH

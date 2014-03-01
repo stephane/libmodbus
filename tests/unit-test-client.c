@@ -57,6 +57,7 @@ int main(int argc, char *argv[])
     uint32_t old_byte_to_sec;
     uint32_t old_byte_to_usec;
     int use_backend;
+    int success = FALSE;
 
     if (argc > 1) {
         if (strcmp(argv[1], "tcp") == 0) {
@@ -600,6 +601,7 @@ int main(int argc, char *argv[])
     ASSERT_TRUE(ctx == NULL && errno == EINVAL, "");
 
     printf("\nALL TESTS PASS WITH SUCCESS.\n");
+    success = TRUE;
 
 close:
     /* Free the memory */
@@ -610,7 +612,7 @@ close:
     modbus_close(ctx);
     modbus_free(ctx);
 
-    return 0;
+    return (success) ? 0 : -1;
 }
 
 /* Send crafted requests to test server resilience

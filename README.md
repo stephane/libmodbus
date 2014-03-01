@@ -77,6 +77,8 @@ For a quick test of libmodbus, you can run the following programs in two shells:
 
 By default, all TCP unit tests will be executed (see --help for options).
 
+It's also possible to run the unit tests with `make check`.
+
 Report a Bug
 ------------
 
