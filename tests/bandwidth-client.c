@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
         modbus_set_slave(ctx, 1);
     }
     if (modbus_connect(ctx) == -1) {
-        fprintf(stderr, "Connexion failed: %s\n",
+        fprintf(stderr, "Connection failed: %s\n",
                 modbus_strerror(errno));
         modbus_free(ctx);
         return -1;
