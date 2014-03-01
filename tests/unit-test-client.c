@@ -336,10 +336,15 @@ int main(int argc, char *argv[])
     printf("* modbus_write_coils: ");
     ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
 
-    rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS + UT_REGISTERS_NB,
+    rc = modbus_write_register(ctx, UT_REGISTERS_ADDRESS + UT_REGISTERS_NB,
+                                tab_rp_registers[0]);
+    printf("* modbus_write_register: ");
+    ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
+
+    rc = modbus_write_registers(ctx, UT_REGISTERS_ADDRESS + UT_REGISTERS_NB,
                                UT_REGISTERS_NB, tab_rp_registers);
     printf("* modbus_write_registers: ");
-    ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
+    ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");    
 
     /** TOO MANY DATA **/
     printf("\nTEST TOO MANY DATA ERROR:\n");
