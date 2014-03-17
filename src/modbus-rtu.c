@@ -295,8 +295,9 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
         usleep(_MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
 
         size = write(ctx->s, req, req_length);
+        tcdrain(ctx->s);
 
-        usleep(ctx_rtu->onebyte_time * req_length + _MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
+        usleep(_MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
         _modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
 
         return size;
@@ -1184,9 +1185,6 @@ modbus_t* modbus_new_rtu(const char *device,
 #if HAVE_DECL_TIOCM_RTS
     /* The RTS use has been set by default */
     ctx_rtu->rts = MODBUS_RTU_RTS_NONE;
-
-    /* Calculate estimated time in micro second to send one byte */
-    ctx_rtu->onebyte_time = (1000 * 1000) * (1 + data_bit + (parity == 'N' ? 0 : 1) + stop_bit) / baud;
 #endif
 
     ctx_rtu->confirmation_to_ignore = FALSE;
