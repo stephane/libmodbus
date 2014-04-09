@@ -1146,6 +1146,13 @@ modbus_t* modbus_new_rtu(const char *device,
     modbus_t *ctx;
     modbus_rtu_t *ctx_rtu;
 
+    /* Check device argument */
+    if (device == NULL || (*device) == 0) {
+        fprintf(stderr, "The device string is empty\n");
+        errno = EINVAL;
+        return NULL;
+    }
+
     /* Check baud argument */
     if (baud == 0) {
         fprintf(stderr, "The baud rate value must not be zero\n");
@@ -1159,14 +1166,6 @@ modbus_t* modbus_new_rtu(const char *device,
     ctx->backend_data = (modbus_rtu_t *) malloc(sizeof(modbus_rtu_t));
     ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
     ctx_rtu->device = NULL;
-
-    /* Check device argument */
-    if (device == NULL || (*device) == 0) {
-        fprintf(stderr, "The device string is empty\n");
-        modbus_free(ctx);
-        errno = EINVAL;
-        return NULL;
-    }
 
     /* Device name and \0 */
     ctx_rtu->device = (char *) malloc((strlen(device) + 1) * sizeof(char));
