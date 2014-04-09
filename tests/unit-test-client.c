@@ -590,7 +590,10 @@ int main(int argc, char *argv[])
 
     /* Test init functions */
     printf("\nTEST INVALID INITIALIZATION:\n");
-    ctx = modbus_new_rtu(NULL, 0, 'A', 0, 0);
+    ctx = modbus_new_rtu(NULL, 1, 'A', 0, 0);
+    ASSERT_TRUE(ctx == NULL && errno == EINVAL, "");
+
+    ctx = modbus_new_rtu("/dev/dummy", 0, 'A', 0, 0);
     ASSERT_TRUE(ctx == NULL && errno == EINVAL, "");
 
     ctx = modbus_new_tcp_pi(NULL, NULL);
