@@ -130,7 +130,7 @@ int modbus_flush(modbus_t *ctx)
     }
 
     rc = ctx->backend->flush(ctx);
-    if (rc != -1 && ctx->debug) {
+    if (rc > 0 && ctx->debug) {
         /* Not all backends are able to return the number of bytes flushed */
         printf("Bytes flushed (%d)\n", rc);
     }
@@ -179,6 +179,10 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
 {
     int rc;
     int i;
+
+    if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_PROTOCOL) {
+        modbus_flush(ctx); // Without this we might receive junk
+    }
 
     msg_length = ctx->backend->send_msg_pre(msg, msg_length);
 
@@ -397,6 +401,7 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
                     modbus_flush(ctx);
                 } else if (errno == EBADF) {
                     modbus_close(ctx);
+                    _sleep_response_timeout(ctx);
                     modbus_connect(ctx);
                 }
                 errno = saved_errno;

@@ -39,6 +39,7 @@
 # define SHUT_RDWR 2
 # define close closesocket
 #else
+#define __USE_GNU
 # include <sys/socket.h>
 # include <sys/ioctl.h>
 
