@@ -14,16 +14,16 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_set_byte_timeout()_ function shall set the timeout interval between
+The *modbus_set_byte_timeout()* function shall set the timeout interval between
 two consecutive bytes of the same message. The timeout is an upper bound on the
-amount of time elapsed before _select()_ returns, if the time elapsed is longer
-than the defined timeout, an 'ETIMEDOUT' error will be raised by the
+amount of time elapsed before *select()* returns, if the time elapsed is longer
+than the defined timeout, an `ETIMEDOUT` error will be raised by the
 function waiting for a response.
 
 The value of _to_usec_ argument must be in the range 0 to 999999.
 
 If both _to_sec_ and _to_usec_ are zero, this timeout will not be used at all.
-In this case, _modbus_set_response_timeout()_ governs the entire handling of the
+In this case, *modbus_set_response_timeout()* governs the entire handling of the
 response, the full confirmation response must be received before expiration of
 the response timeout. When a byte timeout is set, the response timeout is only
 used to wait for until the first byte of the response.

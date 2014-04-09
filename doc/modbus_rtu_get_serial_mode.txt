@@ -14,7 +14,7 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_rtu_get_serial_mode()_ function shall return the serial mode
+The *modbus_rtu_get_serial_mode()* function shall return the serial mode
 currently used by the libmodbus context:
 
 *MODBUS_RTU_RS232*:: the serial line is set for RS232 communication. RS-232
@@ -36,9 +36,9 @@ used with a context using a RTU backend.
 
 RETURN VALUE
 ------------
-The _modbus_rtu_get_serial_mode()_ function shall return 'MODBUS_RTU_RS232' or
-'MODBUS_RTU_RS485' if successful. Otherwise it shall return -1 and set errno to
-one of the values defined below.
+The function shall return `MODBUS_RTU_RS232` or `MODBUS_RTU_RS485` if
+successful. Otherwise it shall return -1 and set errno to one of the values
+defined below.
 
 
 ERRORS

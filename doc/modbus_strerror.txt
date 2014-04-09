@@ -14,16 +14,16 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_strerror()_ function shall return a pointer to an error message
-string corresponding to the error number specified by the 'errnum' argument.  As
+The *modbus_strerror()* function shall return a pointer to an error message
+string corresponding to the error number specified by the _errnum_ argument.  As
 libmodbus defines additional error numbers over and above those defined by the
-operating system, applications should use _modbus_strerror()_ in preference to
-the standard _strerror()_ function.
+operating system, applications should use *modbus_strerror()* in preference to
+the standard *strerror()* function.
 
 
 RETURN VALUE
 ------------
-The _modbus_strerror()_ function shall return a pointer to an error message
+The *modbus_strerror()* function shall return a pointer to an error message
 string.
 
 

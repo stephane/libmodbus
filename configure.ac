@@ -100,6 +100,9 @@ AC_CHECK_DECLS([__CYGWIN__])
 AC_FUNC_FORK
 AC_CHECK_FUNCS([accept4 getaddrinfo gettimeofday inet_ntoa memset select socket strerror strlcpy])
 
+# Required for MinGW with GCC v4.8.1 on Win7
+AC_DEFINE(WINVER, 0x0501, _)
+
 # Required for getaddrinfo (TCP PI - IPv6)
 AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)
 if test "x$HAVE_WINSOCK2_H" = "xyes"; then

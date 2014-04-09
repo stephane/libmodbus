@@ -14,7 +14,7 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_rtu_set_serial_mode()_ function shall set the selected serial
+The *modbus_rtu_set_serial_mode()* function shall set the selected serial
 mode:
 
 *MODBUS_RTU_RS232*:: the serial line is set for RS232 communication. RS-232
@@ -35,8 +35,8 @@ This function is only supported on Linux kernels 2.6.28 onwards.
 
 RETURN VALUE
 ------------
-The _modbus_set_serial_mode()_ function shall return 0 if successful. Otherwise
-it shall return -1 and set errno to one of the values defined below.
+The function shall return 0 if successful. Otherwise it shall return -1 and set
+errno to one of the values defined below.
 
 
 ERRORS

@@ -15,13 +15,12 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-
-The _modbus_new_rtu()_ function shall allocate and initialize a modbus_t
+The *modbus_new_rtu()* function shall allocate and initialize a modbus_t
 structure to communicate in RTU mode on a serial line.
 
 The _device_ argument specifies the name of the serial port handled by the OS,
-eg. '/dev/ttyS0' or '/dev/ttyUSB0'. On Windows, it's necessary to prepend COM
-name with '\\.\' for COM number greater than 9, eg. '\\\\.\\COM10'. See
+eg. "/dev/ttyS0" or "/dev/ttyUSB0". On Windows, it's necessary to prepend COM
+name with "\\.\" for COM number greater than 9, eg. "\\\\.\\COM10". See
 http://msdn.microsoft.com/en-us/library/aa365247(v=vs.85).aspx for details
 
 The _baud_ argument specifies the baud rate of the communication, eg. 9600,
@@ -41,8 +40,8 @@ and 2.
 
 RETURN VALUE
 ------------
-The _modbus_new_rtu()_ function shall return a pointer to a *modbus_t* structure
-if successful. Otherwise it shall return NULL and set errno to one of the values
+The function shall return a pointer to a _modbus_t_ structure if
+successful. Otherwise it shall return NULL and set errno to one of the values
 defined below.
 
 

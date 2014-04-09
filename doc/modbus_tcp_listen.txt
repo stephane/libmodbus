@@ -14,14 +14,17 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_tcp_listen()_ function shall create a socket and listen for
-'nb_connection' incoming connections.
+The *modbus_tcp_listen()* function shall create a socket and listen to maximum
+_nb_connection_ incoming connections on the specified IP address.  The context
+_ctx _must be allocated and initialized with linkmb:modbus_new_tcp[3] before to
+set the IP address to listen, if IP address is set to NULL, any addresses will be
+listen.
 
 
 RETURN VALUE
 ------------
-The _modbus_tcp_listen()_ function shall return a new socket if
-successful. Otherwise it shall return -1 and set errno.
+The function shall return a new socket if successful. Otherwise it shall return
+-1 and set errno.
 
 
 EXAMPLE
@@ -36,7 +39,8 @@ For detailed examples, see source files in tests directory:
 -------------------
 ...
 
-ctx = modbus_new_tcp("127.0.0.1", 502);
+/* To listen any addresses on port 502 */
+ctx = modbus_new_tcp(NULL, 502);
 
 /* Handle until 10 established connections */
 server_socket = modbus_tcp_listen(ctx, 10);
@@ -58,8 +62,8 @@ modbus_free(ctx);
 
 SEE ALSO
 --------
+linkmb:modbus_new_tcp[3]
 linkmb:modbus_tcp_accept[3]
-linkmb:modbus_tcp_pi_accept[3]
 linkmb:modbus_tcp_pi_listen[3]
 
 AUTHORS

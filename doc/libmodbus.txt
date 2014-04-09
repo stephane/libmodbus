@@ -235,7 +235,7 @@ shall return either a NULL value (if returning a pointer) or a negative value
 (if returning an integer), and the actual error code shall be stored in the
 'errno' variable.
 
-The _modbus_strerror()_ function is provided to translate libmodbus-specific
+The *modbus_strerror()* function is provided to translate libmodbus-specific
 error codes into error message strings; for details refer to
 linkmb:modbus_strerror[3].
 
@@ -265,5 +265,5 @@ Report bugs on the issue tracker at
 COPYING
 -------
 Free use of this software is granted under the terms of the GNU Lesser General
-Public License (LGPL v2.1+). For details see the files `COPYING` and
-`COPYING.LESSER` included with the libmodbus distribution.
+Public License (LGPL v2.1+). For details see the file `COPYING.LESSER` included
+with the libmodbus distribution.

@@ -14,11 +14,12 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_new_tcp_pi()_ function shall allocate and initialize a modbus_t
-structure to communicate with a Modbus TCP IPv4 or Ipv6 server.
+The *modbus_new_tcp_pi()* function shall allocate and initialize a modbus_t
+structure to communicate with a Modbus TCP IPv4 or IPv6 server.
 
 The _node_ argument specifies the host name or IP address of the host to connect
-to, eg. '192.168.0.5' , '::1' or 'server.com'.
+to, eg. "192.168.0.5" , "::1" or "server.com". A NULL value can be used to
+listen any addresses in server mode.
 
 The _service_ argument is the service name/port number to connect to. To use the
 default Modbus port use the string "502". On many Unix systems, it’s
@@ -28,8 +29,8 @@ necessary to have administrator privileges.
 
 RETURN VALUE
 ------------
-The _modbus_new_tcp_pi()_ function shall return a pointer to a *modbus_t* structure
-if successful. Otherwise it shall return NULL and set errno to one of the values
+The function shall return a pointer to a *modbus_t* structure if
+successful. Otherwise it shall return NULL and set errno to one of the values
 defined below.
 
 
@@ -62,7 +63,7 @@ if (modbus_connect(ctx) == -1) {
 SEE ALSO
 --------
 linkmb:modbus_new_tcp[3]
-linkmb:modbus_new_rtu[3]
+linkmb:modbus_tcp_pi_listen[3]
 linkmb:modbus_free[3]
 
 

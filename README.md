@@ -12,15 +12,13 @@ The functions included in the library have been derived from the Modicon Modbus
 Protocol Reference Guide which can be obtained from Schneider at
 [www.schneiderautomation.com](http://www.schneiderautomation.com).
 
-The license of libmodbus is *LGPL v2.1 or later* and the licence of programs in
-tests directory is GPL v3.
+The license of libmodbus is *LGPL v2.1 or later*.
 
 The documentation is available as manual pages (`man libmodbus` to read general
 description and list of available functions) or Web pages
 [www.libmodbus.org/documentation/](http://libmodbus.org/documentation/). The
 documentation is licensed under the Creative Commons Attribution-ShareAlike
 License 3.0 (Unported) (<http://creativecommons.org/licenses/by-sa/3.0/>).
-
 
 The official website is [www.libmodbus.org](http://www.libmodbus.org).
 

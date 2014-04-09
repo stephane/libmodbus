@@ -14,18 +14,18 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_receive_confirmation()_ function shall receive a request via the
-socket of the context 'ctx'. This function must be used for debugging purposes
+The *modbus_receive_confirmation(*_ function shall receive a request via the
+socket of the context _ctx_. This function must be used for debugging purposes
 because the received response isn't checked against the initial request. This
 function can be used to receive request not handled by the library.
 
 
 RETURN VALUE
 ------------
-The _modbus_receive_confirmation()_ function shall store the confirmation
-request in 'rsp' and return the response length if sucessful. The returned
-request length can be zero if the indication request is ignored (eg. a query for
-another slave in RTU mode). Otherwise it shall return -1 and set errno.
+The function shall store the confirmation request in _rsp_ and return the
+response length if sucessful. The returned request length can be zero if the
+indication request is ignored (eg. a query for another slave in RTU
+mode). Otherwise it shall return -1 and set errno.
 
 
 SEE ALSO
