@@ -1146,6 +1146,13 @@ modbus_t* modbus_new_rtu(const char *device,
     modbus_t *ctx;
     modbus_rtu_t *ctx_rtu;
 
+    /* Check baud argument */
+    if (baud == 0) {
+        fprintf(stderr, "baud must not be zero\n");
+        errno = EINVAL;
+        return NULL;
+    }
+
     ctx = (modbus_t *) malloc(sizeof(modbus_t));
     _modbus_init_common(ctx);
     ctx->backend = &_modbus_rtu_backend;
