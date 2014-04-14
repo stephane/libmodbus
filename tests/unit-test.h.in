@@ -55,8 +55,16 @@ const uint16_t UT_INPUT_REGISTERS_ADDRESS = 0x108;
 const uint16_t UT_INPUT_REGISTERS_NB = 0x1;
 const uint16_t UT_INPUT_REGISTERS_TAB[] = { 0x000A };
 
-const float UT_REAL = 916.540649;
-const uint32_t UT_IREAL = 0x4465229a;
-const uint32_t UT_IREAL_DCBA = 0x9a226544;
+const float UT_REAL = 123456.00;
+
+const uint32_t UT_IREAL_ABCD = 0x0020F147;
+const uint32_t UT_IREAL_DCBA = 0x47F12000;
+const uint32_t UT_IREAL_BADC = 0x200047F1;
+const uint32_t UT_IREAL_CDAB = 0xF1470020;
+
+/* const uint32_t UT_IREAL_ABCD = 0x47F12000);
+const uint32_t UT_IREAL_DCBA = 0x0020F147;
+const uint32_t UT_IREAL_BADC = 0xF1470020;
+const uint32_t UT_IREAL_CDAB = 0x200047F1;*/
 
 #endif /* _UNIT_TEST_H_ */

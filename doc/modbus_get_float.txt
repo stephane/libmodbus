@@ -11,6 +11,8 @@ SYNOPSIS
 --------
 *float modbus_get_float(const uint16_t *'src');*
 
+Warning, this function is *deprecated* since libmodbus v3.2.0 and has been
+replaced by *modbus_get_float_dcba()*.
 
 DESCRIPTION
 -----------

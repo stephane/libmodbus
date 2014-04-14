@@ -268,9 +268,16 @@ MODBUS_API void modbus_set_bits_from_bytes(uint8_t *dest, int idx, unsigned int 
                                        const uint8_t *tab_byte);
 MODBUS_API uint8_t modbus_get_byte_from_bits(const uint8_t *src, int idx, unsigned int nb_bits);
 MODBUS_API float modbus_get_float(const uint16_t *src);
+MODBUS_API float modbus_get_float_abcd(const uint16_t *src);
 MODBUS_API float modbus_get_float_dcba(const uint16_t *src);
+MODBUS_API float modbus_get_float_badc(const uint16_t *src);
+MODBUS_API float modbus_get_float_cdab(const uint16_t *src);
+
 MODBUS_API void modbus_set_float(float f, uint16_t *dest);
+MODBUS_API void modbus_set_float_abcd(float f, uint16_t *dest);
 MODBUS_API void modbus_set_float_dcba(float f, uint16_t *dest);
+MODBUS_API void modbus_set_float_badc(float f, uint16_t *dest);
+MODBUS_API void modbus_set_float_cdab(float f, uint16_t *dest);
 
 #include "modbus-tcp.h"
 #include "modbus-rtu.h"
