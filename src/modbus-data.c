@@ -41,7 +41,7 @@ void modbus_set_bits_from_byte(uint8_t *dest, int index, const uint8_t value)
 void modbus_set_bits_from_bytes(uint8_t *dest, int index, unsigned int nb_bits,
                                 const uint8_t *tab_byte)
 {
-    int i;
+    unsigned int i;
     int shift = 0;
 
     for (i = index; i < index + nb_bits; i++) {
@@ -57,7 +57,7 @@ void modbus_set_bits_from_bytes(uint8_t *dest, int index, unsigned int nb_bits,
 uint8_t modbus_get_byte_from_bits(const uint8_t *src, int index,
                                   unsigned int nb_bits)
 {
-    int i;
+    unsigned int i;
     uint8_t value = 0;
 
     if (nb_bits > 8) {
