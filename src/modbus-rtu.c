@@ -320,11 +320,17 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
 		} else  {
 			_modbus_rtu_ioctl_dtr(ctx->s, ctx_rtu->rts == MODBUS_RTU_DTR_UP);
 		}
-        usleep(_MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
+		if (ctx_rtu->rts != MODBUS_RTU_NONE) {
+			usleep(_MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
+		}
 
         size = write(ctx->s, req, req_length);
 
-        usleep(ctx_rtu->onebyte_time * req_length + _MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
+		if (ctx_rtu->rts != MODBUS_RTU_NONE) {
+			usleep(ctx_rtu->onebyte_time * req_length + _MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
+		} else {
+			usleep(ctx_rtu->onebyte_time * req_length);
+		}
 		if (ctx_rtu->rts == MODBUS_RTU_RTS_UP || ctx_rtu->rts == MODBUS_RTU_RTS_DOWN) {
 			_modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
 		} else {
