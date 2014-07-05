@@ -1,18 +1,8 @@
 /*
- * Copyright © 2008-2010 Stéphane Raimbault <stephane.raimbault@gmail.com>
+ * Copyright © 2008-2014 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * it under the terms of the BSD License.
  */
 
 #include <stdio.h>
@@ -156,12 +146,15 @@ int main(int argc, char*argv[])
 
         if (rc == -1) {
             /* Connection closed by the client or error */
+            /* We could answer with an exception on EMBBADDATA to indicate
+               illegal data for example */
             break;
         }
 
-
-        /* Read holding registers */
+        /* Special server behavior to test client */
         if (query[header_length] == 0x03) {
+            /* Read holding registers */
+
             if (MODBUS_GET_INT16_FROM_INT8(query, header_length + 3)
                 == UT_REGISTERS_NB_SPECIAL) {
                 printf("Set an incorrect number of values\n");

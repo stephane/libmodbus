@@ -24,7 +24,6 @@ MAN3 = \
         modbus_read_input_registers.3 \
         modbus_read_registers.3 \
         modbus_receive_confirmation.3 \
-        modbus_receive_from.3 \
         modbus_receive.3 \
         modbus_reply_exception.3 \
         modbus_reply.3 \

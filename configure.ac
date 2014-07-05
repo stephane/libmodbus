@@ -126,6 +126,15 @@ my_CFLAGS="-Wall \
 -Wformat-security"
 AC_SUBST([my_CFLAGS])
 
+# Wtype-limits is not supported by gcc 4.2 (default on recent Mac OS X)
+my_CFLAGS="-Wall \
+-Wmissing-declarations -Wmissing-prototypes \
+-Wnested-externs -Wpointer-arith \
+-Wpointer-arith -Wsign-compare -Wchar-subscripts \
+-Wstrict-prototypes -Wshadow \
+-Wformat-security"
+AC_SUBST([my_CFLAGS])
+
 AC_CONFIG_HEADERS([config.h tests/unit-test.h])
 AC_CONFIG_FILES([
         Makefile
