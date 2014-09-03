@@ -460,7 +460,8 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     dcb = ctx_rtu->old_dcb;
 
     /* Speed setting */
-    int32_t baudrate_list[19] = {//regular baudrate list
+#define LENGTH_OF_BAUDRATE_LIST 19
+    int32_t baudrate_list[LENGTH_OF_BAUDRATE_LIST] = {/*regular baudrate list*/
         75,
         110,
         134,
@@ -483,22 +484,22 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     };
     COMMPROP commprop;
     GetCommProperties(ctx_rtu->w_ser.fd, &commprop);
-    if(commprop.dwMaxBaud != BAUD_USER) {//If user baudrate isn't supported,
-        dcb.BaudRate = CBR_9600;//fall back to 9600 when baudrate unknown.
+    if(commprop.dwMaxBaud != BAUD_USER) {/*If user baudrate isn't supported,*/
+        dcb.BaudRate = CBR_9600;/*fall back to 9600 when baudrate unknown.*/
         uint8_t cnt;
-        for (cnt = 0;cnt < 18;++cnt) {
-            if (ctx_rtu->baud == baudrate_list[cnt])//is regular
-                if (commprop.dwSettableBaud & 1 << cnt) {//is supported
+        for (cnt = 0;cnt < LENGTH_OF_BAUDRATE_LIST;++cnt) {
+            if (ctx_rtu->baud == baudrate_list[cnt]) {/*is regular*/
+                if (commprop.dwSettableBaud & 1 << cnt) {/*is supported*/
                     dcb.BaudRate = ctx_rtu->baud;
                 }
                 else {
                     if (ctx->debug) {
-                        fprintf(stderr, "WARNING Unknown baud rate %d for\
-                                %s (B9600 used)\n", ctx_rtu->baud,\
-                                ctx_rtu->device);
+                        fprintf(stderr, "WARNING Unknown baud rate %d for %s (B9600 used)\n",\
+                                ctx_rtu->baud, ctx_rtu->device);
                     }
                     break;
                 }
+            }
         }
     }
     else
