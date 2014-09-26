@@ -744,8 +744,9 @@ int send_crafted_request(modbus_t *ctx, int function,
 {
     const int EXCEPTION_RC = 2;
     uint8_t rsp[MODBUS_TCP_MAX_ADU_LENGTH];
+    int j;
 
-    for (int j=0; j<2; j++) {
+    for (j=0; j<2; j++) {
         int rc;
 
         req[1] = function;
