@@ -37,10 +37,6 @@
 
 #define _MODBUS_RTU_CHECKSUM_LENGTH    2
 
-/* Time waited beetween the RTS switch before transmit data or after transmit
-   data before to read */
-#define _MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH 10000
-
 #if defined(_WIN32)
 #if !defined(ENOTSUP)
 #define ENOTSUP WSAEOPNOTSUPP
@@ -81,6 +77,7 @@ typedef struct _modbus_rtu {
 #endif
 #if HAVE_DECL_TIOCM_RTS
     int rts;
+    int rts_delay;
     int onebyte_time;
 #endif
     /* To handle many slaves on the same link */
