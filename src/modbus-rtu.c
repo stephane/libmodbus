@@ -389,7 +389,7 @@ static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
         return msg_length;
     } else {
         if (ctx->debug) {
-            fprintf(stderr, "ERROR CRC received %0X != CRC calculated %0X\n",
+            fprintf(stderr, "ERROR CRC received 0x%0X != CRC calculated 0x%0X\n",
                     crc_received, crc_calculated);
         }
 
