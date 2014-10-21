@@ -708,6 +708,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
     sft.function = function;
     sft.t_id = ctx->backend->prepare_response_tid(req, &req_length);
 
+    /* Data are flushed on illegal number of values errors. */
     switch (function) {
     case MODBUS_FC_READ_COILS: {
         int nb = (req[offset + 3] << 8) + req[offset + 4];
@@ -850,8 +851,6 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
                         "Illegal data address 0x%0X in write_bit\n",
                         address);
             }
-            _sleep_response_timeout(ctx);
-            modbus_flush(ctx);
             rsp_length = response_exception(
                 ctx, &sft,
                 MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
@@ -880,8 +879,6 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
                 fprintf(stderr, "Illegal data address 0x%0X in write_register\n",
                         address);
             }
-            _sleep_response_timeout(ctx);
-            modbus_flush(ctx);
             rsp_length = response_exception(
                 ctx, &sft,
                 MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
