@@ -538,7 +538,8 @@ int main(int argc, char *argv[])
                                 old_response_to_usec);
 
     if (use_backend == TCP) {
-        /* Test server is only able to test byte timeout with the TCP backend */
+        /* The test server is only able to test byte timeouts with the TCP
+         * backend */
 
         /* Timeout of 3ms between bytes */
         modbus_set_byte_timeout(ctx, 0, 3000);
@@ -551,7 +552,7 @@ int main(int argc, char *argv[])
         usleep(11 * 5000);
         modbus_flush(ctx);
 
-        /* Timeout of 10ms between bytes */
+        /* Timeout of 7ms between bytes */
         modbus_set_byte_timeout(ctx, 0, 7000);
         rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS_BYTE_SLEEP_5_MS,
                                    1, tab_rp_registers);
