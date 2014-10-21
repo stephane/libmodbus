@@ -746,6 +746,16 @@ int send_crafted_request(modbus_t *ctx, int function,
     const int EXCEPTION_RC = 2;
     uint8_t rsp[MODBUS_TCP_MAX_ADU_LENGTH];
     int j;
+    uint32_t old_response_to_sec;
+    uint32_t old_response_to_usec;
+
+    /* This requests can generate flushes server side so we need a higher
+     * response timeout than the server. The server uses the defined response
+     * timeout to sleep before flushing.
+     * The old timeouts are restored at the end.
+     */
+    modbus_get_response_timeout(ctx, &old_response_to_sec, &old_response_to_usec);
+    modbus_set_response_timeout(ctx, 0, 600000);
 
     for (j=0; j<2; j++) {
         int rc;
@@ -781,8 +791,9 @@ int send_crafted_request(modbus_t *ctx, int function,
                     rsp[backend_offset] == (0x80 + function) &&
                     rsp[backend_offset + 1] == MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, "");
     }
-
+    modbus_set_response_timeout(ctx, old_response_to_sec, old_response_to_usec);
     return 0;
 close:
+    modbus_set_response_timeout(ctx, old_response_to_sec, old_response_to_usec);
     return -1;
 }
