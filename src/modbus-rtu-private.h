@@ -63,6 +63,8 @@ typedef struct _modbus_rtu {
     char *device;
     /* Bauds: 9600, 19200, 57600, 115200, etc */
     int baud;
+		char *rts_pin;
+		int rts_fd;
     /* Data bit */
     uint8_t data_bit;
     /* Stop bit */
