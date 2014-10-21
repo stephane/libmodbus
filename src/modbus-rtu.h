@@ -34,7 +34,7 @@ MODBUS_API modbus_t* modbus_new_rtu(const char *device, int baud, char parity,
 #define MODBUS_RTU_RS232 0
 #define MODBUS_RTU_RS485 1
 
-MODBUS_API int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode);
+MODBUS_API int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode, const char *rts_pin);
 MODBUS_API int modbus_rtu_get_serial_mode(modbus_t *ctx);
 
 #define MODBUS_RTU_RTS_NONE   0

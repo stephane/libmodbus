@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include <sys/time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -263,15 +264,21 @@ static int win32_ser_read(struct win32_ser *ws, uint8_t *p_msg,
 #if HAVE_DECL_TIOCM_RTS
 static void _modbus_rtu_ioctl_rts(int fd, int on)
 {
-    int flags;
-
-    ioctl(fd, TIOCMGET, &flags);
-    if (on) {
-        flags |= TIOCM_RTS;
-    } else {
-        flags &= ~TIOCM_RTS;
+		if (fd == -1) 
+		{
+				fprintf(stderr, "Can't set RTS pin\n");
     }
-    ioctl(fd, TIOCMSET, &flags);
+    else 
+		{
+    		if (on)
+    		{
+    				write(fd, "1", 1);
+    		}
+    		else
+    		{
+    				write(fd, "0", 1);
+    		}
+		}
 }
 #endif
 
@@ -291,13 +298,13 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
             fprintf(stderr, "Sending request using RTS signal\n");
         }
 
-        _modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts == MODBUS_RTU_RTS_UP);
-        usleep(_MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
+		    _modbus_rtu_ioctl_rts(ctx_rtu->rts_fd, ctx_rtu->rts == MODBUS_RTU_RTS_UP);
+        usleep(ctx_rtu->onebyte_time * 4);
 
         size = write(ctx->s, req, req_length);
 
-        usleep(ctx_rtu->onebyte_time * req_length + _MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
-        _modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
+        usleep((ctx_rtu->onebyte_time * req_length) + (ctx_rtu->onebyte_time * 4));
+        _modbus_rtu_ioctl_rts(ctx_rtu->rts_fd, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
 
         return size;
     } else {
@@ -895,7 +902,8 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     /* Unused because we use open with the NDELAY option */
     tios.c_cc[VMIN] = 0;
     tios.c_cc[VTIME] = 0;
-
+    ctx_rtu->rts_fd = open(ctx_rtu->rts_pin, O_WRONLY);
+    _modbus_rtu_ioctl_rts(ctx_rtu->rts_fd, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
     if (tcsetattr(ctx->s, TCSANOW, &tios) < 0) {
         close(ctx->s);
         ctx->s = -1;
@@ -906,7 +914,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     return 0;
 }
 
-int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode)
+int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode, const char *rts_pin)
 {
     if (ctx == NULL) {
         errno = EINVAL;
@@ -920,11 +928,16 @@ int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode)
         memset(&rs485conf, 0x0, sizeof(struct serial_rs485));
 
         if (mode == MODBUS_RTU_RS485) {
-            rs485conf.flags = SER_RS485_ENABLED;
-            if (ioctl(ctx->s, TIOCSRS485, &rs485conf) < 0) {
-                return -1;
+            int size = (strlen(rts_pin) + 1) * sizeof(char);
+            if (size == 0) {
+                fprintf(stderr, "The rts_pin string is empty\n");
+                modbus_free(ctx);
+                errno = EINVAL;
+                return 0;
             }
 
+            ctx_rtu->rts_pin = (char *) malloc(size);
+            strcpy(ctx_rtu->rts_pin, rts_pin);
             ctx_rtu->serial_mode = MODBUS_RTU_RS485;
             return 0;
         } else if (mode == MODBUS_RTU_RS232) {
@@ -990,10 +1003,6 @@ int modbus_rtu_set_rts(modbus_t *ctx, int mode)
         if (mode == MODBUS_RTU_RTS_NONE || mode == MODBUS_RTU_RTS_UP ||
             mode == MODBUS_RTU_RTS_DOWN) {
             ctx_rtu->rts = mode;
-
-            /* Set the RTS bit in order to not reserve the RS485 bus */
-            _modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
-
             return 0;
         } else {
             errno = EINVAL;
@@ -1070,6 +1079,7 @@ static int _modbus_rtu_flush(modbus_t *ctx)
 #else
     return tcflush(ctx->s, TCIOFLUSH);
 #endif
+		  close(ctx_rtu->rts_fd);
 }
 
 static int _modbus_rtu_select(modbus_t *ctx, fd_set *rset,
