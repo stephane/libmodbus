@@ -8,4 +8,4 @@ pkgconfig_DATA = libmodbus.pc
 EXTRA_DIST += libmodbus.pc.in
 CLEANFILES += libmodbus.pc
 
-SUBDIRS = src doc tests
+SUBDIRS = src tests doc
