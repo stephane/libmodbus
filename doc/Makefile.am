@@ -67,14 +67,9 @@ HTML = $(TXT3:%.txt=%.html) $(TXT7:%.txt=%.html)
 htmldoc: $(HTML)
 
 .txt.html:
-	asciidoc -d manpage -b xhtml11 -f asciidoc.conf \
-		-alibmodbus_version=@LIBMODBUS_VERSION@ $<
-.txt.xml:
-	asciidoc -d manpage -b docbook -f asciidoc.conf \
-		-alibmodbus_version=@LIBMODBUS_VERSION@ $<
-.xml.3:
-	xmlto --skip-validation man $<
-.xml.7:
-	xmlto --skip-validation man $<
+	asciidoc -d manpage -b xhtml11 -f asciidoc.conf -alibmodbus_version=@LIBMODBUS_VERSION@ $<
+
+.txt.3 .txt.7:
+	a2x --doctype manpage --format manpage -alibmodbus_version=@LIBMODBUS_VERSION@ $<
 
 CLEANFILES = *.3 *.7 *.html
