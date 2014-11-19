@@ -12,15 +12,13 @@ The functions included in the library have been derived from the Modicon Modbus
 Protocol Reference Guide which can be obtained from Schneider at
 [www.schneiderautomation.com](http://www.schneiderautomation.com).
 
-The license of libmodbus is *LGPL v2.1 or later* and the licence of programs in
-tests directory is GPL v3.
+The license of libmodbus is *LGPL v2.1 or later*.
 
 The documentation is available as manual pages (`man libmodbus` to read general
 description and list of available functions) or Web pages
 [www.libmodbus.org/documentation/](http://libmodbus.org/documentation/). The
 documentation is licensed under the Creative Commons Attribution-ShareAlike
 License 3.0 (Unported) (<http://creativecommons.org/licenses/by-sa/3.0/>).
-
 
 The official website is [www.libmodbus.org](http://www.libmodbus.org).
 
@@ -39,10 +37,10 @@ To install, just run the usual dance, `./configure && make install`. Run
 
 You can change installation directory with prefix option, eg. `./configure
 --prefix=/usr/local/`. You have to check that the installation library path is
-properly set up on your system (`/etc/ld.so.conf.d`) and library cache is up to
+properly set up on your system (*/etc/ld.so.conf.d*) and library cache is up to
 date (run `ldconfig` as root if required).
 
-The library provides a `libmodbus.pc` file to use with `pkg-config` to ease your
+The library provides a *libmodbus.pc* file to use with `pkg-config` to ease your
 program compilation and linking.
 
 If you want to compile with Microsoft Visual Studio, you need to install
@@ -50,10 +48,19 @@ If you want to compile with Microsoft Visual Studio, you need to install
 
 To compile under Windows, install [MinGW](http://www.mingw.org/) and MSYS then
 select the common packages (gcc, automake, libtool, etc). The directory
-`./src/win32/` contains a Visual C project.
+*./src/win32/* contains a Visual C project.
 
 To compile under OS X with [homebrew](http://mxcl.github.com/homebrew/), you will need
 to install the following dependencies first: `brew install autoconf automake libtool`.
+
+Documentation
+-------------
+
+The documentation can be generated in man pages and HTML files. The HTML files
+aren't built by default by the `make` command but by`make htmldoc` in
+*docs* directory.
+
+The documentation is also available [online](http://libmodbus.org/documentation).
 
 Testing
 -------

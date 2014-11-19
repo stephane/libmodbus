@@ -90,7 +90,7 @@ AC_CHECK_HEADERS([ \
 ])
 
 # Check whether to build docs / install man pages
-AC_LIBMODBUS_CHECK_DOC_BUILD
+AC_LIBMODBUS_CHECK_BUILD_DOC
 
 # Cygwin defines IPTOS_LOWDELAY but can't handle that flag so it's necessary to
 # workaround that problem and Cygwin doesn't define MSG_DONTWAIT.
@@ -130,8 +130,8 @@ AC_CONFIG_FILES([
         src/Makefile
         src/modbus-version.h
         src/win32/modbus.dll.manifest
-        doc/Makefile
         tests/Makefile
+        doc/Makefile
         libmodbus.pc
         libmodbus.spec
 ])
@@ -149,4 +149,6 @@ AC_MSG_RESULT([
         compiler:               ${CC}
         cflags:                 ${CFLAGS}
         ldflags:                ${LDFLAGS}
+
+        documentation:          ${ac_libmodbus_build_doc}
 ])

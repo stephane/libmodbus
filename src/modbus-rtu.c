@@ -389,7 +389,7 @@ static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
         return msg_length;
     } else {
         if (ctx->debug) {
-            fprintf(stderr, "ERROR CRC received %0X != CRC calculated %0X\n",
+            fprintf(stderr, "ERROR CRC received 0x%0X != CRC calculated 0x%0X\n",
                     crc_received, crc_calculated);
         }
 
@@ -1146,20 +1146,26 @@ modbus_t* modbus_new_rtu(const char *device,
     modbus_t *ctx;
     modbus_rtu_t *ctx_rtu;
 
+    /* Check device argument */
+    if (device == NULL || (*device) == 0) {
+        fprintf(stderr, "The device string is empty\n");
+        errno = EINVAL;
+        return NULL;
+    }
+
+    /* Check baud argument */
+    if (baud == 0) {
+        fprintf(stderr, "The baud rate value must not be zero\n");
+        errno = EINVAL;
+        return NULL;
+    }
+
     ctx = (modbus_t *) malloc(sizeof(modbus_t));
     _modbus_init_common(ctx);
     ctx->backend = &_modbus_rtu_backend;
     ctx->backend_data = (modbus_rtu_t *) malloc(sizeof(modbus_rtu_t));
     ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
     ctx_rtu->device = NULL;
-
-    /* Check device argument */
-    if (device == NULL || (*device) == 0) {
-        fprintf(stderr, "The device string is empty\n");
-        modbus_free(ctx);
-        errno = EINVAL;
-        return NULL;
-    }
 
     /* Device name and \0 */
     ctx_rtu->device = (char *) malloc((strlen(device) + 1) * sizeof(char));
