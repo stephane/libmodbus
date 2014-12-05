@@ -259,6 +259,7 @@ MODBUS_API void modbus_set_float_dcba(float f, uint16_t *dest);
 
 #include "modbus-tcp.h"
 #include "modbus-rtu.h"
+#include "modbus-ascii.h"
 
 MODBUS_END_DECLS
 
