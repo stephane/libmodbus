@@ -950,7 +950,7 @@ int modbus_ascii_set_serial_mode(modbus_t *ctx, int mode)
     return -1;
 }
 
-int modbus_ascii_serial_mode(modbus_t *ctx)
+int modbus_ascii_get_serial_mode(modbus_t *ctx)
 {
     if (ctx == NULL) {
         errno = EINVAL;
