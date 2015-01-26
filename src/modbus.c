@@ -217,8 +217,10 @@ int modbus_send_raw_request(modbus_t *ctx, uint8_t *raw_req, int raw_req_length)
         return -1;
     }
 
-    if (raw_req_length < 2) {
-        /* The raw request must contain function and slave at least */
+    if (raw_req_length < 2 || raw_req_length > (MODBUS_MAX_PDU_LENGTH + 1)) {
+        /* The raw request must contain function and slave at least and
+           must not be longer than the maximum pdu length plus the slave
+           address. */
         errno = EINVAL;
         return -1;
     }
