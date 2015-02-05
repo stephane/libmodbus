@@ -112,7 +112,7 @@ int main(void)
                 }
             } else {
                 modbus_set_socket(ctx, master_socket);
-                rc = modbus_receive(ctx, query);
+                rc = modbus_receive(ctx, query, MODBUS_TCP_MAX_ADU_LENGTH);
                 if (rc > 0) {
                     modbus_reply(ctx, query, rc, mb_mapping);
                 } else if (rc == -1) {
