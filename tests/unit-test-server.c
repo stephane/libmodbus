@@ -1,8 +1,7 @@
 /*
  * Copyright © 2008-2014 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the BSD License.
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <stdio.h>
