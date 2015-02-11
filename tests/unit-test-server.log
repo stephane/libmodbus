@@ -1,0 +1,187 @@
+Illegal nb of values 0 in read_holding_registers (max 125)
+Illegal data address 156 in read_bits
+Illegal data address 1DB in read_input_bits
+Illegal data address 16F in read_registers
+Illegal data address 10A in read_input_registers
+Illegal data address 155 in write_bit
+Illegal data address 17A in write_bits
+Illegal data address 171 in read_registers
+The client connection from 127.0.0.1 is accepted
+Waiting for a indication...
+<00><01><00><00><00><06><FF><05><01><30><FF><00>
+[00][01][00][00][00][06][FF][05][01][30][FF][00]
+Waiting for a indication...
+<00><02><00><00><00><06><FF><01><01><30><00><01>
+[00][02][00][00][00][04][FF][01][01][01]
+Waiting for a indication...
+<00><03><00><00><00><0C><FF><0F><01><30><00><25><05><CD><6B><B2><0E><1B>
+[00][03][00][00][00][06][FF][0F][01][30][00][25]
+Waiting for a indication...
+<00><04><00><00><00><06><FF><01><01><30><00><25>
+[00][04][00][00][00][08][FF][01][05][CD][6B][B2][0E][1B]
+Waiting for a indication...
+<00><05><00><00><00><06><FF><02><01><C4><00><16>
+[00][05][00][00][00][06][FF][02][03][AC][DB][35]
+Waiting for a indication...
+<00><06><00><00><00><06><FF><06><01><6B><12><34>
+[00][06][00][00][00][06][FF][06][01][6B][12][34]
+Waiting for a indication...
+<00><07><00><00><00><06><FF><03><01><6B><00><01>
+[00][07][00][00][00][05][FF][03][02][12][34]
+Waiting for a indication...
+<00><08><00><00><00><0D><FF><10><01><6B><00><03><06><02><2B><00><01><00><64>
+[00][08][00][00][00][06][FF][10][01][6B][00][03]
+Waiting for a indication...
+<00><09><00><00><00><06><FF><03><01><6B><00><03>
+[00][09][00][00][00][09][FF][03][06][02][2B][00][01][00][64]
+Waiting for a indication...
+<00><0A><00><00><00><06><FF><03><01><6B><00><00>
+Bytes flushed (0)
+[00][0A][00][00][00][03][FF][83][03]
+Waiting for a indication...
+<00><0B><00><00><00><0F><FF><17><01><6B><00><03><01><6C><00><02><04><00><00><00><00>
+[00][0B][00][00][00][09][FF][17][06][02][2B][00][00][00][00]
+Waiting for a indication...
+<00><0C><00><00><00><06><FF><04><01><08><00><01>
+[00][0C][00][00][00][05][FF][04][02][00][0A]
+Waiting for a indication...
+<00><0D><00><00><00><06><FF><01><01><30><00><26>
+[00][0D][00][00][00][03][FF][81][02]
+Waiting for a indication...
+<00><0E><00><00><00><06><FF><02><01><C4><00><17>
+[00][0E][00][00][00][03][FF][82][02]
+Waiting for a indication...
+<00><0F><00><00><00><06><FF><03><01><6B><00><04>
+[00][0F][00][00][00][03][FF][83][02]
+Waiting for a indication...
+<00><10><00><00><00><06><FF><04><01><08><00><02>
+[00][10][00][00][00][03][FF][84][02]
+Waiting for a indication...
+<00><11><00><00><00><06><FF><05><01><55><FF><00>
+Bytes flushed (0)
+[00][11][00][00][00][03][FF][85][02]
+Waiting for a indication...
+<00><12><00><00><00><0C><FF><0F><01><55><00><25><05><AC><DB><B5><0E><1B>
+[00][12][00][00][00][03][FF][8F][02]
+Waiting for a indication...
+<00><13><00><00><00><06><FF><03><01><6E><00><03>
+[00][13][00][00][00][03][FF][83][02]
+Waiting for a indication...
+<00><14><00><00><00><06><12><03><01><6B><00><03>
+[00][14][00][00][00][09][12][03][06][02][2B][00][00][00][00]
+Waiting for a indication...
+<00><15><00><00><00><06><00><03><01><6B><00><03>
+[00][15][00][00][00][09][00][03][06][02][2B][00][00][00][00]
+Waiting for a indication...
+<00><16><00><00><00><06><FF><03><00><6D><00><01>
+Reply with an invalid TID or slave
+[00][00][00][00][00][05][FF][03][02][00][00]
+Waiting for a indication...
+<00><17><00><00><00><02><FF><11>
+[00][17][00][00][00][0D][FF][11][0A][B4][FF][4C][4D][42][33][2E][31][2E][31]
+Waiting for a indication...
+<00><18><00><00><00><02><FF><11>
+[00][18][00][00][00][0D][FF][11][0A][B4][FF][4C][4D][42][33][2E][31][2E][31]
+Waiting for a indication...
+<00><19><00><00><00><06><FF><03><01><6B><00><03>
+[00][19][00][00][00][09][FF][03][06][02][2B][00][00][00][00]
+Waiting for a indication...
+<00><1A><00><00><00><06><FF><03><00><6E><00><01>
+Sleep 0.5 s before replying
+[00][1A][00][00][00][05][FF][03][02][00][00]
+Waiting for a indication...
+<00><1B><00><00><00><06><FF><03><00><6E><00><01>
+Sleep 0.5 s before replying
+[00][1B][00][00][00][05][FF][03][02][00][00]
+Waiting for a indication...
+<00><1C><00><00><00><06><FF><03><00><6E><00><01>
+Sleep 0.5 s before replying
+[00][1C][00][00][00][05][FF][03][02][00][00]
+Waiting for a indication...
+<00><1D><00><00><00><06><FF><03><00><6F><00><01>
+(00)(1D)(00)(00)(00)(05)(FF)(03)(02)(00)(00)Waiting for a indication...
+<00><1E><00><00><00><06><FF><03><00><6F><00><01>
+(00)(1E)(00)(00)(00)(05)(FF)(03)(02)(00)(00)Waiting for a indication...
+<00><1F><00><00><0Illegal nb of values 0 in read_bits (max 2000)
+Illegal nb of values 2001 in read_bits (max 2000)
+Illegal nb of values 0 in read_input_bits (max 2000)
+Illegal nb of values 2001 in read_input_bits (max 2000)
+Illegal nb of values 0 in read_holding_registers (max 125)
+Illegal nb of values 126 in read_holding_registers (max 125)
+Illegal number of values 0 in read_input_registers (max 125)
+Illegal number of values 126 in read_input_registers (max 125)
+Illegal nb of values (W1, R0) in write_and_read_registers (max W121, R125)
+Illegal nb of values (W1, R126) in write_and_read_registers (max W121, R125)
+Illegal number of values 0 in write_registers (max 123)
+Illegal number of values 124 in write_registers (max 123)
+Illegal number of values 0 in write_bits (max 1968)
+Illegal number of values 1969 in write_bits (max 1968)
+ERROR Connection reset by peer: read
+0><06><FF><03><01><6B><00><02>
+Set an incorrect number of values
+[00][1F][00][00][00][05][FF][03][02][02][2B]
+Waiting for a indication...
+<00><20><00><00><00><06><FF><03><00><6C><00><03>
+Reply to this special register address by an exception
+[00][20][00][00][00][03][FF][83][06]
+Waiting for a indication...
+<00><00><00><00><00><06><FF><03><00><01><00><05>
+[00][00][00][00][00][0D][FF][03][0A][00][00][00][00][00][00][00][00][00][00]
+Waiting for a indication...
+<00><00><00><00><00><06><FF><01><00><01><00><00>
+Bytes flushed (0)
+[00][00][00][00][00][03][FF][81][03]
+Waiting for a indication...
+<00><00><00><00><00><06><FF><01><00><01><07><D1>
+Bytes flushed (0)
+[00][00][00][00][00][03][FF][81][03]
+Waiting for a indication...
+<00><00><00><00><00><06><FF><02><00><01><00><00>
+Bytes flushed (0)
+[00][00][00][00][00][03][FF][82][03]
+Waiting for a indication...
+<00><00><00><00><00><06><FF><02><00><01><07><D1>
+Bytes flushed (0)
+[00][00][00][00][00][03][FF][82][03]
+Waiting for a indication...
+<00><00><00><00><00><06><FF><03><00><01><00><00>
+Bytes flushed (0)
+[00][00][00][00][00][03][FF][83][03]
+Waiting for a indication...
+<00><00><00><00><00><06><FF><03><00><01><00><7E>
+Bytes flushed (0)
+[00][00][00][00][00][03][FF][83][03]
+Waiting for a indication...
+<00><00><00><00><00><06><FF><04><00><01><00><00>
+Bytes flushed (0)
+[00][00][00][00][00][03][FF][84][03]
+Waiting for a indication...
+<00><00><00><00><00><06><FF><04><00><01><00><7E>
+Bytes flushed (0)
+[00][00][00][00][00][03][FF][84][03]
+Waiting for a indication...
+<00><00><00><00><00><0D><FF><17><00><00><00><00><00><00><00><01><02><12><34>
+Bytes flushed (0)
+[00][00][00][00][00][03][FF][97][03]
+Waiting for a indication...
+<00><00><00><00><00><0D><FF><17><00><00><00><7E><00><00><00><01><02><12><34>
+Bytes flushed (0)
+[00][00][00][00][00][03][FF][97][03]
+Waiting for a indication...
+<00><00><00><00><00><0D><FF><10><01><6B><00><00><00>
+Bytes flushed (6)
+[00][00][00][00][00][03][FF][90][03]
+Waiting for a indication...
+<00><00><00><00><00><0D><FF><10><01><6B><00><7C><06><02><2B><00><01><00><64>
+Bytes flushed (0)
+[00][00][00][00][00][03][FF][90][03]
+Waiting for a indication...
+<00><00><00><00><00><0D><FF><0F><01><6B><00><00><00>
+Bytes flushed (6)
+[00][00][00][00][00][03][FF][8F][03]
+Waiting for a indication...
+<00><00><00><00><00><0D><FF><0F><01><6B><07><B1><06><02><2B><00><01><00><64>
+Bytes flushed (0)
+[00][00][00][00][00][03][FF][8F][03]
+Waiting for a indication...
+Quit the loop: Connection reset by peer
