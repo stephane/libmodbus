@@ -162,7 +162,7 @@ static ssize_t _modbus_tcp_send(modbus_t *ctx, const uint8_t *req, int req_lengt
        Requests not to send SIGPIPE on errors on stream oriented
        sockets when the other end breaks the connection.  The EPIPE
        error is still returned. */
-    return send(ctx->s, (const char*)req, req_length, MSG_NOSIGNAL);
+    return send(ctx->s, (const char *)req, req_length, MSG_NOSIGNAL);
 }
 
 static int _modbus_tcp_receive(modbus_t *ctx, uint8_t *req) {
@@ -497,7 +497,7 @@ int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
 
     yes = 1;
     if (setsockopt(new_s, SOL_SOCKET, SO_REUSEADDR,
-                   (char *) &yes, sizeof(yes)) == -1) {
+                   (char *)&yes, sizeof(yes)) == -1) {
         close(new_s);
         return -1;
     }
@@ -589,7 +589,7 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
         int s;
 
         s = socket(ai_ptr->ai_family, ai_ptr->ai_socktype,
-                            ai_ptr->ai_protocol);
+                   ai_ptr->ai_protocol);
         if (s < 0) {
             if (ctx->debug) {
                 perror("socket");
@@ -598,7 +598,7 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
         } else {
             int yes = 1;
             rc = setsockopt(s, SOL_SOCKET, SO_REUSEADDR,
-                            (void *) &yes, sizeof (yes));
+                            (void *)&yes, sizeof (yes));
             if (rc != 0) {
                 close(s);
                 if (ctx->debug) {
@@ -793,15 +793,15 @@ modbus_t* modbus_new_tcp(const char *ip, int port)
     }
 #endif
 
-    ctx = (modbus_t *) malloc(sizeof(modbus_t));
+    ctx = (modbus_t *)malloc(sizeof(modbus_t));
     _modbus_init_common(ctx);
 
     /* Could be changed after to reach a remote serial Modbus device */
     ctx->slave = MODBUS_TCP_SLAVE;
 
-    ctx->backend = &(_modbus_tcp_backend);
+    ctx->backend = &_modbus_tcp_backend;
 
-    ctx->backend_data = (modbus_tcp_t *) malloc(sizeof(modbus_tcp_t));
+    ctx->backend_data = (modbus_tcp_t *)malloc(sizeof(modbus_tcp_t));
     ctx_tcp = (modbus_tcp_t *)ctx->backend_data;
 
     if (ip != NULL) {
@@ -837,15 +837,15 @@ modbus_t* modbus_new_tcp_pi(const char *node, const char *service)
     size_t dest_size;
     size_t ret_size;
 
-    ctx = (modbus_t *) malloc(sizeof(modbus_t));
+    ctx = (modbus_t *)malloc(sizeof(modbus_t));
     _modbus_init_common(ctx);
 
     /* Could be changed after to reach a remote serial Modbus device */
     ctx->slave = MODBUS_TCP_SLAVE;
 
-    ctx->backend = &(_modbus_tcp_pi_backend);
+    ctx->backend = &_modbus_tcp_pi_backend;
 
-    ctx->backend_data = (modbus_tcp_pi_t *) malloc(sizeof(modbus_tcp_pi_t));
+    ctx->backend_data = (modbus_tcp_pi_t *)malloc(sizeof(modbus_tcp_pi_t));
     ctx_tcp_pi = (modbus_tcp_pi_t *)ctx->backend_data;
 
     if (node == NULL) {
