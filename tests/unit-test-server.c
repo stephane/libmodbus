@@ -105,7 +105,7 @@ int main(int argc, char*argv[])
     }
 
     if (mb_mapping->nb_input_registers != UT_INPUT_REGISTERS_ADDRESS + UT_INPUT_REGISTERS_NB) {
-        printf("Invalid bb input registers: %d\n", UT_INPUT_REGISTERS_ADDRESS + UT_INPUT_REGISTERS_NB);
+        printf("Invalid nb input registers: %d\n", UT_INPUT_REGISTERS_ADDRESS + UT_INPUT_REGISTERS_NB);
         modbus_free(ctx);
         return -1;
     }
@@ -145,10 +145,10 @@ int main(int argc, char*argv[])
             /* Filtered queries return 0 */
         } while (rc == 0);
 
-        if (rc == -1) {
-            /* Connection closed by the client or error */
-            /* We could answer with an exception on EMBBADDATA to indicate
-               illegal data for example */
+        /* The connection is not closed on errors which require on reply such as
+           bad CRC in RTU. */
+        if (rc == -1 && errno != EMBBADCRC) {
+            /* Quit */
             break;
         }
 
