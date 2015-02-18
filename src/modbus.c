@@ -1055,8 +1055,8 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         break;
     }
 
-    /* Suppress any response when the request was a broadcast */
-    return slave ? send_msg(ctx, rsp, rsp_length) : 0;
+    /* Suppress any responses when the request was a broadcast */
+    return (slave == MODBUS_BROADCAST_ADDRESS) ? 0 : send_msg(ctx, rsp, rsp_length);
 }
 
 int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
