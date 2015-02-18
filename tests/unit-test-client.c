@@ -429,8 +429,8 @@ int main(int argc, char *argv[])
 
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
                                UT_REGISTERS_NB, tab_rp_registers);
-    printf("2/3 Reply after a broadcast query: ");
-    ASSERT_TRUE(rc == UT_REGISTERS_NB, "");
+    printf("2/3 No reply after a broadcast query: ");
+    ASSERT_TRUE(rc == -1 && errno == ETIMEDOUT, "");
 
     /* Restore slave */
     if (use_backend == RTU) {
