@@ -97,13 +97,18 @@ MODBUS_BEGIN_DECLS
  * the first MODBUS implementation on Serial Line network (max. RS485 ADU = 256
  * bytes). Therefore, MODBUS PDU for serial line communication = 256 - Server
  * address (1 byte) - CRC (2 bytes) = 253 bytes.
- *
- * Consequently:
- * - RS232 / RS485 ADU = 253 bytes + Server address (1 byte) + CRC (2 bytes) =
- *   256 bytes.
- * - TCP MODBUS ADU = 253 bytes + MBAP (7 bytes) = 260 bytes.
  */
 #define MODBUS_MAX_PDU_LENGTH              253
+
+/* Consequently:
+ * - RTU MODBUS ADU = 253 bytes + Server address (1 byte) + CRC (2 bytes) = 256
+ *   bytes.
+ * - TCP MODBUS ADU = 253 bytes + MBAP (7 bytes) = 260 bytes.
+ * so the maximum of both backend in 260 bytes. This size can used to allocate
+ * an array of bytes to store responses and it will be compatible with the two
+ * backends.
+ */
+#define MODBUS_MAX_ADU_LENGTH              260
 
 /* Random number to avoid errno conflicts */
 #define MODBUS_ENOBASE 112345678
