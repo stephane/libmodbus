@@ -1,5 +1,5 @@
 /*
- * Copyright © 2001-2013 Stéphane Raimbault <stephane.raimbault@gmail.com>
+ * Copyright © 2001-2015 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -148,6 +148,10 @@ enum {
 #define EMBMDATA   (EMBXGTAR + 5)
 #define EMBBADSLAVE (EMBXGTAR + 6)
 
+/* Masks for Modbus compliance */
+#define MODBUS_COMPLIANCE_SLAVE_RANGE        1
+#define MODBUS_COMPLIANCE_BROADCAST    (1 << 1)
+
 extern const unsigned int libmodbus_version_major;
 extern const unsigned int libmodbus_version_minor;
 extern const unsigned int libmodbus_version_micro;
@@ -172,8 +176,8 @@ typedef struct {
 typedef enum
 {
     MODBUS_ERROR_RECOVERY_NONE          = 0,
-    MODBUS_ERROR_RECOVERY_LINK          = (1<<1),
-    MODBUS_ERROR_RECOVERY_PROTOCOL      = (1<<2)
+    MODBUS_ERROR_RECOVERY_LINK          = (1 << 1),
+    MODBUS_ERROR_RECOVERY_PROTOCOL      = (1 << 2)
 } modbus_error_recovery_mode;
 
 MODBUS_API int modbus_set_slave(modbus_t* ctx, int slave);
@@ -233,6 +237,9 @@ MODBUS_API int modbus_reply(modbus_t *ctx, const uint8_t *req,
                             int req_length, modbus_mapping_t *mb_mapping);
 MODBUS_API int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
                                       unsigned int exception_code);
+
+MODBUS_API void modbus_disable_compliance(modbus_t *ctx, int mask);
+MODBUS_API void modbus_enable_compliance(modbus_t *ctx, int mask);
 
 /**
  * UTILS FUNCTIONS

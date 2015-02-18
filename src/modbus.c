@@ -1668,6 +1668,8 @@ void _modbus_init_common(modbus_t *ctx)
 
     ctx->byte_timeout.tv_sec = 0;
     ctx->byte_timeout.tv_usec = _BYTE_TIMEOUT;
+
+    ctx->compliance = MODBUS_COMPLIANCE_SLAVE_RANGE;
 }
 
 /* Define the slave number */
@@ -1924,6 +1926,17 @@ void modbus_mapping_free(modbus_mapping_t *mb_mapping)
     free(mb_mapping->tab_bits);
     free(mb_mapping);
 }
+
+/* Set the level of compliance to the Modbus protocol */
+void modbus_enable_compliance(modbus_t *ctx, int mask) {
+    ctx->compliance |= mask;
+}
+
+void modbus_disable_compliance(modbus_t *ctx, int mask)
+{
+    ctx->compliance &= ~mask;
+}
+
 
 #ifndef HAVE_STRLCPY
 /*

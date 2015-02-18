@@ -442,9 +442,25 @@ int main(int argc, char *argv[])
     printf("* modbus_write_registers: ");
     ASSERT_TRUE(rc == -1 && errno == EMBMDATA, "");
 
+    /** TEST SLAVE ADDRESS **/
+    printf("\nTEST SLAVE ADDRESS:\n");
+
+    printf("1/2 Not compliant slave address refused: ");
+    rc = modbus_set_slave(ctx, 248);
+    ASSERT_TRUE(rc == -1, "Slave address musn't be allowed");
+
+    printf("2/2 Not compliant slave address allowed: ");
+    modbus_disable_compliance(ctx, MODBUS_COMPLIANCE_SLAVE_RANGE);
+    rc = modbus_set_slave(ctx, 248);
+    ASSERT_TRUE(rc == 0, "Not compliant slave address refused");
+    modbus_enable_compliance(ctx, MODBUS_COMPLIANCE_SLAVE_RANGE);
+
     /** SLAVE REPLY **/
     printf("\nTEST SLAVE REPLY:\n");
-    modbus_set_slave(ctx, INVALID_SERVER_ID);
+
+    rc = modbus_set_slave(ctx, INVALID_SERVER_ID);
+    ASSERT_TRUE(rc == 0, "Server ID for tests");
+
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
                                UT_REGISTERS_NB, tab_rp_registers);
     if (use_backend == RTU) {
@@ -490,7 +506,7 @@ int main(int argc, char *argv[])
     }
 
     rc = modbus_set_slave(ctx, MODBUS_BROADCAST_ADDRESS);
-    ASSERT_TRUE(rc != -1, "Invalid broacast address");
+    ASSERT_TRUE(rc == 0, "Set broadcast address");
 
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
                                UT_REGISTERS_NB, tab_rp_registers);
