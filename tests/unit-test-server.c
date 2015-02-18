@@ -140,7 +140,7 @@ int main(int argc, char*argv[])
 
     for (;;) {
         do {
-            rc = modbus_receive(ctx, query);
+            rc = modbus_receive(ctx, query, MODBUS_TCP_MAX_ADU_LENGTH);
             /* Filtered queries return 0 */
         } while (rc == 0);
 

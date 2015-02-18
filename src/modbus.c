@@ -33,6 +33,15 @@ const unsigned int libmodbus_version_micro = LIBMODBUS_VERSION_MICRO;
 /* Max between RTU and TCP max adu length (so TCP) */
 #define MAX_MESSAGE_LENGTH 260
 
+#ifndef min
+/* Get the minimum between 2 values. */
+#define min(x, y) ({            \
+    typeof(x) _x = (x);         \
+    typeof(y) _y = (y);         \
+    (void) (&_x == &_y);        \
+    _x < _y ? _x : _y; })
+#endif
+
 /* 3 steps are used to parse the query */
 typedef enum {
     _STEP_FUNCTION,
@@ -334,7 +343,7 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
    - read() or recv() error codes
 */
 
-int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
+int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type, int msg_max)
 {
     int rc;
     fd_set rset;
@@ -373,6 +382,8 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     }
 
     while (length_to_read != 0) {
+        int to_read;
+
         rc = ctx->backend->select(ctx, &rset, p_tv, length_to_read);
         if (rc == -1) {
             _error_print(ctx, "select");
@@ -391,7 +402,8 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
             return -1;
         }
 
-        rc = ctx->backend->recv(ctx, msg + msg_length, length_to_read);
+        to_read = min(msg_max - msg_length, length_to_read);
+        rc = ctx->backend->recv(ctx, msg + msg_length, to_read);
         if (rc == 0) {
             errno = ECONNRESET;
             rc = -1;
@@ -423,6 +435,8 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
         /* Computes remaining bytes */
         length_to_read -= rc;
 
+        if (msg_length == msg_max)
+            break;
         if (length_to_read == 0) {
             switch (step) {
             case _STEP_FUNCTION:
@@ -469,14 +483,14 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
 }
 
 /* Receive the request from a modbus master */
-int modbus_receive(modbus_t *ctx, uint8_t *req)
+int modbus_receive(modbus_t *ctx, uint8_t *req, int req_max)
 {
     if (ctx == NULL) {
         errno = EINVAL;
         return -1;
     }
 
-    return ctx->backend->receive(ctx, req);
+    return ctx->backend->receive(ctx, req, req_max);
 }
 
 /* Receives the confirmation.
@@ -487,14 +501,14 @@ int modbus_receive(modbus_t *ctx, uint8_t *req)
    The function doesn't check the confirmation is the expected response to the
    initial request.
 */
-int modbus_receive_confirmation(modbus_t *ctx, uint8_t *rsp)
+int modbus_receive_confirmation(modbus_t *ctx, uint8_t *rsp, int rsp_max)
 {
     if (ctx == NULL) {
         errno = EINVAL;
         return -1;
     }
 
-    return _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+    return _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION, rsp_max);
 }
 
 static int check_confirmation(modbus_t *ctx, uint8_t *req,
@@ -1106,7 +1120,7 @@ static int read_io_status(modbus_t *ctx, int function,
         int offset;
         int offset_end;
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION, MAX_MESSAGE_LENGTH);
         if (rc == -1)
             return -1;
 
@@ -1215,7 +1229,7 @@ static int read_registers(modbus_t *ctx, int function, int addr, int nb,
         int offset;
         int i;
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION, MAX_MESSAGE_LENGTH);
         if (rc == -1)
             return -1;
 
@@ -1306,7 +1320,7 @@ static int write_single(modbus_t *ctx, int function, int addr, int value)
         /* Used by write_bit and write_register */
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION, MAX_MESSAGE_LENGTH);
         if (rc == -1)
             return -1;
 
@@ -1391,7 +1405,7 @@ int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *src)
     if (rc > 0) {
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION, MAX_MESSAGE_LENGTH);
         if (rc == -1)
             return -1;
 
@@ -1441,7 +1455,7 @@ int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *src)
     if (rc > 0) {
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION, MAX_MESSAGE_LENGTH);
         if (rc == -1)
             return -1;
 
@@ -1474,7 +1488,7 @@ int modbus_mask_write_register(modbus_t *ctx, int addr, uint16_t and_mask, uint1
         /* Used by write_bit and write_register */
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION, MAX_MESSAGE_LENGTH);
         if (rc == -1)
             return -1;
 
@@ -1544,7 +1558,7 @@ int modbus_write_and_read_registers(modbus_t *ctx,
     if (rc > 0) {
         int offset;
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION, MAX_MESSAGE_LENGTH);
         if (rc == -1)
             return -1;
 
@@ -1588,7 +1602,7 @@ int modbus_report_slave_id(modbus_t *ctx, int max_dest, uint8_t *dest)
         int offset;
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION, MAX_MESSAGE_LENGTH);
         if (rc == -1)
             return -1;
 

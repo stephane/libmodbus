@@ -404,7 +404,7 @@ int main(int argc, char *argv[])
          * ignore both. */
         modbus_send_raw_request(ctx, raw_req, RAW_REQ_LENGTH * sizeof(uint8_t));
         modbus_send_raw_request(ctx, raw_rep, RAW_REP_LENGTH * sizeof(uint8_t));
-        rc = modbus_receive_confirmation(ctx, rsp);
+        rc = modbus_receive_confirmation(ctx, rsp, MODBUS_RTU_MAX_ADU_LENGTH);
 
         printf("1-B/3 No response from slave %d on indication/confirmation messages: ",
                INVALID_SERVER_ID);
@@ -412,7 +412,7 @@ int main(int argc, char *argv[])
 
         /* Send an INVALID request for another slave */
         modbus_send_raw_request(ctx, raw_invalid_req, RAW_REQ_LENGTH * sizeof(uint8_t));
-        rc = modbus_receive_confirmation(ctx, rsp);
+        rc = modbus_receive_confirmation(ctx, rsp, MODBUS_RTU_MAX_ADU_LENGTH);
 
         printf("1-C/3 No response from slave %d with invalid request: ",
                INVALID_SERVER_ID);
@@ -692,7 +692,7 @@ int test_server(modbus_t *ctx, int use_backend)
     ASSERT_TRUE(req_length == (backend_length + 5), "FAILED (%d)\n", req_length);
 
     printf("* modbus_receive_confirmation: ");
-    rc = modbus_receive_confirmation(ctx, rsp);
+    rc = modbus_receive_confirmation(ctx, rsp, MODBUS_TCP_MAX_ADU_LENGTH);
     ASSERT_TRUE(rc == (backend_length + 12), "FAILED (%d)\n", rc);
 
     /* Try to read more values than a response could hold for all data
@@ -785,7 +785,7 @@ int send_crafted_request(modbus_t *ctx, int function,
             printf("* try function 0x%X: %s %d values: ", function, bytes ? "write": "read",
                    max_value);
         }
-        rc = modbus_receive_confirmation(ctx, rsp);
+        rc = modbus_receive_confirmation(ctx, rsp, MODBUS_TCP_MAX_ADU_LENGTH);
         ASSERT_TRUE(rc == (backend_length + EXCEPTION_RC) &&
                     rsp[backend_offset] == (0x80 + function) &&
                     rsp[backend_offset + 1] == MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, "");
