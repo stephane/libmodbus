@@ -14,10 +14,17 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The *modbus_receive_confirmation(*_ function shall receive a request via the
+The *modbus_receive_confirmation()* function shall receive a request via the
 socket of the context _ctx_. This function must be used for debugging purposes
 because the received response isn't checked against the initial request. This
 function can be used to receive request not handled by the library.
+
+The maximum size of the response depends on the used backend, in RTU the _rsp_
+array must be _MODBUS_RTU_MAX_ADU_LENGTH_ bytes and in TCP it must be
+_MODBUS_TCP_MAX_ADU_LENGTH_ bytes. If you want to write code compatible with
+both, you can use the constant _MODBUS_MAX_ADU_LENGTH_ (maximum value of all
+libmodbus backends). Take care to allocate enough memory to store responses to
+avoid crashes of your server.
 
 
 RETURN VALUE
@@ -27,6 +34,13 @@ response length if sucessful. The returned request length can be zero if the
 indication request is ignored (eg. a query for another slave in RTU
 mode). Otherwise it shall return -1 and set errno.
 
+EXAMPLE
+-------
+[source,c]
+-------------------
+uint8_t rsp[MODBUS_MAX_ADU_LENGTH];
+rc = modbus_receive_confirmation(ctx, rsp);
+-------------------
 
 SEE ALSO
 --------

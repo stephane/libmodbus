@@ -1,19 +1,7 @@
 /*
  * Copyright © 2001-2011 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include <stdio.h>
@@ -183,7 +171,8 @@ static int _modbus_rtu_send_msg_pre(uint8_t *req, int req_length)
  * while win32_ser_read() only consumes the receive buffer.
  */
 
-static void win32_ser_init(struct win32_ser *ws) {
+static void win32_ser_init(struct win32_ser *ws)
+{
     /* Clear everything */
     memset(ws, 0x00, sizeof(struct win32_ser));
 
@@ -193,7 +182,8 @@ static void win32_ser_init(struct win32_ser *ws) {
 
 /* FIXME Try to remove length_to_read -> max_len argument, only used by win32 */
 static int win32_ser_select(struct win32_ser *ws, int max_len,
-                            const struct timeval *tv) {
+                            const struct timeval *tv)
+{
     COMMTIMEOUTS comm_to;
     unsigned int msec = 0;
 
@@ -243,7 +233,8 @@ static int win32_ser_select(struct win32_ser *ws, int max_len,
 }
 
 static int win32_ser_read(struct win32_ser *ws, uint8_t *p_msg,
-                          unsigned int max_len) {
+                          unsigned int max_len)
+{
     unsigned int n = ws->n_bytes;
 
     if (max_len < n) {
@@ -606,7 +597,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     }
 
     /* Save */
-    tcgetattr(ctx->s, &(ctx_rtu->old_tios));
+    tcgetattr(ctx->s, &ctx_rtu->old_tios);
 
     memset(&tios, 0, sizeof(struct termios));
 
@@ -1054,7 +1045,7 @@ static void _modbus_rtu_close(modbus_t *ctx)
     }
 #else
     if (ctx->s != -1) {
-        tcsetattr(ctx->s, TCSANOW, &(ctx_rtu->old_tios));
+        tcsetattr(ctx->s, TCSANOW, &ctx_rtu->old_tios);
         close(ctx->s);
         ctx->s = -1;
     }
@@ -1073,11 +1064,11 @@ static int _modbus_rtu_flush(modbus_t *ctx)
 }
 
 static int _modbus_rtu_select(modbus_t *ctx, fd_set *rset,
-                       struct timeval *tv, int length_to_read)
+                              struct timeval *tv, int length_to_read)
 {
     int s_rc;
 #if defined(_WIN32)
-    s_rc = win32_ser_select(&(((modbus_rtu_t*)ctx->backend_data)->w_ser),
+    s_rc = win32_ser_select(&((modbus_rtu_t *)ctx->backend_data)->w_ser,
                             length_to_read, tv);
     if (s_rc == 0) {
         errno = ETIMEDOUT;
@@ -1147,7 +1138,7 @@ modbus_t* modbus_new_rtu(const char *device,
     modbus_rtu_t *ctx_rtu;
 
     /* Check device argument */
-    if (device == NULL || (*device) == 0) {
+    if (device == NULL || *device == 0) {
         fprintf(stderr, "The device string is empty\n");
         errno = EINVAL;
         return NULL;
@@ -1160,15 +1151,15 @@ modbus_t* modbus_new_rtu(const char *device,
         return NULL;
     }
 
-    ctx = (modbus_t *) malloc(sizeof(modbus_t));
+    ctx = (modbus_t *)malloc(sizeof(modbus_t));
     _modbus_init_common(ctx);
     ctx->backend = &_modbus_rtu_backend;
-    ctx->backend_data = (modbus_rtu_t *) malloc(sizeof(modbus_rtu_t));
+    ctx->backend_data = (modbus_rtu_t *)malloc(sizeof(modbus_rtu_t));
     ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
     ctx_rtu->device = NULL;
 
     /* Device name and \0 */
-    ctx_rtu->device = (char *) malloc((strlen(device) + 1) * sizeof(char));
+    ctx_rtu->device = (char *)malloc((strlen(device) + 1) * sizeof(char));
     strcpy(ctx_rtu->device, device);
 
     ctx_rtu->baud = baud;

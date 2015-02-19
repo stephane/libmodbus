@@ -1,8 +1,7 @@
 /*
  * Copyright © 2008-2014 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the BSD License.
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <stdio.h>
@@ -58,6 +57,7 @@ int main(int argc, char *argv[])
     uint32_t old_byte_to_sec;
     uint32_t old_byte_to_usec;
     int use_backend;
+    int success = FALSE;
 
     if (argc > 1) {
         if (strcmp(argv[1], "tcp") == 0) {
@@ -429,8 +429,8 @@ int main(int argc, char *argv[])
 
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
                                UT_REGISTERS_NB, tab_rp_registers);
-    printf("2/3 Reply after a broadcast query: ");
-    ASSERT_TRUE(rc == UT_REGISTERS_NB, "");
+    printf("2/3 No reply after a broadcast query: ");
+    ASSERT_TRUE(rc == -1 && errno == ETIMEDOUT, "");
 
     /* Restore slave */
     if (use_backend == RTU) {
@@ -601,6 +601,7 @@ int main(int argc, char *argv[])
     ASSERT_TRUE(ctx == NULL && errno == EINVAL, "");
 
     printf("\nALL TESTS PASS WITH SUCCESS.\n");
+    success = TRUE;
 
 close:
     /* Free the memory */
@@ -611,7 +612,7 @@ close:
     modbus_close(ctx);
     modbus_free(ctx);
 
-    return 0;
+    return (success) ? 0 : -1;
 }
 
 /* Send crafted requests to test server resilience

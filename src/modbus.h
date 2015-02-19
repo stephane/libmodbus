@@ -1,19 +1,7 @@
 /*
  * Copyright © 2001-2013 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #ifndef MODBUS_H
@@ -109,13 +97,18 @@ MODBUS_BEGIN_DECLS
  * the first MODBUS implementation on Serial Line network (max. RS485 ADU = 256
  * bytes). Therefore, MODBUS PDU for serial line communication = 256 - Server
  * address (1 byte) - CRC (2 bytes) = 253 bytes.
- *
- * Consequently:
- * - RS232 / RS485 ADU = 253 bytes + Server address (1 byte) + CRC (2 bytes) =
- *   256 bytes.
- * - TCP MODBUS ADU = 253 bytes + MBAP (7 bytes) = 260 bytes.
  */
 #define MODBUS_MAX_PDU_LENGTH              253
+
+/* Consequently:
+ * - RTU MODBUS ADU = 253 bytes + Server address (1 byte) + CRC (2 bytes) = 256
+ *   bytes.
+ * - TCP MODBUS ADU = 253 bytes + MBAP (7 bytes) = 260 bytes.
+ * so the maximum of both backend in 260 bytes. This size can used to allocate
+ * an array of bytes to store responses and it will be compatible with the two
+ * backends.
+ */
+#define MODBUS_MAX_ADU_LENGTH              260
 
 /* Random number to avoid errno conflicts */
 #define MODBUS_ENOBASE 112345678

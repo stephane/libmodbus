@@ -1,4 +1,4 @@
-libmodbus 3.1.2 (2014-XX-XX)
+libmodbus 3.1.2 (2015-02-13)
 ============================
 
 If you still want to listen any addresses in your TCP IPv4 server, you must now
@@ -10,6 +10,7 @@ This release introduces API changes on modbus_get_byte_timeout,
 modbus_get_response_timeout, modbus_set_byte_timeout,
 modbus_set_response_timeout to ease writing of language bindings.
 
+- Rewrite documentation building system
 - Fix timeouts in unit tests
 - Don't flush on illegal address errors in single write functions
 - Fix compilation on compilers not supporting c99 mode.

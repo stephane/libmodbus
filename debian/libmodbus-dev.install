@@ -1,3 +1,0 @@
-debian/tmp/usr/include/modbus/*
-debian/tmp/usr/lib/*/libmodbus.so
-debian/tmp/usr/lib/*/pkgconfig/libmodbus.pc

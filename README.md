@@ -1,6 +1,8 @@
 A groovy modbus library
 =======================
 
+[![Build Status](https://travis-ci.org/stephane/libmodbus.svg?branch=master)](https://travis-ci.org/stephane/libmodbus)
+
 Overview
 --------
 
@@ -76,6 +78,8 @@ For a quick test of libmodbus, you can run the following programs in two shells:
 2. ./unit-test-client
 
 By default, all TCP unit tests will be executed (see --help for options).
+
+It's also possible to run the unit tests with `make check`.
 
 Report a Bug
 ------------

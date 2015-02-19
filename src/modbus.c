@@ -1,20 +1,7 @@
 /*
  * Copyright © 2001-2011 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
+ * SPDX-License-Identifier: LGPL-2.1+
  *
  * This library implements the Modbus protocol.
  * http://libmodbus.org/
@@ -230,8 +217,10 @@ int modbus_send_raw_request(modbus_t *ctx, uint8_t *raw_req, int raw_req_length)
         return -1;
     }
 
-    if (raw_req_length < 2) {
-        /* The raw request must contain function and slave at least */
+    if (raw_req_length < 2 || raw_req_length > (MODBUS_MAX_PDU_LENGTH + 1)) {
+        /* The raw request must contain function and slave at least and
+           must not be longer than the maximum pdu length plus the slave
+           address. */
         errno = EINVAL;
         return -1;
     }
@@ -1066,7 +1055,8 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         break;
     }
 
-    return send_msg(ctx, rsp, rsp_length);
+    /* Suppress any responses when the request was a broadcast */
+    return (slave == MODBUS_BROADCAST_ADDRESS) ? 0 : send_msg(ctx, rsp, rsp_length);
 }
 
 int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
