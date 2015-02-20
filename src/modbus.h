@@ -57,6 +57,10 @@ MODBUS_BEGIN_DECLS
 #define ON 1
 #endif
 
+#ifndef BIT
+#define BIT(x) (1 << (x))
+#endif
+
 /* Modbus function codes */
 #define MODBUS_FC_READ_COILS                0x01
 #define MODBUS_FC_READ_DISCRETE_INPUTS      0x02
@@ -176,6 +180,15 @@ typedef enum
     MODBUS_ERROR_RECOVERY_PROTOCOL      = (1<<2)
 } modbus_error_recovery_mode;
 
+/* The following flags indicate to libmodbus, that various 'quirks' handlers should be enabled.
+ * Please note, that using such 'quirks' is _not_ Modbus compliant, so use at your own risk :-)
+ *
+ * MODBUS_QUIRK_INVAL_ADDR       - allows the use of modbus addresses 0 and 248-255
+ * MODBUS_QUIRK_BCAST_RESP       - respond to broadcast requests
+ */
+#define MODBUS_QUIRK_INVAL_ADDR         BIT(0)
+#define MODBUS_QUIRK_BCAST_RESP         BIT(1)
+
 MODBUS_API int modbus_set_slave(modbus_t* ctx, int slave);
 MODBUS_API int modbus_get_slave(modbus_t* ctx);
 MODBUS_API int modbus_set_error_recovery(modbus_t *ctx, modbus_error_recovery_mode error_recovery);
@@ -192,6 +205,9 @@ MODBUS_API int modbus_get_indication_timeout(modbus_t *ctx, uint32_t *to_sec, ui
 MODBUS_API int modbus_set_indication_timeout(modbus_t *ctx, uint32_t to_sec, uint32_t to_usec);
 
 MODBUS_API int modbus_get_header_length(modbus_t *ctx);
+
+MODBUS_API int modbus_enable_quirks(modbus_t *ctx, int quirks_mask);
+MODBUS_API int modbus_disable_quirks(modbus_t *ctx, int quirks_mask);
 
 MODBUS_API int modbus_connect(modbus_t *ctx);
 MODBUS_API void modbus_close(modbus_t *ctx);

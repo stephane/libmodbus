@@ -1,6 +1,8 @@
 TXT3 = \
         modbus_close.txt \
         modbus_connect.txt \
+        modbus_disable_quirks.txt \
+        modbus_enable_quirks.txt \
         modbus_flush.txt \
         modbus_free.txt \
         modbus_get_byte_from_bits.txt \

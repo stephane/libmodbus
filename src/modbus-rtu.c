@@ -91,8 +91,11 @@ static const uint8_t table_crc_lo[] = {
  * internal slave ID in slave mode */
 static int _modbus_set_slave(modbus_t *ctx, int slave)
 {
+    /* Enabled quirk allows to set slave address to none-conforming address. */
+
     /* Broadcast address is 0 (MODBUS_BROADCAST_ADDRESS) */
-    if (slave >= 0 && slave <= 247) {
+    if ((slave >= 0 && slave <= 247) ||
+        (ctx->quirks & MODBUS_QUIRK_INVAL_ADDR)) {
         ctx->slave = slave;
     } else {
         errno = EINVAL;

@@ -1,0 +1,44 @@
+modbus_enable_quirks(3)
+=======================
+
+
+NAME
+----
+modbus_enable_quirks - enable quirk handler
+
+
+SYNOPSIS
+--------
+*int modbus_enable_quirks(modbus_t *'ctx', int 'quirks_mask');*
+
+
+DESCRIPTION
+-----------
+The *modbus_enable_quirks()* function enables all quirks given in _quirks_mask_
+in the libmodbus context:
+
+*MODBUS_QUIRK_INVAL_ADDR*:: If enabled it allows the use of non-compliant slave
+ addresses, i.e. zero (normally the broadcast address) and addresses above 247.
+
+*MODBUS_QUIRK_BCAST_RESP*:: In slave mode libmodbus must not respond to requests
+ to the broadcast address, neither a normal response nor an exception in case of
+ an error. Enabling this quirk forces an appropriate reply.
+
+Several quirks can be enabled at same time by using logical-or.
+
+
+RETURN VALUE
+------------
+The function shall return zero if successful. Otherwise it shall
+return -1 and set errno.
+
+
+SEE ALSO
+--------
+linkmb:modbus_disable_quirks[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>
