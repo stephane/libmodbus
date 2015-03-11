@@ -114,7 +114,7 @@ float modbus_get_float_abcd(const uint16_t *src)
     return f;
 }
 
-/* Get a float from 4 bytes (Modbus) with byte and word swap conversion (DCBA) */
+/* Get a float from 4 bytes (Modbus) in inversed format (DCBA) */
 float modbus_get_float_dcba(const uint16_t *src)
 {
     float f;
@@ -126,7 +126,7 @@ float modbus_get_float_dcba(const uint16_t *src)
     return f;
 }
 
-/* Get a float from 4 bytes (Modbus) with byte swap conversion (BADC) */
+/* Get a float from 4 bytes (Modbus) with swapped bytes (BADC) */
 float modbus_get_float_badc(const uint16_t *src)
 {
     float f;
@@ -138,7 +138,7 @@ float modbus_get_float_badc(const uint16_t *src)
     return f;
 }
 
-/* Get a float from 4 bytes (Modbus) in the format CDAB */
+/* Get a float from 4 bytes (Modbus) with swapped words (CDAB) */
 float modbus_get_float_cdab(const uint16_t *src)
 {
     float f;
