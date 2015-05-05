@@ -70,6 +70,7 @@ MODBUS_BEGIN_DECLS
 #define MODBUS_FC_REPORT_SLAVE_ID           0x11
 #define MODBUS_FC_MASK_WRITE_REGISTER       0x16
 #define MODBUS_FC_WRITE_AND_READ_REGISTERS  0x17
+#define MODBUS_FC_ENCAP_IFACE_TRANSPORT     0x2B
 
 #define MODBUS_BROADCAST_ADDRESS    0
 
@@ -92,6 +93,12 @@ MODBUS_BEGIN_DECLS
 #define MODBUS_MAX_WRITE_REGISTERS         123
 #define MODBUS_MAX_WR_WRITE_REGISTERS      121
 #define MODBUS_MAX_WR_READ_REGISTERS       125
+
+/* Modbus_Application_Protocol_V1_1b3.pdf (chapter 6 section 21 page 42)
+ * MEI (MODBUS Encapsulated Interface)
+ */
+#define MODBUS_MEI_CANOPEN                 0x0D
+#define MODBUS_MEI_READ_DEVICE_IDENT       0x0E
 
 /* The size of the MODBUS PDU is limited by the size constraint inherited from
  * the first MODBUS implementation on Serial Line network (max. RS485 ADU = 256
@@ -173,6 +180,7 @@ typedef enum
 } modbus_error_recovery_mode;
 
 MODBUS_API int modbus_set_slave(modbus_t* ctx, int slave);
+MODBUS_API int modbus_set_device_ident_obj(modbus_t *ctx, uint8_t obj_id, char *ptr, int len);
 MODBUS_API int modbus_set_error_recovery(modbus_t *ctx, modbus_error_recovery_mode error_recovery);
 MODBUS_API int modbus_set_socket(modbus_t *ctx, int s);
 MODBUS_API int modbus_get_socket(modbus_t *ctx);

@@ -263,6 +263,8 @@ static uint8_t compute_meta_length_after_function(int function,
             length = 6;
         } else if (function == MODBUS_FC_WRITE_AND_READ_REGISTERS) {
             length = 9;
+        } else if (function == MODBUS_FC_ENCAP_IFACE_TRANSPORT) {
+            length = 3;
         } else {
             /* MODBUS_FC_READ_EXCEPTION_STATUS, MODBUS_FC_REPORT_SLAVE_ID */
             length = 0;
@@ -1047,6 +1049,77 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         }
     }
         break;
+    case MODBUS_FC_ENCAP_IFACE_TRANSPORT:
+        {
+            unsigned char mei_type = req[offset + 1];
+            unsigned char read_code = req[offset + 2];
+            unsigned char obj_code = req[offset + 3];
+
+            uint16_t obj_id = obj_code;
+            uint16_t max_obj_code = 0;
+            uint8_t rsp_num_obj_offset = 0;
+            uint8_t rsp_more_follow_offset = 0;
+
+            if (mei_type != MODBUS_MEI_READ_DEVICE_IDENT) {
+                rsp_length = response_exception(ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
+            }
+            else {
+                switch (read_code) {
+                    case 0x01: /* Basic */
+                        max_obj_code = 2;
+                        if (obj_id > 2) obj_id = 0;
+                        break;
+                    case 0x02: /* regular */
+                        max_obj_code = 6;
+                        if ( (obj_id < 3) || (obj_id > 6) ) obj_id = 3;
+                        break;
+                    case 0x03: /* extended */
+                        max_obj_code = 0xff;
+                        if (obj_id < 0x80) obj_id = 0x80;
+                        break;
+                    case 0x04: /* individual */
+                        max_obj_code = obj_id;
+                        break;
+                    default: 
+                        /* error */
+                        rsp_length = response_exception(ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp);
+                        read_code = 0xff;
+                        break;
+                }
+
+                if (read_code != 0xff) { /* code is ok */
+                    rsp_length = ctx->backend->build_response_basis(&sft, rsp);
+                    rsp[rsp_length++] = mei_type;  // MEI Type
+                    rsp[rsp_length++] = read_code; // read device id code
+                    rsp[rsp_length++] = read_code; // conformity level
+                    rsp_more_follow_offset = rsp_length;
+                    rsp[rsp_length++] = 0; // more follows
+                    rsp[rsp_length++] = 0; // next obj id
+                    rsp_num_obj_offset = rsp_length; // num of obj
+                    rsp[rsp_length++] = 0;
+
+                    for ( ; obj_id <= max_obj_code; obj_id++) {
+                        if (ctx->device_ident_objdir[obj_id].ptr != NULL) {
+                            if ((rsp_length + 2 + ctx->device_ident_objdir[obj_id].len) > MAX_MESSAGE_LENGTH) {
+                                rsp[rsp_more_follow_offset] = 0xFF; /* more follow */
+                                break;
+                            }
+                            rsp[rsp_num_obj_offset] ++;
+                            rsp[rsp_length++] = obj_id;
+                            rsp[rsp_length++] = ctx->device_ident_objdir[obj_id].len;
+                            memcpy(&rsp[rsp_length], ctx->device_ident_objdir[obj_id].ptr, ctx->device_ident_objdir[obj_id].len);
+                            rsp_length += ctx->device_ident_objdir[obj_id].len;
+                        }
+                    }
+
+                    if (rsp[rsp_num_obj_offset] == 0) { 
+                        /* no known object found */
+                        rsp_length = response_exception(ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
+                    }
+                }
+            }
+        }
+        break;
 
     default:
         rsp_length = response_exception(ctx, &sft,
@@ -1625,6 +1698,14 @@ void _modbus_init_common(modbus_t *ctx)
 
     ctx->byte_timeout.tv_sec = 0;
     ctx->byte_timeout.tv_usec = _BYTE_TIMEOUT;
+
+    memset(ctx->device_ident_objdir, 0, sizeof(ctx->device_ident_objdir));
+    ctx->device_ident_objdir[0].ptr = "Stéphane Raimbault";
+    ctx->device_ident_objdir[0].len = strlen(ctx->device_ident_objdir[0].ptr);
+    ctx->device_ident_objdir[1].ptr = "libmodbus";
+    ctx->device_ident_objdir[1].len = strlen(ctx->device_ident_objdir[1].ptr);
+    ctx->device_ident_objdir[2].ptr = LIBMODBUS_VERSION_STRING;
+    ctx->device_ident_objdir[2].len = strlen(ctx->device_ident_objdir[2].ptr);
 }
 
 /* Define the slave number */
@@ -1636,6 +1717,14 @@ int modbus_set_slave(modbus_t *ctx, int slave)
     }
 
     return ctx->backend->set_slave(ctx, slave);
+}
+
+int modbus_set_device_ident_obj(modbus_t *ctx, uint8_t obj_id, char *ptr, int len) {
+	if (obj_id >= 0x7 && obj_id <= 0x7F)
+		return -1;
+	ctx->device_ident_objdir[obj_id].len = len;
+	ctx->device_ident_objdir[obj_id].ptr = ptr;
+	return 0;
 }
 
 int modbus_set_error_recovery(modbus_t *ctx,
