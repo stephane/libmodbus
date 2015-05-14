@@ -34,6 +34,8 @@
 #define ENOTSUP WSAEOPNOTSUPP
 #endif
 
+#define DEVICE_NAME_PREFIX  "\\\\.\\"
+
 /* WIN32: struct containing serial handle and a receive buffer */
 #define PY_BUF_SIZE 512
 struct win32_ser {

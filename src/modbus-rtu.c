@@ -1158,9 +1158,32 @@ modbus_t* modbus_new_rtu(const char *device,
     ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
     ctx_rtu->device = NULL;
 
+#if defined(_WIN32)
+    /* Device name and \0 */
+    ctx_rtu->device = (char *)malloc((strlen(DEVICE_NAME_PREFIX) + strlen(device) + 1) * sizeof(char));
+    
+    /* Check if malloc successed */
+    if (ctx_rtu->device == NULL) {
+        fprintf(stderr, "Out of memory\n\n");
+        errno = ENOMEM;
+        return NULL;
+    }
+    
+    strcpy(ctx_rtu->device, DEVICE_NAME_PREFIX);
+    strcat(ctx_rtu->device, device);
+#else
     /* Device name and \0 */
     ctx_rtu->device = (char *)malloc((strlen(device) + 1) * sizeof(char));
+    
+    /* Check if malloc successed */
+    if (ctx_rtu->device == NULL) {
+        fprintf(stderr, "Out of memory\n\n");
+        errno = ENOMEM;
+        return NULL;
+    }
+    
     strcpy(ctx_rtu->device, device);
+#endif
 
     ctx_rtu->baud = baud;
     if (parity == 'N' || parity == 'E' || parity == 'O') {
