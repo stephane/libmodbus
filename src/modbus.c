@@ -1458,14 +1458,14 @@ int modbus_mask_write_register(modbus_t *ctx, int addr, uint16_t and_mask, uint1
 {
     int rc;
     int req_length;
-    uint8_t req[_MIN_REQ_LENGTH];
+    uint8_t req[MAX_MESSAGE_LENGTH];
 
     req_length = ctx->backend->build_request_basis(ctx,
                                                    MODBUS_FC_MASK_WRITE_REGISTER,
                                                    addr, 0, req);
 
     /* HACKISH, count is not used */
-    req_length -=2;
+    req_length -= 2;
 
     req[req_length++] = and_mask >> 8;
     req[req_length++] = and_mask & 0x00ff;
