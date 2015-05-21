@@ -1,3 +1,9 @@
+libmodbus 3.2.0 (XXXX-XX-XX)
+============================
+
+- Fix buffer overflow in modbus_mask_write_register #265)
+
+
 libmodbus 3.1.2 (2015-02-13)
 ============================
 

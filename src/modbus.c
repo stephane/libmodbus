@@ -1458,7 +1458,10 @@ int modbus_mask_write_register(modbus_t *ctx, int addr, uint16_t and_mask, uint1
 {
     int rc;
     int req_length;
-    uint8_t req[MAX_MESSAGE_LENGTH];
+    /* The request length can not exceed _MIN_REQ_LENGTH - 2 and 4 bytes to
+     * store the masks. The ugly substraction is there to remove the 'nb' value
+     * (2 bytes) which is not used. */
+    uint8_t req[_MIN_REQ_LENGTH + 2];
 
     req_length = ctx->backend->build_request_basis(ctx,
                                                    MODBUS_FC_MASK_WRITE_REGISTER,

@@ -299,6 +299,16 @@ int main(int argc, char *argv[])
     real = modbus_get_float_dcba(tab_rp_registers);
     ASSERT_TRUE(real == UT_REAL, "FAILED (%f != %f)\n", real, UT_REAL);
 
+    /* MASKS */
+    printf("1/1 Write mask: ");
+    rc = modbus_write_register(ctx, UT_REGISTERS_ADDRESS, 0x12);
+    rc = modbus_mask_write_register(ctx, UT_REGISTERS_ADDRESS, 0xF2, 0x25);
+    ASSERT_TRUE(rc != -1, "FAILED (%x == -1)\n", rc);
+    rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS, 1, tab_rp_registers);
+    ASSERT_TRUE(tab_rp_registers[0] == 0x17,
+                "FAILED (%0X != %0X)\n",
+                tab_rp_registers[0], 0x17);
+
     printf("\nAt this point, error messages doesn't mean the test has failed\n");
 
     /** ILLEGAL DATA ADDRESS **/
