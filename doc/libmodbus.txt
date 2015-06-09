@@ -137,10 +137,6 @@ Setter/getter of internal socket::
 Information about header::
     linkmb:modbus_get_header_length[3]
 
-A libmodbus 'context' is thread safe and may be shared among as many application
-threads as necessary, without any additional locking required on the part of the
-caller.
-
 Macros for data manipulation::
 
 - MODBUS_GET_HIGH_BYTE(data), extracts the high byte from a byte
