@@ -680,10 +680,10 @@ static int response_exception(modbus_t *ctx, sft_t *sft,
 int modbus_reply(modbus_t *ctx, const uint8_t *req,
                  int req_length, modbus_mapping_t *mb_mapping)
 {
-    int offset = ctx->backend->header_length;
-    int slave = req[offset - 1];
-    int function = req[offset];
-    uint16_t address = (req[offset + 1] << 8) + req[offset + 2];
+    int offset;
+    int slave;
+    int function;
+    uint16_t address;
     uint8_t rsp[MAX_MESSAGE_LENGTH];
     int rsp_length = 0;
     sft_t sft;
@@ -692,6 +692,11 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         errno = EINVAL;
         return -1;
     }
+
+    offset = ctx->backend->header_length;
+    slave = req[offset - 1];
+    function = req[offset];
+    address = (req[offset + 1] << 8) + req[offset + 2];
 
     sft.slave = slave;
     sft.function = function;
@@ -1062,9 +1067,9 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
 int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
                            unsigned int exception_code)
 {
-    int offset = ctx->backend->header_length;
-    int slave = req[offset - 1];
-    int function = req[offset];
+    int offset;
+    int slave;
+    int function;
     uint8_t rsp[MAX_MESSAGE_LENGTH];
     int rsp_length;
     int dummy_length = 99;
@@ -1074,6 +1079,10 @@ int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
         errno = EINVAL;
         return -1;
     }
+
+    offset = ctx->backend->header_length;
+    slave = req[offset - 1];
+    function = req[offset];
 
     sft.slave = slave;
     sft.function = function + 0x80;;
