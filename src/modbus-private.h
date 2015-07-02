@@ -40,7 +40,7 @@ MODBUS_BEGIN_DECLS
 #define _BYTE_TIMEOUT        500000
 
 typedef enum {
-    _MODBUS_BACKEND_TYPE_RTU=0,
+    _MODBUS_BACKEND_TYPE_SERIAL=0,
     _MODBUS_BACKEND_TYPE_TCP
 } modbus_backend_type_t;
 
