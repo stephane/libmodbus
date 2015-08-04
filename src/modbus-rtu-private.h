@@ -26,7 +26,7 @@
 #define _MODBUS_RTU_CHECKSUM_LENGTH    2
 
 /* Time waited beetween the RTS switch before transmit data or after transmit
-   data before to read */
+   data before to read (1 ms) */
 #define _MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH 1000
 
 #if defined(_WIN32)
