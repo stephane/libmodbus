@@ -45,6 +45,32 @@ ERRORS
 The slave number is invalid.
 
 
+EXAMPLE
+-------
+[source,c]
+-------------------
+modbus_t *ctx;
+
+ctx = modbus_new_rtu("/dev/ttyUSB0", 115200, 'N', 8, 1);
+if (ctx == NULL) {
+    fprintf(stderr, "Unable to create the libmodbus context\n");
+    return -1;
+}
+
+rc = modbus_set_slave(ctx, YOUR_DEVICE_ID);
+if (rc == -1) {
+    fprintf(stderr, "Invalid slave ID\n");
+    modbus_free(ctx);
+    return -1;
+}
+
+if (modbus_connect(ctx) == -1) {
+    fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
+    modbus_free(ctx);
+    return -1;
+}
+-------------------
+
 AUTHORS
 -------
 The libmodbus documentation was written by Stéphane Raimbault
