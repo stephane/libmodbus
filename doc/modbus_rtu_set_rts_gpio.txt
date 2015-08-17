@@ -1,0 +1,85 @@
+modbus_rtu_set_rts_gpio(3)
+==========================
+
+
+NAME
+----
+modbus_rtu_set_rts_gpio - set the RTS mode in RTU using a GPIO port
+
+
+SYNOPSIS
+--------
+*int modbus_rtu_set_rts(modbus_t *'ctx', int 'mode', char *'gpio_directory')*
+
+
+DESCRIPTION
+-----------
+The _modbus_rtu_set_rts_gpio()_ function shall set the Request To Send mode to
+communicate on a RS485 serial bus. By default, the mode is set to
+MODBUS_RTU_RTS_NONE and no signal is issued before writing data on the wire.
+
+The function first checks, if the given GPIO port exits, has it's 'direction' set
+to 'out', and if 'value' can be written by the current user.
+
+To enable the RTS mode, the values MODBUS_RTU_RTS_GPIO_UP or MODBUS_RTU_RTS_GPIO_DOWN
+shall be used, these modes enable the RTS mode and set the polarity at the same
+time. When MODBUS_RTU_RTS_GPIO_UP is used, a '1' character will be written to file
+'value' at the given 'gpio_directory' for enabling write mode, and '0' for disabling.
+The MODBUS_RTU_RTS_GPIO_DOWN mode applies the same procedure but with an inversed
+RTS flag.
+
+This function can only be used with a context using a RTU backend.
+
+
+RETURN VALUE
+------------
+The _modbus_rtu_set_rts_gpio()_ function shall return 0 if successful. Otherwise it
+shall return -1 and set errno to one of the values defined below.
+
+
+ERRORS
+------
+*EINVAL*::
+The libmodbus backend isn't RTU, the mode given in argument is invalid, or
+the given directory for GPIO does not exits or user lacks on permissions.
+
+
+EXAMPLE
+-------
+.Enable the RTS mode with positive polarity
+[source,c]
+-------------------
+modbus_t *ctx;
+uint16_t tab_reg[10];
+
+ctx = modbus_new_rtu("/dev/ttyS0", 115200, 'N', 8, 1);
+modbus_set_slave(ctx, 1);
+modbus_rtu_set_serial_mode(ctx, MODBUS_RTU_RS485);
+char gpio_directory[] = "/sys/class/gpio/gpio20";
+modbus_rtu_set_rts_gpio(mb, MODBUS_RTU_RTS_GPIO_UP, gpio_directory);
+
+if (modbus_connect(ctx) == -1) {
+    fprintf(stderr, "Connexion failed: %s\n", modbus_strerror(errno));
+    modbus_free(ctx);
+    return -1;
+}
+
+rc = modbus_read_registers(ctx, 0, 7, tab_reg);
+if (rc == -1) {
+    fprintf(stderr, "%s\n", modbus_strerror(errno));
+    return -1;
+}
+
+modbus_close(ctx);
+modbus_free(ctx);
+-------------------
+
+SEE ALSO
+--------
+linkmb:modbus_rtu_get_rts[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

@@ -266,6 +266,19 @@ static void _modbus_rtu_ioctl_rts(int fd, int on)
 }
 #endif
 
+static void _modbus_rtu_ioctl_rts_gpio(char *gpio_value_filename, int on){
+
+    // File IO error checks @ modbus_rtu_set_rts_gpio
+    // (GPIO port should not be unexported)
+
+    FILE *fp;
+    fp = fopen(gpio_value_filename, "w");
+    fprintf(fp, "%d", on);
+    fflush(fp);
+    fclose(fp);
+
+}
+
 static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
 {
 #if defined(_WIN32)
@@ -273,30 +286,48 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
     DWORD n_bytes = 0;
     return (WriteFile(ctx_rtu->w_ser.fd, req, req_length, &n_bytes, NULL)) ? (ssize_t)n_bytes : -1;
 #else
-#if HAVE_DECL_TIOCM_RTS
-    modbus_rtu_t *ctx_rtu = ctx->backend_data;
-    if (ctx_rtu->rts != MODBUS_RTU_RTS_NONE) {
-        ssize_t size;
 
+    modbus_rtu_t *ctx_rtu = ctx->backend_data;
+
+    if (ctx_rtu->rts == MODBUS_RTU_RTS_NONE){
+
+        return write(ctx->s, req, req_length);
+
+    } else {
+
+        ssize_t size = 0;
+
+    #if HAVE_DECL_TIOCM_RTS
         if (ctx->debug) {
             fprintf(stderr, "Sending request using RTS signal\n");
         }
 
-        _modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts == MODBUS_RTU_RTS_UP);
-        usleep(_MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
+        if(ctx_rtu->rts == MODBUS_RTU_RTS_UP || ctx_rtu->rts == MODBUS_RTU_RTS_DOWN){
 
-        size = write(ctx->s, req, req_length);
+            _modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts == MODBUS_RTU_RTS_UP);
+            usleep(_MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
 
-        usleep(ctx_rtu->onebyte_time * req_length + _MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
-        _modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
+            size = write(ctx->s, req, req_length);
+
+            usleep(ctx_rtu->onebyte_time * req_length + _MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
+            _modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
+
+        } else if (ctx_rtu->rts == MODBUS_RTU_RTS_GPIO_UP || ctx_rtu->rts == MODBUS_RTU_RTS_GPIO_DOWN){
+
+            _modbus_rtu_ioctl_rts_gpio(ctx_rtu->gpio_value_filename, ctx_rtu->rts == MODBUS_RTU_RTS_GPIO_UP);
+            usleep(_MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
+
+            size = write(ctx->s, req, req_length);
+
+            usleep(ctx_rtu->onebyte_time * req_length + _MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
+            _modbus_rtu_ioctl_rts_gpio(ctx_rtu->gpio_value_filename, ctx_rtu->rts != MODBUS_RTU_RTS_GPIO_UP);
+
+        }
+    #endif
+
 
         return size;
-    } else {
-#endif
-        return write(ctx->s, req, req_length);
-#if HAVE_DECL_TIOCM_RTS
     }
-#endif
 #endif
 }
 
@@ -1003,6 +1034,79 @@ int modbus_rtu_set_rts(modbus_t *ctx, int mode)
     return -1;
 }
 
+int modbus_rtu_set_rts_gpio(modbus_t *ctx, int mode, char *gpio_directory)
+{
+
+    if (ctx == NULL) {
+        fprintf(stderr, "CTX is null.\n");
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (ctx->backend->backend_type != _MODBUS_BACKEND_TYPE_RTU) {
+        fprintf(stderr, "Backend must be RTU.\n");
+        errno = EINVAL;
+        return -1;
+    }
+
+    modbus_rtu_t *ctx_rtu = ctx->backend_data;
+
+    if (mode != MODBUS_RTU_RTS_GPIO_UP && mode != MODBUS_RTU_RTS_GPIO_DOWN) {
+        fprintf(stderr, "Please select a GPIO RTS mode.\n");
+        errno = EINVAL;
+        return -1;
+    } else {
+        ctx_rtu->rts = mode;
+    }
+
+    // Set filenames
+    char *gpio_direction_filename;
+    gpio_direction_filename = (char *) malloc((strlen(gpio_directory) + 12) * sizeof(char));
+    strcat(gpio_direction_filename, gpio_directory);
+    strcat(gpio_direction_filename, "/direction");
+
+    ctx_rtu->gpio_value_filename = (char *) malloc((strlen(gpio_directory) + 8) * sizeof(char));
+    strcat(ctx_rtu->gpio_value_filename, gpio_directory);
+    strcat(ctx_rtu->gpio_value_filename, "/value");
+
+    // Check GPIO direction-file permissions
+    errno = 0;
+    FILE *fp;
+    fp = fopen(gpio_direction_filename, "r");
+    if (errno != 0){
+        fprintf(stderr, "Could not open \"%s\" for reading, errno: %d.\n", gpio_direction_filename, errno);
+        return -1;
+    }
+    
+    free(gpio_direction_filename);
+
+    // Get GPIO port direction
+    char buff[4];
+    fgets(buff, 4, fp);
+    fclose(fp);    
+
+    if(strcmp(buff, "out") != 0){
+        fprintf(stderr, "GPIO direction is not \"out\".\n");
+        errno = EINVAL;
+        return -1;
+    }
+
+    // Check GPIO value-file permissions
+    fp = fopen(ctx_rtu->gpio_value_filename, "w");
+    if (errno != 0){
+        fprintf(stderr, "Could not open \"%s\" for writing, errno: %d.\n", ctx_rtu->gpio_value_filename, errno);
+        return -1;
+    }
+    fclose(fp);
+
+    // Set the RTS port in order to not reserve the RS485 bus
+    _modbus_rtu_ioctl_rts_gpio(ctx_rtu->gpio_value_filename, ctx_rtu->rts != MODBUS_RTU_RTS_GPIO_UP);
+
+
+    return 0;
+
+}
+
 int modbus_rtu_get_rts(modbus_t *ctx)
 {
     if (ctx == NULL) {
@@ -1104,6 +1208,7 @@ static int _modbus_rtu_select(modbus_t *ctx, fd_set *rset,
 
 static void _modbus_rtu_free(modbus_t *ctx) {
     free(((modbus_rtu_t*)ctx->backend_data)->device);
+    free(((modbus_rtu_t*)ctx->backend_data)->gpio_value_filename);
     free(ctx->backend_data);
     free(ctx);
 }

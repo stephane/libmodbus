@@ -70,6 +70,7 @@ typedef struct _modbus_rtu {
 #if HAVE_DECL_TIOCM_RTS
     int rts;
     int onebyte_time;
+    char* gpio_value_filename;
 #endif
     /* To handle many slaves on the same link */
     int confirmation_to_ignore;
