@@ -60,7 +60,7 @@ Documentation
 -------------
 
 The documentation is based on
-[AsciiDoc](http://http://www.methods.co.nz/asciidoc/).  Only man pages are built
+[AsciiDoc](http://www.methods.co.nz/asciidoc/).  Only man pages are built
 by default with `make` command, you can run `make htmldoc` in *docs* directory
 to generate HTML files.
 
