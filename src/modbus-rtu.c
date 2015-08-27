@@ -968,6 +968,30 @@ int modbus_rtu_get_serial_mode(modbus_t *ctx)
     }
 }
 
+int modbus_rtu_get_rts(modbus_t *ctx)
+{
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
+#if HAVE_DECL_TIOCM_RTS
+        modbus_rtu_t *ctx_rtu = ctx->backend_data;
+        return ctx_rtu->rts;
+#else
+        if (ctx->debug) {
+            fprintf(stderr, "This function isn't supported on your platform\n");
+        }
+        errno = ENOTSUP;
+        return -1;
+#endif
+    } else {
+        errno = EINVAL;
+        return -1;
+    }
+}
+
 int modbus_rtu_set_rts(modbus_t *ctx, int mode)
 {
     if (ctx == NULL) {
@@ -1004,7 +1028,7 @@ int modbus_rtu_set_rts(modbus_t *ctx, int mode)
     return -1;
 }
 
-int modbus_rtu_get_rts(modbus_t *ctx)
+int modbus_rtu_set_custom_rts(modbus_t *ctx, void (*set_rts) (modbus_t *ctx, int on))
 {
     if (ctx == NULL) {
         errno = EINVAL;
@@ -1014,32 +1038,7 @@ int modbus_rtu_get_rts(modbus_t *ctx)
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
 #if HAVE_DECL_TIOCM_RTS
         modbus_rtu_t *ctx_rtu = ctx->backend_data;
-        return ctx_rtu->rts;
-#else
-        if (ctx->debug) {
-            fprintf(stderr, "This function isn't supported on your platform\n");
-        }
-        errno = ENOTSUP;
-        return -1;
-#endif
-    } else {
-        errno = EINVAL;
-        return -1;
-    }
-}
-
-int modbus_rtu_set_rts_delay(modbus_t *ctx, int us)
-{
-    if (ctx == NULL || us < 0) {
-        errno = EINVAL;
-        return -1;
-    }
-
-    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
-#if HAVE_DECL_TIOCM_RTS
-        modbus_rtu_t *ctx_rtu;
-        ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
-        ctx_rtu->rts_delay = us;
+        ctx_rtu->set_rts = set_rts;
         return 0;
 #else
         if (ctx->debug) {
@@ -1079,17 +1078,18 @@ int modbus_rtu_get_rts_delay(modbus_t *ctx)
     }
 }
 
-int modbus_rtu_set_custom_rts(modbus_t *ctx, void (*set_rts) (modbus_t *ctx, int on))
+int modbus_rtu_set_rts_delay(modbus_t *ctx, int us)
 {
-    if (ctx == NULL) {
+    if (ctx == NULL || us < 0) {
         errno = EINVAL;
         return -1;
     }
 
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
 #if HAVE_DECL_TIOCM_RTS
-        modbus_rtu_t *ctx_rtu = ctx->backend_data;
-        ctx_rtu->set_rts = set_rts;
+        modbus_rtu_t *ctx_rtu;
+        ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
+        ctx_rtu->rts_delay = us;
         return 0;
 #else
         if (ctx->debug) {
