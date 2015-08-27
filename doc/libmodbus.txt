@@ -81,6 +81,8 @@ Set the serial mode::
     linkmb:modbus_rtu_get_rts[3]
     linkmb:modbus_rtu_set_rts[3]
     linkmb:modbus_rtu_set_custom_rts[3]
+    linkmb:modbus_rtu_get_rts_delay[3]
+    linkmb:modbus_rtu_set_rts_delay[3]
 
 
 TCP (IPv4) Context

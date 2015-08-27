@@ -1262,6 +1262,7 @@ modbus_t* modbus_new_rtu(const char *device,
     /* Calculate estimated time in micro second to send one byte */
     ctx_rtu->onebyte_time = 1000000 * (1 + data_bit + (parity == 'N' ? 0 : 1) + stop_bit) / baud;
 
+    /* The internal function is used by default to set RTS */
     ctx_rtu->set_rts = _modbus_rtu_ioctl_rts;
 
     /* The delay before and after transmission when toggling the RTS pin */
