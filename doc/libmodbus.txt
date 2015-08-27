@@ -80,7 +80,7 @@ Set the serial mode::
     linkmb:modbus_rtu_set_serial_mode[3]
     linkmb:modbus_rtu_get_rts[3]
     linkmb:modbus_rtu_set_rts[3]
-
+    linkmb:modbus_rtu_set_custom_rts[3]
 
 
 TCP (IPv4) Context
