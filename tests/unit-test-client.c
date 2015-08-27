@@ -354,7 +354,7 @@ int main(int argc, char *argv[])
     rc = modbus_write_registers(ctx, UT_REGISTERS_ADDRESS + UT_REGISTERS_NB,
                                UT_REGISTERS_NB, tab_rp_registers);
     printf("* modbus_write_registers: ");
-    ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
+    ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");    
 
     /** TOO MANY DATA **/
     printf("\nTEST TOO MANY DATA ERROR:\n");
