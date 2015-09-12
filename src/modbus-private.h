@@ -2,7 +2,9 @@
  * Copyright © 2010-2012 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
+ * Raspberry pi fork of libmodbus with GPIO rx-tx functionality for RS485
  */
+ 
 
 #ifndef MODBUS_PRIVATE_H
 #define MODBUS_PRIVATE_H
@@ -96,6 +98,10 @@ struct _modbus {
     int s;
     int debug;
     int error_recovery;
+    //pi related functionality
+    int enable_rpi_rtu;
+    int rpi_bcm_pin;
+    //pi related functionality
     struct timeval response_timeout;
     struct timeval byte_timeout;
     const modbus_backend_t *backend;

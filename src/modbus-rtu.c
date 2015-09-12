@@ -2,6 +2,7 @@
  * Copyright © 2001-2011 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
+ * * Raspberry pi fork of libmodbus with GPIO rx-tx functionality for RS485
  */
 
 #include <stdio.h>
@@ -13,6 +14,9 @@
 #include <unistd.h>
 #endif
 #include <assert.h>
+
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include "modbus-private.h"
 
@@ -267,6 +271,41 @@ static void _modbus_rtu_ioctl_rts(modbus_t *ctx, int on)
 }
 #endif
 
+static int _set_GPIO_pin(modbus_t *ctx,int value)
+{
+  if(ctx->enable_rpi_rtu == 1)
+  {
+    static const char s_values_str[] = "01";
+    char path[VALUE_MAX];
+    int fd;
+    snprintf(path, VALUE_MAX, "/sys/class/gpio/gpio%d/value", ctx->rpi_bcm_pin);
+    fd = open(path, O_WRONLY);
+    if (-1 == fd)
+    {
+       if (ctx->debug)
+       {
+        fprintf(stderr, "Failed to open gpio value for writing!\n");
+       }
+       return(-1);
+    }
+    if (1 != write(fd, &s_values_str[value], 1))
+    {
+       if (ctx->debug)
+       {
+        fprintf(stderr, "Failed to write value!\n");
+       }
+       return(-1);
+    }
+    close(fd);
+  }
+  if (ctx->debug)
+  {
+    fprintf(stderr, "GPIO%d written : %d successfully !\n",ctx->rpi_bcm_pin,value);
+  }
+  return 0;
+}
+
+
 static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
 {
 #if defined(_WIN32)
@@ -276,25 +315,29 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
 #else
 #if HAVE_DECL_TIOCM_RTS
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
-    if (ctx_rtu->rts != MODBUS_RTU_RTS_NONE) {
+    if (ctx_rtu->rts != MODBUS_RTU_RTS_NONE)
+    {
         ssize_t size;
-
-        if (ctx->debug) {
+        if (ctx->debug)
+        {
             fprintf(stderr, "Sending request using RTS signal\n");
         }
-
+        _set_GPIO_pin(ctx,HIGH);
         ctx_rtu->set_rts(ctx, ctx_rtu->rts == MODBUS_RTU_RTS_UP);
         usleep(ctx_rtu->rts_delay);
-
         size = write(ctx->s, req, req_length);
-
         usleep(ctx_rtu->onebyte_time * req_length + ctx_rtu->rts_delay);
+        _set_GPIO_pin(ctx,LOW);
         ctx_rtu->set_rts(ctx, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
-
         return size;
     } else {
 #endif
-        return write(ctx->s, req, req_length);
+  ssize_t size;
+  _set_GPIO_pin(ctx,HIGH);
+	size = write(ctx->s, req, req_length);
+  usleep(ctx_rtu->onebyte_time * req_length);
+  _set_GPIO_pin(ctx,LOW);
+  return size;
 #if HAVE_DECL_TIOCM_RTS
     }
 #endif

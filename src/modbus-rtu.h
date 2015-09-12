@@ -2,7 +2,9 @@
  * Copyright © 2001-2011 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
+ * Raspberry pi fork of libmodbus with GPIO rx-tx functionality for RS485
  */
+
 
 #ifndef MODBUS_RTU_H
 #define MODBUS_RTU_H
@@ -28,6 +30,12 @@ MODBUS_API int modbus_rtu_get_serial_mode(modbus_t *ctx);
 #define MODBUS_RTU_RTS_NONE   0
 #define MODBUS_RTU_RTS_UP     1
 #define MODBUS_RTU_RTS_DOWN   2
+
+//rpi related defines
+
+#define VALUE_MAX 30
+#define HIGH 1
+#define LOW 0
 
 MODBUS_API int modbus_rtu_set_rts(modbus_t *ctx, int mode);
 MODBUS_API int modbus_rtu_get_rts(modbus_t *ctx);

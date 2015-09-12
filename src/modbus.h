@@ -2,6 +2,7 @@
  * Copyright © 2001-2013 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
+ * * Raspberry pi fork of libmodbus with GPIO rx-tx functionality for RS485
  */
 
 #ifndef MODBUS_H
@@ -112,6 +113,11 @@ MODBUS_BEGIN_DECLS
 
 /* Random number to avoid errno conflicts */
 #define MODBUS_ENOBASE 112345678
+
+/* pi related defines*/
+
+#define DIRECTION_MAX 35
+#define BUFFER_MAX 3
 
 /* Protocol exceptions */
 enum {
@@ -231,6 +237,15 @@ MODBUS_API int modbus_reply(modbus_t *ctx, const uint8_t *req,
                             int req_length, modbus_mapping_t *mb_mapping);
 MODBUS_API int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
                                       unsigned int exception_code);
+
+// additional modbus API for Rpi for GPIO based rx-tx switching (RS485)
+
+MODBUS_API int modbus_enable_rpi(modbus_t *ctx, uint8_t value);
+MODBUS_API int modbus_configure_rpi_bcm_pin(modbus_t *ctx, uint8_t value);
+MODBUS_API int modbus_rpi_pin_export_direction(modbus_t *ctx);
+MODBUS_API int modbus_rpi_pin_unexport_direction(modbus_t *ctx);
+
+
 
 /**
  * UTILS FUNCTIONS

@@ -1,103 +1,33 @@
-A groovy modbus library
-=======================
+#This is the Raspberry Pi fork of libmodbus () with GPIO rx-tx functionality RS485 chips
 
-[![Build Status](https://travis-ci.org/stephane/libmodbus.svg?branch=master)](https://travis-ci.org/stephane/libmodbus)
+======================================================================================
 
-Overview
---------
+#When it should be used :
 
-libmodbus is a free software library to send/receive data with a device which
-respects the Modbus protocol. This library can use a serial port or an Ethernet
-connection.
+If you're using an UART to RS485 conversion chip like 75176 or anything similar and using one of the RPi GPIO
+to switch rx - tx functionality of the chip.
 
-The functions included in the library have been derived from the Modicon Modbus
-Protocol Reference Guide which can be obtained from Schneider at
-[www.schneiderautomation.com](http://www.schneiderautomation.com).
+In addition to standard libmodbus API, addtional APIs are included to support GPIO based rx-tx switching
 
-The license of libmodbus is *LGPL v2.1 or later*.
+#Additional APIs :
 
-The documentation is available as manual pages (`man libmodbus` to read general
-description and list of available functions) or Web pages
-[www.libmodbus.org/documentation/](http://libmodbus.org/documentation/). The
-documentation is licensed under the Creative Commons Attribution-ShareAlike
-License 3.0 (Unported) (<http://creativecommons.org/licenses/by-sa/3.0/>).
+modbus_enable_rpi                 : Sets an enable Rpi integer in ctx data structure.
+modbus_configure_rpi_bcm_pin      : Configures GPIO BCM pin to be used for rx-tx switching
+modbus_rpi_pin_export_direction   : export configured GPIO, configures it as an output.
+modbus_rpi_pin_unexport_direction : unexport configured GPIO, configures it as an input.
 
-The official website is [www.libmodbus.org](http://www.libmodbus.org).
+#Usage :
 
-The library is written in C and designed to run on Linux, Mac OS X, FreeBSD and
-QNX and Windows.
+#While initializing :
 
-Installation
-------------
+modbus_enable_rpi(ctx);
+modbus_configure_rpi_bcm_pin(ctx,18);   // configures BCM pin # 18 for switching
+modbus_rpi_pin_export_direction(ctx);   // exports configured BCM pin #
 
-You will only need to install automake, autoconf, libtool and a C compiler (gcc
-or clang) to compile the library and asciidoc and xmlto to generate the
-documentation (optional).
+#While clean up :
 
-To install, just run the usual dance, `./configure && make install`. Run
-`./autogen.sh` first to generate the `configure` script if required.
+modbus_rpi_pin_unexport_direction(ctx); //unexport configured BCM pin #
 
-You can change installation directory with prefix option, eg. `./configure
---prefix=/usr/local/`. You have to check that the installation library path is
-properly set up on your system (*/etc/ld.so.conf.d*) and library cache is up to
-date (run `ldconfig` as root if required).
+#Examples
 
-The library provides a *libmodbus.pc* file to use with `pkg-config` to ease your
-program compilation and linking.
-
-If you want to compile with Microsoft Visual Studio, you need to install
-<http://code.google.com/p/msinttypes/> to fill the absence of stdint.h.
-
-To compile under Windows, install [MinGW](http://www.mingw.org/) and MSYS then
-select the common packages (gcc, automake, libtool, etc). The directory
-*./src/win32/* contains a Visual C project.
-
-To compile under OS X with [homebrew](http://mxcl.github.com/homebrew/), you
-will need to install the following dependencies first: `brew install autoconf
-automake libtool`.
-
-Documentation
--------------
-
-The documentation is based on
-[AsciiDoc](http://www.methods.co.nz/asciidoc/).  Only man pages are built
-by default with `make` command, you can run `make htmldoc` in *docs* directory
-to generate HTML files.
-
-The documentation is also available [online](http://libmodbus.org/documentation).
-
-Testing
--------
-
-Some tests are provided in *tests* directory, you can freely edit the source
-code to fit your needs (it's Free Software :).
-
-See *tests/README* for a description of each program.
-
-For a quick test of libmodbus, you can run the following programs in two shells:
-
-1. ./unit-test-server
-2. ./unit-test-client
-
-By default, all TCP unit tests will be executed (see --help for options).
-
-It's also possible to run the unit tests with `make check`.
-
-Report a Bug
-------------
-
-Before reporting a bug, take care to read the documentation (RTFM!) and to
-provide enough information:
-
-1. libmodbus version
-2. OS/environment/architecture
-3. libmodbus backend (TCP, RTU, IPv6)
-3. Modbus messages when running in debug mode (`man modbus_set_debug`)
-
-To report your problem, you can:
-
-* fill a bug report on the issue tracker <http://github.com/stephane/libmodbus/issues>.
-* or send an email to the libmodbus mailing list [libmodbus@googlegroups.com](https://groups.google.com/forum/#!forum/libmodbus).
-
-If your prefer live talk when your're looking for help or to offer contribution,
-there is also a channel called #libmodbus on Freenode.
+See test.c in rpi-test folder for template.
