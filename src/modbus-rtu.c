@@ -297,10 +297,10 @@ static int _set_GPIO_pin(modbus_t *ctx,int value)
        return(-1);
     }
     close(fd);
-  }
-  if (ctx->debug)
-  {
-    fprintf(stderr, "GPIO%d written : %d successfully !\n",ctx->rpi_bcm_pin,value);
+    if (ctx->debug)
+    {
+      fprintf(stderr, "GPIO%d written : %d successfully !\n",ctx->rpi_bcm_pin,value);
+    }
   }
   return 0;
 }
