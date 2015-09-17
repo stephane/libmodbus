@@ -1966,14 +1966,14 @@ int modbus_enable_rpi(modbus_t *ctx, uint8_t value)
   if(value == 1)
   {
     ctx->enable_rpi_rtu = value;
+    if(ctx->debug)
+    {
+      fprintf(stderr, "Rpi RTU enabled.\n");
+    }
   }
   else
   {
     ctx->enable_rpi_rtu = 0;
-  }
-  if(ctx->debug)
-  {
-    fprintf(stderr, "Rpi RTU enabled.\n");
   }
   return ctx->enable_rpi_rtu;
 }
@@ -2030,10 +2030,10 @@ int modbus_rpi_pin_export_direction(modbus_t *ctx)
         return(-1);
     }
     close(fd);
-  }
-  if(ctx->debug)
-  {
-      fprintf(stderr, "RPI pin exported and pin direction configured successfully.\n");
+    if(ctx->debug)
+    {
+        fprintf(stderr, "RPI pin exported and pin direction configured successfully.\n");
+    }
   }
   return 0;
 }
@@ -2080,10 +2080,10 @@ int modbus_rpi_pin_unexport_direction(modbus_t *ctx)
     bytes_written = snprintf(buffer, BUFFER_MAX, "%d",ctx->rpi_bcm_pin);
     write(fd, buffer, bytes_written);
     close(fd);
-  }
-  if(ctx->debug)
-  {
-    fprintf(stderr, "RPI BCM Pin Unexported successfully.\n");
+    if(ctx->debug)
+    {
+      fprintf(stderr, "RPI BCM Pin Unexported successfully.\n");
+    }
   }
   return 0;
 }
