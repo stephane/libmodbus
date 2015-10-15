@@ -19,6 +19,8 @@
 # include <arpa/inet.h>
 #endif
 
+#include <config.h>
+
 #include "modbus.h"
 
 #if defined(HAVE_BYTESWAP_H)
