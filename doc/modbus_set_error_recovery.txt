@@ -25,7 +25,7 @@ libmodbus functions and for handling them if necessary.
 
 When `MODBUS_ERROR_RECOVERY_LINK` is set, the library will attempt an
 reconnection after a delay defined by response timeout of the libmodbus context.
-This mode will try a infinite close/connect loop until success on send call and
+This mode will try an infinite close/connect loop until success on send call and
 will just try one time to retablish the connection on select/read calls (if the
 connecton was down, the values to read are certainly not available anymore after
 reconnection, except for slave/server). This mode will also run flush requests

@@ -4,7 +4,7 @@ modbus_receive(3)
 
 NAME
 ----
-modbus_receive - receive a indication request
+modbus_receive - receive an indication request
 
 
 SYNOPSIS
