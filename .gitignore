@@ -42,5 +42,9 @@ tests/unit-test-server
 tests/version
 tests/stamp-h2
 doc/*.html
+jni/config.h
+jni/modbus-version.h
 doc/*.3
 doc/*.7
+/libs
+/obj
