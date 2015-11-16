@@ -46,6 +46,10 @@
 #define MSG_NOSIGNAL 0
 #endif
 
+#if defined(_AIX) && !defined(MSG_DONTWAIT)
+#define MSG_DONTWAIT MSG_NONBLOCK
+#endif
+
 #include "modbus-private.h"
 
 #include "modbus-tcp.h"
