@@ -154,6 +154,13 @@ static unsigned int compute_response_length_from_request(modbus_t *ctx, uint8_t 
     case MODBUS_FC_MASK_WRITE_REGISTER:
         length = 7;
         break;
+    case MODBUS_FC_WRITE_FILE_RECORDS:
+        length = 2 + req[offset + 1];
+        break;
+    case _FC_READ_FILE_RECORDS:
+        /* You could do this but the way I want to do it
+           set 0xffff as length to read everything
+          (because I map file records into string registers). */
     default:
         length = 5;
     }
@@ -310,7 +317,9 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
         /* MSG_CONFIRMATION */
         if (function <= MODBUS_FC_READ_INPUT_REGISTERS ||
             function == MODBUS_FC_REPORT_SLAVE_ID ||
-            function == MODBUS_FC_WRITE_AND_READ_REGISTERS) {
+            function == MODBUS_FC_WRITE_AND_READ_REGISTERS ||
+            function == MODBUS_FC_WRITE_FILE_RECORDS ||
+            function == MODBUS_FC_READ_FILE_RECORDS) {
             length = msg[ctx->backend->header_length + 1];
         } else {
             length = 0;
@@ -591,6 +600,12 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
             /* Report slave ID (bytes received) */
             req_nb_value = rsp_nb_value = rsp[offset + 1];
             break;
+        case MODBUS_FC_WRITE_FILE_RECORDS:
+            req_nb_value = req[offset + 1];
+            rsp_nb_value = rsp[offset + 1];
+            break;
+        case MODBUS_FC_READ_FILE_RECORDS:
+            /* Read file records, first byte tells the length. */
         default:
             /* 1 Write functions & others */
             req_nb_value = rsp_nb_value = 1;
