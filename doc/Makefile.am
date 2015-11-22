@@ -6,6 +6,9 @@ TXT3 = \
         modbus_get_byte_from_bits.txt \
         modbus_get_byte_timeout.txt \
         modbus_get_float.txt \
+        modbus_get_float_abcd.txt \
+        modbus_get_float_badc.txt \
+        modbus_get_float_cdab.txt \
         modbus_get_float_dcba.txt \
         modbus_get_header_length.txt \
         modbus_get_response_timeout.txt \

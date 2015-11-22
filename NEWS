@@ -1,8 +1,35 @@
-libmodbus 3.2.0 (XXXX-XX-XX)
+libmodbus 3.1.3 (XXXX-XX-XX)
 ============================
 
-- Fix buffer overflow in modbus_mask_write_register #265)
-
+- Introduce offsets in modbus mappings.
+- Add some more macros for data manipulation.
+- Change order of few functions in modbus RTU code.
+- Add entries for modbus_rtu_[get|set]_delay in documentation index.
+- Implemented runtime configurable RTS delay by Jimmy Bergström.
+- Add an entry in libmodbus index page for modbus_rtu_set_custom_rts.
+- Add support for user defined RTS toggle function by Jimmy
+  Bergström.
+- Added ILLEGAL_DATA_ADDRESS tests for modbus_write_register[|s].
+  Thanks to Andrey Skvortsov.
+- Update documentation of modbus_rtu_set_rts
+- fix rts signal switch time by Hiromasa Ihara.
+- Improve new_rtu and set_slave documentation (related to #276).
+- Fix late check of ctx in modbus_reply[|_exception] (closes #269).
+- Wait the server for 1 second before running tests (help Travis).
+- A libmodbus context isn't thread safe and won't be (closes #246).
+- Fix buffer overflow in modbus_mask_write_register (#265).
+- Minor adjustments to README about AsciiDoc.
+- Export MODBUS_MAX_ADU_LENGTH and documentation (ref #241).
+- Explicit check against Modbus broadcast address.
+- Do not reply on broadcast requests (fixes #153). Thanks to Michael.
+- Add Travis support.
+- Run unit tests with standard: make check (closes #205, closes #238).
+  This patch has been developed by Andrey Skvortsov, Michael Heimpold
+  and Stéphane Raimbault.
+- modbus_send_raw_request: limit request length (fixes #207).
+  Thanks to Hanno Neuer for spotting this security flaw.
+- Add new contributors to AUTHORS
+- Introduce SPDX license identifiers. Thanks to Michael Heimpold.
 
 libmodbus 3.1.2 (2015-02-13)
 ============================

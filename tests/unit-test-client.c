@@ -24,6 +24,7 @@ int send_crafted_request(modbus_t *ctx, int function,
                          uint8_t *req, int req_size,
                          uint16_t max_value, uint16_t bytes,
                          int backend_length, int backend_offset);
+int equal_dword(uint16_t *tab_reg, const uint32_t value);
 
 #define BUG_REPORT(_cond, _format, _args ...) \
     printf("\nLine %d: assertion error for '%s': " _format "\n", __LINE__, # _cond, ## _args)
@@ -37,6 +38,10 @@ int send_crafted_request(modbus_t *ctx, int function,
     }                                             \
 };
 
+int equal_dword(uint16_t *tab_reg, const uint32_t value) {
+    return ((tab_reg[0] == (value >> 16)) && (tab_reg[1] == (value & 0xFFFF)));
+}
+
 int main(int argc, char *argv[])
 {
     const int NB_REPORT_SLAVE_ID = 10;
@@ -49,7 +54,6 @@ int main(int argc, char *argv[])
     int nb_points;
     int rc;
     float real;
-    uint32_t ireal;
     uint32_t old_response_to_sec;
     uint32_t old_response_to_usec;
     uint32_t new_response_to_sec;
@@ -267,38 +271,6 @@ int main(int argc, char *argv[])
                     tab_rp_registers[i], UT_INPUT_REGISTERS_TAB[i]);
     }
 
-    printf("\nTEST FLOATS\n");
-    /** FLOAT **/
-    printf("1/4 Set float: ");
-    modbus_set_float(UT_REAL, tab_rp_registers);
-    if (tab_rp_registers[1] == (UT_IREAL >> 16) &&
-        tab_rp_registers[0] == (UT_IREAL & 0xFFFF)) {
-        printf("OK\n");
-    } else {
-        /* Avoid *((uint32_t *)tab_rp_registers)
-         * https://github.com/stephane/libmodbus/pull/104 */
-        ireal = (uint32_t) tab_rp_registers[0] & 0xFFFF;
-        ireal |= (uint32_t) tab_rp_registers[1] << 16;
-        printf("FAILED (%x != %x)\n", ireal, UT_IREAL);
-        goto close;
-    }
-
-    printf("2/4 Get float: ");
-    real = modbus_get_float(tab_rp_registers);
-    ASSERT_TRUE(real == UT_REAL, "FAILED (%f != %f)\n", real, UT_REAL);
-
-    printf("3/4 Set float in DBCA order: ");
-    modbus_set_float_dcba(UT_REAL, tab_rp_registers);
-    ireal = (uint32_t) tab_rp_registers[0] & 0xFFFF;
-    ireal |= (uint32_t) tab_rp_registers[1] << 16;
-    ASSERT_TRUE(tab_rp_registers[1] == (UT_IREAL_DCBA >> 16) &&
-                tab_rp_registers[0] == (UT_IREAL_DCBA & 0xFFFF),
-                "FAILED (%x != %x)\n", ireal, UT_IREAL_DCBA);
-
-    printf("4/4 Get float in DCBA order: ");
-    real = modbus_get_float_dcba(tab_rp_registers);
-    ASSERT_TRUE(real == UT_REAL, "FAILED (%f != %f)\n", real, UT_REAL);
-
     /* MASKS */
     printf("1/1 Write mask: ");
     rc = modbus_write_register(ctx, UT_REGISTERS_ADDRESS, 0x12);
@@ -308,6 +280,32 @@ int main(int argc, char *argv[])
     ASSERT_TRUE(tab_rp_registers[0] == 0x17,
                 "FAILED (%0X != %0X)\n",
                 tab_rp_registers[0], 0x17);
+
+    printf("\nTEST FLOATS\n");
+    /** FLOAT **/
+    printf("1/4 Set/get float ABCD: ");
+    modbus_set_float_abcd(UT_REAL, tab_rp_registers);
+    ASSERT_TRUE(equal_dword(tab_rp_registers, UT_IREAL_ABCD), "FAILED Set float ABCD");
+    real = modbus_get_float_abcd(tab_rp_registers);
+    ASSERT_TRUE(real == UT_REAL, "FAILED (%f != %f)\n", real, UT_REAL);
+
+    printf("2/4 Set/get float DCBA: ");
+    modbus_set_float_dcba(UT_REAL, tab_rp_registers);
+    ASSERT_TRUE(equal_dword(tab_rp_registers, UT_IREAL_DCBA), "FAILED Set float DCBA");
+    real = modbus_get_float_dcba(tab_rp_registers);
+    ASSERT_TRUE(real == UT_REAL, "FAILED (%f != %f)\n", real, UT_REAL);
+
+    printf("3/4 Set/get float BADC: ");
+    modbus_set_float_badc(UT_REAL, tab_rp_registers);
+    ASSERT_TRUE(equal_dword(tab_rp_registers, UT_IREAL_BADC), "FAILED Set float BADC");
+    real = modbus_get_float_badc(tab_rp_registers);
+    ASSERT_TRUE(real == UT_REAL, "FAILED (%f != %f)\n", real, UT_REAL);
+
+    printf("4/4 Set/get float CDAB: ");
+    modbus_set_float_cdab(UT_REAL, tab_rp_registers);
+    ASSERT_TRUE(equal_dword(tab_rp_registers, UT_IREAL_CDAB), "FAILED Set float CDAB");
+    real = modbus_get_float_cdab(tab_rp_registers);
+    ASSERT_TRUE(real == UT_REAL, "FAILED (%f != %f)\n", real, UT_REAL);
 
     printf("\nAt this point, error messages doesn't mean the test has failed\n");
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2010-2011 Stéphane Raimbault <stephane.raimbault@gmail.com>
+ * Copyright © 2010-2014 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -12,6 +12,14 @@
 #endif
 #include <string.h>
 #include <assert.h>
+
+#if defined(_WIN32)
+# include <winsock2.h>
+#else
+# include <arpa/inet.h>
+#endif
+
+#include <config.h>
 
 #include "modbus.h"
 
@@ -29,9 +37,8 @@
 #endif
 #if defined(_MSC_VER) && (_MSC_VER >= 1400)
 # define bswap_32 _byteswap_ulong
+# define bswap_16 _byteswap_ushort
 #endif
-
-#if !defined(bswap_32)
 
 #if !defined(bswap_16)
 #   warning "Fallback on C functions for bswap_16"
@@ -41,6 +48,7 @@ static inline uint16_t bswap_16(uint16_t x)
 }
 #endif
 
+#if !defined(bswap_32)
 #   warning "Fallback on C functions for bswap_32"
 static inline uint32_t bswap_32(uint32_t x)
 {
@@ -96,7 +104,55 @@ uint8_t modbus_get_byte_from_bits(const uint8_t *src, int idx,
     return value;
 }
 
-/* Get a float from 4 bytes in Modbus format (ABCD) */
+/* Get a float from 4 bytes (Modbus) without any conversion (ABCD) */
+float modbus_get_float_abcd(const uint16_t *src)
+{
+    float f;
+    uint32_t i;
+
+    i = ntohl(((uint32_t)src[0] << 16) + src[1]);
+    memcpy(&f, &i, sizeof(float));
+
+    return f;
+}
+
+/* Get a float from 4 bytes (Modbus) in inversed format (DCBA) */
+float modbus_get_float_dcba(const uint16_t *src)
+{
+    float f;
+    uint32_t i;
+
+    i = ntohl(bswap_32((((uint32_t)src[0]) << 16) + src[1]));
+    memcpy(&f, &i, sizeof(float));
+
+    return f;
+}
+
+/* Get a float from 4 bytes (Modbus) with swapped bytes (BADC) */
+float modbus_get_float_badc(const uint16_t *src)
+{
+    float f;
+    uint32_t i;
+
+    i = ntohl((uint32_t)(bswap_16(src[0]) << 16) + bswap_16(src[1]));
+    memcpy(&f, &i, sizeof(float));
+
+    return f;
+}
+
+/* Get a float from 4 bytes (Modbus) with swapped words (CDAB) */
+float modbus_get_float_cdab(const uint16_t *src)
+{
+    float f;
+    uint32_t i;
+
+    i = ntohl((((uint32_t)src[1]) << 16) + src[0]);
+    memcpy(&f, &i, sizeof(float));
+
+    return f;
+}
+
+/* DEPRECATED - Get a float from 4 bytes in sort of Modbus format */
 float modbus_get_float(const uint16_t *src)
 {
     float f;
@@ -108,35 +164,56 @@ float modbus_get_float(const uint16_t *src)
     return f;
 }
 
-/* Get a float from 4 bytes in inversed Modbus format (DCBA) */
-float modbus_get_float_dcba(const uint16_t *src)
-{
-    float f;
-    uint32_t i;
-
-    i = bswap_32((((uint32_t)src[1]) << 16) + src[0]);
-    memcpy(&f, &i, sizeof(float));
-
-    return f;
-}
-
-/* Set a float to 4 bytes in Modbus format (ABCD) */
-void modbus_set_float(float f, uint16_t *dest)
+/* Set a float to 4 bytes for Modbus w/o any conversion (ABCD) */
+void modbus_set_float_abcd(float f, uint16_t *dest)
 {
     uint32_t i;
 
     memcpy(&i, &f, sizeof(uint32_t));
-    dest[0] = (uint16_t)i;
-    dest[1] = (uint16_t)(i >> 16);
+    i = htonl(i);
+    dest[0] = (uint16_t)(i >> 16);
+    dest[1] = (uint16_t)i;
 }
 
-/* Set a float to 4 bytes in inversed Modbus format (DCBA) */
+/* Set a float to 4 bytes for Modbus with byte and word swap conversion (DCBA) */
 void modbus_set_float_dcba(float f, uint16_t *dest)
 {
     uint32_t i;
 
     memcpy(&i, &f, sizeof(uint32_t));
-    i = bswap_32(i);
+    i = bswap_32(htonl(i));
+    dest[0] = (uint16_t)(i >> 16);
+    dest[1] = (uint16_t)i;
+}
+
+/* Set a float to 4 bytes for Modbus with byte swap conversion (BADC) */
+void modbus_set_float_badc(float f, uint16_t *dest)
+{
+    uint32_t i;
+
+    memcpy(&i, &f, sizeof(uint32_t));
+    i = htonl(i);
+    dest[0] = (uint16_t)bswap_16(i >> 16);
+    dest[1] = (uint16_t)bswap_16(i & 0xFFFF);
+}
+
+/* Set a float to 4 bytes for Modbus with word swap conversion (CDAB) */
+void modbus_set_float_cdab(float f, uint16_t *dest)
+{
+    uint32_t i;
+
+    memcpy(&i, &f, sizeof(uint32_t));
+    i = htonl(i);
+    dest[0] = (uint16_t)i;
+    dest[1] = (uint16_t)(i >> 16);
+}
+
+/* DEPRECATED - Set a float to 4 bytes in a sort of Modbus format! */
+void modbus_set_float(float f, uint16_t *dest)
+{
+    uint32_t i;
+
+    memcpy(&i, &f, sizeof(uint32_t));
     dest[0] = (uint16_t)i;
     dest[1] = (uint16_t)(i >> 16);
 }
