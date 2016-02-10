@@ -32,7 +32,7 @@ EXAMPLE
 For detailed examples, see source files in tests directory:
 
 - unit-test-server.c, simple but handle only one connection
-- bandwith-server-many-up.c, handles several connections at once
+- bandwidth-server-many-up.c, handles several connections at once
 
 
 [source,c]

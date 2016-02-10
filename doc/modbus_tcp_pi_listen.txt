@@ -52,7 +52,7 @@ mclose(s);
 modbus_free(ctx);
 -------------------
 
-- bandwith-server-many-up.c, handles several connections at once
+- bandwidth-server-many-up.c, handles several connections at once
 
 
 SEE ALSO

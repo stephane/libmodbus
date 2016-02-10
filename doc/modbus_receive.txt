@@ -25,7 +25,7 @@ context _ctx_, see the function linkmb:modbus_set_socket[3].
 RETURN VALUE
 ------------
 The function shall store the indication request in _req_ and return the request
-length if sucessful. The returned request length can be zero if the indication
+length if successful. The returned request length can be zero if the indication
 request is ignored (eg. a query for another slave in RTU mode). Otherwise it
 shall return -1 and set errno.
 
