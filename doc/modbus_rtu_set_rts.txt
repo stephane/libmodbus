@@ -23,7 +23,7 @@ must be used, these modes enable the RTS mode and set the polarity at the same
 time. When `MODBUS_RTU_RTS_UP` is used, an ioctl call is made with RTS flag
 enabled then data is written on the bus after a delay of 1 ms, then another
 ioctl call is made with the RTS flag disabled and again a delay of 1 ms occurs.
-The `MODBUS_RTU_RTS_DOWN` mode applies the same procedure but with an inversed
+The `MODBUS_RTU_RTS_DOWN` mode applies the same procedure but with an inverted
 RTS flag.
 
 This function can only be used with a context using a RTU backend.
