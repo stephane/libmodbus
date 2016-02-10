@@ -97,7 +97,7 @@ Create a Modbus TCP context::
 
 TCP PI (IPv4 and IPv6) Context
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The TCP PI (Protocol Indepedent) backend implements a Modbus variant used for
+The TCP PI (Protocol Independent) backend implements a Modbus variant used for
 communications over TCP IPv4 and IPv6 networks. It does not require a checksum
 calculation as lower layer takes care of the same.
 
