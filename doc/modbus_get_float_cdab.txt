@@ -29,8 +29,8 @@ SEE ALSO
 --------
 linkmb:modbus_set_float_cdab[3]
 linkmb:modbus_get_float_abcd[3]
-linkmb:modbus_get_float_dcba[3]
 linkmb:modbus_get_float_badc[3]
+linkmb:modbus_get_float_dcba[3]
 
 
 AUTHORS

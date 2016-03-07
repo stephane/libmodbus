@@ -1,0 +1,38 @@
+modbus_set_float_badc(3)
+========================
+
+
+NAME
+----
+modbus_set_float_badc - set a float value in 2 registers using BADC byte order
+
+
+SYNOPSIS
+--------
+*void modbus_set_float_badc(float 'f', uint16_t *'dest');*
+
+
+DESCRIPTION
+-----------
+The *modbus_set_float_badc()* function shall set a float to 4 bytes in swapped
+bytes Modbus format (BADC insted of ABCD). The _dest_ array must be pointer on
+two 16 bits values to be able to store the full result of the conversion.
+
+
+RETURN VALUE
+------------
+There is no return values.
+
+
+SEE ALSO
+--------
+linkmb:modbus_get_float_badc[3]
+linkmb:modbus_set_float_abcd[3]
+linkmb:modbus_set_float_cdab[3]
+linkmb:modbus_set_float_dcba[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

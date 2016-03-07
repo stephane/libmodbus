@@ -14,7 +14,6 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-
 The *modbus_get_float_badc()* function shall get a float from 4 bytes with
 swapped bytes (BADC instead of ABCD). The _src_ array must be a pointer on two
 16 bits values, for example, if the first word is set to 0x2000 and the second
@@ -30,8 +29,8 @@ SEE ALSO
 --------
 linkmb:modbus_set_float_badc[3]
 linkmb:modbus_get_float_abcd[3]
-linkmb:modbus_get_float_dcba[3]
 linkmb:modbus_get_float_cdab[3]
+linkmb:modbus_get_float_dcba[3]
 
 
 AUTHORS

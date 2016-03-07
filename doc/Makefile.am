@@ -43,6 +43,9 @@ TXT3 = \
         modbus_set_debug.txt \
         modbus_set_error_recovery.txt \
         modbus_set_float.txt \
+        modbus_set_float_abcd.txt \
+        modbus_set_float_badc.txt \
+        modbus_set_float_cdab.txt \
         modbus_set_float_dcba.txt \
         modbus_set_response_timeout.txt \
         modbus_set_slave.txt \
