@@ -22,12 +22,15 @@ The behavior depends of network and the role of the device:
 *RTU*::
 Define the slave ID of the remote device to talk in master mode or set the
 internal slave ID in slave mode. According to the protocol, a Modbus device must
-only accept message holing its slave number or the special broadcast number.
+only accept message holding its slave number or the special broadcast number.
 
 *TCP*::
-The slave number is only required in TCP if the message must reach a device
-on a serial network. The special value `MODBUS_TCP_SLAVE` (0xFF) can be used in TCP mode to restore
-the default value.
+The slave number is only required in TCP if the message must reach a device on a
+serial network. Some not compliant devices or software (such as modpoll) uses
+the slave ID as unit identifier, that's incorrect (cf page 23 of Modbus
+Messaging Implementation Guide v1.0b) but without the slave value, the faulty
+remote device or software drops the requests! The special value
+`MODBUS_TCP_SLAVE` (0xFF) can be used in TCP mode to restore the default value.
 
 The broadcast address is `MODBUS_BROADCAST_ADDRESS`. This special value must be
 use when you want all Modbus devices of the network receive the request.
