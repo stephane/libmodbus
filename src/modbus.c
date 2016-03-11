@@ -1122,6 +1122,9 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         break;
 
     default:
+        /* invalid function code -> flush rest of telegram */
+        sleep_response_timeout(ctx);
+        modbus_flush(ctx);
         rsp_length = response_exception(ctx, &sft,
                                         MODBUS_EXCEPTION_ILLEGAL_FUNCTION,
                                         rsp);
