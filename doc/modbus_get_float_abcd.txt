@@ -1,0 +1,39 @@
+modbus_get_float_abcd(3)
+========================
+
+
+NAME
+----
+modbus_get_float_abcd - get a float value from 2 registers in ABCD byte order
+
+
+SYNOPSIS
+--------
+*float modbus_get_float_abcd(const uint16_t *'src');*
+
+
+DESCRIPTION
+-----------
+The *modbus_get_float_abcd()* function shall get a float from 4 bytes in usual
+Modbus format. The _src_ array must be a pointer on two 16 bits values, for
+example, if the first word is set to 0x0020 and the second to 0xF147, the float
+value will be read as 123456.0.
+
+
+RETURN VALUE
+------------
+The function shall return a float.
+
+
+SEE ALSO
+--------
+linkmb:modbus_set_float_abcd[3]
+linkmb:modbus_get_float_badc[3]
+linkmb:modbus_get_float_cdab[3]
+linkmb:modbus_get_float_dcba[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

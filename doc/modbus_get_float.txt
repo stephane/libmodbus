@@ -11,13 +11,15 @@ SYNOPSIS
 --------
 *float modbus_get_float(const uint16_t *'src');*
 
+Warning, this function is *deprecated* since libmodbus v3.2.0 and has been
+replaced by *modbus_get_float_dcba()*.
 
 DESCRIPTION
 -----------
 The *modbus_get_float()* function shall get a float from 4 bytes in Modbus
-format (ABCD order). The _src_ array must be pointer on two 16 bits values, for
-example, if the first word is set to 0x4465 and the second to 0x229a, the float
-value will be 916.540649.
+format (DCBA byte order). The _src_ array must be a pointer on two 16 bits
+values, for example, if the first word is set to 0x4465 and the second to
+0x229a, the float value will be 916.540649.
 
 
 RETURN VALUE

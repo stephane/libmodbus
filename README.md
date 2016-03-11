@@ -52,15 +52,17 @@ To compile under Windows, install [MinGW](http://www.mingw.org/) and MSYS then
 select the common packages (gcc, automake, libtool, etc). The directory
 *./src/win32/* contains a Visual C project.
 
-To compile under OS X with [homebrew](http://mxcl.github.com/homebrew/), you will need
-to install the following dependencies first: `brew install autoconf automake libtool`.
+To compile under OS X with [homebrew](http://mxcl.github.com/homebrew/), you
+will need to install the following dependencies first: `brew install autoconf
+automake libtool`.
 
 Documentation
 -------------
 
-The documentation can be generated in man pages and HTML files. The HTML files
-aren't built by default by the `make` command but by`make htmldoc` in
-*docs* directory.
+The documentation is based on
+[AsciiDoc](http://www.methods.co.nz/asciidoc/).  Only man pages are built
+by default with `make` command, you can run `make htmldoc` in *docs* directory
+to generate HTML files.
 
 The documentation is also available [online](http://libmodbus.org/documentation).
 

@@ -14,7 +14,7 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The *modbus_connect()* function shall etablish a connection to a Modbus server,
+The *modbus_connect()* function shall establish a connection to a Modbus server,
 a network or a bus using the context information of libmodbus context given in
 argument.
 

@@ -1,0 +1,46 @@
+modbus_rtu_set_rts_delay(3)
+===========================
+
+
+NAME
+----
+modbus_rtu_set_rts_delay - set the RTS delay in RTU
+
+
+SYNOPSIS
+--------
+*int modbus_rtu_set_rts_delay(modbus_t *'ctx', int 'us');*
+
+
+DESCRIPTION
+-----------
+
+The _modbus_rtu_set_rts_delay()_ function shall set the Request To Send delay
+period of the libmodbus context 'ctx'.
+
+This function can only be used with a context using a RTU backend.
+
+
+RETURN VALUE
+------------
+The _modbus_rtu_set_rts_delay()_ function shall return 0 if successful.
+Otherwise it shall return -1 and set errno.
+
+
+ERRORS
+------
+*EINVAL*::
+The libmodbus backend is not RTU or a negative delay was specified.
+
+
+SEE ALSO
+--------
+linkmb:modbus_rtu_get_rts_delay[3]
+
+
+AUTHORS
+-------
+Jimmy Bergström <jimmy@ekontroll.com>
+
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

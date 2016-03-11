@@ -46,6 +46,10 @@
 #define MSG_NOSIGNAL 0
 #endif
 
+#if defined(_AIX) && !defined(MSG_DONTWAIT)
+#define MSG_DONTWAIT MSG_NONBLOCK
+#endif
+
 #include "modbus-private.h"
 
 #include "modbus-tcp.h"
@@ -473,7 +477,7 @@ static int _modbus_tcp_flush(modbus_t *ctx)
 int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
 {
     int new_s;
-    int yes;
+    int enable;
     struct sockaddr_in addr;
     modbus_tcp_t *ctx_tcp;
 
@@ -495,9 +499,9 @@ int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
         return -1;
     }
 
-    yes = 1;
+    enable = 1;
     if (setsockopt(new_s, SOL_SOCKET, SO_REUSEADDR,
-                   (char *)&yes, sizeof(yes)) == -1) {
+                   (char *)&enable, sizeof(enable)) == -1) {
         close(new_s);
         return -1;
     }
@@ -596,9 +600,9 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
             }
             continue;
         } else {
-            int yes = 1;
+            int enable = 1;
             rc = setsockopt(s, SOL_SOCKET, SO_REUSEADDR,
-                            (void *)&yes, sizeof (yes));
+                            (void *)&enable, sizeof (enable));
             if (rc != 0) {
                 close(s);
                 if (ctx->debug) {

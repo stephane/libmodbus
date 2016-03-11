@@ -18,6 +18,9 @@ The *modbus_mapping_new()* function shall allocate four arrays to store bits,
 input bits, registers and inputs registers. The pointers are stored in
 modbus_mapping_t structure. All values of the arrays are initialized to zero.
 
+This function is equivalent to a call of the _modbus_mapping_offset_new()_ function
+with all offsets set to zero.
+
 If it isn't necessary to allocate an array for a specific type of data, you can
 pass the zero value in argument, the associated pointer will be NULL.
 
@@ -40,7 +43,7 @@ EXAMPLE
 -------
 [source,c]
 -------------------
-/* The fist value of each array is accessible from the 0 address. */
+/* The first value of each array is accessible from the 0 address. */
 mb_mapping = modbus_mapping_new(BITS_ADDRESS + BITS_NB,
                                 INPUT_BITS_ADDRESS + INPUT_BITS_NB,
                                 REGISTERS_ADDRESS + REGISTERS_NB,

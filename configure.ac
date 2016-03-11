@@ -81,6 +81,7 @@ AC_CHECK_HEADERS([ \
     netinet/in.h \
     netinet/tcp.h \
     sys/ioctl.h \
+    sys/params.h \
     sys/socket.h \
     sys/time.h \
     sys/types.h \
@@ -98,10 +99,26 @@ AC_CHECK_DECLS([__CYGWIN__])
 
 # Checks for library functions.
 AC_FUNC_FORK
+AC_FUNC_MALLOC
 AC_CHECK_FUNCS([accept4 getaddrinfo gettimeofday inet_ntoa memset select socket strerror strlcpy])
 
 # Required for MinGW with GCC v4.8.1 on Win7
 AC_DEFINE(WINVER, 0x0501, _)
+
+# Required for bswap
+AC_C_INLINE
+
+# libtool
+AC_PROG_CXX
+AC_PROG_RANLIB
+
+# Various types
+AC_TYPE_INT64_T
+AC_TYPE_SIZE_T
+AC_TYPE_SSIZE_T
+AC_TYPE_UINT16_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT8_T
 
 # Required for getaddrinfo (TCP PI - IPv6)
 AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)

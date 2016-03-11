@@ -252,8 +252,9 @@ static int win32_ser_read(struct win32_ser *ws, uint8_t *p_msg,
 #endif
 
 #if HAVE_DECL_TIOCM_RTS
-static void _modbus_rtu_ioctl_rts(int fd, int on)
+static void _modbus_rtu_ioctl_rts(modbus_t *ctx, int on)
 {
+    int fd = ctx->s;
     int flags;
 
     ioctl(fd, TIOCMGET, &flags);
@@ -282,13 +283,13 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
             fprintf(stderr, "Sending request using RTS signal\n");
         }
 
-        _modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts == MODBUS_RTU_RTS_UP);
-        usleep(_MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
+        ctx_rtu->set_rts(ctx, ctx_rtu->rts == MODBUS_RTU_RTS_UP);
+        usleep(ctx_rtu->rts_delay);
 
         size = write(ctx->s, req, req_length);
 
-        usleep(ctx_rtu->onebyte_time * req_length + _MODBUS_RTU_TIME_BETWEEN_RTS_SWITCH);
-        _modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
+        usleep(ctx_rtu->onebyte_time * req_length + ctx_rtu->rts_delay);
+        ctx_rtu->set_rts(ctx, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
 
         return size;
     } else {
@@ -967,6 +968,30 @@ int modbus_rtu_get_serial_mode(modbus_t *ctx)
     }
 }
 
+int modbus_rtu_get_rts(modbus_t *ctx)
+{
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
+#if HAVE_DECL_TIOCM_RTS
+        modbus_rtu_t *ctx_rtu = ctx->backend_data;
+        return ctx_rtu->rts;
+#else
+        if (ctx->debug) {
+            fprintf(stderr, "This function isn't supported on your platform\n");
+        }
+        errno = ENOTSUP;
+        return -1;
+#endif
+    } else {
+        errno = EINVAL;
+        return -1;
+    }
+}
+
 int modbus_rtu_set_rts(modbus_t *ctx, int mode)
 {
     if (ctx == NULL) {
@@ -983,7 +1008,7 @@ int modbus_rtu_set_rts(modbus_t *ctx, int mode)
             ctx_rtu->rts = mode;
 
             /* Set the RTS bit in order to not reserve the RS485 bus */
-            _modbus_rtu_ioctl_rts(ctx->s, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
+            ctx_rtu->set_rts(ctx, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
 
             return 0;
         } else {
@@ -1003,7 +1028,7 @@ int modbus_rtu_set_rts(modbus_t *ctx, int mode)
     return -1;
 }
 
-int modbus_rtu_get_rts(modbus_t *ctx)
+int modbus_rtu_set_custom_rts(modbus_t *ctx, void (*set_rts) (modbus_t *ctx, int on))
 {
     if (ctx == NULL) {
         errno = EINVAL;
@@ -1013,7 +1038,59 @@ int modbus_rtu_get_rts(modbus_t *ctx)
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
 #if HAVE_DECL_TIOCM_RTS
         modbus_rtu_t *ctx_rtu = ctx->backend_data;
-        return ctx_rtu->rts;
+        ctx_rtu->set_rts = set_rts;
+        return 0;
+#else
+        if (ctx->debug) {
+            fprintf(stderr, "This function isn't supported on your platform\n");
+        }
+        errno = ENOTSUP;
+        return -1;
+#endif
+    } else {
+        errno = EINVAL;
+        return -1;
+    }
+}
+
+int modbus_rtu_get_rts_delay(modbus_t *ctx)
+{
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
+#if HAVE_DECL_TIOCM_RTS
+        modbus_rtu_t *ctx_rtu;
+        ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
+        return ctx_rtu->rts_delay;
+#else
+        if (ctx->debug) {
+            fprintf(stderr, "This function isn't supported on your platform\n");
+        }
+        errno = ENOTSUP;
+        return -1;
+#endif
+    } else {
+        errno = EINVAL;
+        return -1;
+    }
+}
+
+int modbus_rtu_set_rts_delay(modbus_t *ctx, int us)
+{
+    if (ctx == NULL || us < 0) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
+#if HAVE_DECL_TIOCM_RTS
+        modbus_rtu_t *ctx_rtu;
+        ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
+        ctx_rtu->rts_delay = us;
+        return 0;
 #else
         if (ctx->debug) {
             fprintf(stderr, "This function isn't supported on your platform\n");
@@ -1183,7 +1260,13 @@ modbus_t* modbus_new_rtu(const char *device,
     ctx_rtu->rts = MODBUS_RTU_RTS_NONE;
 
     /* Calculate estimated time in micro second to send one byte */
-    ctx_rtu->onebyte_time = (1000 * 1000) * (1 + data_bit + (parity == 'N' ? 0 : 1) + stop_bit) / baud;
+    ctx_rtu->onebyte_time = 1000000 * (1 + data_bit + (parity == 'N' ? 0 : 1) + stop_bit) / baud;
+
+    /* The internal function is used by default to set RTS */
+    ctx_rtu->set_rts = _modbus_rtu_ioctl_rts;
+
+    /* The delay before and after transmission when toggling the RTS pin */
+    ctx_rtu->rts_delay = ctx_rtu->onebyte_time;
 #endif
 
     ctx_rtu->confirmation_to_ignore = FALSE;

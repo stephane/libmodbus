@@ -80,7 +80,9 @@ Set the serial mode::
     linkmb:modbus_rtu_set_serial_mode[3]
     linkmb:modbus_rtu_get_rts[3]
     linkmb:modbus_rtu_set_rts[3]
-
+    linkmb:modbus_rtu_set_custom_rts[3]
+    linkmb:modbus_rtu_get_rts_delay[3]
+    linkmb:modbus_rtu_set_rts_delay[3]
 
 
 TCP (IPv4) Context
@@ -95,7 +97,7 @@ Create a Modbus TCP context::
 
 TCP PI (IPv4 and IPv6) Context
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The TCP PI (Protocol Indepedent) backend implements a Modbus variant used for
+The TCP PI (Protocol Independent) backend implements a Modbus variant used for
 communications over TCP IPv4 and IPv6 networks. It does not require a checksum
 calculation as lower layer takes care of the same.
 
@@ -137,20 +139,22 @@ Setter/getter of internal socket::
 Information about header::
     linkmb:modbus_get_header_length[3]
 
-A libmodbus 'context' is thread safe and may be shared among as many application
-threads as necessary, without any additional locking required on the part of the
-caller.
-
 Macros for data manipulation::
 
 - MODBUS_GET_HIGH_BYTE(data), extracts the high byte from a byte
 - MODBUS_GET_LOW_BYTE(data), extracts the low byte from a byte
+- MODBUS_GET_INT64_FROM_INT16(tab_int16, index), builds an int64 from the four
+  first int16 starting at tab_int16[index]
 - MODBUS_GET_INT32_FROM_INT16(tab_int16, index), builds an int32 from the two
   first int16 starting at tab_int16[index]
 - MODBUS_GET_INT16_FROM_INT8(tab_int8, index), builds an int16 from the two
   first int8 starting at tab_int8[index]
 - MODBUS_SET_INT16_TO_INT8(tab_int8, index, value), set an int16 value into
   the two first bytes starting at tab_int8[index]
+- MODBUS_SET_INT32_TO_INT16(tab_int16, index, value), set an int32 value into
+  the two first int16 starting at tab_int16[index]
+- MODBUS_SET_INT64_TO_INT16(tab_int16, index, value), set an int64 value into
+  the four first int16 starting at tab_int16[index]
 
 Handling of bits and bytes::
     linkmb:modbus_set_bits_from_byte[3]

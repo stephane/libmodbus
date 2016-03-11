@@ -1,5 +1,4 @@
 EXTRA_DIST =
-pkginclude_HEADERS = modbus.h
 lib_LTLIBRARIES = libmodbus.la
 
 AM_CPPFLAGS = \

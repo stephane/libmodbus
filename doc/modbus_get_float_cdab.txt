@@ -1,0 +1,39 @@
+modbus_get_float_cdab(3)
+========================
+
+
+NAME
+----
+modbus_get_float_cdab - get a float value from 2 registers in CDAB byte order
+
+
+SYNOPSIS
+--------
+*float modbus_get_float_cdab(const uint16_t *'src');*
+
+
+DESCRIPTION
+-----------
+The *modbus_get_float_cdab()* function shall get a float from 4 bytes with
+swapped words (CDAB order instead of ABCD). The _src_ array must be a pointer on
+two 16 bits values, for example, if the first word is set to F147 and the second
+to 0x0020, the float value will be read as 123456.0.
+
+
+RETURN VALUE
+------------
+The function shall return a float.
+
+
+SEE ALSO
+--------
+linkmb:modbus_set_float_cdab[3]
+linkmb:modbus_get_float_abcd[3]
+linkmb:modbus_get_float_badc[3]
+linkmb:modbus_get_float_dcba[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

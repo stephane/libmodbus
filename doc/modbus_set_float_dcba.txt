@@ -14,7 +14,7 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The *modbus_set_float_dcba()* function shall set a float to 4 bytes in inversed
+The *modbus_set_float_dcba()* function shall set a float to 4 bytes in inverted
 Modbus format (DCBA order). The _dest_ array must be pointer on two 16 bits
 values to be able to store the full result of the conversion.
 

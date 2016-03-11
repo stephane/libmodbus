@@ -6,12 +6,16 @@ TXT3 = \
         modbus_get_byte_from_bits.txt \
         modbus_get_byte_timeout.txt \
         modbus_get_float.txt \
+        modbus_get_float_abcd.txt \
+        modbus_get_float_badc.txt \
+        modbus_get_float_cdab.txt \
         modbus_get_float_dcba.txt \
         modbus_get_header_length.txt \
         modbus_get_response_timeout.txt \
         modbus_get_socket.txt \
         modbus_mapping_free.txt \
         modbus_mapping_new.txt \
+        modbus_mapping_offset_new.txt \
         modbus_mask_write_register.txt \
         modbus_new_rtu.txt \
         modbus_new_tcp_pi.txt \
@@ -29,6 +33,9 @@ TXT3 = \
         modbus_rtu_set_serial_mode.txt \
         modbus_rtu_get_rts.txt \
         modbus_rtu_set_rts.txt \
+        modbus_rtu_set_custom_rts.txt \
+        modbus_rtu_get_rts_delay.txt \
+        modbus_rtu_set_rts_delay.txt \
         modbus_send_raw_request.txt \
         modbus_set_bits_from_bytes.txt \
         modbus_set_bits_from_byte.txt \
@@ -36,6 +43,9 @@ TXT3 = \
         modbus_set_debug.txt \
         modbus_set_error_recovery.txt \
         modbus_set_float.txt \
+        modbus_set_float_abcd.txt \
+        modbus_set_float_badc.txt \
+        modbus_set_float_cdab.txt \
         modbus_set_float_dcba.txt \
         modbus_set_response_timeout.txt \
         modbus_set_slave.txt \
