@@ -27,6 +27,13 @@
 #  include <byteswap.h>
 #endif
 
+#if defined(__APPLE__)
+  #include <libkern/OSByteOrder.h>
+  #define bswap_16 OSSwapInt16
+  #define bswap_32 OSSwapInt32
+	#define bswap_64 OSSwapInt64
+#endif
+
 #if defined(__GNUC__)
 #  define GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__ * 10)
 #  if GCC_VERSION >= 430
