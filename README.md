@@ -46,7 +46,7 @@ The library provides a *libmodbus.pc* file to use with `pkg-config` to ease your
 program compilation and linking.
 
 If you want to compile with Microsoft Visual Studio, you need to install
-<http://code.google.com/p/msinttypes/> to fill the absence of stdint.h.
+<https://github.com/chemeris/msinttypes> to fill the absence of stdint.h.
 
 To compile under Windows, install [MinGW](http://www.mingw.org/) and MSYS then
 select the common packages (gcc, automake, libtool, etc). The directory
