@@ -26,6 +26,7 @@ TXT3 = \
         modbus_read_registers.txt \
         modbus_receive_confirmation.txt \
         modbus_receive.txt \
+        modbus_reply_callback.txt \
         modbus_reply_exception.txt \
         modbus_reply.txt \
         modbus_report_slave_id.txt \
