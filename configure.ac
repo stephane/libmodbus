@@ -141,6 +141,13 @@ my_CFLAGS="-Wall \
 -Wformat-security"
 AC_SUBST([my_CFLAGS])
 
+# Build options
+AC_ARG_ENABLE(tests,
+	AS_HELP_STRING([--disable-tests],
+	[Build tests (default: yes)]),,
+	[enable_tests=yes])
+AM_CONDITIONAL(BUILD_TESTS, [test $enable_tests != no])
+
 AC_CONFIG_HEADERS([config.h tests/unit-test.h])
 AC_CONFIG_FILES([
         Makefile
@@ -167,4 +174,5 @@ AC_MSG_RESULT([
         ldflags:                ${LDFLAGS}
 
         documentation:          ${ac_libmodbus_build_doc}
+        tests:                  ${enable_tests}
 ])
