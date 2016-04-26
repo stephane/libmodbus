@@ -630,7 +630,7 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
     return rc;
 }
 
-static int response_io_status(int address, int nb,
+static int response_io_status(int nb,
                               uint8_t *tab_io_status,
                               uint8_t *rsp, int offset)
 {
@@ -639,7 +639,7 @@ static int response_io_status(int address, int nb,
     int one_byte = 0;
     int i;
 
-    for (i = address; i < address+nb; i++) {
+    for (i = 0; i < nb; i++) {
         one_byte |= tab_io_status[i] << shift;
         if (shift == 7) {
             /* Byte is full */
@@ -677,8 +677,9 @@ static int response_exception(modbus_t *ctx, sft_t *sft,
    If an error occurs, this function construct the response
    accordingly.
 */
-int modbus_reply(modbus_t *ctx, const uint8_t *req,
-                 int req_length, modbus_mapping_t *mb_mapping)
+int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
+                 int req_length, modbus_vmapping_t* vm,
+                 modbus_mapping_t *mb_mapping)
 {
     int offset;
     int slave;
@@ -688,7 +689,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
     int rsp_length = 0;
     sft_t sft;
 
-    if (ctx == NULL) {
+    if ((ctx == NULL)||(vm==NULL)||(mb_mapping==NULL)||(req==NULL)) {
         errno = EINVAL;
         return -1;
     }
@@ -730,8 +731,8 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         } else {
             rsp_length = ctx->backend->build_response_basis(&sft, rsp);
             rsp[rsp_length++] = (nb / 8) + ((nb % 8) ? 1 : 0);
-            rsp_length = response_io_status(addr, nb,
-                                            mb_mapping->tab_bits,
+            rsp_length = response_io_status(nb,
+                                            mb_mapping->tab_bits+addr,
                                             rsp, rsp_length);
         }
     }
@@ -740,7 +741,6 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         /* Similar to coil status (but too many arguments to use a
          * function) */
         int nb = (req[offset + 3] << 8) + req[offset + 4];
-        int addr = address - mb_mapping->offset_input_bits;
 
         if (nb < 1 || MODBUS_MAX_READ_BITS < nb) {
             if (ctx->debug) {
@@ -753,20 +753,28 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
             rsp_length = response_exception(
                 ctx, &sft,
                 MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp);
-        } else if (address < mb_mapping->offset_input_bits || (addr + nb) > mb_mapping->nb_input_bits) {
-            if (ctx->debug) {
-                fprintf(stderr, "Illegal data address 0x%0X in read_input_bits\n",
-                        address < mb_mapping->offset_input_bits ? address : address + nb);
-            }
-            rsp_length = response_exception(
-                ctx, &sft,
-                MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
         } else {
-            rsp_length = ctx->backend->build_response_basis(&sft, rsp);
-            rsp[rsp_length++] = (nb / 8) + ((nb % 8) ? 1 : 0);
-            rsp_length = response_io_status(addr, nb,
-                                            mb_mapping->tab_input_bits,
-                                            rsp, rsp_length);
+            if(!vm->tab_input_bits)
+            {
+                errno = EINVAL;
+                return -1;
+            }
+            uint8_t* data = vm->tab_input_bits(vm->app, address, nb);
+            if(data) {
+                rsp_length = ctx->backend->build_response_basis(&sft, rsp);
+                rsp[rsp_length++] = (nb / 8) + ((nb % 8) ? 1 : 0);
+                rsp_length = response_io_status(nb,
+                                                data,
+                                                rsp, rsp_length);
+            } else {
+                if(ctx->debug) {
+                    fprintf(stderr, "Virtual mapping failed for %d Bits"
+                                    " starting at address 0x%X\n", address, nb);
+                }
+                rsp_length = response_exception(
+                    ctx, &sft,
+                    MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
+            }
         }
     }
         break;
@@ -1083,6 +1091,14 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
 
     /* Suppress any responses when the request was a broadcast */
     return (slave == MODBUS_BROADCAST_ADDRESS) ? 0 : send_msg(ctx, rsp, rsp_length);
+}
+
+int modbus_reply(modbus_t *ctx, const uint8_t *req,
+                 int req_length, modbus_mapping_t *mb_mapping)
+{
+    modbus_vmapping_t vm;
+    modbus_virtualize_mapping(&vm, mb_mapping);
+    return modbus_virt_reply(ctx, req, req_length, &vm, mb_mapping);
 }
 
 int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,

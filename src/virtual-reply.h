@@ -6,8 +6,6 @@
 #ifndef MODBUS_VIRTUAL_RESPONSE_H
 #define MODBUS_VIRTUAL_RESPONSE_H
 
-#include "modbus.h"
-
 #ifndef _MSC_VER
 #include <stdint.h>
 #else
