@@ -881,8 +881,12 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
     }
         break;
     case MODBUS_FC_WRITE_MULTIPLE_COILS: {
+        if(!vm->tab_bits) {
+            errno = EINVAL;
+            return -1;
+        }
+
         int nb = (req[offset + 3] << 8) + req[offset + 4];
-        int addr = address - mb_mapping->offset_bits;
 
         if (nb < 1 || MODBUS_MAX_WRITE_BITS < nb) {
             if (ctx->debug) {
@@ -898,22 +902,25 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
             rsp_length = response_exception(
                 ctx, &sft,
                 MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp);
-        } else if (address < mb_mapping->offset_bits || (addr + nb) > mb_mapping->nb_bits) {
-            if (ctx->debug) {
-                fprintf(stderr, "Illegal data address 0x%0X in write_bits\n",
-                        address < mb_mapping->offset_bits ? address : address + nb);
-            }
-            rsp_length = response_exception(
-                ctx, &sft,
-                MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
         } else {
-            /* 6 = byte count */
-            modbus_set_bits_from_bytes(mb_mapping->tab_bits, addr, nb, &req[offset + 6]);
+            uint8_t* dest = vm->tab_bits(vm->app, address, nb);
+            if(!dest)
+            {
+                if (ctx->debug) {
+                    fprintf(stderr, "Illegal data address 0x%0X in write_bits\n", address);
+                }
+                rsp_length = response_exception(
+                    ctx, &sft,
+                    MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
+            } else {
+                /* 6 = byte count */
+                modbus_set_bits_from_bytes(dest, 0, nb, &req[offset + 6]);
 
-            rsp_length = ctx->backend->build_response_basis(&sft, rsp);
-            /* 4 to copy the bit address (2) and the quantity of bits */
-            memcpy(rsp + rsp_length, req + rsp_length, 4);
-            rsp_length += 4;
+                rsp_length = ctx->backend->build_response_basis(&sft, rsp);
+                /* 4 to copy the bit address (2) and the quantity of bits */
+                memcpy(rsp + rsp_length, req + rsp_length, 4);
+                rsp_length += 4;
+            }
         }
     }
         break;
