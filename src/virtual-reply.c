@@ -17,6 +17,20 @@ static uint8_t* get_discrete_inputs(void* app, int address, int nb)
     return mb_mapping->tab_input_bits + addr;
 }
 
+static uint8_t* get_coils(void* app, int address, int nb)
+{
+    if(!app)
+        return NULL;
+
+    modbus_mapping_t* mb_mapping = app;
+    int addr = address - mb_mapping->offset_bits;
+    if (   (address < mb_mapping->offset_bits)
+        || ((addr + nb) > mb_mapping->nb_bits)) {
+        return NULL;
+    }
+    return mb_mapping->tab_bits + addr;
+}
+
 
 void modbus_virtualize_mapping(modbus_vmapping_t* dest,
                                modbus_mapping_t* source)
@@ -24,4 +38,5 @@ void modbus_virtualize_mapping(modbus_vmapping_t* dest,
     memset(dest, 0, sizeof(*dest));
     dest->app = source;
     dest->tab_input_bits = get_discrete_inputs;
+    dest->tab_bits = get_coils;
 }

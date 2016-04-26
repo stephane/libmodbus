@@ -705,39 +705,11 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
 
     /* Data are flushed on illegal number of values errors. */
     switch (function) {
-    case MODBUS_FC_READ_COILS: {
-        int nb = (req[offset + 3] << 8) + req[offset + 4];
-        int addr = address - mb_mapping->offset_bits;
 
-        if (nb < 1 || MODBUS_MAX_READ_BITS < nb) {
-            if (ctx->debug) {
-                fprintf(stderr,
-                        "Illegal nb of values %d in read_bits (max %d)\n",
-                        nb, MODBUS_MAX_READ_BITS);
-            }
-            _sleep_response_timeout(ctx);
-            modbus_flush(ctx);
-            rsp_length = response_exception(
-                ctx, &sft,
-                MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp);
-        } else if (address < mb_mapping->offset_bits || (addr + nb) > mb_mapping->nb_bits) {
-            if (ctx->debug) {
-                fprintf(stderr, "Illegal data address 0x%0X in read_bits\n",
-                        address < mb_mapping->offset_bits ? address : address + nb);
-            }
-            rsp_length = response_exception(
-                ctx, &sft,
-                MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
-        } else {
-            rsp_length = ctx->backend->build_response_basis(&sft, rsp);
-            rsp[rsp_length++] = (nb / 8) + ((nb % 8) ? 1 : 0);
-            rsp_length = response_io_status(nb,
-                                            mb_mapping->tab_bits+addr,
-                                            rsp, rsp_length);
-        }
-    }
-        break;
+    case MODBUS_FC_READ_COILS:
     case MODBUS_FC_READ_DISCRETE_INPUTS: {
+        const unsigned coil = (function == MODBUS_FC_READ_COILS);
+        char const * const fn_name = coil ? "read_bits" : "read_input_bits";
         /* Similar to coil status (but too many arguments to use a
          * function) */
         int nb = (req[offset + 3] << 8) + req[offset + 4];
@@ -745,8 +717,8 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
         if (nb < 1 || MODBUS_MAX_READ_BITS < nb) {
             if (ctx->debug) {
                 fprintf(stderr,
-                        "Illegal nb of values %d in read_input_bits (max %d)\n",
-                        nb, MODBUS_MAX_READ_BITS);
+                        "Illegal nb of values %d in %s (max %d)\n",
+                        nb, fn_name, MODBUS_MAX_READ_BITS);
             }
             _sleep_response_timeout(ctx);
             modbus_flush(ctx);
@@ -754,12 +726,14 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
                 ctx, &sft,
                 MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp);
         } else {
-            if(!vm->tab_input_bits)
+            uint8_t* (*get_fn)(void*, int, int)
+                = coil? vm->tab_bits : vm->tab_input_bits;
+            if(!get_fn)
             {
                 errno = EINVAL;
                 return -1;
             }
-            uint8_t* data = vm->tab_input_bits(vm->app, address, nb);
+            uint8_t* data = get_fn(vm->app, address, nb);
             if(data) {
                 rsp_length = ctx->backend->build_response_basis(&sft, rsp);
                 rsp[rsp_length++] = (nb / 8) + ((nb % 8) ? 1 : 0);
@@ -768,8 +742,9 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
                                                 rsp, rsp_length);
             } else {
                 if(ctx->debug) {
-                    fprintf(stderr, "Virtual mapping failed for %d Bits"
-                                    " starting at address 0x%X\n", address, nb);
+                    fprintf(stderr, "Virtual mapping failed for %d Bits,"
+                                    " starting at address 0x%X"
+                                    " for function %s\n", address, nb, fn_name);
                 }
                 rsp_length = response_exception(
                     ctx, &sft,
