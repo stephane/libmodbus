@@ -825,23 +825,26 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
         }
     }
         break;
-    case MODBUS_FC_WRITE_SINGLE_COIL: {
-        int addr = address - mb_mapping->offset_bits;
-
-        if (address < mb_mapping->offset_bits || addr >= mb_mapping->nb_bits) {
+    case MODBUS_FC_WRITE_SINGLE_COIL:
+        if(!vm->tab_bits) {
+            errno = EINVAL;
+            return -1;
+        }
+    {
+        uint8_t* dest = vm->tab_bits(vm->app, address, 1);
+        if(!dest) {
             if (ctx->debug) {
                 fprintf(stderr,
-                        "Illegal data address 0x%0X in write_bit\n",
-                        address);
+                        "Illegal data address 0x%0X in write_bit\n", address);
             }
             rsp_length = response_exception(
                 ctx, &sft,
                 MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
         } else {
-            int data = (req[offset + 3] << 8) + req[offset + 4];
+            const int data = (req[offset + 3] << 8) + req[offset + 4];
 
             if (data == 0xFF00 || data == 0x0) {
-                mb_mapping->tab_bits[addr] = (data) ? ON : OFF;
+                *dest = (data) ? ON : OFF;
                 memcpy(rsp, req, req_length);
                 rsp_length = req_length;
             } else {
