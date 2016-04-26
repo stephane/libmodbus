@@ -755,9 +755,9 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
         break;
     case MODBUS_FC_READ_HOLDING_REGISTERS:
         if(!vm->tab_registers) {
-                errno = EINVAL;
-                return -1;
-         }
+            errno = EINVAL;
+            return -1;
+        }
     {
         int nb = (req[offset + 3] << 8) + req[offset + 4];
 
@@ -867,10 +867,14 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
         }
     }
         break;
-    case MODBUS_FC_WRITE_SINGLE_REGISTER: {
-        int addr = address - mb_mapping->offset_registers;
-
-        if (address < mb_mapping->offset_registers || addr >= mb_mapping->nb_registers) {
+    case MODBUS_FC_WRITE_SINGLE_REGISTER:
+        if(!vm->tab_registers) {
+            errno = EINVAL;
+            return -1;
+        }
+    {
+        uint16_t* dest = vm->tab_registers(vm->app, address, 1);
+        if (!dest) {
             if (ctx->debug) {
                 fprintf(stderr, "Illegal data address 0x%0X in write_register\n",
                         address);
@@ -881,7 +885,7 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
         } else {
             int data = (req[offset + 3] << 8) + req[offset + 4];
 
-            mb_mapping->tab_registers[addr] = data;
+            *dest = data;
             memcpy(rsp, req, req_length);
             rsp_length = req_length;
         }
@@ -931,9 +935,13 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
         }
     }
         break;
-    case MODBUS_FC_WRITE_MULTIPLE_REGISTERS: {
+    case MODBUS_FC_WRITE_MULTIPLE_REGISTERS:
+        if(!vm->tab_registers) {
+            errno = EINVAL;
+            return -1;
+        }
+    {
         int nb = (req[offset + 3] << 8) + req[offset + 4];
-        int addr = address - mb_mapping->offset_registers;
 
         if (nb < 1 || MODBUS_MAX_WRITE_REGISTERS < nb) {
             if (ctx->debug) {
@@ -949,26 +957,28 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
             rsp_length = response_exception(
                 ctx, &sft,
                 MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp);
-        } else if (address < mb_mapping->offset_registers || (addr + nb) > mb_mapping->nb_registers) {
-            if (ctx->debug) {
-                fprintf(stderr, "Illegal data address 0x%0X in write_registers\n",
-                        address < mb_mapping->offset_registers ? address : address + nb);
-            }
-            rsp_length = response_exception(
-                ctx, &sft,
-                MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
         } else {
-            int i, j;
-            for (i = addr, j = 6; i < addr + nb; i++, j += 2) {
-                /* 6 and 7 = first value */
-                mb_mapping->tab_registers[i] =
-                    (req[offset + j] << 8) + req[offset + j + 1];
-            }
+            uint16_t* dest = vm->tab_registers(vm->app, address, nb);
+            if(!dest) {
+                if (ctx->debug) {
+                    fprintf(stderr, "Illegal data address 0x%0X in write_registers\n",
+                            address);
+                }
+                rsp_length = response_exception(
+                        ctx, &sft,
+                        MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
+            } else {
+                int i, j;
+                for (i = 0, j = 6; i < nb; i++, j += 2) {
+                    /* 6 and 7 = first value */
+                    dest[i] = (req[offset + j] << 8) + req[offset + j + 1];
+                }
 
-            rsp_length = ctx->backend->build_response_basis(&sft, rsp);
-            /* 4 to copy the address (2) and the no. of registers */
-            memcpy(rsp + rsp_length, req + rsp_length, 4);
-            rsp_length += 4;
+                rsp_length = ctx->backend->build_response_basis(&sft, rsp);
+                /* 4 to copy the address (2) and the no. of registers */
+                memcpy(rsp + rsp_length, req + rsp_length, 4);
+                rsp_length += 4;
+            }
         }
     }
         break;
@@ -996,10 +1006,14 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
         errno = ENOPROTOOPT;
         return -1;
         break;
-    case MODBUS_FC_MASK_WRITE_REGISTER: {
-        int addr = address - mb_mapping->offset_registers;
-
-        if (address < mb_mapping->offset_registers || addr >= mb_mapping->nb_registers) {
+    case MODBUS_FC_MASK_WRITE_REGISTER:
+        if(!vm->tab_registers) {
+            errno = EINVAL;
+            return -1;
+        }
+    {
+        uint16_t* dest = vm->tab_registers(vm->app, address, 1);
+        if (!dest) {
             if (ctx->debug) {
                 fprintf(stderr, "Illegal data address 0x%0X in write_register\n",
                         address);
@@ -1008,24 +1022,27 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
                 ctx, &sft,
                 MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
         } else {
-            uint16_t data = mb_mapping->tab_registers[addr];
+            uint16_t data = *dest;
             uint16_t and = (req[offset + 3] << 8) + req[offset + 4];
             uint16_t or = (req[offset + 5] << 8) + req[offset + 6];
 
             data = (data & and) | (or & (~and));
-            mb_mapping->tab_registers[addr] = data;
+            *dest = data;
             memcpy(rsp, req, req_length);
             rsp_length = req_length;
         }
     }
         break;
-    case MODBUS_FC_WRITE_AND_READ_REGISTERS: {
+    case MODBUS_FC_WRITE_AND_READ_REGISTERS:
+        if(!vm->tab_registers) {
+            errno = EINVAL;
+            return -1;
+        }
+    {
         int nb = (req[offset + 3] << 8) + req[offset + 4];
         uint16_t address_write = (req[offset + 5] << 8) + req[offset + 6];
         int nb_write = (req[offset + 7] << 8) + req[offset + 8];
         int nb_write_bytes = req[offset + 9];
-        int addr = address - mb_mapping->offset_registers;
-        int addr_write = address_write - mb_mapping->offset_registers;
 
         if (nb_write < 1 || MODBUS_MAX_WR_WRITE_REGISTERS < nb_write ||
             nb < 1 || MODBUS_MAX_WR_READ_REGISTERS < nb ||
@@ -1041,34 +1058,35 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
             rsp_length = response_exception(
                 ctx, &sft,
                 MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp);
-        } else if (address < mb_mapping->offset_registers ||
-                   (addr + nb) > mb_mapping->nb_registers ||
-                   address_write < mb_mapping->offset_registers ||
-                   (addr_write + nb_write) > mb_mapping->nb_registers) {
-            if (ctx->debug) {
-                fprintf(stderr,
-                        "Illegal data read address 0x%0X or write address 0x%0X write_and_read_registers\n",
-                        address < mb_mapping->offset_registers ? address : address + nb,
-                        address_write < mb_mapping->offset_registers ? address_write : address_write + nb_write);
-            }
-            rsp_length = response_exception(ctx, &sft,
-                                            MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
         } else {
-            int i, j;
-            rsp_length = ctx->backend->build_response_basis(&sft, rsp);
-            rsp[rsp_length++] = nb << 1;
+            uint16_t* read = vm->tab_registers(vm->app, address, nb);
+            uint16_t* write = vm->tab_registers(vm->app, address_write, nb_write);
+            if(!(read && write)) {
+                if (ctx->debug) {
+                    fprintf(stderr,
+                            "Illegal data read address 0x%0X or write address 0x%0X"
+                            " write_and_read_registers\n",
+                            address, address_write);
+                }
+                rsp_length = response_exception(ctx, &sft,
+                        MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
+            } else {
+                int i, j;
+                rsp_length = ctx->backend->build_response_basis(&sft, rsp);
+                rsp[rsp_length++] = nb << 1;
 
-            /* Write first.
-               10 and 11 are the offset of the first values to write */
-            for (i = addr_write, j = 10; i < addr_write + nb_write; i++, j += 2) {
-                mb_mapping->tab_registers[i] =
-                    (req[offset + j] << 8) + req[offset + j + 1];
-            }
+                /* Write first.
+                   10 and 11 are the offset of the first values to write */
+                for (i = 0, j = 10; i < nb_write; i++, j += 2) {
+                    write[i] = (req[offset + j] << 8) + req[offset + j + 1];
+                }
 
-            /* and read the data for the response */
-            for (i = addr; i < addr + nb; i++) {
-                rsp[rsp_length++] = mb_mapping->tab_registers[i] >> 8;
-                rsp[rsp_length++] = mb_mapping->tab_registers[i] & 0xFF;
+                /* and read the data for the response */
+                for (i = 0; i < nb; i++) {
+                    const uint16_t to_send = read[i];
+                    rsp[rsp_length++] = to_send >> 8;
+                    rsp[rsp_length++] = to_send & 0xFF;
+                }
             }
         }
     }
