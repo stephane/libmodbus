@@ -678,8 +678,7 @@ static int response_exception(modbus_t *ctx, sft_t *sft,
    accordingly.
 */
 int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
-                 int req_length, modbus_vmapping_t* vm,
-                 modbus_mapping_t *mb_mapping)
+                 int req_length, modbus_vmapping_t* vm)
 {
     int offset;
     int slave;
@@ -689,7 +688,7 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
     int rsp_length = 0;
     sft_t sft;
 
-    if ((ctx == NULL)||(vm==NULL)||(mb_mapping==NULL)||(req==NULL)) {
+    if ((ctx == NULL)||(vm==NULL)||(req==NULL)) {
         errno = EINVAL;
         return -1;
     }
@@ -777,7 +776,7 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
             if(!source) {
                 if (ctx->debug) {
                     fprintf(stderr, "Illegal data address 0x%0X in read_registers\n",
-                            address < mb_mapping->offset_registers ? address : address + nb);
+                            address);
                 }
                 rsp_length = response_exception(
                         ctx, &sft,
@@ -821,7 +820,7 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
             if(!source) {
                 if (ctx->debug) {
                     fprintf(stderr, "Illegal data address 0x%0X in read_input_registers\n",
-                            address < mb_mapping->offset_input_registers ? address : address + nb);
+                            address);
                 }
                 rsp_length = response_exception(
                         ctx, &sft,
@@ -1115,7 +1114,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
 {
     modbus_vmapping_t vm;
     modbus_virtualize_mapping(&vm, mb_mapping);
-    return modbus_virt_reply(ctx, req, req_length, &vm, mb_mapping);
+    return modbus_virt_reply(ctx, req, req_length, &vm);
 }
 
 int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
