@@ -671,6 +671,15 @@ static int response_exception(modbus_t *ctx, sft_t *sft,
     return rsp_length;
 }
 
+static unsigned assure_or_set_errno(unsigned condition, int code)
+{
+    if(!condition){
+        errno = code;
+        return 0;
+    }
+    return 1;
+}
+
 /* Send a response to the received request.
    Analyses the request and constructs a response.
 
@@ -688,10 +697,8 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
     int rsp_length = 0;
     sft_t sft;
 
-    if ((ctx == NULL)||(vm==NULL)||(req==NULL)) {
-        errno = EINVAL;
+    if (!assure_or_set_errno(ctx && vm && req, EINVAL))
         return -1;
-    }
 
     offset = ctx->backend->header_length;
     slave = req[offset - 1];
@@ -725,11 +732,10 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
         } else {
             uint8_t* (*get_fn)(void*, int, int)
                 = coil? vm->tab_bits : vm->tab_input_bits;
-            if(!get_fn)
-            {
-                errno = EINVAL;
+
+            if(!assure_or_set_errno(get_fn, EINVAL))
                 return -1;
-            }
+
             uint8_t* data = get_fn(vm->app, address, nb);
             if(data) {
                 rsp_length = ctx->backend->build_response_basis(&sft, rsp);
@@ -760,10 +766,8 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
 
         const int nb = (req[offset + 3] << 8) + req[offset + 4];
 
-        if(!get_fn) {
-            errno = EINVAL;
+        if(!assure_or_set_errno(get_fn, EINVAL))
             return -1;
-        }
 
         if (nb < 1 || MODBUS_MAX_READ_REGISTERS < nb) {
             if (ctx->debug) {
@@ -800,10 +804,8 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
     }
         break;
     case MODBUS_FC_WRITE_SINGLE_COIL:
-        if(!vm->tab_bits) {
-            errno = EINVAL;
+        if(!assure_or_set_errno(vm->tab_bits, EINVAL))
             return -1;
-        }
     {
         uint8_t* dest = vm->tab_bits(vm->app, address, 1);
         if(!dest) {
@@ -835,10 +837,8 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
     }
         break;
     case MODBUS_FC_WRITE_SINGLE_REGISTER:
-        if(!vm->tab_registers) {
-            errno = EINVAL;
+        if(!assure_or_set_errno(vm->tab_registers, EINVAL))
             return -1;
-        }
     {
         uint16_t* dest = vm->tab_registers(vm->app, address, 1);
         if (!dest) {
@@ -859,12 +859,10 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
     }
         break;
     case MODBUS_FC_WRITE_MULTIPLE_COILS: {
-        if(!vm->tab_bits) {
-            errno = EINVAL;
-            return -1;
-        }
-
         int nb = (req[offset + 3] << 8) + req[offset + 4];
+
+        if(!assure_or_set_errno(vm->tab_bits, EINVAL))
+            return -1;
 
         if (nb < 1 || MODBUS_MAX_WRITE_BITS < nb) {
             if (ctx->debug) {
@@ -903,10 +901,8 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
     }
         break;
     case MODBUS_FC_WRITE_MULTIPLE_REGISTERS:
-        if(!vm->tab_registers) {
-            errno = EINVAL;
+        if(!assure_or_set_errno(vm->tab_registers, EINVAL))
             return -1;
-        }
     {
         int nb = (req[offset + 3] << 8) + req[offset + 4];
 
@@ -974,10 +970,8 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
         return -1;
         break;
     case MODBUS_FC_MASK_WRITE_REGISTER:
-        if(!vm->tab_registers) {
-            errno = EINVAL;
+        if(!assure_or_set_errno(vm->tab_registers, EINVAL))
             return -1;
-        }
     {
         uint16_t* dest = vm->tab_registers(vm->app, address, 1);
         if (!dest) {
@@ -1001,10 +995,8 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
     }
         break;
     case MODBUS_FC_WRITE_AND_READ_REGISTERS:
-        if(!vm->tab_registers) {
-            errno = EINVAL;
+        if(!assure_or_set_errno(vm->tab_registers, EINVAL))
             return -1;
-        }
     {
         int nb = (req[offset + 3] << 8) + req[offset + 4];
         uint16_t address_write = (req[offset + 5] << 8) + req[offset + 6];
