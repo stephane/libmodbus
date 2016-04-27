@@ -709,8 +709,6 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
     case MODBUS_FC_READ_DISCRETE_INPUTS: {
         const unsigned coil = (function == MODBUS_FC_READ_COILS);
         char const * const fn_name = coil ? "read_bits" : "read_input_bits";
-        /* Similar to coil status (but too many arguments to use a
-         * function) */
         int nb = (req[offset + 3] << 8) + req[offset + 4];
 
         if (nb < 1 || MODBUS_MAX_READ_BITS < nb) {
@@ -753,18 +751,25 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
     }
         break;
     case MODBUS_FC_READ_HOLDING_REGISTERS:
-        if(!vm->tab_registers) {
+    case MODBUS_FC_READ_INPUT_REGISTERS: {
+        const unsigned is_input = MODBUS_FC_READ_INPUT_REGISTERS == function;
+        char const*const name
+            = is_input ? "read_input_registers": "read_holding_registers";
+        uint16_t* (*get_fn)(void*, int, int)
+            = is_input ? vm->tab_input_registers:vm->tab_registers;
+
+        const int nb = (req[offset + 3] << 8) + req[offset + 4];
+
+        if(!get_fn) {
             errno = EINVAL;
             return -1;
         }
-    {
-        int nb = (req[offset + 3] << 8) + req[offset + 4];
 
         if (nb < 1 || MODBUS_MAX_READ_REGISTERS < nb) {
             if (ctx->debug) {
                 fprintf(stderr,
-                        "Illegal nb of values %d in read_holding_registers (max %d)\n",
-                        nb, MODBUS_MAX_READ_REGISTERS);
+                        "Illegal nb of values %d in %s (max %d)\n",
+                        nb, name, MODBUS_MAX_READ_REGISTERS);
             }
             _sleep_response_timeout(ctx);
             modbus_flush(ctx);
@@ -772,54 +777,10 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
                 ctx, &sft,
                 MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp);
         } else {
-            uint16_t* source = vm->tab_registers(vm->app, address, nb);
+            uint16_t* source = get_fn(vm->app, address, nb);
             if(!source) {
                 if (ctx->debug) {
                     fprintf(stderr, "Illegal data address 0x%0X in read_registers\n",
-                            address);
-                }
-                rsp_length = response_exception(
-                        ctx, &sft,
-                        MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
-            } else {
-                int i;
-
-                rsp_length = ctx->backend->build_response_basis(&sft, rsp);
-                rsp[rsp_length++] = nb << 1;
-                for (i = 0; i < nb; i++) {
-                    rsp[rsp_length++] = source[i] >> 8;
-                    rsp[rsp_length++] = source[i] & 0xFF;
-                }
-            }
-        }
-    }
-        break;
-    case MODBUS_FC_READ_INPUT_REGISTERS:
-        if(!vm->tab_input_registers) {
-            errno = EINVAL;
-            return -1;
-        }
-    {
-        /* Similar to holding registers (but too many arguments to use a
-         * function) */
-        int nb = (req[offset + 3] << 8) + req[offset + 4];
-
-        if (nb < 1 || MODBUS_MAX_READ_REGISTERS < nb) {
-            if (ctx->debug) {
-                fprintf(stderr,
-                        "Illegal number of values %d in read_input_registers (max %d)\n",
-                        nb, MODBUS_MAX_READ_REGISTERS);
-            }
-            _sleep_response_timeout(ctx);
-            modbus_flush(ctx);
-            rsp_length = response_exception(
-                ctx, &sft,
-                MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp);
-        } else {
-            uint16_t* source = vm->tab_input_registers(vm->app, address, nb);
-            if(!source) {
-                if (ctx->debug) {
-                    fprintf(stderr, "Illegal data address 0x%0X in read_input_registers\n",
                             address);
                 }
                 rsp_length = response_exception(
