@@ -795,11 +795,15 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
         }
     }
         break;
-    case MODBUS_FC_READ_INPUT_REGISTERS: {
+    case MODBUS_FC_READ_INPUT_REGISTERS:
+        if(!vm->tab_input_registers) {
+            errno = EINVAL;
+            return -1;
+        }
+    {
         /* Similar to holding registers (but too many arguments to use a
          * function) */
         int nb = (req[offset + 3] << 8) + req[offset + 4];
-        int addr = address - mb_mapping->offset_input_registers;
 
         if (nb < 1 || MODBUS_MAX_READ_REGISTERS < nb) {
             if (ctx->debug) {
@@ -812,22 +816,25 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
             rsp_length = response_exception(
                 ctx, &sft,
                 MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp);
-        } else if (address < mb_mapping->offset_input_registers || (addr + nb) > mb_mapping->nb_input_registers) {
-            if (ctx->debug) {
-                fprintf(stderr, "Illegal data address 0x%0X in read_input_registers\n",
-                        address < mb_mapping->offset_input_registers ? address : address + nb);
-            }
-            rsp_length = response_exception(
-                ctx, &sft,
-                MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
         } else {
-            int i;
+            uint16_t* source = vm->tab_input_registers(vm->app, address, nb);
+            if(!source) {
+                if (ctx->debug) {
+                    fprintf(stderr, "Illegal data address 0x%0X in read_input_registers\n",
+                            address < mb_mapping->offset_input_registers ? address : address + nb);
+                }
+                rsp_length = response_exception(
+                        ctx, &sft,
+                        MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
+            } else {
+                int i;
 
-            rsp_length = ctx->backend->build_response_basis(&sft, rsp);
-            rsp[rsp_length++] = nb << 1;
-            for (i = addr; i < addr + nb; i++) {
-                rsp[rsp_length++] = mb_mapping->tab_input_registers[i] >> 8;
-                rsp[rsp_length++] = mb_mapping->tab_input_registers[i] & 0xFF;
+                rsp_length = ctx->backend->build_response_basis(&sft, rsp);
+                rsp[rsp_length++] = nb << 1;
+                for (i = 0; i < nb; i++) {
+                    rsp[rsp_length++] = source[i] >> 8;
+                    rsp[rsp_length++] = source[i] & 0xFF;
+                }
             }
         }
     }
