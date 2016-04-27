@@ -16,6 +16,7 @@
 #ifndef _MSC_VER
 #include <unistd.h>
 #endif
+#include <stdarg.h>
 
 #include <config.h>
 
@@ -657,9 +658,32 @@ static int response_io_status(int nb,
 }
 
 /* Build the exception response */
+#ifdef __GNUC__
 static int response_exception(modbus_t *ctx, sft_t *sft,
-                              int exception_code, uint8_t *rsp)
+                              int exception_code, uint8_t *rsp,
+                              unsigned perform_flush, const char* format, ...)
+                              __attribute__ ((format (printf, 6, 7)));
+#endif
+
+static int response_exception(modbus_t *ctx, sft_t *sft,
+                              int exception_code, uint8_t *rsp,
+                              unsigned perform_flush, const char* format, ...)
 {
+    if (ctx->debug) {
+        va_list ap;
+        va_start(ap, format);
+        vfprintf(stderr, format, ap);
+        va_end(ap);
+    }
+
+    if(perform_flush) {
+        /* May be the indication has been truncated on reading because of
+         * invalid address (eg. nb is 0 but the request contains values to
+         * write) so it's necessary to flush. */
+        _sleep_response_timeout(ctx);
+        modbus_flush(ctx);
+    }
+
     int rsp_length;
 
     sft->function = sft->function + 0x80;
@@ -719,21 +743,15 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
         int nb = (req[offset + 3] << 8) + req[offset + 4];
 
         if (nb < 1 || MODBUS_MAX_READ_BITS < nb) {
-            if (ctx->debug) {
-                fprintf(stderr,
-                        "Illegal nb of values %d in %s (max %d)\n",
-                        nb, fn_name, MODBUS_MAX_READ_BITS);
-            }
-            _sleep_response_timeout(ctx);
-            modbus_flush(ctx);
             rsp_length = response_exception(
                 ctx, &sft,
-                MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp);
+                MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, 1,
+                "Illegal nb of values %d in %s (max %d)\n", nb, fn_name, MODBUS_MAX_READ_BITS);
         } else {
             uint8_t* (*get_fn)(void*, int, int)
                 = coil? vm->tab_bits : vm->tab_input_bits;
 
-            if(!assure_or_set_errno(get_fn, EINVAL))
+            if(!assure_or_set_errno(!!get_fn, EINVAL))
                 return -1;
 
             uint8_t* data = get_fn(vm->app, address, nb);
@@ -744,14 +762,11 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
                                                 data,
                                                 rsp, rsp_length);
             } else {
-                if(ctx->debug) {
-                    fprintf(stderr, "Virtual mapping failed for %d Bits,"
-                                    " starting at address 0x%X"
-                                    " for function %s\n", address, nb, fn_name);
-                }
-                rsp_length = response_exception(
-                    ctx, &sft,
-                    MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
+                rsp_length = response_exception(ctx, &sft,
+                    MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp, 0,
+                    "Virtual mapping failed for %d Bits,"
+                    " starting at address 0x%X"
+                    " for function %s\n", address, nb, fn_name);
             }
         }
     }
@@ -766,30 +781,23 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
 
         const int nb = (req[offset + 3] << 8) + req[offset + 4];
 
-        if(!assure_or_set_errno(get_fn, EINVAL))
+        if(!assure_or_set_errno(!!get_fn, EINVAL))
             return -1;
 
         if (nb < 1 || MODBUS_MAX_READ_REGISTERS < nb) {
-            if (ctx->debug) {
-                fprintf(stderr,
-                        "Illegal nb of values %d in %s (max %d)\n",
-                        nb, name, MODBUS_MAX_READ_REGISTERS);
-            }
-            _sleep_response_timeout(ctx);
-            modbus_flush(ctx);
             rsp_length = response_exception(
                 ctx, &sft,
-                MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp);
+                MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, 1,
+                "Illegal nb of values %d in %s (max %d)\n",
+                nb, name, MODBUS_MAX_READ_REGISTERS);
         } else {
             uint16_t* source = get_fn(vm->app, address, nb);
             if(!source) {
-                if (ctx->debug) {
-                    fprintf(stderr, "Illegal data address 0x%0X in read_registers\n",
-                            address);
-                }
                 rsp_length = response_exception(
                         ctx, &sft,
-                        MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
+                        MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp, 0,
+                        "Illegal data address 0x%0X in read_registers\n",
+                        address);
             } else {
                 int i;
 
@@ -804,18 +812,15 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
     }
         break;
     case MODBUS_FC_WRITE_SINGLE_COIL:
-        if(!assure_or_set_errno(vm->tab_bits, EINVAL))
+        if(!assure_or_set_errno(!!vm->tab_bits, EINVAL))
             return -1;
     {
         uint8_t* dest = vm->tab_bits(vm->app, address, 1);
         if(!dest) {
-            if (ctx->debug) {
-                fprintf(stderr,
-                        "Illegal data address 0x%0X in write_bit\n", address);
-            }
             rsp_length = response_exception(
                 ctx, &sft,
-                MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
+                MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp, 0,
+                "Illegal data address 0x%0X in write_bit\n", address);
         } else {
             const int data = (req[offset + 3] << 8) + req[offset + 4];
 
@@ -824,31 +829,26 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
                 memcpy(rsp, req, req_length);
                 rsp_length = req_length;
             } else {
-                if (ctx->debug) {
-                    fprintf(stderr,
-                            "Illegal data value 0x%0X in write_bit request at address %0X\n",
-                            data, address);
-                }
                 rsp_length = response_exception(
                     ctx, &sft,
-                    MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp);
+                    MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, 0,
+                    "Illegal data value 0x%0X in write_bit request at address %0X\n",
+                    data, address);
             }
         }
     }
         break;
     case MODBUS_FC_WRITE_SINGLE_REGISTER:
-        if(!assure_or_set_errno(vm->tab_registers, EINVAL))
+        if(!assure_or_set_errno(!!vm->tab_registers, EINVAL))
             return -1;
     {
         uint16_t* dest = vm->tab_registers(vm->app, address, 1);
         if (!dest) {
-            if (ctx->debug) {
-                fprintf(stderr, "Illegal data address 0x%0X in write_register\n",
-                        address);
-            }
             rsp_length = response_exception(
                 ctx, &sft,
-                MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
+                MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp, 0,
+                "Illegal data address 0x%0X in write_register\n",
+                address);
         } else {
             int data = (req[offset + 3] << 8) + req[offset + 4];
 
@@ -861,33 +861,22 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
     case MODBUS_FC_WRITE_MULTIPLE_COILS: {
         int nb = (req[offset + 3] << 8) + req[offset + 4];
 
-        if(!assure_or_set_errno(vm->tab_bits, EINVAL))
+        if(!assure_or_set_errno(!!vm->tab_bits, EINVAL))
             return -1;
 
         if (nb < 1 || MODBUS_MAX_WRITE_BITS < nb) {
-            if (ctx->debug) {
-                fprintf(stderr,
-                        "Illegal number of values %d in write_bits (max %d)\n",
-                        nb, MODBUS_MAX_WRITE_BITS);
-            }
-            /* May be the indication has been truncated on reading because of
-             * invalid address (eg. nb is 0 but the request contains values to
-             * write) so it's necessary to flush. */
-            _sleep_response_timeout(ctx);
-            modbus_flush(ctx);
             rsp_length = response_exception(
                 ctx, &sft,
-                MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp);
+                MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, 1,
+                "Illegal number of values %d in write_bits (max %d)\n",
+                nb, MODBUS_MAX_WRITE_BITS);
         } else {
             uint8_t* dest = vm->tab_bits(vm->app, address, nb);
-            if(!dest)
-            {
-                if (ctx->debug) {
-                    fprintf(stderr, "Illegal data address 0x%0X in write_bits\n", address);
-                }
+            if(!dest) {
                 rsp_length = response_exception(
                     ctx, &sft,
-                    MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
+                    MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp, 0,
+                    "Illegal data address 0x%0X in write_bits\n", address);
             } else {
                 /* 6 = byte count */
                 modbus_set_bits_from_bytes(dest, 0, nb, &req[offset + 6]);
@@ -901,35 +890,25 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
     }
         break;
     case MODBUS_FC_WRITE_MULTIPLE_REGISTERS:
-        if(!assure_or_set_errno(vm->tab_registers, EINVAL))
+        if(!assure_or_set_errno(!!vm->tab_registers, EINVAL))
             return -1;
     {
         int nb = (req[offset + 3] << 8) + req[offset + 4];
 
         if (nb < 1 || MODBUS_MAX_WRITE_REGISTERS < nb) {
-            if (ctx->debug) {
-                fprintf(stderr,
-                        "Illegal number of values %d in write_registers (max %d)\n",
-                        nb, MODBUS_MAX_WRITE_REGISTERS);
-            }
-            /* May be the indication has been truncated on reading because of
-             * invalid address (eg. nb is 0 but the request contains values to
-             * write) so it's necessary to flush. */
-            _sleep_response_timeout(ctx);
-            modbus_flush(ctx);
             rsp_length = response_exception(
                 ctx, &sft,
-                MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp);
+                MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, 1,
+                "Illegal number of values %d in write_registers (max %d)\n",
+                nb, MODBUS_MAX_WRITE_REGISTERS);
         } else {
             uint16_t* dest = vm->tab_registers(vm->app, address, nb);
             if(!dest) {
-                if (ctx->debug) {
-                    fprintf(stderr, "Illegal data address 0x%0X in write_registers\n",
-                            address);
-                }
                 rsp_length = response_exception(
                         ctx, &sft,
-                        MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
+                        MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp, 0,
+                        "Illegal data address 0x%0X in write_registers\n",
+                        address);
             } else {
                 int i, j;
                 for (i = 0, j = 6; i < nb; i++, j += 2) {
@@ -970,18 +949,16 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
         return -1;
         break;
     case MODBUS_FC_MASK_WRITE_REGISTER:
-        if(!assure_or_set_errno(vm->tab_registers, EINVAL))
+        if(!assure_or_set_errno(!!vm->tab_registers, EINVAL))
             return -1;
     {
         uint16_t* dest = vm->tab_registers(vm->app, address, 1);
         if (!dest) {
-            if (ctx->debug) {
-                fprintf(stderr, "Illegal data address 0x%0X in write_register\n",
-                        address);
-            }
             rsp_length = response_exception(
                 ctx, &sft,
-                MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
+                MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp, 0,
+                "Illegal data address 0x%0X in write_register\n",
+                address);
         } else {
             uint16_t data = *dest;
             uint16_t and = (req[offset + 3] << 8) + req[offset + 4];
@@ -995,7 +972,7 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
     }
         break;
     case MODBUS_FC_WRITE_AND_READ_REGISTERS:
-        if(!assure_or_set_errno(vm->tab_registers, EINVAL))
+        if(!assure_or_set_errno(!!vm->tab_registers, EINVAL))
             return -1;
     {
         int nb = (req[offset + 3] << 8) + req[offset + 4];
@@ -1006,29 +983,21 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
         if (nb_write < 1 || MODBUS_MAX_WR_WRITE_REGISTERS < nb_write ||
             nb < 1 || MODBUS_MAX_WR_READ_REGISTERS < nb ||
             nb_write_bytes != nb_write * 2) {
-            if (ctx->debug) {
-                fprintf(stderr,
-                        "Illegal nb of values (W%d, R%d) in write_and_read_registers (max W%d, R%d)\n",
-                        nb_write, nb,
-                        MODBUS_MAX_WR_WRITE_REGISTERS, MODBUS_MAX_WR_READ_REGISTERS);
-            }
-            _sleep_response_timeout(ctx);
-            modbus_flush(ctx);
             rsp_length = response_exception(
                 ctx, &sft,
-                MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp);
+                MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, 1,
+                "Illegal nb of values (W%d, R%d) in write_and_read_registers (max W%d, R%d)\n",
+                nb_write, nb,
+                MODBUS_MAX_WR_WRITE_REGISTERS, MODBUS_MAX_WR_READ_REGISTERS);
         } else {
             uint16_t* read = vm->tab_registers(vm->app, address, nb);
             uint16_t* write = vm->tab_registers(vm->app, address_write, nb_write);
             if(!(read && write)) {
-                if (ctx->debug) {
-                    fprintf(stderr,
-                            "Illegal data read address 0x%0X or write address 0x%0X"
-                            " write_and_read_registers\n",
-                            address, address_write);
-                }
                 rsp_length = response_exception(ctx, &sft,
-                        MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp);
+                        MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp, 0,
+                        "Illegal data read address 0x%0X or write address 0x%0X"
+                        " write_and_read_registers\n",
+                        address, address_write);
             } else {
                 int i, j;
                 rsp_length = ctx->backend->build_response_basis(&sft, rsp);
@@ -1054,7 +1023,8 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
     default:
         rsp_length = response_exception(ctx, &sft,
                                         MODBUS_EXCEPTION_ILLEGAL_FUNCTION,
-                                        rsp);
+                                        rsp, 0, "Illegal function code: %d\n",
+                                        function);
         break;
     }
 
