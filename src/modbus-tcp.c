@@ -854,7 +854,7 @@ modbus_t* modbus_new_tcp_pi(const char *node, const char *service)
 
     if (node == NULL) {
         /* The node argument can be empty to indicate any hosts */
-        ctx_tcp_pi->node[0] = '0';
+        ctx_tcp_pi->node[0] = 0;
     } else {
         dest_size = sizeof(char) * _MODBUS_TCP_PI_NODE_LENGTH;
         ret_size = strlcpy(ctx_tcp_pi->node, node, dest_size);
