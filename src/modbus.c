@@ -748,19 +748,23 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
                 MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, 1,
                 "Illegal nb of values %d in %s (max %d)\n", nb, fn_name, MODBUS_MAX_READ_BITS);
         } else {
-            uint8_t* (*get_fn)(void*, int, int)
+            uint8_t* (*get_fn)(void*, int, int, modbus_vmap_reason)
                 = coil? vm->tab_bits : vm->tab_input_bits;
+            void (*done_fn)(void*, uint8_t*, int, int, modbus_vmap_reason)
+                = coil? vm->tab_bits_done : vm->tab_input_bits_done;
 
             if(!assure_or_set_errno(!!get_fn, EINVAL))
                 return -1;
 
-            uint8_t* data = get_fn(vm->app, address, nb);
+            uint8_t* data = get_fn(vm->app, address, nb, MODBUS_VMAP_READ);
             if(data) {
                 rsp_length = ctx->backend->build_response_basis(&sft, rsp);
                 rsp[rsp_length++] = (nb / 8) + ((nb % 8) ? 1 : 0);
                 rsp_length = response_io_status(nb,
                                                 data,
                                                 rsp, rsp_length);
+                if(done_fn)
+                    done_fn(vm->app, data, address, nb, MODBUS_VMAP_READ);
             } else {
                 rsp_length = response_exception(ctx, &sft,
                     MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp, 0,
@@ -776,8 +780,10 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
         const unsigned is_input = MODBUS_FC_READ_INPUT_REGISTERS == function;
         char const*const name
             = is_input ? "read_input_registers": "read_holding_registers";
-        uint16_t* (*get_fn)(void*, int, int)
+        uint16_t* (*get_fn)(void*, int, int, modbus_vmap_reason)
             = is_input ? vm->tab_input_registers:vm->tab_registers;
+        void (*done_fn)(void*, uint16_t*, int, int, modbus_vmap_reason)
+            = is_input ? vm->tab_input_registers_done: vm->tab_registers_done;
 
         const int nb = (req[offset + 3] << 8) + req[offset + 4];
 
@@ -791,7 +797,7 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
                 "Illegal nb of values %d in %s (max %d)\n",
                 nb, name, MODBUS_MAX_READ_REGISTERS);
         } else {
-            uint16_t* source = get_fn(vm->app, address, nb);
+            uint16_t* source = get_fn(vm->app, address, nb, MODBUS_VMAP_READ);
             if(!source) {
                 rsp_length = response_exception(
                         ctx, &sft,
@@ -807,6 +813,8 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
                     rsp[rsp_length++] = source[i] >> 8;
                     rsp[rsp_length++] = source[i] & 0xFF;
                 }
+                if(done_fn)
+                    done_fn(vm->app, source, address, nb, MODBUS_VMAP_READ);
             }
         }
     }
@@ -815,7 +823,7 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
         if(!assure_or_set_errno(!!vm->tab_bits, EINVAL))
             return -1;
     {
-        uint8_t* dest = vm->tab_bits(vm->app, address, 1);
+        uint8_t* dest = vm->tab_bits(vm->app, address, 1, MODBUS_VMAP_WRITE);
         if(!dest) {
             rsp_length = response_exception(
                 ctx, &sft,
@@ -835,6 +843,8 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
                     "Illegal data value 0x%0X in write_bit request at address %0X\n",
                     data, address);
             }
+            if(vm->tab_bits_done)
+                vm->tab_bits_done(vm->app, dest, address, 1, MODBUS_VMAP_WRITE);
         }
     }
         break;
@@ -842,7 +852,7 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
         if(!assure_or_set_errno(!!vm->tab_registers, EINVAL))
             return -1;
     {
-        uint16_t* dest = vm->tab_registers(vm->app, address, 1);
+        uint16_t* dest = vm->tab_registers(vm->app, address, 1, MODBUS_VMAP_WRITE);
         if (!dest) {
             rsp_length = response_exception(
                 ctx, &sft,
@@ -855,6 +865,8 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
             *dest = data;
             memcpy(rsp, req, req_length);
             rsp_length = req_length;
+            if(vm->tab_registers_done)
+                vm->tab_registers_done(vm->app, dest, address, 1, MODBUS_VMAP_WRITE);
         }
     }
         break;
@@ -871,7 +883,7 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
                 "Illegal number of values %d in write_bits (max %d)\n",
                 nb, MODBUS_MAX_WRITE_BITS);
         } else {
-            uint8_t* dest = vm->tab_bits(vm->app, address, nb);
+            uint8_t* dest = vm->tab_bits(vm->app, address, nb, MODBUS_VMAP_WRITE);
             if(!dest) {
                 rsp_length = response_exception(
                     ctx, &sft,
@@ -885,6 +897,8 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
                 /* 4 to copy the bit address (2) and the quantity of bits */
                 memcpy(rsp + rsp_length, req + rsp_length, 4);
                 rsp_length += 4;
+                if(vm->tab_bits_done)
+                    vm->tab_bits_done(vm->app, dest, address, nb, MODBUS_VMAP_WRITE);
             }
         }
     }
@@ -902,7 +916,7 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
                 "Illegal number of values %d in write_registers (max %d)\n",
                 nb, MODBUS_MAX_WRITE_REGISTERS);
         } else {
-            uint16_t* dest = vm->tab_registers(vm->app, address, nb);
+            uint16_t* dest = vm->tab_registers(vm->app, address, nb, MODBUS_VMAP_WRITE);
             if(!dest) {
                 rsp_length = response_exception(
                         ctx, &sft,
@@ -920,6 +934,8 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
                 /* 4 to copy the address (2) and the no. of registers */
                 memcpy(rsp + rsp_length, req + rsp_length, 4);
                 rsp_length += 4;
+                if(vm->tab_registers_done)
+                    vm->tab_registers_done(vm->app, dest, address, nb, MODBUS_VMAP_WRITE);
             }
         }
     }
@@ -952,7 +968,7 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
         if(!assure_or_set_errno(!!vm->tab_registers, EINVAL))
             return -1;
     {
-        uint16_t* dest = vm->tab_registers(vm->app, address, 1);
+        uint16_t* dest = vm->tab_registers(vm->app, address, 1, MODBUS_VMAP_WRITE);
         if (!dest) {
             rsp_length = response_exception(
                 ctx, &sft,
@@ -968,6 +984,8 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
             *dest = data;
             memcpy(rsp, req, req_length);
             rsp_length = req_length;
+            if(vm->tab_registers_done)
+                vm->tab_registers_done(vm->app, dest, address, 1, MODBUS_VMAP_WRITE);
         }
     }
         break;
@@ -990,8 +1008,10 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
                 nb_write, nb,
                 MODBUS_MAX_WR_WRITE_REGISTERS, MODBUS_MAX_WR_READ_REGISTERS);
         } else {
-            uint16_t* read = vm->tab_registers(vm->app, address, nb);
-            uint16_t* write = vm->tab_registers(vm->app, address_write, nb_write);
+            uint16_t* read = vm->tab_registers(vm->app, address, nb,
+                                               MODBUS_VMAP_READ);
+            uint16_t* write = vm->tab_registers(vm->app, address_write,
+                                                nb_write, MODBUS_VMAP_WRITE);
             if(!(read && write)) {
                 rsp_length = response_exception(ctx, &sft,
                         MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp, 0,
@@ -1014,6 +1034,12 @@ int modbus_virt_reply(modbus_t *ctx, const uint8_t *req,
                     const uint16_t to_send = read[i];
                     rsp[rsp_length++] = to_send >> 8;
                     rsp[rsp_length++] = to_send & 0xFF;
+                }
+                if(vm->tab_registers_done) {
+                    vm->tab_registers_done(vm->app, read, address, nb,
+                                           MODBUS_VMAP_READ);
+                    vm->tab_registers_done(vm->app, write, address, nb,
+                                           MODBUS_VMAP_WRITE);
                 }
             }
         }
