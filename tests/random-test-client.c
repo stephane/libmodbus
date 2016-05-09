@@ -86,7 +86,7 @@ int main(void)
 
     nb_loop = nb_fail = 0;
     while (nb_loop++ < LOOP) {
-        for (addr = ADDRESS_START; addr <= ADDRESS_END; addr++) {
+        for (addr = ADDRESS_START; addr < ADDRESS_END; addr++) {
             int i;
 
             /* Random numbers (short) */
