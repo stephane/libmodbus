@@ -156,13 +156,13 @@ typedef struct _modbus modbus_t;
 
 typedef struct {
     int nb_bits;
-    int offset_bits;
+    int start_bits;
     int nb_input_bits;
-    int offset_input_bits;
+    int start_input_bits;
     int nb_input_registers;
-    int offset_input_registers;
+    int start_input_registers;
     int nb_registers;
-    int offset_registers;
+    int start_registers;
     uint8_t *tab_bits;
     uint8_t *tab_input_bits;
     uint16_t *tab_input_registers;
@@ -213,12 +213,14 @@ MODBUS_API int modbus_write_and_read_registers(modbus_t *ctx, int write_addr, in
                                                uint16_t *dest);
 MODBUS_API int modbus_report_slave_id(modbus_t *ctx, int max_dest, uint8_t *dest);
 
-MODBUS_API modbus_mapping_t* modbus_mapping_offset_new(int nb_bits, int offset_bits,
-                                            int nb_input_bits, int offset_input_bits,
-                                            int nb_registers, int offset_registers,
-                                            int nb_input_registers, int offset_input_registers);
+MODBUS_API modbus_mapping_t* modbus_mapping_new_start_address(
+    unsigned int start_bits, unsigned int nb_bits,
+    unsigned int start_input_bits, unsigned int nb_input_bits,
+    unsigned int start_registers, unsigned int nb_registers,
+    unsigned int start_input_registers, unsigned int nb_input_registers);
+
 MODBUS_API modbus_mapping_t* modbus_mapping_new(int nb_bits, int nb_input_bits,
-                                            int nb_registers, int nb_input_registers);
+                                                int nb_registers, int nb_input_registers);
 MODBUS_API void modbus_mapping_free(modbus_mapping_t *mb_mapping);
 
 MODBUS_API int modbus_send_raw_request(modbus_t *ctx, uint8_t *raw_req, int raw_req_length);
