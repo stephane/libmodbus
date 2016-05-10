@@ -146,8 +146,7 @@ int main(int argc, char *argv[])
         uint8_t tab_value[UT_BITS_NB];
 
         modbus_set_bits_from_bytes(tab_value, 0, UT_BITS_NB, UT_BITS_TAB);
-        rc = modbus_write_bits(ctx, UT_BITS_ADDRESS,
-                               UT_BITS_NB, tab_value);
+        rc = modbus_write_bits(ctx, UT_BITS_ADDRESS, UT_BITS_NB, tab_value);
         printf("1/2 modbus_write_bits: ");
         ASSERT_TRUE(rc == UT_BITS_NB, "");
     }
@@ -325,7 +324,7 @@ int main(int argc, char *argv[])
     ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
 
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
-                               UT_REGISTERS_NB + 1, tab_rp_registers);
+                               UT_REGISTERS_NB_MAX + 1, tab_rp_registers);
     printf("* modbus_read_registers: ");
     ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
 
@@ -344,12 +343,12 @@ int main(int argc, char *argv[])
     printf("* modbus_write_coils: ");
     ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
 
-    rc = modbus_write_register(ctx, UT_REGISTERS_ADDRESS + UT_REGISTERS_NB,
+    rc = modbus_write_register(ctx, UT_REGISTERS_ADDRESS + UT_REGISTERS_NB_MAX,
                                 tab_rp_registers[0]);
     printf("* modbus_write_register: ");
     ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
 
-    rc = modbus_write_registers(ctx, UT_REGISTERS_ADDRESS + UT_REGISTERS_NB,
+    rc = modbus_write_registers(ctx, UT_REGISTERS_ADDRESS + UT_REGISTERS_NB_MAX,
                                UT_REGISTERS_NB, tab_rp_registers);
     printf("* modbus_write_registers: ");
     ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
@@ -639,8 +638,10 @@ int test_server(modbus_t *ctx, int use_backend)
     uint8_t read_raw_req[] = {
         /* slave */
         (use_backend == RTU) ? SERVER_ID : 0xFF,
-        /* function, addr 1, 5 values */
-        MODBUS_FC_READ_HOLDING_REGISTERS, 0x00, 0x01, 0x0, 0x05
+        /* function, address, 5 values */
+        MODBUS_FC_READ_HOLDING_REGISTERS,
+        UT_REGISTERS_ADDRESS >> 8, UT_REGISTERS_ADDRESS & 0xFF,
+        0x0, 0x05
     };
     /* Write and read registers request */
     const int RW_RAW_REQ_LEN = 13;
@@ -650,7 +651,7 @@ int test_server(modbus_t *ctx, int use_backend)
         /* function, addr to read, nb to read */
         MODBUS_FC_WRITE_AND_READ_REGISTERS,
         /* Read */
-        0, 0,
+        UT_REGISTERS_ADDRESS >> 8, UT_REGISTERS_ADDRESS & 0xFF,
         (MODBUS_MAX_WR_READ_REGISTERS + 1) >> 8,
         (MODBUS_MAX_WR_READ_REGISTERS + 1) & 0xFF,
         /* Write */
@@ -668,8 +669,7 @@ int test_server(modbus_t *ctx, int use_backend)
         /* function will be set in the loop */
         MODBUS_FC_WRITE_MULTIPLE_REGISTERS,
         /* Address */
-        UT_REGISTERS_ADDRESS >> 8,
-        UT_REGISTERS_ADDRESS & 0xFF,
+        UT_REGISTERS_ADDRESS >> 8, UT_REGISTERS_ADDRESS & 0xFF,
         /* 3 values, 6 bytes */
         0x00, 0x03, 0x06,
         /* Dummy data to write */
@@ -711,8 +711,7 @@ int test_server(modbus_t *ctx, int use_backend)
     ASSERT_TRUE(rc == (backend_length + 12), "FAILED (%d)\n", rc);
 
     /* Try to read more values than a response could hold for all data
-     * types.
-     */
+       types. */
     for (i=0; i<4; i++) {
         rc = send_crafted_request(ctx, tab_read_function[i],
                                   read_raw_req, READ_RAW_REQ_LEN,
