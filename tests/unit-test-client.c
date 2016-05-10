@@ -311,46 +311,99 @@ int main(int argc, char *argv[])
     /** ILLEGAL DATA ADDRESS **/
     printf("\nTEST ILLEGAL DATA ADDRESS:\n");
 
-    /* The mapping begins at 0 and ends at address + nb_points so
-     * the addresses are not valid. */
+    /* The mapping begins at the defined addresses and ends at address +
+     * nb_points so these addresses are not valid. */
+
+    rc = modbus_read_bits(ctx, 0, 1, tab_rp_bits);
+    printf("* modbus_read_bits (0): ");
+    ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
 
     rc = modbus_read_bits(ctx, UT_BITS_ADDRESS, UT_BITS_NB + 1, tab_rp_bits);
-    printf("* modbus_read_bits: ");
+    printf("* modbus_read_bits (max): ");
+    ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
+
+    rc = modbus_read_input_bits(ctx, 0, 1, tab_rp_bits);
+    printf("* modbus_read_input_bits (0): ");
     ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
 
     rc = modbus_read_input_bits(ctx, UT_INPUT_BITS_ADDRESS,
                                 UT_INPUT_BITS_NB + 1, tab_rp_bits);
-    printf("* modbus_read_input_bits: ");
+    printf("* modbus_read_input_bits (max): ");
+    ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
+
+    rc = modbus_read_registers(ctx, 0, 1, tab_rp_registers);
+    printf("* modbus_read_registers (0): ");
     ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
 
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
                                UT_REGISTERS_NB_MAX + 1, tab_rp_registers);
-    printf("* modbus_read_registers: ");
+    printf("* modbus_read_registers (max): ");
+    ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
+
+    rc = modbus_read_input_registers(ctx, 0, 1, tab_rp_registers);
+    printf("* modbus_read_input_registers (0): ");
     ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
 
     rc = modbus_read_input_registers(ctx, UT_INPUT_REGISTERS_ADDRESS,
                                      UT_INPUT_REGISTERS_NB + 1,
                                      tab_rp_registers);
-    printf("* modbus_read_input_registers: ");
+    printf("* modbus_read_input_registers (max): ");
+    ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
+
+    rc = modbus_write_bit(ctx, 0, ON);
+    printf("* modbus_write_bit (0): ");
     ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
 
     rc = modbus_write_bit(ctx, UT_BITS_ADDRESS + UT_BITS_NB, ON);
-    printf("* modbus_write_bit: ");
+    printf("* modbus_write_bit (max): ");
+    ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
+
+    rc = modbus_write_bits(ctx, 0, 1, tab_rp_bits);
+    printf("* modbus_write_coils (0): ");
     ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
 
     rc = modbus_write_bits(ctx, UT_BITS_ADDRESS + UT_BITS_NB,
                            UT_BITS_NB, tab_rp_bits);
-    printf("* modbus_write_coils: ");
+    printf("* modbus_write_coils (max): ");
+    ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
+
+    rc = modbus_write_register(ctx, 0, tab_rp_registers[0]);
+    printf("* modbus_write_register (0): ");
     ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
 
     rc = modbus_write_register(ctx, UT_REGISTERS_ADDRESS + UT_REGISTERS_NB_MAX,
                                 tab_rp_registers[0]);
-    printf("* modbus_write_register: ");
+    printf("* modbus_write_register (max): ");
+    ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
+
+    rc = modbus_write_registers(ctx, 0, 1, tab_rp_registers);
+    printf("* modbus_write_registers (0): ");
     ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
 
     rc = modbus_write_registers(ctx, UT_REGISTERS_ADDRESS + UT_REGISTERS_NB_MAX,
-                               UT_REGISTERS_NB, tab_rp_registers);
-    printf("* modbus_write_registers: ");
+                                UT_REGISTERS_NB, tab_rp_registers);
+    printf("* modbus_write_registers (max): ");
+    ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
+
+    rc = modbus_mask_write_register(ctx, 0, 0xF2, 0x25);
+    printf("* modbus_mask_write_registers (0): ");
+    ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
+
+    rc = modbus_mask_write_register(ctx, UT_REGISTERS_ADDRESS + UT_REGISTERS_NB_MAX,
+                                    0xF2, 0x25);
+    printf("* modbus_mask_write_registers (max): ");
+    ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
+
+    rc = modbus_write_and_read_registers(ctx, 0, 1, tab_rp_registers, 0, 1, tab_rp_registers);
+    printf("* modbus_write_and_read_registers (0): ");
+    ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
+
+    rc = modbus_write_and_read_registers(ctx,
+                                         UT_REGISTERS_ADDRESS + UT_REGISTERS_NB_MAX,
+                                         UT_REGISTERS_NB, tab_rp_registers,
+                                         UT_REGISTERS_ADDRESS + UT_REGISTERS_NB_MAX,
+                                         UT_REGISTERS_NB, tab_rp_registers);
+    printf("* modbus_write_and_read_registers (max): ");
     ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
 
     /** TOO MANY DATA **/
