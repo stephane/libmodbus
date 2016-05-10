@@ -18,8 +18,9 @@ The *modbus_mapping_new()* function shall allocate four arrays to store bits,
 input bits, registers and inputs registers. The pointers are stored in
 modbus_mapping_t structure. All values of the arrays are initialized to zero.
 
-This function is equivalent to a call of the _modbus_mapping_offset_new()_ function
-with all offsets set to zero.
+This function is equivalent to a call of the
+linkmb:modbus_mapping_new_start_address[3] function with all start addresses to
+`0`.
 
 If it isn't necessary to allocate an array for a specific type of data, you can
 pass the zero value in argument, the associated pointer will be NULL.
@@ -59,6 +60,7 @@ if (mb_mapping == NULL) {
 SEE ALSO
 --------
 linkmb:modbus_mapping_free[3]
+linkmb:modbus_mapping_new_start_address[3]
 
 
 AUTHORS
