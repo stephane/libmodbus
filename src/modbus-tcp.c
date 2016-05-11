@@ -225,7 +225,6 @@ static int _modbus_tcp_set_ipv4_options(int s)
     /* If the OS does not offer SOCK_NONBLOCK, fall back to setting FIONBIO to
      * make sockets non-blocking */
     /* Do not care about the return value, this is optional */
-    option = 1;
 #if !defined(SOCK_NONBLOCK) && defined(FIONBIO)
 #ifdef OS_WIN32
     {
@@ -234,6 +233,7 @@ static int _modbus_tcp_set_ipv4_options(int s)
         ioctlsocket(s, FIONBIO, &loption);
     }
 #else
+    option = 1;
     ioctl(s, FIONBIO, &option);
 #endif
 #endif
