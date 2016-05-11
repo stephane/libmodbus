@@ -27,7 +27,7 @@ The response stored in _dest_ contains:
   the version of the library as a string.
 
 The function writes at most _max_dest_ bytes from the response to _dest_ so
-you must take to allocate enough memory to store the results.
+you must ensure that _dest_ is large enough.
 
 RETURN VALUE
 ------------
