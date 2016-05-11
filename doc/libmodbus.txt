@@ -162,10 +162,17 @@ Handling of bits and bytes::
     linkmb:modbus_get_byte_from_bits[3]
 
 Set or get float numbers::
-    linkmb:modbus_get_float[3]
-    linkmb:modbus_set_float[3]
+    linkmb:modbus_get_float_abcd[3]
+    linkmb:modbus_set_float_abcd[3]
+    linkmb:modbus_get_float_badc[3]
+    linkmb:modbus_set_float_badc[3]
+    linkmb:modbus_get_float_cdab[3]
+    linkmb:modbus_set_float_cdab[3]
     linkmb:modbus_get_float_dcba[3]
     linkmb:modbus_set_float_dcba[3]
+    linkmb:modbus_get_float[3] (deprecated)
+    linkmb:modbus_set_float[3] (deprecated)
+
 
 
 Connection
