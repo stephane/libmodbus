@@ -26,7 +26,8 @@ The response stored in _dest_ contains:
 * additional data specific to each controller. For example, libmodbus returns
   the version of the library as a string.
 
-The function write at most _max_dest_ bytes from the response to _dest_.
+The function writes at most _max_dest_ bytes from the response to _dest_ so
+you must take to allocate enough memory to store the results.
 
 RETURN VALUE
 ------------
