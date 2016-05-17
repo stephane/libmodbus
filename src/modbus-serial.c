@@ -48,7 +48,7 @@ void win32_ser_init(struct win32_ser *ws)
 
 /* FIXME Try to remove length_to_read -> max_len argument, only used by win32 */
 int win32_ser_select(struct win32_ser *ws, int max_len,
-                            const struct timeval *tv)
+                     const struct timeval *tv)
 {
     COMMTIMEOUTS comm_to;
     unsigned int msec = 0;
@@ -62,7 +62,7 @@ int win32_ser_select(struct win32_ser *ws, int max_len,
        FIXME Please someone on Windows can look at this?
        Does it possible to use WaitCommEvent?
        When tv is NULL, MAXDWORD isn't infinite!
-     */
+    */
     if (tv == NULL) {
         msec = MAXDWORD;
     } else {
@@ -99,7 +99,7 @@ int win32_ser_select(struct win32_ser *ws, int max_len,
 }
 
 int win32_ser_read(struct win32_ser *ws, uint8_t *p_msg,
-                          unsigned int max_len)
+                   unsigned int max_len)
 {
     unsigned int n = ws->n_bytes;
 
@@ -246,12 +246,12 @@ int _modbus_serial_connect(modbus_t *ctx)
     /* ctx_serial->device should contain a string like "COMxx:" xx being a decimal
      * number */
     ctx_serial->w_ser.fd = CreateFileA(ctx_serial->device,
-                                    GENERIC_READ | GENERIC_WRITE,
-                                    0,
-                                    NULL,
-                                    OPEN_EXISTING,
-                                    0,
-                                    NULL);
+                                       GENERIC_READ | GENERIC_WRITE,
+                                       0,
+                                       NULL,
+                                       OPEN_EXISTING,
+                                       0,
+                                       NULL);
 
     /* Error checking */
     if (ctx_serial->w_ser.fd == INVALID_HANDLE_VALUE) {
@@ -500,7 +500,7 @@ int _modbus_serial_connect(modbus_t *ctx)
         break;
 #endif
 #ifdef B1152000
-   case 1152000:
+    case 1152000:
         speed = B1152000;
         break;
 #endif
@@ -891,7 +891,7 @@ int _modbus_serial_flush(modbus_t *ctx)
 }
 
 int _modbus_serial_select(modbus_t *ctx, fd_set *rset,
-                              struct timeval *tv, int length_to_read)
+                          struct timeval *tv, int length_to_read)
 {
     int s_rc;
 #if defined(_WIN32)
@@ -931,70 +931,70 @@ int _modbus_serial_select(modbus_t *ctx, fd_set *rset,
 
 void _modbus_serial_free(modbus_serial_t *ctx_serial)
 {
-  if (ctx_serial) {
-      free(ctx_serial->device);
-  }
-  free(ctx_serial);
+    if (ctx_serial) {
+        free(ctx_serial->device);
+    }
+    free(ctx_serial);
 }
 
 modbus_serial_t* modbus_serial_init(const char *device,
                                     int baud, char parity, int data_bit, int stop_bit)
 {
-  /* Check device argument */
-  if (device == NULL || *device == 0) {
-    fprintf(stderr, "The device string is empty\n");
-    errno = EINVAL;
-    return NULL;
-  }
+    /* Check device argument */
+    if (device == NULL || *device == 0) {
+        fprintf(stderr, "The device string is empty\n");
+        errno = EINVAL;
+        return NULL;
+    }
 
-  /* Check baud argument */
-  if (baud == 0) {
-    fprintf(stderr, "The baud rate value must not be zero\n");
-    errno = EINVAL;
-    return NULL;
-  }
+    /* Check baud argument */
+    if (baud == 0) {
+        fprintf(stderr, "The baud rate value must not be zero\n");
+        errno = EINVAL;
+        return NULL;
+    }
 
-  /* Check parity argument */
-  if (parity != 'N' && parity != 'E' && parity != 'O') {
-    fprintf(stderr, "The parity given is not one of 'N', 'E' or 'O' and thus invalid\n");
-    errno = EINVAL;
-    return NULL;
-  }
+    /* Check parity argument */
+    if (parity != 'N' && parity != 'E' && parity != 'O') {
+        fprintf(stderr, "The parity given is not one of 'N', 'E' or 'O' and thus invalid\n");
+        errno = EINVAL;
+        return NULL;
+    }
 
-  modbus_serial_t *ctx_serial = (modbus_serial_t*)malloc(sizeof(modbus_serial_t));
+    modbus_serial_t *ctx_serial = (modbus_serial_t*)malloc(sizeof(modbus_serial_t));
 
-  ctx_serial->device = NULL;
+    ctx_serial->device = NULL;
 
-  /* Device name and \0 */
-  ctx_serial->device = (char *)malloc((strlen(device) + 1) * sizeof(char));
-  strcpy(ctx_serial->device, device);
+    /* Device name and \0 */
+    ctx_serial->device = (char *)malloc((strlen(device) + 1) * sizeof(char));
+    strcpy(ctx_serial->device, device);
 
-  ctx_serial->baud = baud;
-  ctx_serial->parity = parity;
-  ctx_serial->data_bit = data_bit;
-  ctx_serial->stop_bit = stop_bit;
+    ctx_serial->baud = baud;
+    ctx_serial->parity = parity;
+    ctx_serial->data_bit = data_bit;
+    ctx_serial->stop_bit = stop_bit;
 
 #if HAVE_DECL_TIOCSRS485
-  /* The RS232 mode has been set by default */
-  ctx_serial->serial_mode = MODBUS_RTU_RS232;
+    /* The RS232 mode has been set by default */
+    ctx_serial->serial_mode = MODBUS_RTU_RS232;
 #endif
 
 #if HAVE_DECL_TIOCM_RTS
-  /* The RTS use has been set by default */
-  ctx_serial->rts = MODBUS_RTU_RTS_NONE;
+    /* The RTS use has been set by default */
+    ctx_serial->rts = MODBUS_RTU_RTS_NONE;
 
-  /* Calculate estimated time in micro second to send one byte */
-  ctx_serial->onebyte_time = (1000 * 1000) * (1 + data_bit + (parity == 'N' ? 0 : 1) + stop_bit) / baud;
+    /* Calculate estimated time in micro second to send one byte */
+    ctx_serial->onebyte_time = (1000 * 1000) * (1 + data_bit + (parity == 'N' ? 0 : 1) + stop_bit) / baud;
 
-  /* The internal function is used by default to set RTS */
-  ctx_serial->set_rts = _modbus_serial_ioctl_rts;
+    /* The internal function is used by default to set RTS */
+    ctx_serial->set_rts = _modbus_serial_ioctl_rts;
 
-  /* The delay before and after transmission when toggling the RTS pin */
-  ctx_serial->rts_delay = ctx_serial->onebyte_time;
+    /* The delay before and after transmission when toggling the RTS pin */
+    ctx_serial->rts_delay = ctx_serial->onebyte_time;
 #endif
 
-  ctx_serial->confirmation_to_ignore = FALSE;
+    ctx_serial->confirmation_to_ignore = FALSE;
 
-  return ctx_serial;
+    return ctx_serial;
 }
 

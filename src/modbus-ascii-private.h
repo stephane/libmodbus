@@ -11,6 +11,7 @@
 #define _MODBUS_ASCII_PRESET_REQ_LENGTH  7
 #define _MODBUS_ASCII_PRESET_RSP_LENGTH  2
 
-#define _MODBUS_ASCII_CHECKSUM_LENGTH    3 /* lrc8 + \r\n */
+/* LRC8 + \r + \n */
+#define _MODBUS_ASCII_CHECKSUM_LENGTH    3
 
 #endif /* MODBUS_ASCII_PRIVATE_H */
