@@ -21,21 +21,6 @@
 
 #include "modbus-serial-private.h"
 
-/* Define the slave ID of the remote device to talk in master mode or set the
- * internal slave ID in slave mode */
-static int _modbus_set_slave(modbus_t *ctx, int slave)
-{
-    /* Broadcast address is 0 (MODBUS_BROADCAST_ADDRESS) */
-    if (slave >= 0 && slave <= 247) {
-        ctx->slave = slave;
-    } else {
-        errno = EINVAL;
-        return -1;
-    }
-
-    return 0;
-}
-
 static char nibble_to_hex_ascii(uint8_t nibble)
 {
     char c;
@@ -254,7 +239,7 @@ const modbus_backend_t _modbus_ascii_backend = {
     _MODBUS_ASCII_HEADER_LENGTH,
     _MODBUS_ASCII_CHECKSUM_LENGTH,
     MODBUS_ASCII_MAX_ADU_LENGTH,
-    _modbus_set_slave,
+    _modbus_serial_set_slave,
     _modbus_ascii_build_request_basis,
     _modbus_ascii_build_response_basis,
     _modbus_ascii_prepare_response_tid,

@@ -985,6 +985,21 @@ int _modbus_serial_select(modbus_t *ctx, fd_set *rset,
     return s_rc;
 }
 
+/* Define the slave ID of the remote device to talk in master mode or set the
+ * internal slave ID in slave mode */
+int _modbus_serial_set_slave(modbus_t *ctx, int slave)
+{
+    /* Broadcast address is 0 (MODBUS_BROADCAST_ADDRESS) */
+    if (slave >= 0 && slave <= 247) {
+        ctx->slave = slave;
+    } else {
+        errno = EINVAL;
+        return -1;
+    }
+
+    return 0;
+}
+
 void _modbus_serial_free(modbus_serial_t *ctx_serial)
 {
     if (ctx_serial) {
@@ -1076,4 +1091,3 @@ modbus_t* _modbus_serial_new(const modbus_backend_t *modbus_backend, const char 
 
     return ctx;
 }
-

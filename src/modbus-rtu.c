@@ -81,21 +81,6 @@ static const uint8_t table_crc_lo[] = {
     0x43, 0x83, 0x41, 0x81, 0x80, 0x40
 };
 
-/* Define the slave ID of the remote device to talk in master mode or set the
- * internal slave ID in slave mode */
-static int _modbus_set_slave(modbus_t *ctx, int slave)
-{
-    /* Broadcast address is 0 (MODBUS_BROADCAST_ADDRESS) */
-    if (slave >= 0 && slave <= 247) {
-        ctx->slave = slave;
-    } else {
-        errno = EINVAL;
-        return -1;
-    }
-
-    return 0;
-}
-
 /* Builds a RTU request header */
 static int _modbus_rtu_build_request_basis(modbus_t *ctx, int function,
                                            int addr, int nb,
@@ -206,7 +191,7 @@ const modbus_backend_t _modbus_rtu_backend = {
     _MODBUS_RTU_HEADER_LENGTH,
     _MODBUS_RTU_CHECKSUM_LENGTH,
     MODBUS_RTU_MAX_ADU_LENGTH,
-    _modbus_set_slave,
+    _modbus_serial_set_slave,
     _modbus_rtu_build_request_basis,
     _modbus_rtu_build_response_basis,
     _modbus_rtu_prepare_response_tid,
