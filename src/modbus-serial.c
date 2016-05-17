@@ -765,11 +765,7 @@ int modbus_serial_get_serial_mode(modbus_t *ctx)
         modbus_serial_t *ctx_serial = ctx->backend_data;
         return ctx_serial->serial_mode;
 #else
-        if (ctx->debug) {
-            fprintf(stderr, "This function isn't supported on your platform\n");
-        }
-        errno = ENOTSUP;
-        return -1;
+        return MODBUS_SERIAL_RS232;
 #endif
     } else {
         errno = EINVAL;
@@ -1058,7 +1054,7 @@ modbus_t* _modbus_serial_new(const modbus_backend_t *modbus_backend, const char 
     ctx_serial->stop_bit = stop_bit;
 
 #if HAVE_DECL_TIOCSRS485
-    /* The RS232 mode has been set by default */
+    /* The RS232 mode is set by default */
     ctx_serial->serial_mode = MODBUS_SERIAL_RS232;
 #endif
 

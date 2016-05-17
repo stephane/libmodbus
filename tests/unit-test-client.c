@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
 
         modbus_set_slave(ctx, SERVER_ID);
 
-        /* Not really tested but call them at least */
+        /* Not really tested but called at least */
         serial_mode = modbus_serial_get_serial_mode(ctx);
         ASSERT_TRUE(serial_mode == MODBUS_SERIAL_RS232, "");
     }
