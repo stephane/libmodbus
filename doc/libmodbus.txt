@@ -75,14 +75,14 @@ Create a Modbus RTU context::
     linkmb:modbus_new_rtu[3]
 
 
-Set the serial mode::
+Set the low-level behaviour of the serial communication::
     linkmb:modbus_rtu_get_serial_mode[3]
     linkmb:modbus_rtu_set_serial_mode[3]
-    linkmb:modbus_rtu_get_rts[3]
-    linkmb:modbus_rtu_set_rts[3]
-    linkmb:modbus_rtu_set_custom_rts[3]
-    linkmb:modbus_rtu_get_rts_delay[3]
-    linkmb:modbus_rtu_set_rts_delay[3]
+    linkmb:modbus_serial_get_rts[3]
+    linkmb:modbus_serial_set_rts[3]
+    linkmb:modbus_serial_set_custom_rts[3]
+    linkmb:modbus_serial_get_rts_delay[3]
+    linkmb:modbus_serial_set_rts_delay[3]
 
 
 TCP (IPv4) Context

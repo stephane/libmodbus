@@ -267,35 +267,6 @@ int modbus_ascii_get_serial_mode(modbus_t *ctx)
     }
 }
 
-int modbus_ascii_set_rts(modbus_t *ctx, int mode)
-{
-    /* Translate the define to decouple the interfaces */
-    int serial_mode;
-    switch(mode)
-    {
-    case MODBUS_ASCII_RTS_NONE: serial_mode = MODBUS_SERIAL_RTS_NONE; break;
-    case MODBUS_ASCII_RTS_UP:   serial_mode = MODBUS_SERIAL_RTS_UP;   break;
-    case MODBUS_ASCII_RTS_DOWN: serial_mode = MODBUS_SERIAL_RTS_DOWN; break;
-    default:                  serial_mode = -1;                     break;
-    }
-
-    return modbus_serial_set_rts(ctx, serial_mode);
-}
-
-int modbus_ascii_get_rts(modbus_t *ctx)
-{
-    int serial_mode = modbus_serial_get_rts(ctx);
-
-    /* Translate the define to decouple the interfaces */
-    switch(serial_mode)
-    {
-    case MODBUS_SERIAL_RTS_NONE: return MODBUS_ASCII_RTS_NONE;
-    case MODBUS_SERIAL_RTS_UP:   return MODBUS_ASCII_RTS_UP;
-    case MODBUS_SERIAL_RTS_DOWN: return MODBUS_ASCII_RTS_DOWN;
-    default:                     return -1;
-    }
-}
-
 static void _modbus_ascii_free(modbus_t *ctx) {
     _modbus_serial_free(ctx->backend_data);
     free(ctx);
@@ -334,9 +305,9 @@ modbus_t* modbus_new_ascii(const char *device,
     ctx->backend = &_modbus_ascii_backend;
 
     ctx->backend_data = modbus_serial_init(device, baud, parity, data_bit, stop_bit);
-    if(ctx->backend_data == NULL)
-    {
+    if (ctx->backend_data == NULL) {
         modbus_free(ctx);
+        errno = EINVAL;
         return NULL;
     }
 

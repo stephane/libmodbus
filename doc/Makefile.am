@@ -18,27 +18,27 @@ TXT3 = \
         modbus_mapping_new_start_address.txt \
         modbus_mask_write_register.txt \
         modbus_new_rtu.txt \
-        modbus_new_tcp_pi.txt \
         modbus_new_tcp.txt \
+        modbus_new_tcp_pi.txt \
         modbus_read_bits.txt \
         modbus_read_input_bits.txt \
         modbus_read_input_registers.txt \
         modbus_read_registers.txt \
-        modbus_receive_confirmation.txt \
         modbus_receive.txt \
-        modbus_reply_exception.txt \
+        modbus_receive_confirmation.txt \
         modbus_reply.txt \
+        modbus_reply_exception.txt \
         modbus_report_slave_id.txt \
         modbus_rtu_get_serial_mode.txt \
         modbus_rtu_set_serial_mode.txt \
-        modbus_rtu_get_rts.txt \
-        modbus_rtu_set_rts.txt \
-        modbus_rtu_set_custom_rts.txt \
-        modbus_rtu_get_rts_delay.txt \
-        modbus_rtu_set_rts_delay.txt \
         modbus_send_raw_request.txt \
-        modbus_set_bits_from_bytes.txt \
+        modbus_serial_get_rts.txt \
+        modbus_serial_get_rts_delay.txt \
+        modbus_serial_set_custom_rts.txt \
+        modbus_serial_set_rts.txt \
+        modbus_serial_set_rts_delay.txt \
         modbus_set_bits_from_byte.txt \
+        modbus_set_bits_from_bytes.txt \
         modbus_set_byte_timeout.txt \
         modbus_set_debug.txt \
         modbus_set_error_recovery.txt \
@@ -52,14 +52,14 @@ TXT3 = \
         modbus_set_socket.txt \
         modbus_strerror.txt \
         modbus_tcp_accept.txt \
-        modbus_tcp_pi_accept.txt \
         modbus_tcp_listen.txt \
+        modbus_tcp_pi_accept.txt \
         modbus_tcp_pi_listen.txt \
         modbus_write_and_read_registers.txt \
-        modbus_write_bits.txt \
         modbus_write_bit.txt \
-        modbus_write_registers.txt \
-        modbus_write_register.txt
+        modbus_write_bits.txt \
+        modbus_write_register.txt \
+        modbus_write_registers.txt
 TXT7 = libmodbus.txt
 
 EXTRA_DIST = asciidoc.conf $(TXT3) $(TXT7)

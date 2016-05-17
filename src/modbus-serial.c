@@ -155,7 +155,7 @@ ssize_t _modbus_serial_send(modbus_t *ctx, const uint8_t *req, int req_length)
         size = write(ctx->s, req, req_length);
 
         usleep(ctx_serial->onebyte_time * req_length + ctx_serial->rts_delay);
-        ctx_serial->set_rts(ctx, ctx_serial->rts != MODBUS_RTU_RTS_UP);
+        ctx_serial->set_rts(ctx, ctx_serial->rts != MODBUS_SERIAL_RTS_UP);
 
         return size;
     } else {
@@ -805,12 +805,13 @@ int modbus_serial_set_rts(modbus_t *ctx, int mode)
 #if HAVE_DECL_TIOCM_RTS
         modbus_serial_t *ctx_serial = ctx->backend_data;
 
-        if (mode == MODBUS_RTU_RTS_NONE || mode == MODBUS_RTU_RTS_UP ||
-            mode == MODBUS_RTU_RTS_DOWN) {
+        if (mode == MODBUS_SERIAL_RTS_NONE ||
+            mode == MODBUS_SERIAL_RTS_UP ||
+            mode == MODBUS_SERIAL_RTS_DOWN) {
             ctx_serial->rts = mode;
 
             /* Set the RTS bit in order to not reserve the RS485 bus */
-            ctx_serial->set_rts(ctx, ctx_serial->rts != MODBUS_RTU_RTS_UP);
+            ctx_serial->set_rts(ctx, ctx_serial->rts != MODBUS_SERIAL_RTS_UP);
 
             return 0;
         } else {
@@ -841,6 +842,82 @@ int modbus_serial_get_rts(modbus_t *ctx)
 #if HAVE_DECL_TIOCM_RTS
         modbus_serial_t *ctx_serial = ctx->backend_data;
         return ctx_serial->rts;
+#else
+        if (ctx->debug) {
+            fprintf(stderr, "This function isn't supported on your platform\n");
+        }
+        errno = ENOTSUP;
+        return -1;
+#endif
+    } else {
+        errno = EINVAL;
+        return -1;
+    }
+}
+
+int modbus_serial_set_custom_rts(modbus_t *ctx, void (*set_rts) (modbus_t *ctx, int on))
+{
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_SERIAL) {
+#if HAVE_DECL_TIOCM_RTS
+        modbus_serial_t *ctx_serial = ctx->backend_data;
+        ctx_serial->set_rts = set_rts;
+        return 0;
+#else
+        if (ctx->debug) {
+            fprintf(stderr, "This function isn't supported on your platform\n");
+        }
+        errno = ENOTSUP;
+        return -1;
+#endif
+    } else {
+        errno = EINVAL;
+        return -1;
+    }
+}
+
+int modbus_serial_set_rts_delay(modbus_t *ctx, int us)
+{
+    if (ctx == NULL || us < 0) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_SERIAL) {
+#if HAVE_DECL_TIOCM_RTS
+        modbus_serial_t *ctx_serial;
+        ctx_serial = (modbus_serial_t *)ctx->backend_data;
+        ctx_serial->rts_delay = us;
+        return 0;
+#else
+        if (ctx->debug) {
+            fprintf(stderr, "This function isn't supported on your platform\n");
+        }
+        errno = ENOTSUP;
+        return -1;
+#endif
+    } else {
+        errno = EINVAL;
+        return -1;
+    }
+}
+
+int modbus_serial_get_rts_delay(modbus_t *ctx)
+{
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_SERIAL) {
+#if HAVE_DECL_TIOCM_RTS
+        modbus_serial_t *ctx_serial;
+        ctx_serial = (modbus_serial_t *)ctx->backend_data;
+        return ctx_serial->rts_delay;
 #else
         if (ctx->debug) {
             fprintf(stderr, "This function isn't supported on your platform\n");
@@ -976,12 +1053,12 @@ modbus_serial_t* modbus_serial_init(const char *device,
 
 #if HAVE_DECL_TIOCSRS485
     /* The RS232 mode has been set by default */
-    ctx_serial->serial_mode = MODBUS_RTU_RS232;
+    ctx_serial->serial_mode = MODBUS_SERIAL_RS232;
 #endif
 
 #if HAVE_DECL_TIOCM_RTS
     /* The RTS use has been set by default */
-    ctx_serial->rts = MODBUS_RTU_RTS_NONE;
+    ctx_serial->rts = MODBUS_SERIAL_RTS_NONE;
 
     /* Calculate estimated time in micro second to send one byte */
     ctx_serial->onebyte_time = (1000 * 1000) * (1 + data_bit + (parity == 'N' ? 0 : 1) + stop_bit) / baud;
