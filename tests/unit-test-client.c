@@ -649,10 +649,14 @@ int main(int argc, char *argv[])
     printf("* modbus_read_registers at special address: ");
     ASSERT_TRUE(rc == -1 && errno == EMBXSBUSY, "");
 
-    /** SERVER **/
+    /** Run a few tests to challenge the server code **/
     if (test_server(ctx, use_backend) == -1) {
         goto close;
     }
+
+    modbus_close(ctx);
+    modbus_free(ctx);
+    ctx = NULL;
 
     /* Test init functions */
     printf("\nTEST INVALID INITIALIZATION:\n");
