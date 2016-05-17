@@ -724,6 +724,7 @@ int _modbus_serial_connect(modbus_t *ctx)
     return 0;
 }
 
+/* Only the serial port driver for the ETRAX 100LX chip seems to support it! */
 int modbus_serial_set_serial_mode(modbus_t *ctx, int mode)
 {
     if (ctx == NULL) {

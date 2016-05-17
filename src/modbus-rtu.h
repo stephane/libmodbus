@@ -8,6 +8,7 @@
 #define MODBUS_RTU_H
 
 #include "modbus.h"
+#include "modbus-serial.h"
 
 MODBUS_BEGIN_DECLS
 
@@ -19,11 +20,12 @@ MODBUS_BEGIN_DECLS
 MODBUS_API modbus_t* modbus_new_rtu(const char *device, int baud, char parity,
                                     int data_bit, int stop_bit);
 
-#define MODBUS_RTU_RS232 0
-#define MODBUS_RTU_RS485 1
+/* Deprecated */
+#define MODBUS_RTU_RS232 MODBUS_SERIAL_RS232
+#define MODBUS_RTU_RS485 MODBUS_SERIAL_RS485
 
-MODBUS_API int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode);
-MODBUS_API int modbus_rtu_get_serial_mode(modbus_t *ctx);
+#define modbus_rtu_set_serial_mode(pctx, mode) modbus_serial_set_serial_mode(pctx, mode)
+#define modbus_rtu_get_serial_mode(pctx) modbus_serial_get_serial_mode(pctx)
 
 MODBUS_END_DECLS
 

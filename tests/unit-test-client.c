@@ -96,7 +96,13 @@ int main(int argc, char *argv[])
                               MODBUS_ERROR_RECOVERY_PROTOCOL);
 
     if (use_backend == RTU) {
+        int serial_mode;
+
         modbus_set_slave(ctx, SERVER_ID);
+
+        /* Not really tested but call them at least */
+        serial_mode = modbus_serial_get_serial_mode(ctx);
+        ASSERT_TRUE(serial_mode == MODBUS_SERIAL_RS232, "");
     }
 
     modbus_get_response_timeout(ctx, &old_response_to_sec, &old_response_to_usec);

@@ -282,7 +282,9 @@ MODBUS_API void modbus_set_float_badc(float f, uint16_t *dest);
 MODBUS_API void modbus_set_float_cdab(float f, uint16_t *dest);
 
 #include "modbus-tcp.h"
+#include "modbus-serial.h"
 #include "modbus-rtu.h"
+#include "modbus-ascii.h"
 
 MODBUS_END_DECLS
 

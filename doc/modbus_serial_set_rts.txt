@@ -53,7 +53,6 @@ uint16_t tab_reg[10];
 
 ctx = modbus_new_rtu("/dev/ttyS0", 115200, 'N', 8, 1);
 modbus_set_slave(ctx, 1);
-modbus_rtu_set_serial_mode(ctx, MODBUS_RTU_RS485);
 modbus_serial_set_rts(ctx, MODBUS_SERIAL_RTS_UP);
 
 if (modbus_connect(ctx) == -1) {

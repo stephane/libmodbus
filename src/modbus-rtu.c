@@ -196,33 +196,6 @@ static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
     }
 }
 
-int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode)
-{
-  /* Translate the define to decouple the interfaces */
-  int serial_mode;
-  switch(mode)
-  {
-    case MODBUS_RTU_RS232: serial_mode = MODBUS_SERIAL_RS232; break;
-    case MODBUS_RTU_RS485: serial_mode = MODBUS_SERIAL_RS485; break;
-    default:               serial_mode = -1;                  break;
-  }
-
-  return modbus_serial_set_serial_mode(ctx, serial_mode);
-}
-
-int modbus_rtu_get_serial_mode(modbus_t *ctx)
-{
-  int serial_mode = modbus_serial_get_serial_mode(ctx);
-
-  /* Translate the define to decouple the interfaces */
-  switch(serial_mode)
-  {
-    case MODBUS_SERIAL_RS232: return MODBUS_RTU_RS232;
-    case MODBUS_SERIAL_RS485: return MODBUS_RTU_RS485;
-    default:                  return -1;
-  }
-}
-
 static void _modbus_rtu_free(modbus_t *ctx) {
   _modbus_serial_free(ctx->backend_data);
   free(ctx->backend_data);
