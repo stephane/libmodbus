@@ -59,12 +59,13 @@ automake libtool`.
 Documentation
 -------------
 
+The documentation is available [online](http://libmodbus.org/documentation) or
+as manual pages after installation.
+
 The documentation is based on
 [AsciiDoc](http://www.methods.co.nz/asciidoc/).  Only man pages are built
 by default with `make` command, you can run `make htmldoc` in *docs* directory
 to generate HTML files.
-
-The documentation is also available [online](http://libmodbus.org/documentation).
 
 Testing
 -------
@@ -83,21 +84,7 @@ By default, all TCP unit tests will be executed (see --help for options).
 
 It's also possible to run the unit tests with `make check`.
 
-Report a Bug
-------------
+To report a bug or to contribute
+--------------------------------
 
-Before reporting a bug, take care to read the documentation (RTFM!) and to
-provide enough information:
-
-1. libmodbus version
-2. OS/environment/architecture
-3. libmodbus backend (TCP, RTU, IPv6)
-3. Modbus messages when running in debug mode (`man modbus_set_debug`)
-
-To report your problem, you can:
-
-* fill a bug report on the issue tracker <http://github.com/stephane/libmodbus/issues>.
-* or send an email to the libmodbus mailing list [libmodbus@googlegroups.com](https://groups.google.com/forum/#!forum/libmodbus).
-
-If your prefer live talk when your're looking for help or to offer contribution,
-there is also a channel called #libmodbus on Freenode.
+See [CONTRIBUTING](CONTRIBUTING.md) document.
