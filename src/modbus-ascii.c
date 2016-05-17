@@ -61,8 +61,7 @@ static uint8_t hex_ascii_to_nibble(char digit) {
 
 /* Build an ASCII request header */
 static int _modbus_ascii_build_request_basis(modbus_t *ctx, int function,
-                                             int addr, int nb,
-                                             uint8_t *req)
+                                             int addr, int nb, uint8_t *req)
 {
     assert(ctx->slave != -1);
 
@@ -74,16 +73,17 @@ static int _modbus_ascii_build_request_basis(modbus_t *ctx, int function,
     req[5] = nb >> 8;
     req[6] = nb & 0x00ff;
 
-    return _MODBUS_ASCII_PRESET_REQ_LENGTH;
+    return 7;
 }
 
 /* Build an ASCII response header */
 static int _modbus_ascii_build_response_basis(sft_t *sft, uint8_t *rsp)
 {
-    rsp[0] = sft->slave;
-    rsp[1] = sft->function;
+    rsp[0] = ':';
+    rsp[1] = sft->slave;
+    rsp[2] = sft->function;
 
-    return _MODBUS_ASCII_PRESET_RSP_LENGTH;
+    return 3;
 }
 
 /* calculate the Longitudinal Redundancy Checking (LRC)
@@ -223,11 +223,14 @@ static ssize_t _modbus_ascii_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length)
 
 static ssize_t _modbus_ascii_send(modbus_t *ctx, const uint8_t *req, int req_length)
 {
-    uint8_t ascii_req[3 + (MODBUS_ASCII_MAX_ADU_LENGTH * 2)];
-
+    /* FIXME Ugly copy! */
+    uint8_t ascii_req[MODBUS_ASCII_MAX_ADU_LENGTH];
     ssize_t i, j = 0;
+
     for (i = 0; i < req_length; i++) {
-        if (req[i] == ':' || req[i] == '\r' || req[i] == '\n') {
+        if ((i == 0 && req[i] == ':') ||
+            (i == req_length - 2 && req[i] == '\r') ||
+            (i == req_length - 1 && req[i] == '\n')) {
             ascii_req[j++] = req[i];
         } else {
             ascii_req[j++] = nibble_to_hex_ascii(req[i] >> 4);
@@ -237,7 +240,8 @@ static ssize_t _modbus_ascii_send(modbus_t *ctx, const uint8_t *req, int req_len
     ascii_req[j] = '\0';
 
     ssize_t size = _modbus_serial_send(ctx, ascii_req, j);
-    return ((size - 3) / 2) +3;
+    /* FIXME */
+    return ((size - 3) / 2) + 3;
 }
 
 static void _modbus_ascii_free(modbus_t *ctx) {
