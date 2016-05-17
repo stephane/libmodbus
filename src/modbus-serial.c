@@ -117,22 +117,6 @@ int win32_ser_read(struct win32_ser *ws, uint8_t *p_msg,
 }
 #endif
 
-#if HAVE_DECL_TIOCM_RTS
-void _modbus_serial_ioctl_rts(modbus_t *ctx, int on)
-{
-    int fd = ctx->s;
-    int flags;
-
-    ioctl(fd, TIOCMGET, &flags);
-    if (on) {
-        flags |= TIOCM_RTS;
-    } else {
-        flags &= ~TIOCM_RTS;
-    }
-    ioctl(fd, TIOCMSET, &flags);
-}
-#endif
-
 ssize_t _modbus_serial_send(modbus_t *ctx, const uint8_t *req, int req_length)
 {
 #if defined(_WIN32)
@@ -198,8 +182,6 @@ ssize_t _modbus_serial_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length)
     return read(ctx->s, rsp, rsp_length);
 #endif
 }
-
-int _modbus_serial_flush(modbus_t *);
 
 int _modbus_serial_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
                                           const uint8_t *rsp, int rsp_length)
@@ -1015,8 +997,24 @@ void _modbus_serial_free(modbus_serial_t *ctx_serial)
     free(ctx_serial);
 }
 
-modbus_serial_t* modbus_serial_init(const char *device,
-                                    int baud, char parity, int data_bit, int stop_bit)
+#if HAVE_DECL_TIOCM_RTS
+static void _modbus_serial_ioctl_rts(modbus_t *ctx, int on)
+{
+    int fd = ctx->s;
+    int flags;
+
+    ioctl(fd, TIOCMGET, &flags);
+    if (on) {
+        flags |= TIOCM_RTS;
+    } else {
+        flags &= ~TIOCM_RTS;
+    }
+    ioctl(fd, TIOCMSET, &flags);
+}
+#endif
+
+modbus_serial_t* _modbus_serial_init(const char *device,
+                                     int baud, char parity, int data_bit, int stop_bit)
 {
     /* Check device argument */
     if (device == NULL || *device == 0) {

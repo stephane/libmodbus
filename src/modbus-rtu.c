@@ -19,7 +19,6 @@
 #include "modbus-rtu.h"
 #include "modbus-rtu-private.h"
 
-#include "modbus-serial.h"
 #include "modbus-serial-private.h"
 
 /* Table of CRC values for high-order byte */
@@ -234,7 +233,7 @@ modbus_t* modbus_new_rtu(const char *device,
     _modbus_init_common(ctx);
     ctx->backend = &_modbus_rtu_backend;
 
-    ctx->backend_data = modbus_serial_init(device, baud, parity, data_bit, stop_bit);
+    ctx->backend_data = _modbus_serial_init(device, baud, parity, data_bit, stop_bit);
     if (ctx->backend_data == NULL) {
       modbus_free(ctx);
       errno = EINVAL;

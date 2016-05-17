@@ -19,7 +19,7 @@
 #include "modbus-ascii.h"
 #include "modbus-ascii-private.h"
 
-#include "modbus-serial.h"
+#include "modbus-serial-private.h"
 
 /* Define the slave ID of the remote device to talk in master mode or set the
  * internal slave ID in slave mode */
@@ -277,7 +277,7 @@ modbus_t* modbus_new_ascii(const char *device,
     _modbus_init_common(ctx);
     ctx->backend = &_modbus_ascii_backend;
 
-    ctx->backend_data = modbus_serial_init(device, baud, parity, data_bit, stop_bit);
+    ctx->backend_data = _modbus_serial_init(device, baud, parity, data_bit, stop_bit);
     if (ctx->backend_data == NULL) {
         modbus_free(ctx);
         errno = EINVAL;

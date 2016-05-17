@@ -69,4 +69,16 @@ typedef struct _modbus_serial {
     int confirmation_to_ignore;
 } modbus_serial_t;
 
+ssize_t _modbus_serial_send(modbus_t *ctx, const uint8_t *req, int req_length);
+int _modbus_serial_receive(modbus_t *ctx, uint8_t *req);
+ssize_t _modbus_serial_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length);
+int _modbus_serial_pre_check_confirmation(modbus_t *ctx, const uint8_t *req, const uint8_t *rsp, int rsp_length);
+int _modbus_serial_connect(modbus_t *ctx);
+void _modbus_serial_close(modbus_t *ctx);
+int _modbus_serial_flush(modbus_t *ctx);
+int _modbus_serial_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int length_to_read);
+
+void _modbus_serial_free(modbus_serial_t *serial_ctx);
+modbus_serial_t* _modbus_serial_init(const char *device, int baud, char parity, int data_bit, int stop_bit);
+
 #endif /* MODBUS_SERIAL_PRIVATE_H */
