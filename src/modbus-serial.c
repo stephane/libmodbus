@@ -1013,9 +1013,12 @@ static void _modbus_serial_ioctl_rts(modbus_t *ctx, int on)
 }
 #endif
 
-modbus_serial_t* _modbus_serial_init(const char *device,
-                                     int baud, char parity, int data_bit, int stop_bit)
+modbus_t* _modbus_serial_new(const modbus_backend_t *modbus_backend, const char *device,
+                             int baud, char parity, int data_bit, int stop_bit)
 {
+    modbus_t *ctx;
+    modbus_serial_t *ctx_serial;
+
     /* Check device argument */
     if (device == NULL || *device == 0) {
         fprintf(stderr, "The device string is empty\n");
@@ -1032,13 +1035,17 @@ modbus_serial_t* _modbus_serial_init(const char *device,
 
     /* Check parity argument */
     if (parity != 'N' && parity != 'E' && parity != 'O') {
-        fprintf(stderr, "The parity given is not one of 'N', 'E' or 'O' and thus invalid\n");
+        fprintf(stderr, "The parity '%c' is invalid (not 'N', 'E' or 'O')\n", parity);
         errno = EINVAL;
         return NULL;
     }
 
-    modbus_serial_t *ctx_serial = (modbus_serial_t*)malloc(sizeof(modbus_serial_t));
+    ctx = (modbus_t *)malloc(sizeof(modbus_t));
+    _modbus_init_common(ctx);
+    ctx->backend = modbus_backend;
+    ctx->backend_data = (modbus_serial_t*)malloc(sizeof(modbus_serial_t));
 
+    ctx_serial = ctx->backend_data;
     ctx_serial->device = NULL;
 
     /* Device name and \0 */
@@ -1071,6 +1078,6 @@ modbus_serial_t* _modbus_serial_init(const char *device,
 
     ctx_serial->confirmation_to_ignore = FALSE;
 
-    return ctx_serial;
+    return ctx;
 }
 

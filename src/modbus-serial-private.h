@@ -19,6 +19,7 @@
 #include <termios.h>
 #endif
 
+#include "modbus-private.h"
 #include "modbus-serial.h"
 
 #if defined(_WIN32)
@@ -79,6 +80,7 @@ int _modbus_serial_flush(modbus_t *ctx);
 int _modbus_serial_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int length_to_read);
 
 void _modbus_serial_free(modbus_serial_t *serial_ctx);
-modbus_serial_t* _modbus_serial_init(const char *device, int baud, char parity, int data_bit, int stop_bit);
+modbus_t* _modbus_serial_new(const modbus_backend_t *modbus_backend,
+                             const char *device, int baud, char parity, int data_bit, int stop_bit);
 
 #endif /* MODBUS_SERIAL_PRIVATE_H */

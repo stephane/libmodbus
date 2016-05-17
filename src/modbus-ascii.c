@@ -268,21 +268,8 @@ const modbus_backend_t _modbus_ascii_backend = {
 };
 
 modbus_t* modbus_new_ascii(const char *device,
-                           int baud, char parity, int data_bit,
-                           int stop_bit)
+                           int baud, char parity, int data_bit, int stop_bit)
 {
-    modbus_t *ctx;
-
-    ctx = (modbus_t *)malloc(sizeof(modbus_t));
-    _modbus_init_common(ctx);
-    ctx->backend = &_modbus_ascii_backend;
-
-    ctx->backend_data = _modbus_serial_init(device, baud, parity, data_bit, stop_bit);
-    if (ctx->backend_data == NULL) {
-        modbus_free(ctx);
-        errno = EINVAL;
-        return NULL;
-    }
-
-    return ctx;
+    return _modbus_serial_new(&_modbus_ascii_backend,
+                              device, baud, parity, data_bit, stop_bit);
 }
