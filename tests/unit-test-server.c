@@ -161,6 +161,10 @@ int main(int argc, char*argv[])
                 uint8_t req[] = "\x00\x1C\x00\x00\x00\x05\xFF\x03\x02\x00\x00";
                 int req_length = 11;
                 int w_s = modbus_get_socket(ctx);
+                if (ws_s == -1) {
+                    fprintf(stderr, "Unable to get a valid socket in special test\n");
+                    continue;
+                }
 
                 /* Copy TID */
                 req[1] = query[1];
