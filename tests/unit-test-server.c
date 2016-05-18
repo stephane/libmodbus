@@ -167,7 +167,10 @@ int main(int argc, char*argv[])
                 for (i=0; i < req_length; i++) {
                     printf("(%.2X)", req[i]);
                     usleep(5000);
-                    send(w_s, (const char*)(req + i), 1, MSG_NOSIGNAL);
+                    rc = send(w_s, (const char*)(req + i), 1, MSG_NOSIGNAL);
+                    if (rc == -1) {
+                        break;
+                    }
                 }
                 continue;
             }
