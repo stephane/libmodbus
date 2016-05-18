@@ -62,6 +62,11 @@ int main(void)
     }
 
     server_socket = modbus_tcp_listen(ctx, NB_CONNECTION);
+    if (server_socket == -1) {
+        fprintf(stderr, "Unable to listen TCP connection\n");
+        modbus_free(ctx);
+        return -1;
+    }
 
     signal(SIGINT, close_sigint);
 
