@@ -89,6 +89,11 @@ typedef struct _modbus_backend {
     void (*free) (modbus_t *ctx);
 } modbus_backend_t;
 
+typedef struct _modbus_device_identification_object {
+	int len;
+	char *ptr;
+} modbus_device_identification_object;
+
 struct _modbus {
     /* Slave address */
     int slave;
@@ -100,6 +105,7 @@ struct _modbus {
     struct timeval byte_timeout;
     const modbus_backend_t *backend;
     void *backend_data;
+    modbus_device_identification_object device_ident_objdir[256];
 };
 
 void _modbus_init_common(modbus_t *ctx);
