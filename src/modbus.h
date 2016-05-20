@@ -123,7 +123,7 @@ enum {
     MODBUS_EXCEPTION_SLAVE_OR_SERVER_BUSY,
     MODBUS_EXCEPTION_NEGATIVE_ACKNOWLEDGE,
     MODBUS_EXCEPTION_MEMORY_PARITY,
-    MODBUS_EXCEPTION_NOT_DEFINED,
+    MODBUS_EXCEPTION_NOT_DEFINED, /* Do not use! (with callbacks) */
     MODBUS_EXCEPTION_GATEWAY_PATH,
     MODBUS_EXCEPTION_GATEWAY_TARGET,
     MODBUS_EXCEPTION_MAX
@@ -175,6 +175,29 @@ typedef enum
     MODBUS_ERROR_RECOVERY_LINK          = (1<<1),
     MODBUS_ERROR_RECOVERY_PROTOCOL      = (1<<2)
 } modbus_error_recovery_mode;
+
+/* Each read callback function takes the address, number of registers, address
+   to response message and pointer to optional user data.  The response is
+   pre-filled with the MBAP header AND FCode (function code), 8 bytes in total.
+   The callback is responsible for filling in the rest of the response PDU
+   according to Modbus Application Protocol V1.1b3, returning the size of the
+   PDU. */
+typedef int (*modbus_read_callback)(uint16_t addr, uint16_t nb, uint8_t *rsp, void *user_data);
+
+/* Each write callback function takes the address, number of registers,
+   address to the request to be written and pointer to optional user data. */
+typedef int (*modbus_write_callback)(uint16_t addr, uint16_t nb, const uint8_t *req, void *user_data);
+
+typedef struct {
+    modbus_read_callback read_coils;
+    modbus_read_callback read_discrete_inputs;
+    modbus_read_callback read_holding_registers; /* Also used for _FC_WRITE_AND_READ_REGISTERS */
+    modbus_read_callback read_input_registers;
+    modbus_write_callback write_single_coil;
+    modbus_write_callback write_single_register;
+    modbus_write_callback write_multiple_coils;
+    modbus_write_callback write_multiple_registers; /* Also used for _FC_WRITE_AND_READ_REGISTERS */
+} modbus_callbacks_t;
 
 MODBUS_API int modbus_set_slave(modbus_t* ctx, int slave);
 MODBUS_API int modbus_set_error_recovery(modbus_t *ctx, modbus_error_recovery_mode error_recovery);
@@ -233,6 +256,10 @@ MODBUS_API int modbus_reply(modbus_t *ctx, const uint8_t *req,
                             int req_length, modbus_mapping_t *mb_mapping);
 MODBUS_API int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
                                       unsigned int exception_code);
+
+MODBUS_API int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
+                                     int req_length, modbus_callbacks_t *mb_callbacks,
+                                     void *user_data);
 
 /**
  * UTILS FUNCTIONS

@@ -235,6 +235,7 @@ Receive::
 
 Reply::
      linkmb:modbus_reply[3]
+     linkmb:modbus_reply_callback[3]
      linkmb:modbus_reply_exception[3]
 
 
