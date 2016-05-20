@@ -782,7 +782,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         if (nb < 1 || MODBUS_MAX_READ_REGISTERS < nb) {
             rsp_length = response_exception(
                 ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, TRUE,
-                "Illegal nb of values %d in read_holding_registers (max %d)\n",
+                "Illegal nb of values %d in read_registers (max %d)\n",
                 nb, MODBUS_MAX_READ_REGISTERS);
         } else if (mapping_address < 0 ||
                    (mapping_address + nb) > mb_mapping->nb_registers) {
