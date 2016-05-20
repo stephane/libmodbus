@@ -1027,7 +1027,8 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
 
     default:
         rsp_length = response_exception(
-            ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_FUNCTION, rsp, FALSE, "");
+            ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_FUNCTION, rsp, FALSE,
+            "Unknown Modbus function code: 0x%0X\n", function);
         break;
     }
 
