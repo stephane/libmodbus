@@ -114,7 +114,6 @@ AC_C_INLINE
 
 # libtool
 AC_PROG_CXX
-AC_PROG_RANLIB
 
 # Various types
 AC_TYPE_INT64_T
