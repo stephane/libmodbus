@@ -452,8 +452,8 @@ int main(int argc, char *argv[])
         uint8_t raw_req[] = { INVALID_SERVER_ID, 0x03, 0x00, 0x01, 0x01, 0x01 };
         /* Too many points */
         uint8_t raw_invalid_req[] = { INVALID_SERVER_ID, 0x03, 0x00, 0x01, 0xFF, 0xFF };
-        const int RAW_REP_LENGTH = 7;
-        uint8_t raw_rep[] = { INVALID_SERVER_ID, 0x03, 0x04, 0, 0, 0, 0 };
+        const int RAW_RSP_LENGTH = 7;
+        uint8_t raw_rsp[] = { INVALID_SERVER_ID, 0x03, 0x04, 0, 0, 0, 0 };
         uint8_t rsp[MODBUS_RTU_MAX_ADU_LENGTH];
 
         /* No response in RTU mode */
@@ -469,7 +469,7 @@ int main(int argc, char *argv[])
          * slave will see the indication message then the confirmation, and it must
          * ignore both. */
         modbus_send_raw_request(ctx, raw_req, RAW_REQ_LENGTH * sizeof(uint8_t));
-        modbus_send_raw_request(ctx, raw_rep, RAW_REP_LENGTH * sizeof(uint8_t));
+        modbus_send_raw_request(ctx, raw_rsp, RAW_RSP_LENGTH * sizeof(uint8_t));
         rc = modbus_receive_confirmation(ctx, rsp);
 
         printf("1-B/4 No response from slave %d on indication/confirmation messages: ",
