@@ -457,7 +457,7 @@ int main(int argc, char *argv[])
         uint8_t rsp[MODBUS_RTU_MAX_ADU_LENGTH];
 
         /* No response in RTU mode */
-        printf("1-A/3 No response from slave %d: ", INVALID_SERVER_ID);
+        printf("1-A/4 No response from slave %d: ", INVALID_SERVER_ID);
         ASSERT_TRUE(rc == -1 && errno == ETIMEDOUT, "");
 
         /* The slave raises a timeout on a confirmation to ignore because if an
@@ -472,7 +472,7 @@ int main(int argc, char *argv[])
         modbus_send_raw_request(ctx, raw_rep, RAW_REP_LENGTH * sizeof(uint8_t));
         rc = modbus_receive_confirmation(ctx, rsp);
 
-        printf("1-B/3 No response from slave %d on indication/confirmation messages: ",
+        printf("1-B/4 No response from slave %d on indication/confirmation messages: ",
                INVALID_SERVER_ID);
         ASSERT_TRUE(rc == -1 && errno == ETIMEDOUT, "");
 
@@ -480,12 +480,12 @@ int main(int argc, char *argv[])
         modbus_send_raw_request(ctx, raw_invalid_req, RAW_REQ_LENGTH * sizeof(uint8_t));
         rc = modbus_receive_confirmation(ctx, rsp);
 
-        printf("1-C/3 No response from slave %d with invalid request: ",
+        printf("1-C/4 No response from slave %d with invalid request: ",
                INVALID_SERVER_ID);
         ASSERT_TRUE(rc == -1 && errno == ETIMEDOUT, "");
     } else {
         /* Response in TCP mode */
-        printf("1/3 Response from slave %d: ", INVALID_SERVER_ID);
+        printf("1/4 Response from slave %d: ", INVALID_SERVER_ID);
         ASSERT_TRUE(rc == UT_REGISTERS_NB, "");
     }
 
@@ -494,17 +494,25 @@ int main(int argc, char *argv[])
 
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
                                UT_REGISTERS_NB, tab_rp_registers);
-    printf("2/3 No reply after a broadcast query: ");
+    printf("2/4 No reply after a broadcast query: ");
     ASSERT_TRUE(rc == -1 && errno == ETIMEDOUT, "");
 
     /* Restore slave */
-    if (use_backend == RTU) {
-        modbus_set_slave(ctx, SERVER_ID);
-    } else {
-        modbus_set_slave(ctx, MODBUS_TCP_SLAVE);
+    modbus_set_slave(ctx, use_backend == RTU ? SERVER_ID : MODBUS_TCP_SLAVE);
+
+    {
+        const int RAW_REQ_LENGTH = 6;
+        uint8_t raw_req[] = { use_backend == RTU ? SERVER_ID : MODBUS_TCP_SLAVE, 0x42, 0x00, 0x00, 0x00, 0x00 };
+        uint8_t rsp[MODBUS_MAX_ADU_LENGTH];
+
+        rc = modbus_send_raw_request(ctx, raw_req, RAW_REQ_LENGTH * sizeof(uint8_t));
+        ASSERT_TRUE(rc != -1, "Unable to send raw request with invalid function code");
+        rc = modbus_receive_confirmation(ctx, rsp);
+        printf("3/4 Raise an exception on unknown function code: ");
+        ASSERT_TRUE(rc == -1, "");
     }
 
-    printf("3/3 Response with an invalid TID or slave: ");
+    printf("4/4 Response with an invalid TID or slave: ");
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS_INVALID_TID_OR_SLAVE,
                                1, tab_rp_registers);
     ASSERT_TRUE(rc == -1, "");
