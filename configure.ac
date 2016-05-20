@@ -57,6 +57,7 @@ AC_CANONICAL_HOST
 
 # OS check
 os_win32="false"
+os_cygwin="false"
 os_qnx="false"
 case "${host_os}" in
       *mingw32*)
@@ -64,6 +65,9 @@ case "${host_os}" in
   ;;
       *nto-qnx*)
     os_qnx="true"
+  ;;
+      *cygwin*)
+    os_cygwin="true"
   ;;
 esac
 AM_CONDITIONAL(OS_WIN32, test "$os_win32" = "true")
@@ -120,11 +124,13 @@ AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT8_T
 
-# Required for getaddrinfo (TCP PI - IPv6)
+if test "$os_cygwin" = "false"; then
+# Required for getaddrinfo (TCP IP - IPv6)
 AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)
 if test "x$HAVE_WINSOCK2_H" = "xyes"; then
    LIBS="$LIBS -lws2_32"
    AC_SUBST(LIBS)
+fi
 fi
 
 # Check for RS485 support (Linux kernel version 2.6.28+)
