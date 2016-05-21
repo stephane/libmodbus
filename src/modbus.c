@@ -1034,12 +1034,9 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
     switch (function) {
     case MODBUS_FC_READ_COILS:
         if (mb_callbacks->read_coils == NULL) {
-            if (ctx->debug) {
-                fprintf(stderr, "Callback not defined for _FC_READ_COILS.\n");
-            }
             rsp_length = response_exception(
-                ctx, &sft,
-                MODBUS_EXCEPTION_ILLEGAL_FUNCTION, rsp);
+                ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_FUNCTION, rsp,
+                FALSE, "Callback not defined for _FC_READ_COILS.\n");
         } else {
             uint16_t nb = (req[offset + 3] << 8) + req[offset + 4];            
 
@@ -1048,8 +1045,8 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
 
             if (rv < 0) {
                 rsp_length = response_exception(
-                    ctx, &sft,
-                    -rv, rsp);
+                    ctx, &sft, -rv, rsp,
+                    FALSE, "");
             } else {
                 rsp_length += rv;
             }
@@ -1057,12 +1054,9 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
         break;
     case MODBUS_FC_READ_DISCRETE_INPUTS:
         if (mb_callbacks->read_discrete_inputs == NULL) {
-            if (ctx->debug) {
-                fprintf(stderr, "Callback not defined for _FC_READ_DISCRETE_INPUTS.\n");
-            }
             rsp_length = response_exception(
-                ctx, &sft,
-                MODBUS_EXCEPTION_ILLEGAL_FUNCTION, rsp);
+                ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_FUNCTION, rsp,
+                FALSE, "Callback not defined for _FC_READ_DISCRETE_INPUTS.\n");
         } else {
             uint16_t nb = (req[offset + 3] << 8) + req[offset + 4];
 
@@ -1070,8 +1064,8 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
             rv = mb_callbacks->read_discrete_inputs(address, nb, &rsp[rsp_length], user_data);
             if (rv < 0) {
                 rsp_length = response_exception(
-                    ctx, &sft,
-                    -rv, rsp);
+                    ctx, &sft, -rv, rsp,
+                    FALSE, "");
             } else {
                 rsp_length += rv;
             }
@@ -1079,12 +1073,9 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
         break;
     case MODBUS_FC_READ_HOLDING_REGISTERS:
         if (mb_callbacks->read_holding_registers == NULL) {
-            if (ctx->debug) {
-                fprintf(stderr, "Callback not defined for _FC_READ_HOLDING_REGISTERS.\n");
-            }
             rsp_length = response_exception(
-                ctx, &sft,
-                MODBUS_EXCEPTION_ILLEGAL_FUNCTION, rsp);
+                ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_FUNCTION, rsp,
+                FALSE, "Callback not defined for _FC_READ_HOLDING_REGISTERS.\n");
         } else {
             uint16_t nb = (req[offset + 3] << 8) + req[offset + 4];
 
@@ -1093,8 +1084,8 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
 
             if (rv < 0) {
                 rsp_length = response_exception(
-                    ctx, &sft,
-                    -rv, rsp);
+                    ctx, &sft, -rv, rsp,
+                    FALSE, "");
             } else {
                 rsp_length += rv;
             }
@@ -1102,12 +1093,9 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
         break;
     case MODBUS_FC_READ_INPUT_REGISTERS:
         if (mb_callbacks->read_input_registers == NULL) {
-            if (ctx->debug) {
-                fprintf(stderr, "Callback not defined for _FC_READ_INPUT_REGISTERS.\n");
-            }
             rsp_length = response_exception(
-                ctx, &sft,
-                MODBUS_EXCEPTION_ILLEGAL_FUNCTION, rsp);
+                ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_FUNCTION, rsp,
+                FALSE, "Callback not defined for _FC_READ_INPUT_REGISTERS.\n");
         } else {
             uint16_t nb = (req[offset + 3] << 8) + req[offset + 4];
 
@@ -1116,8 +1104,8 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
 
             if (rv < 0) {
                 rsp_length = response_exception(
-                    ctx, &sft,
-                    -rv, rsp);
+                    ctx, &sft, -rv, rsp,
+                    FALSE, "");
             } else {
                 rsp_length += rv;
             }
@@ -1125,12 +1113,9 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
         break;
     case MODBUS_FC_WRITE_SINGLE_COIL:
         if (mb_callbacks->write_single_coil == NULL) {
-            if (ctx->debug) {
-                fprintf(stderr, "Callback not defined for _FC_WRITE_SINGLE_COIL.\n");
-            }
             rsp_length = response_exception(
-                ctx, &sft,
-                MODBUS_EXCEPTION_ILLEGAL_FUNCTION, rsp);
+                ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_FUNCTION, rsp,
+                FALSE, "Callback not defined for _FC_WRITE_SINGLE_COIL.\n");
         } else {
             uint16_t value = (req[offset + 3] << 8) + req[offset + 4];
 
@@ -1138,39 +1123,32 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
                 rv = mb_callbacks->write_single_coil(address, 1, &req[offset + 3], user_data);
                 if (rv < 0) {
                     rsp_length = response_exception(
-                        ctx, &sft,
-                        -rv, rsp);
+                        ctx, &sft, -rv, rsp,
+                        FALSE, "");
                 } else {
                     memcpy(rsp, req, req_length);
                     rsp_length = req_length;
                 }
             } else {
-                if (ctx->debug) {
-                    fprintf(stderr,
-                            "Illegal data value %0X in _FC_WRITE_SINGLE_COIL request at address %0X.\n",
-                            value, address);
-                }
                 rsp_length = response_exception(
-                    ctx, &sft,
-                    MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp);
+                    ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp,
+                    FALSE, "Illegal data value %0X in _FC_WRITE_SINGLE_COIL request at address %0X.\n",
+                    value, address);
             }
         }
         break;
     case MODBUS_FC_WRITE_SINGLE_REGISTER:
         if (mb_callbacks->write_single_register == NULL) {
-            if (ctx->debug) {
-                fprintf(stderr, "Callback not defined for _FC_WRITE_SINGLE_REGISTER.\n");
-            }
             rsp_length = response_exception(
-                ctx, &sft,
-                MODBUS_EXCEPTION_ILLEGAL_FUNCTION, rsp);
+                ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_FUNCTION, rsp,
+                FALSE, "Callback not defined for _FC_WRITE_SINGLE_REGISTER.\n");
         } else {
             rv = mb_callbacks->write_single_register(address, 1, &req[offset + 3], user_data);
 
             if (rv < 0) {
                 rsp_length = response_exception(
-                    ctx, &sft,
-                    -rv, rsp);
+                    ctx, &sft, -rv, rsp,
+                    FALSE, "");
             } else {
                 memcpy(rsp, req, req_length);
                 rsp_length = req_length;
@@ -1179,20 +1157,17 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
         break;
     case MODBUS_FC_WRITE_MULTIPLE_COILS:
         if (mb_callbacks->write_multiple_coils == NULL) {
-            if (ctx->debug) {
-                fprintf(stderr, "Callback not defined for _FC_WRITE_MULTIPLE_COILS.\n");
-            }
             rsp_length = response_exception(
-                ctx, &sft,
-                MODBUS_EXCEPTION_ILLEGAL_FUNCTION, rsp);
+                ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_FUNCTION, rsp,
+                FALSE, "Callback not defined for _FC_WRITE_MULTIPLE_COILS.\n");
         } else {
             uint16_t nb = (req[offset + 3] << 8) + req[offset + 4];
             rv = mb_callbacks->write_multiple_coils(address, nb, &req[offset+6], user_data);
 
             if (rv < 0) {
                 rsp_length = response_exception(
-                    ctx, &sft,
-                    -rv, rsp);
+                    ctx, &sft, -rv, rsp,
+                    FALSE, "");
             } else {
                 rsp_length = ctx->backend->build_response_basis(&sft, rsp);
                 /* 4 to copy the bit address (2) and the quantity of bits */
@@ -1203,20 +1178,17 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
         break;
     case MODBUS_FC_WRITE_MULTIPLE_REGISTERS:
         if (mb_callbacks->write_multiple_registers == NULL) {
-            if (ctx->debug) {
-                fprintf(stderr, "Callback not defined for _FC_WRITE_MULTIPLE_REGISTERS.\n");
-            }
             rsp_length = response_exception(
-                ctx, &sft,
-                MODBUS_EXCEPTION_ILLEGAL_FUNCTION, rsp);
+                ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_FUNCTION, rsp,
+                FALSE, "Callback not defined for _FC_WRITE_MULTIPLE_REGISTERS.\n");
         } else {
             uint16_t nb = (req[offset + 3] << 8) + req[offset + 4];
             rv = mb_callbacks->write_multiple_registers(address, nb, &req[offset+6], user_data);
 
             if (rv < 0) {
                 rsp_length = response_exception(
-                    ctx, &sft,
-                    -rv, rsp);
+                    ctx, &sft, -rv, rsp,
+                    FALSE, "");
             } else {
                 rsp_length = ctx->backend->build_response_basis(&sft, rsp);
                 /* 4 to copy the bit address (2) and the quantity of bits */
@@ -1245,12 +1217,9 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
     case MODBUS_FC_WRITE_AND_READ_REGISTERS:
         if (mb_callbacks->read_holding_registers == NULL ||
             mb_callbacks->write_multiple_registers == NULL) {
-            if (ctx->debug) {
-                fprintf(stderr, "Callbacks not defined for _FC_WRITE_AND_READ_REGISTERS.\n");
-            }
             rsp_length = response_exception(
-                ctx, &sft,
-                MODBUS_EXCEPTION_ILLEGAL_FUNCTION, rsp);
+                ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_FUNCTION, rsp,
+                FALSE, "Callbacks not defined for _FC_WRITE_AND_READ_REGISTERS.\n");
         } else {
             uint16_t nb = (req[offset + 3] << 8) + req[offset + 4];
             uint16_t address_write = (req[offset + 5] << 8) + req[offset + 6];
@@ -1261,16 +1230,16 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
             rv = mb_callbacks->write_multiple_registers(address_write, nb_write, &req[offset+10], user_data);
             if (rv < 0) {
                 rsp_length = response_exception(
-                    ctx, &sft,
-                    -rv, rsp);
+                    ctx, &sft, -rv, rsp,
+                    FALSE, "");
             } else {
                 /* ...then read the response. */
                 rsp_length = ctx->backend->build_response_basis(&sft, rsp);
                 rv = mb_callbacks->read_holding_registers(address, nb, &rsp[rsp_length], user_data);
                 if (rv < 0) {
                     rsp_length = response_exception(
-                        ctx, &sft,
-                        -rv, rsp);
+                        ctx, &sft, -rv, rsp,
+                        FALSE, "");
                 } else {
                     rsp_length += rv;
                 }
@@ -1278,9 +1247,9 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
         }
         break;
     default:
-        rsp_length = response_exception(ctx, &sft,
-                                        MODBUS_EXCEPTION_ILLEGAL_FUNCTION,
-                                        rsp);
+        rsp_length = response_exception(
+            ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_FUNCTION, rsp,
+            FALSE, "");
         break;
     }
 
