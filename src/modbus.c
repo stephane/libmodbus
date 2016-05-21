@@ -1046,7 +1046,7 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
             if (rv < 0) {
                 rsp_length = response_exception(
                     ctx, &sft, -rv, rsp,
-                    FALSE, "");
+                    FALSE, "Illegal callback response (%d) in _FC_READ_COILS.\n", rv);
             } else {
                 rsp_length += rv;
             }
@@ -1065,7 +1065,7 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
             if (rv < 0) {
                 rsp_length = response_exception(
                     ctx, &sft, -rv, rsp,
-                    FALSE, "");
+                    FALSE, "Illegal callback response (%d) in _FC_READ_DISCRETE_INPUTS.\n", rv);
             } else {
                 rsp_length += rv;
             }
@@ -1085,7 +1085,7 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
             if (rv < 0) {
                 rsp_length = response_exception(
                     ctx, &sft, -rv, rsp,
-                    FALSE, "");
+                    FALSE, "Illegal callback response (%d) in _FC_READ_HOLDING_REGISTERS.\n", rv);
             } else {
                 rsp_length += rv;
             }
@@ -1105,7 +1105,7 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
             if (rv < 0) {
                 rsp_length = response_exception(
                     ctx, &sft, -rv, rsp,
-                    FALSE, "");
+                    FALSE, "Illegal callback response (%d) in _FC_READ_INPUT_REGISTERS.\n", rv);
             } else {
                 rsp_length += rv;
             }
@@ -1124,7 +1124,7 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
                 if (rv < 0) {
                     rsp_length = response_exception(
                         ctx, &sft, -rv, rsp,
-                        FALSE, "");
+                        FALSE, "Illegal callback response (%d) in _FC_WRITE_SINGLE_COIL.\n", rv);
                 } else {
                     memcpy(rsp, req, req_length);
                     rsp_length = req_length;
@@ -1148,7 +1148,7 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
             if (rv < 0) {
                 rsp_length = response_exception(
                     ctx, &sft, -rv, rsp,
-                    FALSE, "");
+                    FALSE, "Illegal callback response (%d) in _FC_WRITE_SINGLE_REGISTER.\n", rv);
             } else {
                 memcpy(rsp, req, req_length);
                 rsp_length = req_length;
@@ -1167,7 +1167,7 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
             if (rv < 0) {
                 rsp_length = response_exception(
                     ctx, &sft, -rv, rsp,
-                    FALSE, "");
+                    FALSE, "Illegal callback response (%d) in _FC_WRITE_MULTIPLE_COILS.\n", rv);
             } else {
                 rsp_length = ctx->backend->build_response_basis(&sft, rsp);
                 /* 4 to copy the bit address (2) and the quantity of bits */
@@ -1188,7 +1188,7 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
             if (rv < 0) {
                 rsp_length = response_exception(
                     ctx, &sft, -rv, rsp,
-                    FALSE, "");
+                    FALSE, "Illegal callback response (%d) in _FC_WRITE_MULTIPLE_REGISTERS.\n", rv);
             } else {
                 rsp_length = ctx->backend->build_response_basis(&sft, rsp);
                 /* 4 to copy the bit address (2) and the quantity of bits */
@@ -1231,7 +1231,7 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
             if (rv < 0) {
                 rsp_length = response_exception(
                     ctx, &sft, -rv, rsp,
-                    FALSE, "");
+                    FALSE, "Illegal callback response (%d) in write part of _FC_WRITE_AND_READ_REGISTERS.\n", rv);
             } else {
                 /* ...then read the response. */
                 rsp_length = ctx->backend->build_response_basis(&sft, rsp);
@@ -1239,7 +1239,7 @@ int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
                 if (rv < 0) {
                     rsp_length = response_exception(
                         ctx, &sft, -rv, rsp,
-                        FALSE, "");
+                        FALSE, "Illegal callback response (%d) in read part of _FC_WRITE_AND_READ_REGISTERS.\n", rv);
                 } else {
                     rsp_length += rv;
                 }
