@@ -25,17 +25,17 @@ and sent by using the information of the modbus context _ctx_.
 
 For read functions, the callback will need to supply the response, returning
 the length of that response. For pure write functions (i.e. not
-_FC_WRITE_AND_READ_REGISTERS), the response is automatically constructed.
+MODBUS_FC_WRITE_AND_READ_REGISTERS), the response is automatically constructed.
 
-The callbacks are supplied in the callback mapping _mb_callbacks_ according
-to the type of the request. If a callback is not provided for a given
-function, *modbus_reply_callback()* constructs the exception
+The callbacks are supplied in an array of callbacks _mb_callbacks_ indexed by
+the requested function. If a callback is not provided for a given function,
+*modbus_reply_callback()* constructs the exception
 MODBUS_EXCEPTION_ILLEGAL_FUNCTION accordingly. 
 
 It is the callback's responsibility to return the Modbus error code
-*negated* (except for the case where the operation is _FC_WRITE_SINGLE_COIL
-and the value is neither OFF nor ON) in case of errors. In this case an
-exception response will be sent.
+*negated* (except for the case where the operation is
+MODBUS_FC_WRITE_SINGLE_COIL and the value is neither OFF nor ON) in case of
+errors. In this case an exception response will be sent.
 
 Note: If the return value is => 0 it is assumed that the call was successful
 both for read and write callbacks. For read callbacks the value is also used
@@ -44,22 +44,16 @@ as the response length supplied by the callback function.
 An optional parameter _user_data_ can be suppied which will be passed to
 the callback function, typically for context purpose.
 
-The read and write callbacks have the following prototypes:
+The callbacks have the following prototype:
 
-int (*modbus_read_callback)(uint16_t addr, uint16_t nb, uint8_t *rsp, void *user_data);
+int (*modbus_callback)(uint16_t addr, uint16_t nb, uint8_t *msg, void *user_data);
 
-Each read callback function takes the address (_addr_), number of registers
-(_nb_), address to response message (_rsp_)(, and pointer to optional user data
-(_user_data_). The response is pre-filled with the MBAP header AND FCode
-(function code), 8 bytes in total. The callback is responsible for filling
-in the rest of the response PDU according to Modbus Application Protocol'
+Each callback function takes the address (_addr_), number of registers
+(_nb_), address to request/response message (_msg_), and pointer to optional
+user data (_user_data_). The read response is pre-filled with the MBAP header
+and FCode (function code), 8 bytes in total. The callback is responsible for
+filling in the rest of the response PDU according to Modbus Application Protocol
 V1.1b3, returning the size of the PDU.
-   
-int (*modbus_write_callback)(uint16_t addr, uint16_t nb, const uint8_t *req, void *user_data);
-
-Each write callback function takes the address (_addr_), number of registers
-(_nb_), address to the request to be written (_req_), and pointer to optional
-user data (_user_data_).
 
 This function is designed for Modbus server.
 
@@ -82,11 +76,11 @@ EXAMPLE
 -------
 [source,c]
 -------------------
-static struct modbus_callbacks_t callbacks;
+static modbus_callbacks_t callbacks;
 int my_read_coil_implementation(uint16_t addr, uint16_t nb, uint8_t *rsp, void *user_data);
 ...
 
-callbacks.read_coils = &my_read_coil_implementation;
+callbacks[MODBUS_FC_READ_COILS] = &my_read_coil_implementation;
 ...
 
 modbus_reply_callback(context, &request, request_lenght, &callbacks, NULL);
@@ -101,5 +95,5 @@ linkmb:libmodbus[7]
 
 AUTHORS
 -------
-The libmodbus documentation was written by Stéphane Raimbault
+Theis libmodbus documentation was written by Frode Tennebø
 <frode@tennebo.com>

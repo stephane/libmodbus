@@ -176,28 +176,19 @@ typedef enum
     MODBUS_ERROR_RECOVERY_PROTOCOL      = (1<<2)
 } modbus_error_recovery_mode;
 
-/* Each read callback function takes the address, number of registers, address
-   to response message and pointer to optional user data.  The response is
-   pre-filled with the MBAP header AND FCode (function code), 8 bytes in total.
-   The callback is responsible for filling in the rest of the response PDU
-   according to Modbus Application Protocol V1.1b3, returning the size of the
-   PDU. */
-typedef int (*modbus_read_callback)(uint16_t addr, uint16_t nb, uint8_t *rsp, void *user_data);
+/* Each callback function takes the address, number of registers,
+   address to the response (for read) or request (for write) message and
+   a pointer to optional user data.
+   For read callbacks, the response is pre-filled with the MBAP header
+   AND FCode (function code), 8 bytes in total. The callback is responsible
+   for filling in the rest of the response PDU according to
+   Modbus Application Protocol V1.1b3, returning the size of the PDU. */
+typedef int (*modbus_callback)(uint16_t addr, uint16_t nb, uint8_t *msg, void *user_data);
 
-/* Each write callback function takes the address, number of registers,
-   address to the request to be written and pointer to optional user data. */
-typedef int (*modbus_write_callback)(uint16_t addr, uint16_t nb, const uint8_t *req, void *user_data);
-
-typedef struct {
-    modbus_read_callback read_coils;
-    modbus_read_callback read_discrete_inputs;
-    modbus_read_callback read_holding_registers; /* Also used for _FC_WRITE_AND_READ_REGISTERS */
-    modbus_read_callback read_input_registers;
-    modbus_write_callback write_single_coil;
-    modbus_write_callback write_single_register;
-    modbus_write_callback write_multiple_coils;
-    modbus_write_callback write_multiple_registers; /* Also used for _FC_WRITE_AND_READ_REGISTERS */
-} modbus_callbacks_t;
+/* NOTE: The entry for MODBUS_FC_WRITE_AND_READ_REGISTERS doesn't exist since
+   MODBUS_FC_READ_HOLDING_REGISTERS is used for read and 
+   MODBUS_FC_WRITE_MULTIPLE_REGISTERS is used for write! */
+typedef modbus_callback modbus_callbacks_t[MODBUS_FC_WRITE_AND_READ_REGISTERS];
 
 MODBUS_API int modbus_set_slave(modbus_t* ctx, int slave);
 MODBUS_API int modbus_set_error_recovery(modbus_t *ctx, modbus_error_recovery_mode error_recovery);
@@ -258,7 +249,7 @@ MODBUS_API int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
                                       unsigned int exception_code);
 
 MODBUS_API int modbus_reply_callback(modbus_t *ctx, const uint8_t *req,
-                                     int req_length, modbus_callbacks_t *mb_callbacks,
+                                     int req_length, const modbus_callbacks_t mb_callbacks,
                                      void *user_data);
 
 /**
