@@ -38,6 +38,7 @@ tests/random-test-server
 tests/unit-test-client
 tests/unit-test.h
 tests/unit-test-server
+tests/tcp-server-test
 tests/version
 tests/stamp-h2
 doc/*.html

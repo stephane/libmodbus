@@ -1,0 +1,38 @@
+modbus_tcp_server_handle(3)
+===========================
+
+
+NAME
+----
+modbus_tcp_server_handle - handle data exchange on a modbus context
+
+
+SYNOPSIS
+--------
+*int modbus_tcp_server_handle(modbus_tcp_server_t* mb_srv_ctx, modbus_mapping_t* mb_map);*
+
+
+DESCRIPTION
+-----------
+The *modbus_tcp_server_handle()* function exchanges data with connected clients
+based on the supplied _mb_map_ data structure.
+
+Uses a select that defaults to BLOCKING, but that can be changed with
+*modbus_tcp_server_set_select_timeout()*.
+
+
+RETURN VALUE
+------------
+The function shall return 0 if successful. Otherwise it shall return -1 and set
+errno.
+
+
+SEE ALSO
+--------
+linkmb:modbus_server_create[3]
+linkmb:modbus_server_destroy[3]
+
+
+AUTHORS
+-------
+The libmodbus server documentation was written by DEIF A/S

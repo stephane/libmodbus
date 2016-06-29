@@ -59,7 +59,11 @@ TXT3 = \
         modbus_write_bits.txt \
         modbus_write_bit.txt \
         modbus_write_registers.txt \
-        modbus_write_register.txt
+        modbus_write_register.txt \
+        modbus_tcp_server_start.txt \ 
+        modbus_tcp_server_stop.txt \
+        modbus_tcp_server_handle.txt \
+        modbus_tcp_server_set_select_timeout.txt
 TXT7 = libmodbus.txt
 
 EXTRA_DIST = asciidoc.conf $(TXT3) $(TXT7)
