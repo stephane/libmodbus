@@ -324,6 +324,127 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
 }
 
 
+/* Waits a raw response from a modbus server or a request from a modbus client.
+   This function blocks if there is no replies (3 timeouts).
+
+   The function shall return the number of received characters and the received
+   message in an array of uint8_t if successful. Otherwise it shall return -1
+   and errno is set to one of the values defined below:
+   - ECONNRESET
+   - EMBBADDATA
+   - EMBUNKEXC
+   - ETIMEDOUT
+   - read() or recv() error codes
+*/
+
+int _modbus_receive_raw_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
+{
+    int rc = 0;
+    fd_set rset;
+    struct timeval tv;
+    struct timeval *p_tv;
+    int length_to_read;
+    int msg_length = 0;
+    _step_t step = _STEP_FUNCTION;
+
+    if (ctx->debug) {
+        if (msg_type == MSG_INDICATION) {
+            printf("Waiting for a raw indication...\n");
+        } else {
+            printf("Waiting for a raw confirmation...\n");
+        }
+    }
+
+    /* Add a file descriptor to the set */
+    FD_ZERO(&rset);
+    FD_SET(ctx->s, &rset);
+
+    length_to_read = ctx->backend->header_length + 1;
+
+    if (msg_type == MSG_INDICATION) {
+        /* Wait for a message, we don't know when the message will be
+         * received */
+        p_tv = NULL;
+    } else {
+        tv.tv_sec = ctx->response_timeout.tv_sec;
+        tv.tv_usec = ctx->response_timeout.tv_usec;
+        p_tv = &tv;
+    }
+
+    while (rc != -1) {
+        rc = ctx->backend->select(ctx, &rset, p_tv, length_to_read);
+        if (rc == -1) {
+            /* Timeout at end of msg */
+            if(step == _STEP_DATA && errno == ETIMEDOUT){
+                break;
+            }
+            _error_print(ctx, "select");
+            if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) {
+                int saved_errno = errno;
+
+                if (errno == ETIMEDOUT) {
+                    _sleep_response_timeout(ctx);
+                    modbus_flush(ctx);
+                } else if (errno == EBADF) {
+                    modbus_close(ctx);
+                    modbus_connect(ctx);
+                }
+                errno = saved_errno;
+            }
+            return -1;
+        }
+
+        rc = ctx->backend->recv(ctx, msg + msg_length, length_to_read);
+        if (rc == 0) {
+            errno = ECONNRESET;
+            rc = -1;
+        }
+
+        if (rc == -1) {
+            _error_print(ctx, "read");
+            if ((ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) &&
+                (errno == ECONNRESET || errno == ECONNREFUSED ||
+                 errno == EBADF)) {
+                int saved_errno = errno;
+                modbus_close(ctx);
+                modbus_connect(ctx);
+                /* Could be removed by previous calls */
+                errno = saved_errno;
+            }
+            return -1;
+        }
+
+        /* Display the hex code of each character received */
+        if (ctx->debug) {
+            int i;
+            for (i=0; i < rc; i++)
+                printf("<%.2X>", msg[msg_length + i]);
+        }
+
+        /* Sums bytes received */
+        msg_length += rc;
+        
+        if(step == _STEP_FUNCTION){
+            /* Set byte timeout */
+            if (ctx->byte_timeout.tv_sec > 0 || ctx->byte_timeout.tv_usec > 0) {
+                tv.tv_sec = ctx->byte_timeout.tv_sec;
+                tv.tv_usec = ctx->byte_timeout.tv_usec;
+                p_tv = &tv;
+            }
+            /* Read one byte */
+            length_to_read = 1;
+            /* Data step */
+            step = _STEP_DATA;
+        }
+    }
+
+    if (ctx->debug)
+        printf("\n");
+
+    return ctx->backend->check_integrity(ctx, msg, msg_length);
+}
+
+
 /* Waits a response from a modbus server or a request from a modbus client.
    This function blocks if there is no replies (3 timeouts).
 
@@ -498,6 +619,24 @@ int modbus_receive_confirmation(modbus_t *ctx, uint8_t *rsp)
     }
 
     return _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+}
+
+/* Receives the raw confirmation.
+
+   The function shall store the read response in rsp and return the number of
+   values (bits or words). Otherwise, its shall return -1 and errno is set.
+
+   The function doesn't check the confirmation is the expected response to the
+   initial request.
+*/
+int modbus_receive_raw_confirmation(modbus_t *ctx, uint8_t *rsp)
+{
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    return _modbus_receive_raw_msg(ctx, rsp, MSG_CONFIRMATION);
 }
 
 static int check_confirmation(modbus_t *ctx, uint8_t *req,
