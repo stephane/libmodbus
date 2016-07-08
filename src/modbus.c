@@ -425,16 +425,23 @@ int _modbus_receive_raw_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
         msg_length += rc;
         
         if(step == _STEP_FUNCTION){
-            /* Set byte timeout */
-            if (ctx->byte_timeout.tv_sec > 0 || ctx->byte_timeout.tv_usec > 0) {
-                tv.tv_sec = ctx->byte_timeout.tv_sec;
-                tv.tv_usec = ctx->byte_timeout.tv_usec;
-                p_tv = &tv;
-            }
             /* Read one byte */
             length_to_read = 1;
             /* Data step */
             step = _STEP_DATA;
+        }
+        
+        /* On Linux, select() modifies timeout to reflect the amount of time not slept.
+         * http://linux.die.net/man/2/select
+         * Set byte timeout */
+        if (ctx->byte_timeout.tv_sec > 0 || ctx->byte_timeout.tv_usec > 0) {
+            tv.tv_sec = ctx->byte_timeout.tv_sec;
+            tv.tv_usec = ctx->byte_timeout.tv_usec;
+            p_tv = &tv;
+        } else {
+            tv.tv_sec = ctx->response_timeout.tv_sec;
+            tv.tv_usec = ctx->response_timeout.tv_usec;
+            p_tv = &tv;
         }
     }
 
