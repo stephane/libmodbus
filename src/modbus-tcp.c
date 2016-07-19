@@ -661,8 +661,6 @@ int modbus_tcp_accept(modbus_t *ctx, int *s)
 #endif
 
     if (ctx->s == -1) {
-        close(*s);
-        *s = -1;
         return -1;
     }
 
@@ -691,9 +689,9 @@ int modbus_tcp_pi_accept(modbus_t *ctx, int *s)
 #else
     ctx->s = accept(*s, (struct sockaddr *)&addr, &addrlen);
 #endif
+
     if (ctx->s == -1) {
-        close(*s);
-        *s = -1;
+        return -1;
     }
 
     if (ctx->debug) {
