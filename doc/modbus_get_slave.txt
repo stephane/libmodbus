@@ -1,0 +1,41 @@
+modbus_get_slave(3)
+===================
+
+
+NAME
+----
+modbus_get_slave - get slave number in the context
+
+
+SYNOPSIS
+--------
+*int modbus_get_slave(modbus_t *'ctx');*
+
+
+DESCRIPTION
+-----------
+The *modbus_get_slave()* function shall get the slave number in the libmodbus
+context.
+
+
+RETURN VALUE
+------------
+The function shall return the slave number if successful. Otherwise it shall return -1
+and set errno to one of the values defined below.
+
+
+ERRORS
+------
+*EINVAL*::
+The libmodbus context is undefined.
+
+
+SEE ALSO
+--------
+linkmb:modbus_set_slave[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

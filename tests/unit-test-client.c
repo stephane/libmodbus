@@ -64,6 +64,7 @@ int main(int argc, char *argv[])
     uint32_t old_byte_to_usec;
     int use_backend;
     int success = FALSE;
+    int old_slave;
 
     if (argc > 1) {
         if (strcmp(argv[1], "tcp") == 0) {
@@ -445,6 +446,8 @@ int main(int argc, char *argv[])
     ASSERT_TRUE(rc == -1 && errno == EMBMDATA, "");
 
     /** SLAVE REPLY **/
+    old_slave = modbus_get_slave(ctx);
+
     printf("\nTEST SLAVE REPLY:\n");
     modbus_set_slave(ctx, INVALID_SERVER_ID);
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
@@ -500,7 +503,7 @@ int main(int argc, char *argv[])
     ASSERT_TRUE(rc == -1 && errno == ETIMEDOUT, "");
 
     /* Restore slave */
-    modbus_set_slave(ctx, use_backend == RTU ? SERVER_ID : MODBUS_TCP_SLAVE);
+    modbus_set_slave(ctx, old_slave);
 
     printf("3/3 Response with an invalid TID or slave: ");
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS_INVALID_TID_OR_SLAVE,

@@ -1577,6 +1577,16 @@ int modbus_set_slave(modbus_t *ctx, int slave)
     return ctx->backend->set_slave(ctx, slave);
 }
 
+int modbus_get_slave(modbus_t *ctx)
+{
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    return ctx->slave;
+}
+
 int modbus_set_error_recovery(modbus_t *ctx,
                               modbus_error_recovery_mode error_recovery)
 {

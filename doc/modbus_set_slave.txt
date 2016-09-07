@@ -74,6 +74,10 @@ if (modbus_connect(ctx) == -1) {
 }
 -------------------
 
+SEE ALSO
+--------
+linkmb:modbus_get_slave[3]
+
 AUTHORS
 -------
 The libmodbus documentation was written by Stéphane Raimbault
