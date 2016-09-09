@@ -16,6 +16,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#if defined(_WIN32)
+# define OS_WIN32
+/* ws2_32.dll has getaddrinfo and freeaddrinfo on Windows XP and later.
+ * minwg32 headers check WINVER before allowing the use of these */
+# ifndef WINVER
+#  define WINVER 0x0501
+# endif
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,12 +36,6 @@
 #include <sys/types.h>
 
 #if defined(_WIN32)
-# define OS_WIN32
-/* ws2_32.dll has getaddrinfo and freeaddrinfo on Windows XP and later.
- * minwg32 headers check WINVER before allowing the use of these */
-# ifndef WINVER
-# define WINVER 0x0501
-# endif
 # include <ws2tcpip.h>
 # define SHUT_RDWR 2
 # define close closesocket
