@@ -4,6 +4,15 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
+#if defined(_WIN32)
+# define OS_WIN32
+/* ws2_32.dll has getaddrinfo and freeaddrinfo on Windows XP and later.
+ * minwg32 headers check WINVER before allowing the use of these */
+# ifndef WINVER
+#   define WINVER 0x0501
+# endif
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,12 +24,6 @@
 #include <sys/types.h>
 
 #if defined(_WIN32)
-# define OS_WIN32
-/* ws2_32.dll has getaddrinfo and freeaddrinfo on Windows XP and later.
- * minwg32 headers check WINVER before allowing the use of these */
-# ifndef WINVER
-# define WINVER 0x0501
-# endif
 /* Already set in modbus-tcp.h but it seems order matters in VS2005 */
 # include <winsock2.h>
 # include <ws2tcpip.h>
