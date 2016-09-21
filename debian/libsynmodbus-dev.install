@@ -1,0 +1,3 @@
+debian/tmp/usr/include/synmodbus/*
+debian/tmp/usr/lib/*/libsynmodbus.so
+debian/tmp/usr/lib/*/pkgconfig/libsynmodbus.pc

@@ -12,8 +12,8 @@
 # http://www.gnu.org/software/libtool/manual/html_node/Libtool-versioning.html
 #
 m4_define([libmodbus_version_major], [3])
-m4_define([libmodbus_version_minor], [1])
-m4_define([libmodbus_version_micro], [4])
+m4_define([libmodbus_version_minor], [2])
+m4_define([libmodbus_version_micro], [0])
 
 m4_define([libmodbus_release_status],
     [m4_if(m4_eval(libmodbus_version_minor % 2), [1], [snapshot], [release])])
@@ -22,7 +22,7 @@ m4_define([libmodbus_version],
     [libmodbus_version_major.libmodbus_version_minor.libmodbus_version_micro])
 
 AC_PREREQ([2.63])
-AC_INIT([libmodbus],
+AC_INIT([libsynmodbus],
         [libmodbus_version],
         [https://github.com/stephane/libmodbus/issues],
         [libmodbus],
@@ -161,7 +161,7 @@ AC_CONFIG_FILES([
         src/win32/modbus.dll.manifest
         tests/Makefile
         doc/Makefile
-        libmodbus.pc
+        libsynmodbus.pc
 ])
 
 AC_OUTPUT

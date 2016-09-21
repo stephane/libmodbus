@@ -11,7 +11,7 @@ noinst_PROGRAMS = \
 	version
 
 common_ldflags = \
-	$(top_builddir)/src/libmodbus.la
+	$(top_builddir)/src/libsynmodbus.la
 
 bandwidth_server_one_SOURCES = bandwidth-server-one.c
 bandwidth_server_one_LDADD = $(common_ldflags)

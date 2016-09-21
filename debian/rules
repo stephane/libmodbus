@@ -1,0 +1,9 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --with autoreconf --parallel
+
+override_dh_installchangelogs:
+	dh_installchangelogs NEWS
+
+override_dh_auto_configure:
+	dh_auto_configure -- --disable-silent-rules

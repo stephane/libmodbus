@@ -1,0 +1,31 @@
+Source: libsynmodbus
+Priority: extra
+Maintainer: Robert Middleton <rmiddleton@synexxus.com>
+Standards-Version: 3.9.6
+Section: libs
+Build-Depends: debhelper (>= 9), asciidoc, xmlto, dh-autoreconf
+Homepage: http://libmodbus.org/
+
+Package: libsynmodbus5
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Pre-Depends: ${misc:Pre-Depends}
+Multi-Arch: same
+Description: library for the Modbus protocol
+ A Modbus library written in C, to send/receive data with a device which
+ respects the Modbus protocol. This library can use a serial port or an
+ Ethernet connection.
+ .
+ This package contains the shared library.
+
+Package: libsynmodbus-dev
+Section: libdevel
+Architecture: any
+Depends: libsynmodbus (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Description: development files for the Modbus protocol library
+ A Modbus library written in C, to send/receive data with a device which
+ respects the Modbus protocol. This library can use a serial port or an
+ Ethernet connection.
+ .
+ This package contains the development files.
+
