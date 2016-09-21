@@ -269,13 +269,29 @@ static void _modbus_rtu_ioctl_rts(modbus_t *ctx, int on)
 
 static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
 {
-#if defined(_WIN32)
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
+
+#if defined(_WIN32)
     DWORD n_bytes = 0;
-    return (WriteFile(ctx_rtu->w_ser.fd, req, req_length, &n_bytes, NULL)) ? (ssize_t)n_bytes : -1;
+    ssize_t size = (WriteFile(ctx_rtu->w_ser.fd, req, req_length, &n_bytes, NULL)) ? (ssize_t)n_bytes : -1;
+    uint8_t ignorebuffer;
+
+    if( ctx_rtu->ignore_self == TRUE ){
+        ssize_t start = 0;
+        uint8_t ignorebuffer;
+        DWORD number_bytes_read;
+        for( start = 0; start < size; start++ ){
+            BOOL read = ReadFile( ctx->w_ser.fd, &ignorebuffer, &number_bytes_read, NULL );
+            if( number_bytes_read != 1 || read == FALSE ){
+                /* read error, so errno will be set */
+                return -1;
+            }
+        }
+    }
+
+    return size;
 #else
 #if HAVE_DECL_TIOCM_RTS
-    modbus_rtu_t *ctx_rtu = ctx->backend_data;
     if (ctx_rtu->rts != MODBUS_RTU_RTS_NONE) {
         ssize_t size;
 
@@ -291,10 +307,33 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
         usleep(ctx_rtu->onebyte_time * req_length + ctx_rtu->rts_delay);
         ctx_rtu->set_rts(ctx, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
 
+        if( ctx_rtu->ignore_self == TRUE ){
+            ssize_t start = 0;
+            uint8_t ignorebuffer;
+            for( start = 0; start < size; start++ ){
+                if( read( ctx->s, &ignorebuffer, 1 ) != 1 ){
+                    /* read error, so errno will be set */
+                    return -1;
+                }
+            }
+        }
+
         return size;
     } else {
 #endif
-        return write(ctx->s, req, req_length);
+        ssize_t size;
+        size = write(ctx->s, req, req_length);
+        if( ctx_rtu->ignore_self == TRUE ){
+            ssize_t start = 0;
+            uint8_t ignorebuffer;
+            for( start = 0; start < size; start++ ){
+                if( read( ctx->s, &ignorebuffer, 1 ) != 1 ){
+                    /* read error, so errno will be set */
+                    return -1;
+                }
+            }
+        }
+        return size;
 #if HAVE_DECL_TIOCM_RTS
     }
 #endif
@@ -1271,5 +1310,40 @@ modbus_t* modbus_new_rtu(const char *device,
 
     ctx_rtu->confirmation_to_ignore = FALSE;
 
+    ctx_rtu->ignore_self = FALSE;
+
     return ctx;
+}
+
+int modbus_rtu_set_ignore_self(modbus_t *ctx, int ignore){
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
+        modbus_rtu_t *ctx_rtu = ctx->backend_data;
+        ctx_rtu->ignore_self = ignore;
+        return 0;
+    }
+
+    /* Wrong backend and invalid mode specified */
+    errno = EINVAL;
+    return -1;
+}
+
+int modbus_rtu_get_ignore_self(modbus_t *ctx){
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
+        modbus_rtu_t *ctx_rtu = ctx->backend_data;
+        return ctx_rtu->ignore_self;
+    }
+
+    /* Wrong backend and invalid mode specified */
+    errno = EINVAL;
+    return -1;
 }

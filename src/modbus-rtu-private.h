@@ -71,6 +71,8 @@ typedef struct _modbus_rtu {
 #endif
     /* To handle many slaves on the same link */
     int confirmation_to_ignore;
+    /* On half-duplex connections, we may have to ignore ourself */
+    int ignore_self;
 } modbus_rtu_t;
 
 #endif /* MODBUS_RTU_PRIVATE_H */
