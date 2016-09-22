@@ -174,6 +174,7 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
         for (i = 0; i < msg_length; i++)
             printf("[%.2X]", msg[i]);
         printf("\n");
+        fflush(stdout);
     }
 
     /* In recovery mode, the write command will be issued until to be
@@ -419,6 +420,7 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
             int i;
             for (i=0; i < rc; i++)
                 printf("<%.2X>", msg[msg_length + i]);
+            fflush(stdout);
         }
 
         /* Sums bytes received */

@@ -3,8 +3,8 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-Name: modbus
+Name: synmodbus
 Description: Modbus library
 Version: @VERSION@
-Libs: -L${libdir} -lmodbus
-Cflags: -I${includedir}/modbus
+Libs: -L${libdir} -lsynmodbus
+Cflags: -I${includedir}/synmodbus

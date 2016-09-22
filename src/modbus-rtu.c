@@ -27,6 +27,9 @@
 #include <linux/serial.h>
 #endif
 
+static int _modbus_rtu_select(modbus_t *ctx, fd_set *rset,
+                              struct timeval *tv, int length_to_read);
+
 /* Table of CRC values for high-order byte */
 static const uint8_t table_crc_hi[] = {
     0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0,
@@ -86,6 +89,52 @@ static const uint8_t table_crc_lo[] = {
     0x44, 0x84, 0x85, 0x45, 0x87, 0x47, 0x46, 0x86, 0x82, 0x42,
     0x43, 0x83, 0x41, 0x81, 0x80, 0x40
 };
+
+static int _modbus_ignore_bytes(modbus_t *ctx, ssize_t num_bytes){
+    uint8_t discard_byte;
+    ssize_t got;
+    fd_set rset;
+    struct timeval tv;
+    struct timeval *p_tv;
+    int rc;
+
+    tv.tv_sec = ctx->response_timeout.tv_sec;
+    tv.tv_usec = ctx->response_timeout.tv_usec;
+
+    p_tv = &tv;
+
+    /* Add a file descriptor to the set */
+    FD_ZERO(&rset);
+    FD_SET(ctx->s, &rset);
+
+    while( num_bytes ){
+        rc = _modbus_rtu_select(ctx, &rset, p_tv, num_bytes);
+        if( rc == -1 ){
+            _error_print( ctx, "select" );
+            return -1;
+        }
+
+#if defined(_WIN32)
+        win32_ser_read(&((modbus_rtu_t *)ctx->backend_data)->w_ser, rsp, rsp_length);
+#else
+        while( 1 ){
+            got = read(ctx->s, &discard_byte, 1);
+            if( got == 1 ){
+                num_bytes--;
+            }else if( got == -1 && errno == EAGAIN ){
+                break;
+            }else if( got == -1 ){
+                _error_print( ctx, "read" );
+                return -1;
+            }
+
+            if( num_bytes == 0 ) break;
+        }
+#endif
+    };
+
+    return 0;
+}
 
 /* Define the slave ID of the remote device to talk in master mode or set the
  * internal slave ID in slave mode */
@@ -274,19 +323,9 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
 #if defined(_WIN32)
     DWORD n_bytes = 0;
     ssize_t size = (WriteFile(ctx_rtu->w_ser.fd, req, req_length, &n_bytes, NULL)) ? (ssize_t)n_bytes : -1;
-    uint8_t ignorebuffer;
 
     if( ctx_rtu->ignore_self == TRUE ){
-        ssize_t start = 0;
-        uint8_t ignorebuffer;
-        DWORD number_bytes_read;
-        for( start = 0; start < size; start++ ){
-            BOOL read = ReadFile( ctx->w_ser.fd, &ignorebuffer, &number_bytes_read, NULL );
-            if( number_bytes_read != 1 || read == FALSE ){
-                /* read error, so errno will be set */
-                return -1;
-            }
-        }
+        _modbus_ignore_bytes( ctx, size );
     }
 
     return size;
@@ -308,14 +347,7 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
         ctx_rtu->set_rts(ctx, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
 
         if( ctx_rtu->ignore_self == TRUE ){
-            ssize_t start = 0;
-            uint8_t ignorebuffer;
-            for( start = 0; start < size; start++ ){
-                if( read( ctx->s, &ignorebuffer, 1 ) != 1 ){
-                    /* read error, so errno will be set */
-                    return -1;
-                }
-            }
+            _modbus_ignore_bytes( ctx, size );
         }
 
         return size;
@@ -324,14 +356,7 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
         ssize_t size;
         size = write(ctx->s, req, req_length);
         if( ctx_rtu->ignore_self == TRUE ){
-            ssize_t start = 0;
-            uint8_t ignorebuffer;
-            for( start = 0; start < size; start++ ){
-                if( read( ctx->s, &ignorebuffer, 1 ) != 1 ){
-                    /* read error, so errno will be set */
-                    return -1;
-                }
-            }
+            _modbus_ignore_bytes( ctx, size );
         }
         return size;
 #if HAVE_DECL_TIOCM_RTS

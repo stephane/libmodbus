@@ -120,7 +120,7 @@ float modbus_get_float_abcd(const uint16_t *src)
     float f;
     uint32_t i;
 
-    i = ntohl(((uint32_t)src[0] << 16) + src[1]);
+    i = ((uint32_t)src[0] << 16) + src[1];
     memcpy(&f, &i, sizeof(float));
 
     return f;
@@ -132,7 +132,7 @@ float modbus_get_float_dcba(const uint16_t *src)
     float f;
     uint32_t i;
 
-    i = ntohl(bswap_32((((uint32_t)src[0]) << 16) + src[1]));
+    i = bswap_32((((uint32_t)src[0]) << 16) + src[1]);
     memcpy(&f, &i, sizeof(float));
 
     return f;
@@ -144,7 +144,7 @@ float modbus_get_float_badc(const uint16_t *src)
     float f;
     uint32_t i;
 
-    i = ntohl((uint32_t)(bswap_16(src[0]) << 16) + bswap_16(src[1]));
+    i = (uint32_t)(bswap_16(src[0]) << 16) + bswap_16(src[1]);
     memcpy(&f, &i, sizeof(float));
 
     return f;
@@ -156,7 +156,7 @@ float modbus_get_float_cdab(const uint16_t *src)
     float f;
     uint32_t i;
 
-    i = ntohl((((uint32_t)src[1]) << 16) + src[0]);
+    i = (((uint32_t)src[1]) << 16) + src[0];
     memcpy(&f, &i, sizeof(float));
 
     return f;
