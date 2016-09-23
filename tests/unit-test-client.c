@@ -27,6 +27,7 @@ int send_crafted_request(modbus_t *ctx, int function,
                          uint16_t max_value, uint16_t bytes,
                          int backend_length, int backend_offset);
 int equal_dword(uint16_t *tab_reg, const uint32_t value);
+int is_memory_equal( void* s1, void* s2, ssize_t size );
 
 #define BUG_REPORT(_cond, _format, _args ...) \
     printf("\nLine %d: assertion error for '%s': " _format "\n", __LINE__, # _cond, ## _args)
@@ -39,6 +40,28 @@ int equal_dword(uint16_t *tab_reg, const uint32_t value);
         goto close;                               \
     }                                             \
 };
+
+int is_memory_equal( void* s1, void* s2, ssize_t size ){
+    int x;
+    uint8_t* arr1 = s1;
+    uint8_t* arr2 = s2;
+    int equal = memcmp( s1, s2, size );
+    if( equal == 0 ){
+       return 1;
+    }
+
+    printf( "Unequal arrays: \n" );
+    for( x = 0; x < size; x++ ){
+        printf( "0x%02X ", arr1[ x ] );
+    }
+    printf( "\n" );
+    for( x = 0; x < size; x++ ){
+        printf( "0x%02X ", arr2[ x ] );
+    }
+    printf( "\n" );
+
+    return 0;
+}
 
 int equal_dword(uint16_t *tab_reg, const uint32_t value) {
     return ((tab_reg[0] == (value >> 16)) && (tab_reg[1] == (value & 0xFFFF)));
@@ -65,6 +88,18 @@ int main(int argc, char *argv[])
     int use_backend;
     int success = FALSE;
     int old_slave;
+
+int32_t foo;
+float fl = UT_REAL;
+memcpy( &foo, &fl, 4 );
+printf( "UT_REAL is 0x%08X\n", foo );
+
+uint8_t* inmem = (uint8_t*)&fl;
+int x;
+for( x = 0; x < 4; x++ ){
+printf( "0x%02X ", inmem[ x ] );
+}
+printf( "\n" );
 
     if (argc > 1) {
         if (strcmp(argv[1], "tcp") == 0) {
@@ -287,26 +322,26 @@ int main(int argc, char *argv[])
     /** FLOAT **/
     printf("1/4 Set/get float ABCD: ");
     modbus_set_float_abcd(UT_REAL, tab_rp_registers);
-    ASSERT_TRUE(equal_dword(tab_rp_registers, UT_IREAL_ABCD), "FAILED Set float ABCD");
-    real = modbus_get_float_abcd(tab_rp_registers);
+    ASSERT_TRUE(is_memory_equal(tab_rp_registers, UT_IREAL_ABCD_SET,4), "FAILED Set float ABCD");
+    real = modbus_get_float_abcd(UT_IREAL_ABCD_GET);
     ASSERT_TRUE(real == UT_REAL, "FAILED (%f != %f)\n", real, UT_REAL);
 
     printf("2/4 Set/get float DCBA: ");
     modbus_set_float_dcba(UT_REAL, tab_rp_registers);
-    ASSERT_TRUE(equal_dword(tab_rp_registers, UT_IREAL_DCBA), "FAILED Set float DCBA");
-    real = modbus_get_float_dcba(tab_rp_registers);
+    ASSERT_TRUE(is_memory_equal(tab_rp_registers, UT_IREAL_DCBA_SET,4), "FAILED Set float DCBA");
+    real = modbus_get_float_dcba(UT_IREAL_DCBA_GET);
     ASSERT_TRUE(real == UT_REAL, "FAILED (%f != %f)\n", real, UT_REAL);
 
     printf("3/4 Set/get float BADC: ");
     modbus_set_float_badc(UT_REAL, tab_rp_registers);
-    ASSERT_TRUE(equal_dword(tab_rp_registers, UT_IREAL_BADC), "FAILED Set float BADC");
-    real = modbus_get_float_badc(tab_rp_registers);
+    ASSERT_TRUE(is_memory_equal(tab_rp_registers, UT_IREAL_BADC_SET,4), "FAILED Set float BADC");
+    real = modbus_get_float_badc(UT_IREAL_BADC_GET);
     ASSERT_TRUE(real == UT_REAL, "FAILED (%f != %f)\n", real, UT_REAL);
 
     printf("4/4 Set/get float CDAB: ");
     modbus_set_float_cdab(UT_REAL, tab_rp_registers);
-    ASSERT_TRUE(equal_dword(tab_rp_registers, UT_IREAL_CDAB), "FAILED Set float CDAB");
-    real = modbus_get_float_cdab(tab_rp_registers);
+    ASSERT_TRUE(is_memory_equal(tab_rp_registers, UT_IREAL_CDAB_SET,4), "FAILED Set float CDAB");
+    real = modbus_get_float_cdab(UT_IREAL_CDAB_GET);
     ASSERT_TRUE(real == UT_REAL, "FAILED (%f != %f)\n", real, UT_REAL);
 
     printf("\nAt this point, error messages doesn't mean the test has failed\n");
