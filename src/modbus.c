@@ -31,15 +31,6 @@ const unsigned int libmodbus_version_major = LIBMODBUS_VERSION_MAJOR;
 const unsigned int libmodbus_version_minor = LIBMODBUS_VERSION_MINOR;
 const unsigned int libmodbus_version_micro = LIBMODBUS_VERSION_MICRO;
 
-/* Max between RTU and TCP max adu length (so TCP) */
-#define MAX_MESSAGE_LENGTH 260
-
-/* 3 steps are used to parse the query */
-typedef enum {
-    _STEP_FUNCTION,
-    _STEP_META,
-    _STEP_DATA
-} _step_t;
 
 const char *modbus_strerror(int errnum) {
     switch (errnum) {
@@ -1566,6 +1557,8 @@ void _modbus_init_common(modbus_t *ctx)
 
     ctx->byte_timeout.tv_sec = 0;
     ctx->byte_timeout.tv_usec = _BYTE_TIMEOUT;
+
+    memset( &(ctx->async_data), 0, sizeof( struct _modbus_async_data ) );
 }
 
 /* Define the slave number */
@@ -1831,6 +1824,168 @@ void modbus_mapping_free(modbus_mapping_t *mb_mapping)
     free(mb_mapping->tab_input_bits);
     free(mb_mapping->tab_bits);
     free(mb_mapping);
+}
+
+static int read_registers_async(modbus_t *ctx, int function, int addr, int nb,
+                                modbus_async_callback_t callback )
+{
+    int rc;
+    int req_length;
+    uint8_t* req = ctx->async_data.request;
+
+    if (nb > MODBUS_MAX_READ_REGISTERS) {
+        if (ctx->debug) {
+            fprintf(stderr,
+                    "ERROR Too many registers requested (%d > %d)\n",
+                    nb, MODBUS_MAX_READ_REGISTERS);
+        }
+        errno = EMBMDATA;
+        return -1;
+    }
+
+    if( callback == NULL ){
+        errno = EINVAL;
+        return -1;
+    }
+
+    ctx->async_data.addr = addr;
+    ctx->async_data.nb = nb;
+    ctx->async_data.callback = callback;
+
+    req_length = ctx->backend->build_request_basis(ctx, function, addr, nb, req);
+
+    rc = send_msg(ctx, req, req_length);
+
+    return rc;
+}
+
+void modbus_process_data_master(modbus_t *ctx){
+    int offset;
+    int rc;
+    int i;
+    int len_to_read;
+    /* Local variables to make this clearer */
+    int* data_offset;
+    uint8_t* buffer;
+    int* length_to_read;
+    _step_t* step;
+    uint16_t* dest;
+     
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return;
+    }
+    data_offset = &(ctx->async_data.raw_data_offset);
+    buffer = ctx->async_data.raw_data;
+    length_to_read = &(ctx->async_data.length_to_read);
+    step = &(ctx->async_data.parse_step);
+    dest = &(ctx->async_data.data);
+
+    if( *step == _STEP_DATA ){
+        len_to_read = MAX_MESSAGE_LENGTH - *length_to_read;
+    }else{
+        len_to_read = *length_to_read;
+    }
+        rc = ctx->backend->recv(ctx, buffer + *data_offset, len_to_read );
+        if (rc == -1){
+            /* Ignore this error, probably due to no data being present */
+            if( errno != EAGAIN ){
+                return;
+            }
+        }
+
+        /* Display the hex code of each character received */
+        if (ctx->debug) {
+            int i;
+            for (i=0; i < rc; i++)
+                printf("<%.2X>", buffer[*data_offset + i]);
+            fflush(stdout);
+        }
+
+        *data_offset += rc;
+        *length_to_read -= rc;
+
+        if (*length_to_read == 0) {
+            switch (*step) {
+            case _STEP_FUNCTION:
+                /* Function code position */
+                *length_to_read = compute_meta_length_after_function(
+                    buffer[ctx->backend->header_length],
+                    MSG_CONFIRMATION);
+                if (*length_to_read != 0) {
+                    *step = _STEP_META;
+                    break;
+                } /* else switches straight to the next step */
+            case _STEP_META:
+                *length_to_read = compute_data_length_after_meta(
+                    ctx, buffer, MSG_CONFIRMATION);
+//printf( "in STEP_META, length to read is %d\n", *length_to_read );
+                if ((*data_offset + *length_to_read) > (int)ctx->backend->max_adu_length) {
+                    errno = EMBBADDATA;
+                    _error_print(ctx, "too many data");
+                    return -1;
+                }
+                *step = _STEP_DATA;
+                break;
+            default:
+                break;
+            }
+        }
+        if( *step != _STEP_DATA ){
+            printf( "not in _STEP_DATA\n" );
+            return;
+        }
+
+//printf( "check integrity data length is %d length to read is %d\n", *data_offset, *length_to_read );
+        rc = ctx->backend->check_integrity(ctx, buffer, *data_offset );
+        if( rc == -1 ){
+            return;
+        }
+
+        rc = check_confirmation(ctx, ctx->async_data.request, buffer, *data_offset);
+        if (rc == -1)
+            return -1;
+
+        offset = ctx->backend->header_length;
+
+        for (i = 0; i < rc; i++) {
+            /* shift reg hi_byte to temp OR with lo_byte */
+            dest[i] = (buffer[offset + 2 + (i << 1)] << 8) |
+                buffer[offset + 3 + (i << 1)];
+        }
+
+printf( "About to call callback\n" );
+fflush(stdout);
+    ctx->async_data.callback( ctx, ctx->async_data.addr, ctx->async_data.nb,
+                              ctx->async_data.data );
+}
+
+
+int modbus_read_registers_async(modbus_t *ctx, int addr, int nb, modbus_async_callback_t callback ){
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if( ctx->async_data.in_async_operation ){
+        errno = EALREADY;
+        return -1;
+    }
+
+    return read_registers_async( ctx, MODBUS_FC_READ_HOLDING_REGISTERS,
+                                 addr, nb, callback );
+}
+
+int modbus_read_input_registers_async(modbus_t *ctx, int addr, int nb, modbus_async_callback_t callback ){
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if( ctx->async_data.in_async_operation ){
+        errno = EALREADY;
+        return -1;
+    }
 }
 
 #ifndef HAVE_STRLCPY

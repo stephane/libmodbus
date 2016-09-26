@@ -20,6 +20,9 @@ typedef int ssize_t;
 
 #include "modbus.h"
 
+/* Max between RTU and TCP max adu length (so TCP) */
+#define MAX_MESSAGE_LENGTH 260
+
 MODBUS_BEGIN_DECLS
 
 /* It's not really the minimal length (the real one is report slave ID
@@ -56,6 +59,13 @@ typedef enum {
     MSG_CONFIRMATION
 } msg_type_t;
 
+/* 3 steps are used to parse the query */
+typedef enum {
+    _STEP_FUNCTION,
+    _STEP_META,
+    _STEP_DATA
+} _step_t;
+
 /* This structure reduces the number of params in functions and so
  * optimizes the speed of execution (~ 37%). */
 typedef struct _sft {
@@ -89,6 +99,22 @@ typedef struct _modbus_backend {
     void (*free) (modbus_t *ctx);
 } modbus_backend_t;
 
+/*
+ * Holds all of our asynchronous-related data
+ */
+struct _modbus_async_data{
+    int in_async_operation;
+    modbus_async_callback_t callback;
+    int addr;
+    int nb;
+    int raw_data_offset;
+    _step_t parse_step;
+    int length_to_read;
+    uint16_t data[ MODBUS_MAX_ADU_LENGTH / 2 ];
+    uint8_t raw_data[ MAX_MESSAGE_LENGTH ];
+    uint8_t request[ _MIN_REQ_LENGTH ];
+};
+
 struct _modbus {
     /* Slave address */
     int slave;
@@ -100,6 +126,7 @@ struct _modbus {
     struct timeval byte_timeout;
     const modbus_backend_t *backend;
     void *backend_data;
+    struct _modbus_async_data async_data;
 };
 
 void _modbus_init_common(modbus_t *ctx);
