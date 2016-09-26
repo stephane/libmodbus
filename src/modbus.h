@@ -236,7 +236,7 @@ MODBUS_API int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
                                       unsigned int exception_code);
 
 /**
- * Async API
+ * Asynchronous API
  **/
 
 /**
@@ -246,12 +246,24 @@ MODBUS_API int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
  * @param addr The modbus address this came from
  * @param nb The length of the dest array in terms of registers, not bytes(multiply by 2 to get total array length)
  * @param data The array of data requested from the device
+ * @param callback_data User-specified data for the callback
  */
-typedef void (*modbus_async_callback_t)(modbus_t *ctx, int addr, int nb, uint16_t *data);
+typedef void (*modbus_async_callback_t)(modbus_t *ctx, int addr, int nb, 
+                                        uint16_t *data, void* callback_data );
 
 MODBUS_API void modbus_process_data_master(modbus_t *ctx);
-MODBUS_API int modbus_read_registers_async(modbus_t *ctx, int addr, int nb, modbus_async_callback_t callback );
-MODBUS_API int modbus_read_input_registers_async(modbus_t *ctx, int addr, int nb, modbus_async_callback_t callback );
+MODBUS_API int modbus_read_registers_async(modbus_t *ctx, int addr, int nb, 
+                                           modbus_async_callback_t callback, 
+                                           void* callback_data );
+MODBUS_API int modbus_read_input_registers_async(modbus_t *ctx, int addr, int nb, 
+                                                 modbus_async_callback_t callback, 
+                                                 void* callback_data );
+MODBUS_API int modbus_read_bits_async(modbus_t *ctx, int addr, int nb, 
+                                      modbus_async_callback_t callback,
+                                      void* callback_data );
+MODBUS_API int modbus_read_input_bits_async(modbus_t *ctx, int addr, int nb, 
+                                            modbus_async_callback_t callback,
+                                            void* callback_data);
 
 /**
  * UTILS FUNCTIONS

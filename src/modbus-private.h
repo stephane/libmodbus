@@ -105,6 +105,7 @@ typedef struct _modbus_backend {
 struct _modbus_async_data{
     int in_async_operation;
     modbus_async_callback_t callback;
+    void* callback_data;
     int addr;
     int nb;
     int raw_data_offset;
@@ -113,6 +114,7 @@ struct _modbus_async_data{
     uint16_t data[ MODBUS_MAX_ADU_LENGTH / 2 ];
     uint8_t raw_data[ MAX_MESSAGE_LENGTH ];
     uint8_t request[ _MIN_REQ_LENGTH ];
+    struct timeval start_time;
 };
 
 struct _modbus {

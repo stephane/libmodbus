@@ -1826,8 +1826,30 @@ void modbus_mapping_free(modbus_mapping_t *mb_mapping)
     free(mb_mapping);
 }
 
+/*
+ * Return 1 if the timer has expired(e.g. no result has come back from a 
+ * slave device), or 0 otherwise
+ */
+static int modbus_timer_has_expired( modbus_t *ctx ){
+    struct timeval now;
+    int diffseconds;
+    int diffmicroseconds;
+
+    gettimeofday( &now, NULL );
+    diffseconds = now.tv_sec - ctx->async_data.start_time.tv_sec;
+    diffmicroseconds = now.tv_usec - ctx->async_data.start_time.tv_usec;
+
+    if( diffmicroseconds >= ctx->response_timeout.tv_usec &&
+        diffseconds >= ctx->response_timeout.tv_sec ){
+        return 1;
+    }
+
+    return 0;
+}
+
 static int read_registers_async(modbus_t *ctx, int function, int addr, int nb,
-                                modbus_async_callback_t callback )
+                                modbus_async_callback_t callback,
+                                void* callback_data )
 {
     int rc;
     int req_length;
@@ -1848,9 +1870,12 @@ static int read_registers_async(modbus_t *ctx, int function, int addr, int nb,
         return -1;
     }
 
+    ctx->async_data.in_async_operation = 1;
     ctx->async_data.addr = addr;
     ctx->async_data.nb = nb;
     ctx->async_data.callback = callback;
+    ctx->async_data.callback_data = callback_data;
+    gettimeofday( &ctx->async_data.start_time, NULL );
 
     req_length = ctx->backend->build_request_basis(ctx, function, addr, nb, req);
 
@@ -1875,11 +1900,30 @@ void modbus_process_data_master(modbus_t *ctx){
         errno = EINVAL;
         return;
     }
+
+    if( !ctx->async_data.in_async_operation ){
+        return;
+    }
+
+    if( ctx->async_data.in_async_operation &&
+        modbus_timer_has_expired( ctx ) ){
+        /* Our timeout has expired;  purge everything
+           in the OS buffer */
+        uint8_t buffer[ 128 ];
+        int rc;
+        do{
+            rc = ctx->backend->recv(ctx, buffer, 128 );
+        }while( rc > 0 );
+        
+        ctx->async_data.in_async_operation = FALSE;
+        return;
+    }
+
     data_offset = &(ctx->async_data.raw_data_offset);
     buffer = ctx->async_data.raw_data;
     length_to_read = &(ctx->async_data.length_to_read);
     step = &(ctx->async_data.parse_step);
-    dest = &(ctx->async_data.data);
+    dest = ctx->async_data.data;
 
     if( *step == _STEP_DATA ){
         len_to_read = MAX_MESSAGE_LENGTH - *length_to_read;
@@ -1905,6 +1949,7 @@ void modbus_process_data_master(modbus_t *ctx){
         *data_offset += rc;
         *length_to_read -= rc;
 
+printf( "header length is %d\n", ctx->backend->header_length );
         if (*length_to_read == 0) {
             switch (*step) {
             case _STEP_FUNCTION:
@@ -1919,7 +1964,6 @@ void modbus_process_data_master(modbus_t *ctx){
             case _STEP_META:
                 *length_to_read = compute_data_length_after_meta(
                     ctx, buffer, MSG_CONFIRMATION);
-//printf( "in STEP_META, length to read is %d\n", *length_to_read );
                 if ((*data_offset + *length_to_read) > (int)ctx->backend->max_adu_length) {
                     errno = EMBBADDATA;
                     _error_print(ctx, "too many data");
@@ -1936,7 +1980,6 @@ void modbus_process_data_master(modbus_t *ctx){
             return;
         }
 
-//printf( "check integrity data length is %d length to read is %d\n", *data_offset, *length_to_read );
         rc = ctx->backend->check_integrity(ctx, buffer, *data_offset );
         if( rc == -1 ){
             return;
@@ -1954,29 +1997,41 @@ void modbus_process_data_master(modbus_t *ctx){
                 buffer[offset + 3 + (i << 1)];
         }
 
-printf( "About to call callback\n" );
-fflush(stdout);
+    ctx->async_data.in_async_operation = 0;
     ctx->async_data.callback( ctx, ctx->async_data.addr, ctx->async_data.nb,
-                              ctx->async_data.data );
+                              ctx->async_data.data, ctx->async_data.callback_data );
 }
 
 
-int modbus_read_registers_async(modbus_t *ctx, int addr, int nb, modbus_async_callback_t callback ){
+int modbus_read_registers_async(modbus_t *ctx, int addr, int nb, 
+                                modbus_async_callback_t callback,
+                                void* callback_data ){
     if (ctx == NULL) {
         errno = EINVAL;
         return -1;
     }
 
-    if( ctx->async_data.in_async_operation ){
+    if( ctx->async_data.in_async_operation &&
+        modbus_timer_has_expired( ctx ) ){
+        /* Our timeout has expired; continue on but purge everything
+           in our buffer */
+        uint8_t buffer[ 128 ];
+        int rc;
+        do{
+            rc = ctx->backend->recv(ctx, buffer, 128 );
+        }while( rc > 0 );
+    }else if( ctx->async_data.in_async_operation ){
         errno = EALREADY;
         return -1;
     }
 
     return read_registers_async( ctx, MODBUS_FC_READ_HOLDING_REGISTERS,
-                                 addr, nb, callback );
+                                 addr, nb, callback, callback_data );
 }
 
-int modbus_read_input_registers_async(modbus_t *ctx, int addr, int nb, modbus_async_callback_t callback ){
+int modbus_read_input_registers_async(modbus_t *ctx, int addr, int nb, 
+                                      modbus_async_callback_t callback,
+                                      void* callback_data ){
     if (ctx == NULL) {
         errno = EINVAL;
         return -1;
@@ -1986,6 +2041,9 @@ int modbus_read_input_registers_async(modbus_t *ctx, int addr, int nb, modbus_as
         errno = EALREADY;
         return -1;
     }
+
+    return read_registers_async( ctx, MODBUS_FC_READ_INPUT_REGISTERS,
+                                 addr, nb, callback, callback_data );
 }
 
 #ifndef HAVE_STRLCPY
