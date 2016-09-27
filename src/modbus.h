@@ -243,13 +243,21 @@ MODBUS_API int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
  * Asynchronous method call back.
  *
  * @param ctx The context this callback is from
- * @param addr The modbus address this came from
+ * @param function_code The function code that this callback is in response to.  One of MODBUS_FC macros
+ * @param addr The modbus register address the data starts out
  * @param nb The length of the dest array in terms of registers, not bytes(multiply by 2 to get total array length)
  * @param data The array of data requested from the device
+ * @param error_code The error code.  If the error code is != 0, the call failed for some reason. 
+ *  The data array will not contain any useful information, and nb will be 0
  * @param callback_data User-specified data for the callback
  */
-typedef void (*modbus_async_callback_t)(modbus_t *ctx, int addr, int nb, 
-                                        uint16_t *data, void* callback_data );
+typedef void (*modbus_async_callback_t)(modbus_t *ctx, 
+                                        int function_code, 
+                                        int addr, 
+                                        int nb, 
+                                        uint16_t *data, 
+                                        int error_code,
+                                        void* callback_data );
 
 MODBUS_API void modbus_process_data_master(modbus_t *ctx);
 MODBUS_API int modbus_read_registers_async(modbus_t *ctx, int addr, int nb, 

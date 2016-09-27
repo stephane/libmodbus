@@ -59,11 +59,16 @@ typedef enum {
     MSG_CONFIRMATION
 } msg_type_t;
 
-/* 3 steps are used to parse the query */
+/* 4 steps are used to parse the query */
 typedef enum {
+    /* Parse the function code */
     _STEP_FUNCTION,
+    /* parse the metadata, if applicable */
     _STEP_META,
-    _STEP_DATA
+    /* parse the data for the response */
+    _STEP_DATA,
+    /* All done parsing data */
+    _STEP_DONE
 } _step_t;
 
 /* This structure reduces the number of params in functions and so
@@ -115,6 +120,7 @@ struct _modbus_async_data{
     uint8_t raw_data[ MAX_MESSAGE_LENGTH ];
     uint8_t request[ _MIN_REQ_LENGTH ];
     struct timeval start_time;
+    uint8_t function_code;
 };
 
 struct _modbus {

@@ -494,7 +494,8 @@ int modbus_receive_confirmation(modbus_t *ctx, uint8_t *rsp)
 }
 
 static int check_confirmation(modbus_t *ctx, uint8_t *req,
-                              uint8_t *rsp, int rsp_length)
+                              uint8_t *rsp, int rsp_length, 
+                              int* error_code )
 {
     int rc;
     int rsp_length_computed;
@@ -525,6 +526,9 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
                 errno = MODBUS_ENOBASE + exception_code;
             } else {
                 errno = EMBBADEXC;
+            }
+            if( error_code != NULL ){
+                *error_code = exception_code;
             }
             _error_print(ctx, NULL);
             return -1;
@@ -1042,7 +1046,7 @@ static int read_io_status(modbus_t *ctx, int function,
         if (rc == -1)
             return -1;
 
-        rc = check_confirmation(ctx, req, rsp, rc);
+        rc = check_confirmation(ctx, req, rsp, rc, NULL);
         if (rc == -1)
             return -1;
 
@@ -1151,7 +1155,7 @@ static int read_registers(modbus_t *ctx, int function, int addr, int nb,
         if (rc == -1)
             return -1;
 
-        rc = check_confirmation(ctx, req, rsp, rc);
+        rc = check_confirmation(ctx, req, rsp, rc, NULL);
         if (rc == -1)
             return -1;
 
@@ -1242,7 +1246,7 @@ static int write_single(modbus_t *ctx, int function, int addr, int value)
         if (rc == -1)
             return -1;
 
-        rc = check_confirmation(ctx, req, rsp, rc);
+        rc = check_confirmation(ctx, req, rsp, rc, NULL);
     }
 
     return rc;
@@ -1327,7 +1331,7 @@ int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *src)
         if (rc == -1)
             return -1;
 
-        rc = check_confirmation(ctx, req, rsp, rc);
+        rc = check_confirmation(ctx, req, rsp, rc, NULL);
     }
 
 
@@ -1377,7 +1381,7 @@ int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *src)
         if (rc == -1)
             return -1;
 
-        rc = check_confirmation(ctx, req, rsp, rc);
+        rc = check_confirmation(ctx, req, rsp, rc, NULL);
     }
 
     return rc;
@@ -1413,7 +1417,7 @@ int modbus_mask_write_register(modbus_t *ctx, int addr, uint16_t and_mask, uint1
         if (rc == -1)
             return -1;
 
-        rc = check_confirmation(ctx, req, rsp, rc);
+        rc = check_confirmation(ctx, req, rsp, rc, NULL);
     }
 
     return rc;
@@ -1483,7 +1487,7 @@ int modbus_write_and_read_registers(modbus_t *ctx,
         if (rc == -1)
             return -1;
 
-        rc = check_confirmation(ctx, req, rsp, rc);
+        rc = check_confirmation(ctx, req, rsp, rc, NULL);
         if (rc == -1)
             return -1;
 
@@ -1527,7 +1531,7 @@ int modbus_report_slave_id(modbus_t *ctx, int max_dest, uint8_t *dest)
         if (rc == -1)
             return -1;
 
-        rc = check_confirmation(ctx, req, rsp, rc);
+        rc = check_confirmation(ctx, req, rsp, rc, NULL);
         if (rc == -1)
             return -1;
 
@@ -1875,6 +1879,8 @@ static int read_registers_async(modbus_t *ctx, int function, int addr, int nb,
     ctx->async_data.nb = nb;
     ctx->async_data.callback = callback;
     ctx->async_data.callback_data = callback_data;
+    ctx->async_data.function_code = function;
+    ctx->async_data.parse_step = _STEP_FUNCTION;
     gettimeofday( &ctx->async_data.start_time, NULL );
 
     req_length = ctx->backend->build_request_basis(ctx, function, addr, nb, req);
@@ -1888,7 +1894,7 @@ void modbus_process_data_master(modbus_t *ctx){
     int offset;
     int rc;
     int i;
-    int len_to_read;
+    int error_code = 0;
     /* Local variables to make this clearer */
     int* data_offset;
     uint8_t* buffer;
@@ -1925,17 +1931,23 @@ void modbus_process_data_master(modbus_t *ctx){
     step = &(ctx->async_data.parse_step);
     dest = ctx->async_data.data;
 
-    if( *step == _STEP_DATA ){
-        len_to_read = MAX_MESSAGE_LENGTH - *length_to_read;
-    }else{
-        len_to_read = *length_to_read;
+    if( *step == _STEP_FUNCTION ){
+        *length_to_read = ctx->backend->header_length + 1;
     }
-        rc = ctx->backend->recv(ctx, buffer + *data_offset, len_to_read );
+
+    while( *step != _STEP_DONE ){ 
+        rc = ctx->backend->recv(ctx, buffer + *data_offset, *length_to_read );
         if (rc == -1){
             /* Ignore this error, probably due to no data being present */
             if( errno != EAGAIN ){
-                return;
+                 return;
             }
+        }else if( rc == 0 ){
+            /*printf( "no data, data offset is %d length to read is %d\n", 
+                ctx->async_data.raw_data_offset,
+                *length_to_read ); */
+            
+            return;
         }
 
         /* Display the hex code of each character received */
@@ -1949,7 +1961,6 @@ void modbus_process_data_master(modbus_t *ctx){
         *data_offset += rc;
         *length_to_read -= rc;
 
-printf( "header length is %d\n", ctx->backend->header_length );
         if (*length_to_read == 0) {
             switch (*step) {
             case _STEP_FUNCTION:
@@ -1957,10 +1968,15 @@ printf( "header length is %d\n", ctx->backend->header_length );
                 *length_to_read = compute_meta_length_after_function(
                     buffer[ctx->backend->header_length],
                     MSG_CONFIRMATION);
-                if (*length_to_read != 0) {
+                if (*length_to_read == 0) {
+                    /* There is no meta information, continue right on
+                     * to processing the data
+                     */
+                    *step = _STEP_DATA;
+                } else{
                     *step = _STEP_META;
-                    break;
-                } /* else switches straight to the next step */
+                }
+                continue;
             case _STEP_META:
                 *length_to_read = compute_data_length_after_meta(
                     ctx, buffer, MSG_CONFIRMATION);
@@ -1971,35 +1987,56 @@ printf( "header length is %d\n", ctx->backend->header_length );
                 }
                 *step = _STEP_DATA;
                 break;
+            case _STEP_DATA:
+                *step = _STEP_DONE;
             default:
                 break;
             }
         }
-        if( *step != _STEP_DATA ){
-            printf( "not in _STEP_DATA\n" );
-            return;
+
+    }
+
+    if( *step != _STEP_DONE ){
+        return;
+    }
+
+    rc = ctx->backend->check_integrity(ctx, buffer, *data_offset );
+    if( rc == -1 ){
+        return;
+    }
+
+    rc = check_confirmation(ctx, ctx->async_data.request, buffer, *data_offset,
+                            &error_code );
+    if (rc == -1){
+        if( error_code != 0 ){
+            ctx->async_data.in_async_operation = 0;
+            ctx->async_data.callback( ctx, 
+                              ctx->async_data.function_code,
+                              ctx->async_data.addr, 
+                              0,
+                              ctx->async_data.data, 
+                              error_code, 
+                              ctx->async_data.callback_data );
         }
+        return -1;
+    }
 
-        rc = ctx->backend->check_integrity(ctx, buffer, *data_offset );
-        if( rc == -1 ){
-            return;
-        }
+    offset = ctx->backend->header_length;
 
-        rc = check_confirmation(ctx, ctx->async_data.request, buffer, *data_offset);
-        if (rc == -1)
-            return -1;
-
-        offset = ctx->backend->header_length;
-
-        for (i = 0; i < rc; i++) {
-            /* shift reg hi_byte to temp OR with lo_byte */
-            dest[i] = (buffer[offset + 2 + (i << 1)] << 8) |
+    for (i = 0; i < rc; i++) {
+        /* shift reg hi_byte to temp OR with lo_byte */
+        dest[i] = (buffer[offset + 2 + (i << 1)] << 8) |
                 buffer[offset + 3 + (i << 1)];
-        }
+    }
 
     ctx->async_data.in_async_operation = 0;
-    ctx->async_data.callback( ctx, ctx->async_data.addr, ctx->async_data.nb,
-                              ctx->async_data.data, ctx->async_data.callback_data );
+    ctx->async_data.callback( ctx, 
+                      ctx->async_data.function_code,
+                      ctx->async_data.addr, 
+                      ctx->async_data.nb,
+                      ctx->async_data.data, 
+                      error_code, 
+                      ctx->async_data.callback_data );
 }
 
 
