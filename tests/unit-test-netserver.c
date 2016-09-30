@@ -68,8 +68,8 @@ int main(int argc, char*argv[])
 	else
 		strncpy(hostip_str, "127.0.0.1", sizeof(hostip_str));
 
-        printf("lanif=%s; ", lanif);
-        printf("hostip=%s\n", hostip_str);
+        fprintf(stderr,"lanif=%s; ", lanif);
+        fprintf(stderr,"hostip=%s\n", hostip_str);
         ctx = modbus_new_tcp(hostip_str, 1502);
         query = malloc(MODBUS_TCP_MAX_ADU_LENGTH);
     } else if (use_backend == TCP_PI) {

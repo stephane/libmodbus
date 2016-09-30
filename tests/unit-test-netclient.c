@@ -67,7 +67,8 @@ int main(int argc, char *argv[])
     int use_backend;
     int success = FALSE;
     int old_slave;
-    const char *hostip="127.0.0.1"; /* default */
+
+    char const *hostip="127.0.0.1"; /* default */
 
     if (argc > 1) {
         if (strcmp(argv[1], "tcp") == 0) {
@@ -88,11 +89,10 @@ int main(int argc, char *argv[])
         use_backend = TCP;
     }
 
-printf("hostip=%s\n", hostip);
+fprintf(stderr,"hostip=%s\n", hostip);
 
     if (use_backend == TCP) {
         ctx = modbus_new_tcp(hostip, 1502);
-//        ctx = modbus_new_tcp("127.0.0.1", 1502);
     } else if (use_backend == TCP_PI) {
         ctx = modbus_new_tcp_pi("::1", "1502");
     } else {

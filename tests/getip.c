@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
@@ -20,7 +21,7 @@ int sockfd;
 struct ifreq ifr;
 sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 ifr.ifr_addr.sa_family = AF_INET;
-strncpy(ifr.ifr_name, "wlan0", IFNAMSIZ-1);
+strncpy(ifr.ifr_name, iface, IFNAMSIZ-1);
 ioctl(sockfd, SIOCGIFADDR, &ifr);
 close(sockfd);
 strncpy(ipstr, (const char *)inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr), strlen);
@@ -29,10 +30,15 @@ return 0;
 }
 
 #ifdef TESTDRIVER
-int main()
+int main(int argc, char **argv)
 {
 char str[20];
-	get_ipstring("wlan0", str, sizeof(str));
+	if (argc < 2)
+	{
+		fprintf(stderr, "syntax: %s <lan i/f name>\n", argv[0]);
+		exit(0);
+	}
+	get_ipstring(argv[1], str, sizeof(str));
 	printf("%s\n", str);
 
 	return 0;
