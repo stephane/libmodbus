@@ -1,9 +1,10 @@
-libsynmodbus (3.2.0) UNRELEASED; urgency=medium
+libsynmodbus (3.2.1) unstable; urgency=medium
 
   * Forked libmodbus from latest upstream version
   * Added packaging back in
+  * changed version numbers, did not do release properly for 3.2.0
 
- -- Robert Middleton <robert@robert-desktop>  Wed, 21 Sep 2016 14:02:39 -0400
+ -- Robert Middleton <robert@robert-desktop>  Mon, 03 Oct 2016 09:41:34 -0400
 
 libmodbus (3.0.6-1) unstable; urgency=medium
 
