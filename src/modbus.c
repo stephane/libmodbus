@@ -1881,6 +1881,7 @@ static int read_registers_async(modbus_t *ctx, int function, int addr, int nb,
     ctx->async_data.callback_data = callback_data;
     ctx->async_data.function_code = function;
     ctx->async_data.parse_step = _STEP_FUNCTION;
+    ctx->async_data.raw_data_offset = 0;
     gettimeofday( &ctx->async_data.start_time, NULL );
 
     req_length = ctx->backend->build_request_basis(ctx, function, addr, nb, req);
