@@ -1,4 +1,4 @@
-#include "modbus-rtu-tcp.h"
+#include "modbus-enc.h"
 
 #include "modbus.h"
 #include "modbus-private.h"
@@ -81,14 +81,14 @@ static modbus_t* get_tcp_ctx(modbus_t* ctx)
     return ((modbus_t**)(ctx->backend_data))[1];
 }
 
-static int _modbus_rtu_tcp_set_slave(modbus_t *ctx, int slave)
+static int _modbus_enc_set_slave(modbus_t *ctx, int slave)
 {
     modbus_t* ctx_rtu = get_rtu_ctx(ctx);
 
     return ctx_rtu->backend->set_slave(ctx_rtu, slave);
 }
 
-static int _modbus_rtu_tcp_build_request_basis(modbus_t *ctx, int function,
+static int _modbus_enc_build_request_basis(modbus_t *ctx, int function,
                                            int addr, int nb,
                                            uint8_t *req)
 {
@@ -97,7 +97,7 @@ static int _modbus_rtu_tcp_build_request_basis(modbus_t *ctx, int function,
     return ctx_rtu->backend->build_request_basis(ctx_rtu, function, addr, nb, req);
 }
 
-static int _modbus_rtu_tcp_build_response_basis(sft_t *sft, uint8_t *rsp)
+static int _modbus_enc_build_response_basis(sft_t *sft, uint8_t *rsp)
 {
     /* In this case, the slave is certainly valid because a check is already
      * done in _modbus_rtu_listen */
@@ -107,7 +107,7 @@ static int _modbus_rtu_tcp_build_response_basis(sft_t *sft, uint8_t *rsp)
     return _MODBUS_RTU_PRESET_RSP_LENGTH;
 }
 
-static int _modbus_rtu_tcp_prepare_response_tid(const uint8_t *req, int *req_length)
+static int _modbus_enc_prepare_response_tid(const uint8_t *req, int *req_length)
 {
     (*req_length) -= _MODBUS_RTU_CHECKSUM_LENGTH;
     /* No TID */
@@ -130,7 +130,7 @@ static uint16_t crc16(uint8_t *buffer, uint16_t buffer_length)
     return (crc_hi << 8 | crc_lo);
 }
 
-static int _modbus_rtu_tcp_send_msg_pre(uint8_t *req, int req_length)
+static int _modbus_enc_send_msg_pre(uint8_t *req, int req_length)
 {
     uint16_t crc = crc16(req, req_length);
     req[req_length++] = crc >> 8;
@@ -139,7 +139,7 @@ static int _modbus_rtu_tcp_send_msg_pre(uint8_t *req, int req_length)
     return req_length;
 }
 
-static int _modbus_rtu_tcp_check_integrity(modbus_t *ctx, uint8_t *msg,
+static int _modbus_enc_check_integrity(modbus_t *ctx, uint8_t *msg,
                                        const int msg_length)
 {
     modbus_t* ctx_rtu = get_rtu_ctx(ctx);
@@ -147,7 +147,7 @@ static int _modbus_rtu_tcp_check_integrity(modbus_t *ctx, uint8_t *msg,
     return ctx_rtu->backend->check_integrity(ctx_rtu, msg, msg_length);
 }
 
-static int _modbus_rtu_tcp_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
+static int _modbus_enc_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
                                               const uint8_t *rsp, int rsp_length)
 {
     modbus_t* ctx_rtu = get_rtu_ctx(ctx);
@@ -155,7 +155,7 @@ static int _modbus_rtu_tcp_pre_check_confirmation(modbus_t *ctx, const uint8_t *
     return ctx_rtu->backend->pre_check_confirmation(ctx_rtu, req, rsp, rsp_length);
 }
 
-static int _modbus_rtu_tcp_connect(modbus_t *ctx)
+static int _modbus_enc_connect(modbus_t *ctx)
 {
     int ret;
     modbus_t* ctx_tcp = get_tcp_ctx(ctx);
@@ -165,21 +165,21 @@ static int _modbus_rtu_tcp_connect(modbus_t *ctx)
     return ret;
 }
 
-static void _modbus_rtu_tcp_close(modbus_t *ctx)
+static void _modbus_enc_close(modbus_t *ctx)
 {
     modbus_t* ctx_tcp = get_tcp_ctx(ctx);
 
     return ctx_tcp->backend->close(ctx_tcp);
 }
 
-static int _modbus_rtu_tcp_flush(modbus_t *ctx)
+static int _modbus_enc_flush(modbus_t *ctx)
 {
     modbus_t* ctx_tcp = get_tcp_ctx(ctx);
 
     return ctx_tcp->backend->flush(ctx_tcp);
 }
 
-static void _modbus_rtu_tcp_free(modbus_t *ctx)
+static void _modbus_enc_free(modbus_t *ctx)
 {
     modbus_t* ctx_tcp = get_tcp_ctx(ctx);
     modbus_t* ctx_rtu = get_rtu_ctx(ctx);
@@ -191,28 +191,28 @@ static void _modbus_rtu_tcp_free(modbus_t *ctx)
     free(ctx);
 }
 
-static ssize_t _modbus_rtu_tcp_send(modbus_t *ctx, const uint8_t *req, int req_length)
+static ssize_t _modbus_enc_send(modbus_t *ctx, const uint8_t *req, int req_length)
 {
     modbus_t* ctx_tcp = get_tcp_ctx(ctx);
 
     return ctx_tcp->backend->send(ctx_tcp, req, req_length);
 }
 
-static int _modbus_rtu_tcp_receive(modbus_t *ctx, uint8_t *req)
+static int _modbus_enc_receive(modbus_t *ctx, uint8_t *req)
 {
     modbus_t* ctx_tcp = get_tcp_ctx(ctx);
 
     return ctx_tcp->backend->receive(ctx_tcp, req);
 }
 
-static ssize_t _modbus_rtu_tcp_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length)
+static ssize_t _modbus_enc_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length)
 {
     modbus_t* ctx_tcp = get_tcp_ctx(ctx);
 
     return ctx_tcp->backend->recv(ctx_tcp, rsp, rsp_length);
 }
 
-static int _modbus_rtu_tcp_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int length_to_read) {
+static int _modbus_enc_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int length_to_read) {
     modbus_t* ctx_tcp = get_tcp_ctx(ctx);
 
     return ctx_tcp->backend->select(ctx_tcp, rset, tv, length_to_read);
@@ -222,30 +222,30 @@ static int _modbus_rtu_tcp_select(modbus_t *ctx, fd_set *rset, struct timeval *t
 extern const modbus_backend_t _modbus_rtu_backend;
 extern const modbus_backend_t _modbus_tcp_backend;
 
-modbus_backend_t _modbus_rtu_tcp_backend = {
+modbus_backend_t _modbus_enc_backend = {
     _MODBUS_BACKEND_TYPE_RTU,
     _MODBUS_RTU_HEADER_LENGTH,
     _MODBUS_RTU_CHECKSUM_LENGTH,
     MODBUS_RTU_MAX_ADU_LENGTH,
-    _modbus_rtu_tcp_set_slave,
-    _modbus_rtu_tcp_build_request_basis,
-    _modbus_rtu_tcp_build_response_basis,
-    _modbus_rtu_tcp_prepare_response_tid,
-    _modbus_rtu_tcp_send_msg_pre,
-    _modbus_rtu_tcp_send,
-    _modbus_rtu_tcp_receive,
-    _modbus_rtu_tcp_recv,
-    _modbus_rtu_tcp_check_integrity,
-    _modbus_rtu_tcp_pre_check_confirmation,
-    _modbus_rtu_tcp_connect,
-    _modbus_rtu_tcp_close,
-    _modbus_rtu_tcp_flush,
-    _modbus_rtu_tcp_select,
-    _modbus_rtu_tcp_free
+    _modbus_enc_set_slave,
+    _modbus_enc_build_request_basis,
+    _modbus_enc_build_response_basis,
+    _modbus_enc_prepare_response_tid,
+    _modbus_enc_send_msg_pre,
+    _modbus_enc_send,
+    _modbus_enc_receive,
+    _modbus_enc_recv,
+    _modbus_enc_check_integrity,
+    _modbus_enc_pre_check_confirmation,
+    _modbus_enc_connect,
+    _modbus_enc_close,
+    _modbus_enc_flush,
+    _modbus_enc_select,
+    _modbus_enc_free
 };
 
 
-modbus_t* modbus_new_rtu_tcp(const char *ip_address, int port)
+modbus_t* modbus_new_enc(const char *ip_address, int port)
 {
     modbus_t* ctx;
     modbus_t* ctx_rtu = modbus_new_rtu("/tmp", 115200, 'N', 8, 1);
@@ -258,7 +258,7 @@ modbus_t* modbus_new_rtu_tcp(const char *ip_address, int port)
     data[0] = ctx_rtu;
     data[1] = ctx_tcp;
 
-    ctx->backend = &_modbus_rtu_tcp_backend;
+    ctx->backend = &_modbus_enc_backend;
     ctx->backend_data = data;
 
 //    ctx->debug = 1;
