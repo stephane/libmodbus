@@ -184,8 +184,8 @@ static void _modbus_enc_free(modbus_t *ctx)
     modbus_t* ctx_tcp = get_tcp_ctx(ctx);
     modbus_t* ctx_rtu = get_rtu_ctx(ctx);
 
-    ctx_tcp->backend->free(ctx_tcp);
-    ctx_rtu->backend->free(ctx_rtu);
+    modbus_free(ctx_tcp);
+    modbus_free(ctx_rtu);
 
     free(ctx->backend_data);
     free(ctx);
@@ -260,10 +260,6 @@ modbus_t* modbus_new_enc(const char *ip_address, int port)
 
     ctx->backend = &_modbus_enc_backend;
     ctx->backend_data = data;
-
-//    ctx->debug = 1;
-//    ctx_rtu->debug = 1;
-//    ctx_tcp->debug = 1;
 
     return ctx;
 }
