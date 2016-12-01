@@ -1,8 +1,8 @@
-libsynmodbus (3.2.2) UNRELEASED; urgency=medium
+libsynmodbus (3.2.2) unstable; urgency=medium
 
   * Fixd bug with asynchronous requests
 
- -- robert <robert@robert-macbook>  Wed, 09 Nov 2016 13:41:57 -0500
+ -- robert <robert@robert-macbook>  Thu, 01 Dec 2016 12:01:39 -0500
 
 libsynmodbus (3.2.1) unstable; urgency=medium
 
