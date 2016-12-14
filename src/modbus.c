@@ -1882,6 +1882,7 @@ static int read_registers_async(modbus_t *ctx, int function, int addr, int nb,
     ctx->async_data.function_code = function;
     ctx->async_data.parse_step = _STEP_FUNCTION;
     ctx->async_data.raw_data_offset = 0;
+    ctx->async_data.length_to_read = ctx->backend->header_length + 1;
     gettimeofday( &ctx->async_data.start_time, NULL );
 
     req_length = ctx->backend->build_request_basis(ctx, function, addr, nb, req);
@@ -1916,10 +1917,9 @@ void modbus_process_data_master(modbus_t *ctx){
         modbus_timer_has_expired( ctx ) ){
         /* Our timeout has expired;  purge everything
            in the OS buffer */
-        uint8_t buffer[ 128 ];
-        int rc;
+        uint8_t purge_buffer[ 128 ];
         do{
-            rc = ctx->backend->recv(ctx, buffer, 128 );
+            rc = ctx->backend->recv(ctx, purge_buffer, 128 );
         }while( rc > 0 );
         
         ctx->async_data.in_async_operation = FALSE;
@@ -1931,10 +1931,6 @@ void modbus_process_data_master(modbus_t *ctx){
     length_to_read = &(ctx->async_data.length_to_read);
     step = &(ctx->async_data.parse_step);
     dest = ctx->async_data.data;
-
-    if( *step == _STEP_FUNCTION ){
-        *length_to_read = ctx->backend->header_length + 1;
-    }
 
     while( *step != _STEP_DONE ){ 
         rc = ctx->backend->recv(ctx, buffer + *data_offset, *length_to_read );
@@ -1953,8 +1949,7 @@ void modbus_process_data_master(modbus_t *ctx){
 
         /* Display the hex code of each character received */
         if (ctx->debug) {
-            int i;
-            for (i=0; i < rc; i++)
+            for (i = 0; i < rc; i++)
                 printf("<%.2X>", buffer[*data_offset + i]);
             fflush(stdout);
         }
@@ -1963,28 +1958,25 @@ void modbus_process_data_master(modbus_t *ctx){
         *length_to_read -= rc;
 
         if (*length_to_read == 0) {
+			/* Switch to next state when it is time */
             switch (*step) {
             case _STEP_FUNCTION:
                 /* Function code position */
                 *length_to_read = compute_meta_length_after_function(
                     buffer[ctx->backend->header_length],
                     MSG_CONFIRMATION);
-                if (*length_to_read == 0) {
-                    /* There is no meta information, continue right on
-                     * to processing the data
-                     */
-                    *step = _STEP_DATA;
-                } else{
+                /* If there is META data, break out to trigger read */
+                if (*length_to_read != 0) {
                     *step = _STEP_META;
-                }
-                continue;
+                    break;
+                } /* Else... falls into next case */
             case _STEP_META:
                 *length_to_read = compute_data_length_after_meta(
                     ctx, buffer, MSG_CONFIRMATION);
                 if ((*data_offset + *length_to_read) > (int)ctx->backend->max_adu_length) {
                     errno = EMBBADDATA;
                     _error_print(ctx, "too many data");
-                    return -1;
+                    return;
                 }
                 *step = _STEP_DATA;
                 break;
@@ -1994,7 +1986,6 @@ void modbus_process_data_master(modbus_t *ctx){
                 break;
             }
         }
-
     }
 
     if( *step != _STEP_DONE ){
@@ -2019,7 +2010,7 @@ void modbus_process_data_master(modbus_t *ctx){
                               error_code, 
                               ctx->async_data.callback_data );
         }
-        return -1;
+        return;
     }
 
     offset = ctx->backend->header_length;
