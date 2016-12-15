@@ -20,7 +20,9 @@ libsynmodbus_la_SOURCES = \
         modbus-tcp.c \
         modbus-tcp.h \
         modbus-tcp-private.h \
-        modbus-version.h
+        modbus-version.h \
+        simplelogger.h \
+        simplelogger_defs.h
 
 libsynmodbus_la_LDFLAGS = -no-undefined \
         -version-info $(LIBMODBUS_LT_VERSION_INFO)
@@ -35,7 +37,7 @@ endif
 
 # Header files to install
 libsynmodbusincludedir = $(includedir)/synmodbus
-libsynmodbusinclude_HEADERS = modbus.h modbus-version.h modbus-rtu.h modbus-tcp.h
+libsynmodbusinclude_HEADERS = modbus.h modbus-version.h modbus-rtu.h modbus-tcp.h simplelogger_defs.h
 
 DISTCLEANFILES = modbus-version.h
 EXTRA_DIST += modbus-version.h.in

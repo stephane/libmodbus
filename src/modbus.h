@@ -19,6 +19,7 @@
 #endif
 
 #include "modbus-version.h"
+#include "simplelogger_defs.h"
 
 #if defined(_MSC_VER)
 # if defined(DLLBUILD)
@@ -319,6 +320,8 @@ MODBUS_API void modbus_set_float_abcd(float f, uint16_t *dest);
 MODBUS_API void modbus_set_float_dcba(float f, uint16_t *dest);
 MODBUS_API void modbus_set_float_badc(float f, uint16_t *dest);
 MODBUS_API void modbus_set_float_cdab(float f, uint16_t *dest);
+
+MODBUS_API void modbus_set_log_function( simplelogger_log_function func );
 
 #include "modbus-tcp.h"
 #include "modbus-rtu.h"

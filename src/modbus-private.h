@@ -20,6 +20,10 @@ typedef int ssize_t;
 
 #include "modbus.h"
 
+#define SIMPLELOGGER_LOG_FUNCTION_NAME libsynmodbus_log_function
+#define SIMPLELOGGER_ENABLE_SMALL_MACROS
+#include "simplelogger.h"
+
 /* Max between RTU and TCP max adu length (so TCP) */
 #define MAX_MESSAGE_LENGTH 260
 
