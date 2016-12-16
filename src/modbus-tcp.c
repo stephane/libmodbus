@@ -799,6 +799,9 @@ modbus_t* modbus_new_tcp(const char *ip, int port)
 #endif
 
     ctx = (modbus_t *)malloc(sizeof(modbus_t));
+    if (ctx == NULL) {
+        return NULL;
+    }
     _modbus_init_common(ctx);
 
     /* Could be changed after to reach a remote serial Modbus device */
@@ -807,6 +810,11 @@ modbus_t* modbus_new_tcp(const char *ip, int port)
     ctx->backend = &_modbus_tcp_backend;
 
     ctx->backend_data = (modbus_tcp_t *)malloc(sizeof(modbus_tcp_t));
+    if (ctx->backend_data == NULL) {
+        modbus_free(ctx);
+        errno = ENOMEM;
+        return NULL;
+    }
     ctx_tcp = (modbus_tcp_t *)ctx->backend_data;
 
     if (ip != NULL) {
@@ -843,6 +851,9 @@ modbus_t* modbus_new_tcp_pi(const char *node, const char *service)
     size_t ret_size;
 
     ctx = (modbus_t *)malloc(sizeof(modbus_t));
+    if (ctx == NULL) {
+        return NULL;
+    }
     _modbus_init_common(ctx);
 
     /* Could be changed after to reach a remote serial Modbus device */
@@ -851,6 +862,11 @@ modbus_t* modbus_new_tcp_pi(const char *node, const char *service)
     ctx->backend = &_modbus_tcp_pi_backend;
 
     ctx->backend_data = (modbus_tcp_pi_t *)malloc(sizeof(modbus_tcp_pi_t));
+    if (ctx->backend_data == NULL) {
+        modbus_free(ctx);
+        errno = ENOMEM;
+        return NULL;
+    }
     ctx_tcp_pi = (modbus_tcp_pi_t *)ctx->backend_data;
 
     if (node == NULL) {
