@@ -1180,8 +1180,11 @@ static int _modbus_rtu_select(modbus_t *ctx, fd_set *rset,
 }
 
 static void _modbus_rtu_free(modbus_t *ctx) {
-    free(((modbus_rtu_t*)ctx->backend_data)->device);
-    free(ctx->backend_data);
+    if (ctx->backend_data) {
+        free(((modbus_rtu_t *)ctx->backend_data)->device);
+        free(ctx->backend_data);
+    }
+
     free(ctx);
 }
 
@@ -1229,14 +1232,27 @@ modbus_t* modbus_new_rtu(const char *device,
     }
 
     ctx = (modbus_t *)malloc(sizeof(modbus_t));
+    if (ctx == NULL) {
+        return NULL;
+    }
+
     _modbus_init_common(ctx);
     ctx->backend = &_modbus_rtu_backend;
     ctx->backend_data = (modbus_rtu_t *)malloc(sizeof(modbus_rtu_t));
+    if (ctx->backend_data == NULL) {
+        modbus_free(ctx);
+        errno = ENOMEM;
+        return NULL;
+    }
     ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
-    ctx_rtu->device = NULL;
 
     /* Device name and \0 */
     ctx_rtu->device = (char *)malloc((strlen(device) + 1) * sizeof(char));
+    if (ctx_rtu->device == NULL) {
+        modbus_free(ctx);
+        errno = ENOMEM;
+        return NULL;
+    }
     strcpy(ctx_rtu->device, device);
 
     ctx_rtu->baud = baud;

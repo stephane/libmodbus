@@ -53,6 +53,10 @@ ERRORS
 *EINVAL*::
 An invalid argument was given.
 
+*ENOMEM*::
+Out of memory. Possibly, the application hits its memory limit and/or whole
+system is running out of memory.
+
 
 EXAMPLE
 -------

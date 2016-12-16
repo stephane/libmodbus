@@ -40,6 +40,10 @@ ERRORS
 The node string is empty or has been truncated. The service string is empty or
 has been truncated.
 
+*ENOMEM*::
+Out of memory. Possibly, the application hits its memory limit and/or whole
+system is running out of memory.
+
 
 EXAMPLE
 -------
