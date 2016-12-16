@@ -334,9 +334,7 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
     if (ctx_rtu->rts != MODBUS_RTU_RTS_NONE) {
         ssize_t size;
 
-        if (ctx->debug) {
-            fprintf(stderr, "Sending request using RTS signal\n");
-        }
+        LOG_DEBUG( "modbus.rtu", "Sending request using RTS signal");
 
         ctx_rtu->set_rts(ctx, ctx_rtu->rts == MODBUS_RTU_RTS_UP);
         usleep(ctx_rtu->rts_delay);
@@ -375,9 +373,7 @@ static int _modbus_rtu_receive(modbus_t *ctx, uint8_t *req)
         /* Ignore errors and reset the flag */
         ctx_rtu->confirmation_to_ignore = FALSE;
         rc = 0;
-        if (ctx->debug) {
-            printf("Confirmation to ignore\n");
-        }
+        LOG_DEBUG( "modbus.rtu", "Confirmation to ignore");
     } else {
         rc = _modbus_receive_msg(ctx, req, MSG_INDICATION);
         if (rc == 0) {
@@ -405,10 +401,12 @@ static int _modbus_rtu_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
     /* Check responding slave is the slave we requested (except for broacast
      * request) */
     if (req[0] != rsp[0] && req[0] != MODBUS_BROADCAST_ADDRESS) {
-        if (ctx->debug) {
-            fprintf(stderr,
+        {
+            char message_buffer[ 1024 ];
+            snprintf(message_buffer, 1024,
                     "The responding slave %d isn't the requested slave %d\n",
                     rsp[0], req[0]);
+            LOG_DEBUG( "modbus.rtu", message_buffer );
         }
         errno = EMBBADSLAVE;
         return -1;
@@ -430,8 +428,11 @@ static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
     /* Filter on the Modbus unit identifier (slave) in RTU mode to avoid useless
      * CRC computing. */
     if (slave != ctx->slave && slave != MODBUS_BROADCAST_ADDRESS) {
-        if (ctx->debug) {
-            printf("Request for slave %d ignored (not %d)\n", slave, ctx->slave);
+        {
+            char message_buffer[ 1024 ];
+            snprintf(message_buffer, 1024,
+                     "Request for slave %d ignored (not %d)", slave, ctx->slave);
+            LOG_DEBUG( "modbus.rtu", message_buffer );
         }
         /* Following call to check_confirmation handles this error */
         return 0;
@@ -444,9 +445,12 @@ static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
     if (crc_calculated == crc_received) {
         return msg_length;
     } else {
-        if (ctx->debug) {
-            fprintf(stderr, "ERROR CRC received 0x%0X != CRC calculated 0x%0X\n",
+        {
+            char message_buffer[ 1024 ];
+            snprintf(message_buffer, 1024,
+                    "CRC received 0x%0X != CRC calculated 0x%0X\n",
                     crc_received, crc_calculated);
+            LOG_ERROR( "modbus.rtu", message_buffer );
         }
 
         if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_PROTOCOL) {
@@ -469,10 +473,13 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 #endif
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
 
-    if (ctx->debug) {
-        printf("Opening %s at %d bauds (%c, %d, %d)\n",
+    {
+        char message_buffer[ 1024 ];
+        snprintf(message_buffer, 1024,
+               "Opening %s at %d bauds (%c, %d, %d)",
                ctx_rtu->device, ctx_rtu->baud, ctx_rtu->parity,
                ctx_rtu->data_bit, ctx_rtu->stop_bit);
+        LOG_DEBUG( "modbus.rtu", message_buffer );
     }
 
 #if defined(_WIN32)
@@ -654,9 +661,12 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 
     ctx->s = open(ctx_rtu->device, flags);
     if (ctx->s == -1) {
-        if (ctx->debug) {
-            fprintf(stderr, "ERROR Can't open the device %s (%s)\n",
+        {
+            char message_buffer[ 1024 ];
+            snprintf(message_buffer, 1024,
+                    "Can't open the device %s (%s)",
                     ctx_rtu->device, strerror(errno));
+            LOG_ERROR( "modbus.rtu", message_buffer );
         }
         return -1;
     }
@@ -769,10 +779,12 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 #endif
     default:
         speed = B9600;
-        if (ctx->debug) {
-            fprintf(stderr,
-                    "WARNING Unknown baud rate %d for %s (B9600 used)\n",
+        {
+            char message_buffer[ 1024 ];
+            snprintf(message_buffer, 1024,
+                    "Unknown baud rate %d for %s (B9600 used)\n",
                     ctx_rtu->baud, ctx_rtu->device);
+            LOG_WARN( "modbus.rtu", message_buffer );
         }
     }
 
@@ -995,9 +1007,7 @@ int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode)
             return 0;
         }
 #else
-        if (ctx->debug) {
-            fprintf(stderr, "This function isn't supported on your platform\n");
-        }
+        LOG_WARN( "modbus.rtu", "This function isn't supported on your platform" );
         errno = ENOTSUP;
         return -1;
 #endif
@@ -1020,9 +1030,7 @@ int modbus_rtu_get_serial_mode(modbus_t *ctx)
         modbus_rtu_t *ctx_rtu = ctx->backend_data;
         return ctx_rtu->serial_mode;
 #else
-        if (ctx->debug) {
-            fprintf(stderr, "This function isn't supported on your platform\n");
-        }
+        LOG_WARN( "modbus.rtu", "This function isn't supported on your platform" );
         errno = ENOTSUP;
         return -1;
 #endif
@@ -1044,9 +1052,7 @@ int modbus_rtu_get_rts(modbus_t *ctx)
         modbus_rtu_t *ctx_rtu = ctx->backend_data;
         return ctx_rtu->rts;
 #else
-        if (ctx->debug) {
-            fprintf(stderr, "This function isn't supported on your platform\n");
-        }
+        LOG_WARN( "modbus.rtu", "This function isn't supported on your platform" );
         errno = ENOTSUP;
         return -1;
 #endif
@@ -1080,9 +1086,7 @@ int modbus_rtu_set_rts(modbus_t *ctx, int mode)
             return -1;
         }
 #else
-        if (ctx->debug) {
-            fprintf(stderr, "This function isn't supported on your platform\n");
-        }
+        LOG_WARN( "modbus.rtu", "This function isn't supported on your platform" );
         errno = ENOTSUP;
         return -1;
 #endif
@@ -1105,9 +1109,7 @@ int modbus_rtu_set_custom_rts(modbus_t *ctx, void (*set_rts) (modbus_t *ctx, int
         ctx_rtu->set_rts = set_rts;
         return 0;
 #else
-        if (ctx->debug) {
-            fprintf(stderr, "This function isn't supported on your platform\n");
-        }
+        LOG_WARN( "modbus.rtu", "This function isn't supported on your platform" );
         errno = ENOTSUP;
         return -1;
 #endif
@@ -1130,9 +1132,7 @@ int modbus_rtu_get_rts_delay(modbus_t *ctx)
         ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
         return ctx_rtu->rts_delay;
 #else
-        if (ctx->debug) {
-            fprintf(stderr, "This function isn't supported on your platform\n");
-        }
+        LOG_WARN( "modbus.rtu", "This function isn't supported on your platform" );
         errno = ENOTSUP;
         return -1;
 #endif
@@ -1156,9 +1156,7 @@ int modbus_rtu_set_rts_delay(modbus_t *ctx, int us)
         ctx_rtu->rts_delay = us;
         return 0;
 #else
-        if (ctx->debug) {
-            fprintf(stderr, "This function isn't supported on your platform\n");
-        }
+        LOG_WARN( "modbus.rtu", "This function isn't supported on your platform" );
         errno = ENOTSUP;
         return -1;
 #endif
@@ -1222,9 +1220,7 @@ static int _modbus_rtu_select(modbus_t *ctx, fd_set *rset,
 #else
     while ((s_rc = select(ctx->s+1, rset, NULL, NULL, tv)) == -1) {
         if (errno == EINTR) {
-            if (ctx->debug) {
-                fprintf(stderr, "A non blocked signal was caught\n");
-            }
+            LOG_DEBUG( "modbus.rtu", "A non blocked signal was caught" );
             /* Necessary after an error */
             FD_ZERO(rset);
             FD_SET(ctx->s, rset);
@@ -1280,14 +1276,14 @@ modbus_t* modbus_new_rtu(const char *device,
 
     /* Check device argument */
     if (device == NULL || *device == 0) {
-        fprintf(stderr, "The device string is empty\n");
+        LOG_ERROR( "modbus.rtu", "The device string is empty" );
         errno = EINVAL;
         return NULL;
     }
 
     /* Check baud argument */
     if (baud == 0) {
-        fprintf(stderr, "The baud rate value must not be zero\n");
+        LOG_ERROR( "modbus.rtu", "Baud rate must not be 0" );
         errno = EINVAL;
         return NULL;
     }

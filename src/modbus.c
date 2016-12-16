@@ -2035,6 +2035,7 @@ AARON
 
     rc = ctx->backend->check_integrity(ctx, buffer, *data_offset );
     if( rc == -1 ){
+        LOG_WARN( "modbus", "check_integrity failed" );
         return;
     }
 
@@ -2051,6 +2052,7 @@ AARON
                               error_code, 
                               ctx->async_data.callback_data );
         }
+        LOG_WARN( "modbus", "check_confirmation was invalid, but error code was 0" );
         return;
     }
 

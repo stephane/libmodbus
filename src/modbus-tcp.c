@@ -190,9 +190,12 @@ static int _modbus_tcp_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
 {
     /* Check transaction ID */
     if (req[0] != rsp[0] || req[1] != rsp[1]) {
-        if (ctx->debug) {
-            fprintf(stderr, "Invalid transaction ID received 0x%X (not 0x%X)\n",
+        {
+            char message_buffer[ 1024 ];
+            snprintf(message_buffer, 1024,
+                    "Invalid transaction ID received 0x%X (not 0x%X)",
                     (rsp[0] << 8) + rsp[1], (req[0] << 8) + req[1]);
+            LOG_ERROR( "modbus.tcp", message_buffer );
         }
         errno = EMBBADDATA;
         return -1;
@@ -200,9 +203,12 @@ static int _modbus_tcp_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
 
     /* Check protocol ID */
     if (rsp[2] != 0x0 && rsp[3] != 0x0) {
-        if (ctx->debug) {
-            fprintf(stderr, "Invalid protocol ID received 0x%X (not 0x0)\n",
+        {
+            char message_buffer[ 1024 ];
+            snprintf(message_buffer, 1024,
+                    "Invalid protocol ID received 0x%X (not 0x0)",
                     (rsp[2] << 8) + rsp[3]);
+            LOG_ERROR( "modbus.tcp", message_buffer );
         }
         errno = EMBBADDATA;
         return -1;
@@ -334,8 +340,11 @@ static int _modbus_tcp_connect(modbus_t *ctx)
         return -1;
     }
 
-    if (ctx->debug) {
-        printf("Connecting to %s:%d\n", ctx_tcp->ip, ctx_tcp->port);
+    {
+        char message_buffer[ 1024 ];
+        snprintf(message_buffer, 1024,
+            "Connecting to %s:%d", ctx_tcp->ip, ctx_tcp->port);
+        LOG_DEBUG( "modbus.tcp", message_buffer );
     }
 
     addr.sin_family = AF_INET;
@@ -380,8 +389,11 @@ static int _modbus_tcp_pi_connect(modbus_t *ctx)
     rc = getaddrinfo(ctx_tcp_pi->node, ctx_tcp_pi->service,
                      &ai_hints, &ai_list);
     if (rc != 0) {
-        if (ctx->debug) {
-            fprintf(stderr, "Error returned by getaddrinfo: %s\n", gai_strerror(rc));
+        {
+            char message_buffer[ 1024 ];
+            snprintf(message_buffer, 1024,
+                "Error returned by getaddrinfo: %s\n", gai_strerror(rc));
+            LOG_ERROR( "modbus.tcp", message_buffer );
         }
         errno = ECONNREFUSED;
         return -1;
@@ -406,8 +418,11 @@ static int _modbus_tcp_pi_connect(modbus_t *ctx)
         if (ai_ptr->ai_family == AF_INET)
             _modbus_tcp_set_ipv4_options(s);
 
-        if (ctx->debug) {
-            printf("Connecting to [%s]:%s\n", ctx_tcp_pi->node, ctx_tcp_pi->service);
+        {
+            char message_buffer[ 1024 ];
+            snprintf(message_buffer, 1024,
+                "Connecting to [%s]:%s", ctx_tcp_pi->node, ctx_tcp_pi->service);
+            LOG_DEBUG( "modbus.tcp", message_buffer );
         }
 
         rc = _connect(s, ai_ptr->ai_addr, ai_ptr->ai_addrlen, &ctx->response_timeout);
@@ -584,8 +599,11 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
     ai_list = NULL;
     rc = getaddrinfo(node, service, &ai_hints, &ai_list);
     if (rc != 0) {
-        if (ctx->debug) {
-            fprintf(stderr, "Error returned by getaddrinfo: %s\n", gai_strerror(rc));
+        {
+            char message_buffer[ 1024 ];
+            snprintf(message_buffer, 1024,
+                "Error returned by getaddrinfo: %s\n", gai_strerror(rc));
+            LOG_ERROR( "modbus.tcp", message_buffer );
         }
         errno = ECONNREFUSED;
         return -1;
@@ -667,9 +685,12 @@ int modbus_tcp_accept(modbus_t *ctx, int *s)
         return -1;
     }
 
-    if (ctx->debug) {
-        printf("The client connection from %s is accepted\n",
+    {
+        char message_buffer[ 1024 ];
+        snprintf(message_buffer, 1024,
+            "The client connection from %s is accepted",
                inet_ntoa(addr.sin_addr));
+        LOG_DEBUG( "modbus.tcp", message_buffer );
     }
 
     return ctx->s;
@@ -697,9 +718,7 @@ int modbus_tcp_pi_accept(modbus_t *ctx, int *s)
         return -1;
     }
 
-    if (ctx->debug) {
-        printf("The client connection is accepted.\n");
-    }
+    LOG_DEBUG( "modbus.tcp", "Accepted client connection" );
 
     return ctx->s;
 }
@@ -709,9 +728,7 @@ static int _modbus_tcp_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, i
     int s_rc;
     while ((s_rc = select(ctx->s+1, rset, NULL, NULL, tv)) == -1) {
         if (errno == EINTR) {
-            if (ctx->debug) {
-                fprintf(stderr, "A non blocked signal was caught\n");
-            }
+            LOG_DEBUG( "modbus.tcp", "A non blocked signal was caught" );
             /* Necessary after an error */
             FD_ZERO(rset);
             FD_SET(ctx->s, rset);
@@ -813,14 +830,14 @@ modbus_t* modbus_new_tcp(const char *ip, int port)
         dest_size = sizeof(char) * 16;
         ret_size = strlcpy(ctx_tcp->ip, ip, dest_size);
         if (ret_size == 0) {
-            fprintf(stderr, "The IP string is empty\n");
+            LOG_ERROR( "modbus.tcp", "IP string not provided" );
             modbus_free(ctx);
             errno = EINVAL;
             return NULL;
         }
 
         if (ret_size >= dest_size) {
-            fprintf(stderr, "The IP string has been truncated\n");
+            LOG_ERROR( "modbus.tcp", "IP string truncated" );
             modbus_free(ctx);
             errno = EINVAL;
             return NULL;
@@ -860,14 +877,14 @@ modbus_t* modbus_new_tcp_pi(const char *node, const char *service)
         dest_size = sizeof(char) * _MODBUS_TCP_PI_NODE_LENGTH;
         ret_size = strlcpy(ctx_tcp_pi->node, node, dest_size);
         if (ret_size == 0) {
-            fprintf(stderr, "The node string is empty\n");
+            LOG_ERROR( "modbus.tcp", "Node string is empty" );
             modbus_free(ctx);
             errno = EINVAL;
             return NULL;
         }
 
         if (ret_size >= dest_size) {
-            fprintf(stderr, "The node string has been truncated\n");
+            LOG_ERROR( "modbus.tcp", "Node string truncated" );
             modbus_free(ctx);
             errno = EINVAL;
             return NULL;
@@ -883,14 +900,14 @@ modbus_t* modbus_new_tcp_pi(const char *node, const char *service)
     }
 
     if (ret_size == 0) {
-        fprintf(stderr, "The service string is empty\n");
+        LOG_ERROR( "modbus.tcp", "Service string is empty" );
         modbus_free(ctx);
         errno = EINVAL;
         return NULL;
     }
 
     if (ret_size >= dest_size) {
-        fprintf(stderr, "The service string has been truncated\n");
+        LOG_ERROR( "modbus.tcp", "Service string has been truncated" );
         modbus_free(ctx);
         errno = EINVAL;
         return NULL;
