@@ -1693,6 +1693,7 @@ int modbus_set_byte_timeout(modbus_t *ctx, uint32_t to_sec, uint32_t to_usec)
 
     ctx->byte_timeout.tv_sec = to_sec;
     ctx->byte_timeout.tv_usec = to_usec;
+
     return 0;
 }
 
@@ -1860,15 +1861,14 @@ void modbus_mapping_free(modbus_mapping_t *mb_mapping)
  */
 static int modbus_timer_has_expired( modbus_t *ctx ){
     struct timeval now;
-    int diffseconds;
-    int diffmicroseconds;
+    struct timeval res;
 
     gettimeofday( &now, NULL );
-    diffseconds = now.tv_sec - ctx->async_data.start_time.tv_sec;
-    diffmicroseconds = now.tv_usec - ctx->async_data.start_time.tv_usec;
 
-    if( diffmicroseconds >= ctx->response_timeout.tv_usec &&
-        diffseconds >= ctx->response_timeout.tv_sec ){
+    timersub( &now, &ctx->async_data.start_time, &res );
+
+    if( res.tv_usec >= ctx->response_timeout.tv_usec &&
+        res.tv_sec >= ctx->response_timeout.tv_sec ){
         return 1;
     }
 
@@ -1941,6 +1941,7 @@ void modbus_process_data_master(modbus_t *ctx){
 
     if( ctx->async_data.in_async_operation &&
         modbus_timer_has_expired( ctx ) ){
+        LOG_DEBUG( "modbus", "Timeout expired for operation" );
         /* Our timeout has expired;  purge everything
            in the OS buffer */
         uint8_t purge_buffer[ 128 ];
@@ -2097,6 +2098,7 @@ int modbus_read_registers_async(modbus_t *ctx, int addr, int nb,
         return -1;
     }
 
+
     return read_registers_async( ctx, MODBUS_FC_READ_HOLDING_REGISTERS,
                                  addr, nb, callback, callback_data );
 }
@@ -2109,7 +2111,16 @@ int modbus_read_input_registers_async(modbus_t *ctx, int addr, int nb,
         return -1;
     }
 
-    if( ctx->async_data.in_async_operation ){
+    if( ctx->async_data.in_async_operation &&
+        modbus_timer_has_expired( ctx ) ){
+        /* Our timeout has expired; continue on but purge everything
+           in our buffer */
+        uint8_t buffer[ 128 ];
+        int rc;
+        do{
+            rc = ctx->backend->recv(ctx, buffer, 128 );
+        }while( rc > 0 );
+    }else if( ctx->async_data.in_async_operation ){
         errno = EALREADY;
         return -1;
     }
