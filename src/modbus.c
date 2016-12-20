@@ -1950,6 +1950,16 @@ void modbus_process_data_master(modbus_t *ctx){
         }while( rc > 0 );
         
         ctx->async_data.in_async_operation = FALSE;
+
+        /* Call the callback with an error_code of -1(timeout) */
+        ctx->async_data.callback( ctx, 
+                          ctx->async_data.function_code,
+                          ctx->async_data.addr, 
+                          0,
+                          ctx->async_data.data, 
+                          -1, 
+                          ctx->async_data.callback_data );
+        
         return;
     }
 
@@ -2129,6 +2139,10 @@ int modbus_read_input_registers_async(modbus_t *ctx, int addr, int nb,
 
 void modbus_set_log_function( simplelogger_log_function func ){
     libsynmodbus_log_function = func;
+}
+
+int modbus_is_in_async_operation( modbus_t* ctx ){
+    return ctx->async_data.in_async_operation;
 }
 
 #ifndef HAVE_STRLCPY

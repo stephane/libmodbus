@@ -249,7 +249,9 @@ MODBUS_API int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
  * @param nb The length of the dest array in terms of registers, not bytes(multiply by 2 to get total array length)
  * @param data The array of data requested from the device
  * @param error_code The error code.  If the error code is != 0, the call failed for some reason. 
- *  The data array will not contain any useful information, and nb will be 0
+ *  The data array will not contain any useful information, and nb will be 0.  This corresponds
+ *  to the modbus error code(for example, MODBUS_EXCEPTION_ILLEGAL_FUNCTION)
+ *  If the call times out, error_code will be -1.  Data will not gontain any useful information, and nb will be 0.
  * @param callback_data User-specified data for the callback
  */
 typedef void (*modbus_async_callback_t)(modbus_t *ctx, 
@@ -273,6 +275,8 @@ MODBUS_API int modbus_read_bits_async(modbus_t *ctx, int addr, int nb,
 MODBUS_API int modbus_read_input_bits_async(modbus_t *ctx, int addr, int nb, 
                                             modbus_async_callback_t callback,
                                             void* callback_data);
+
+MODBUS_API int modbus_is_in_async_operation(modbus_t *ctx);
 
 /**
  * UTILS FUNCTIONS
