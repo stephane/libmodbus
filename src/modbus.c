@@ -1962,11 +1962,9 @@ void modbus_process_data_master(modbus_t *ctx){
     while( *step != _STEP_DONE ){ 
         rc = ctx->backend->recv(ctx, buffer + *data_offset, *length_to_read );
         if (rc == -1){
-            /* Ignore this error, probably due to no data being present */
-            if( errno != EAGAIN ){
-                 return;
-            }
+            return;
         }else if( rc == 0 ){
+            LOG_TRACE( "modbus", "No data recieved from slave device!" );
             /*printf( "no data, data offset is %d length to read is %d\n", 
                 ctx->async_data.raw_data_offset,
                 *length_to_read ); */
