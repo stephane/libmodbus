@@ -653,11 +653,16 @@ printf( "\n" );
         usleep(11 * 5000);
         modbus_flush(ctx);
 
-        /* Timeout of 7ms between bytes */
-        modbus_set_byte_timeout(ctx, 0, 7000);
+        /* Timeout of 10ms between bytes */
+        /* 2017-01-05: discovered that this will often fail on ARM hardware.
+         * Using Nvidia Jetson TK1 as ARM build server, the server often
+         * sleeps for ~6ms before sending the next byte of data.  Does not 
+         * fail on emulated ARM running thru qemu.
+         */
+        modbus_set_byte_timeout(ctx, 0, 10000);
         rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS_BYTE_SLEEP_5_MS,
                                    1, tab_rp_registers);
-        printf("2/2 Adapted byte timeout (7ms > 5ms): ");
+        printf("2/2 Adapted byte timeout (10ms > 5ms): ");
         ASSERT_TRUE(rc == 1, "");
     }
 
