@@ -1,3 +1,9 @@
+libsynmodbus (3.2.4) UNRELEASED; urgency=medium
+
+  * Bumped version after release
+
+ -- Robert Middleton <robert@robert-desktop>  Thu, 12 Jan 2017 17:05:43 -0500
+
 libsynmodbus (3.2.3) unstable; urgency=medium
 
   * Bumped version for release
