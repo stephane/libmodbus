@@ -17,6 +17,9 @@ DESCRIPTION
 The *modbus_new_tcp()* function shall allocate and initialize a modbus_t
 structure to communicate with a Modbus TCP IPv4 server.
 
+(new) const char * 'ip' can be domain name;
+
+
 The _ip_ argument specifies the IP address of the server to which the client
 wants to establish a connection. A NULL value can be used to listen any addresses in
 server mode.
@@ -38,6 +41,7 @@ ERRORS
 ------
 *EINVAL*::
 An invalid IP address was given.
+getHostByName() can't found domain name on DNS.
 
 
 EXAMPLE
@@ -47,6 +51,10 @@ EXAMPLE
 modbus_t *ctx;
 
 ctx = modbus_new_tcp("127.0.0.1", 1502);
+
+/* or
+ctx = modbus_new_tcp("myModbusController.com", 1502);
+*/
 if (ctx == NULL) {
     fprintf(stderr, "Unable to allocate libmodbus context\n");
     return -1;
