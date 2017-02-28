@@ -1,4 +1,4 @@
-EXTRA_DIST = README
+EXTRA_DIST = README.md unit-tests.sh
 
 noinst_PROGRAMS = \
 	bandwidth-server-one \

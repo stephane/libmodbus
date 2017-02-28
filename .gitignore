@@ -19,6 +19,7 @@ Makefile.in
 /build-aux
 /config.*
 /configure
+/configure.scan
 /depcomp
 /install-sh
 /libtool

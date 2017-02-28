@@ -161,13 +161,20 @@ int main(int argc, char*argv[])
                 uint8_t req[] = "\x00\x1C\x00\x00\x00\x05\xFF\x03\x02\x00\x00";
                 int req_length = 11;
                 int w_s = modbus_get_socket(ctx);
+                if (w_s == -1) {
+                    fprintf(stderr, "Unable to get a valid socket in special test\n");
+                    continue;
+                }
 
                 /* Copy TID */
                 req[1] = query[1];
                 for (i=0; i < req_length; i++) {
                     printf("(%.2X)", req[i]);
                     usleep(5000);
-                    send(w_s, (const char*)(req + i), 1, MSG_NOSIGNAL);
+                    rc = send(w_s, (const char*)(req + i), 1, MSG_NOSIGNAL);
+                    if (rc == -1) {
+                        break;
+                    }
                 }
                 continue;
             }

@@ -4,6 +4,15 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
+#if defined(_WIN32)
+# define OS_WIN32
+/* ws2_32.dll has getaddrinfo and freeaddrinfo on Windows XP and later.
+ * minwg32 headers check WINVER before allowing the use of these */
+# ifndef WINVER
+#   define WINVER 0x0501
+# endif
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,12 +24,6 @@
 #include <sys/types.h>
 
 #if defined(_WIN32)
-# define OS_WIN32
-/* ws2_32.dll has getaddrinfo and freeaddrinfo on Windows XP and later.
- * minwg32 headers check WINVER before allowing the use of these */
-# ifndef WINVER
-# define WINVER 0x0501
-# endif
 /* Already set in modbus-tcp.h but it seems order matters in VS2005 */
 # include <winsock2.h>
 # include <ws2tcpip.h>
@@ -227,7 +230,6 @@ static int _modbus_tcp_set_ipv4_options(int s)
     /* If the OS does not offer SOCK_NONBLOCK, fall back to setting FIONBIO to
      * make sockets non-blocking */
     /* Do not care about the return value, this is optional */
-    option = 1;
 #if !defined(SOCK_NONBLOCK) && defined(FIONBIO)
 #ifdef OS_WIN32
     {
@@ -236,6 +238,7 @@ static int _modbus_tcp_set_ipv4_options(int s)
         ioctlsocket(s, FIONBIO, &loption);
     }
 #else
+    option = 1;
     ioctl(s, FIONBIO, &option);
 #endif
 #endif
@@ -663,8 +666,6 @@ int modbus_tcp_accept(modbus_t *ctx, int *s)
 #endif
 
     if (ctx->s == -1) {
-        close(*s);
-        *s = -1;
         return -1;
     }
 
@@ -693,9 +694,9 @@ int modbus_tcp_pi_accept(modbus_t *ctx, int *s)
 #else
     ctx->s = accept(*s, (struct sockaddr *)&addr, &addrlen);
 #endif
+
     if (ctx->s == -1) {
-        close(*s);
-        *s = -1;
+        return -1;
     }
 
     if (ctx->debug) {
@@ -811,21 +812,29 @@ modbus_t* modbus_new_tcp(const char *ip, int port)
     ctx_tcp = (modbus_tcp_t *)ctx->backend_data;
 
     if (ip != NULL) {
-        dest_size = sizeof(char) * 16;
-        ret_size = strlcpy(ctx_tcp->ip, ip, dest_size);
-        if (ret_size == 0) {
-            fprintf(stderr, "The IP string is empty\n");
-            modbus_free(ctx);
-            errno = EINVAL;
-            return NULL;
-        }
+		/*	Paste this code... I want resolve domain name(will need in work, where use DDNS)
+			If not work - mailto:assasinhak008@gmail.com 
+		*/
+		ctx_tcp->ip = gethostbyname(ip)->h_addr;		/*new*/
+		if (ctx_tcp->ip == NULL) {						/*new*/
 
+			dest_size = sizeof(char) * 16;
+			ret_size = strlcpy(ctx_tcp->ip, ip, dest_size);
+			if (ret_size == 0) {
+				fprintf(stderr, "The IP string is empty\n");
+				modbus_free(ctx);
+				errno = EINVAL;
+				return NULL;
+			}
+		}												/*new*/
         if (ret_size >= dest_size) {
             fprintf(stderr, "The IP string has been truncated\n");
             modbus_free(ctx);
             errno = EINVAL;
             return NULL;
         }
+
+
     } else {
         ctx_tcp->ip[0] = '0';
     }

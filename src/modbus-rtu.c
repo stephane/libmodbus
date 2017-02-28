@@ -355,7 +355,7 @@ static int _modbus_rtu_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
 
 /* The check_crc16 function shall return 0 is the message is ignored and the
    message length if the CRC is valid. Otherwise it shall return -1 and set
-   errno to EMBADCRC. */
+   errno to EMBBADCRC. */
 static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
                                        const int msg_length)
 {
