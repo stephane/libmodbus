@@ -64,7 +64,7 @@ as manual pages after installation.
 
 The documentation is based on
 [AsciiDoc](http://www.methods.co.nz/asciidoc/).  Only man pages are built
-by default with `make` command, you can run `make htmldoc` in *docs* directory
+by default with `make` command, you can run `make htmldoc` in *doc* directory
 to generate HTML files.
 
 Testing

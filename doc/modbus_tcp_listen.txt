@@ -17,7 +17,7 @@ DESCRIPTION
 The *modbus_tcp_listen()* function shall create a socket and listen to maximum
 _nb_connection_ incoming connections on the specified IP address.  The context
 _ctx _must be allocated and initialized with linkmb:modbus_new_tcp[3] before to
-set the IP address to listen, if IP address is set to NULL, any addresses will be
+set the IP address to listen, if IP address is set to NULL or '0.0.0.0', any addresses will be
 listen.
 
 

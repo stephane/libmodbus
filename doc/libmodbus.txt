@@ -223,19 +223,24 @@ Reply an exception::
 Server
 ~~~~~~
 The server is waiting for request from clients and must answer when it is
-concerned by the request. The libmodbus offers the following functions to
-handle requests:
+concerned by the request.
 
-Data mapping:
-     linkmb:modbus_mapping_new[3]
-     linkmb:modbus_mapping_free[3]
+In TCP mode, you must not use the usual linkmb:modbus_connect[3] to establish the connection but a pair of accept/listen calls::
+     linkmb:modbus_tcp_listen[3]
+     linkmb:modbus_tcp_accept[3]
+     linkmb:modbus_tcp_pi_listen[3]
+     linkmb:modbus_tcp_pi_accept[3]
 
-Receive::
+then the data can be received with::
      linkmb:modbus_receive[3]
 
-Reply::
+and a response can be send with::
      linkmb:modbus_reply[3]
      linkmb:modbus_reply_exception[3]
+
+To handle the mapping of your Modbus data, you must use:
+     linkmb:modbus_mapping_new[3]
+     linkmb:modbus_mapping_free[3]
 
 
 ERROR HANDLING
