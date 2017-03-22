@@ -128,6 +128,8 @@ Timeout settings::
     linkmb:modbus_set_byte_timeout[3]
     linkmb:modbus_get_response_timeout[3]
     linkmb:modbus_set_response_timeout[3]
+    linkmb:modbus_get_indication_timeout[3]
+    linkmb:modbus_set_indication_timeout[3]
 
 Error recovery mode::
     linkmb:modbus_set_error_recovery[3]

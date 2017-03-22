@@ -98,6 +98,7 @@ struct _modbus {
     int error_recovery;
     struct timeval response_timeout;
     struct timeval byte_timeout;
+    struct timeval indication_timeout;
     const modbus_backend_t *backend;
     void *backend_data;
 };

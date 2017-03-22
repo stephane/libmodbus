@@ -1,0 +1,53 @@
+modbus_get_indication_timeout(3)
+================================
+
+
+NAME
+----
+modbus_get_indication_timeout - get timeout used to wait for an indication (request received by a server).
+
+SYNOPSIS
+--------
+*int modbus_get_indication_timeout(modbus_t *'ctx', uint32_t *'to_sec', uint32_t *'to_usec');*
+
+
+DESCRIPTION
+-----------
+
+The *modbus_get_indication_timeout()* function shall store the timeout interval
+used to wait for an indication in the _to_sec_ and _to_usec_ arguments.
+Indication is the term used by the Modbus protocol to designate a request
+received by the server.
+
+The default value is zero, it means the server will wait forever.
+
+
+RETURN VALUE
+------------
+The function shall return 0 if successful. Otherwise it shall return -1 and set
+errno.
+
+
+EXAMPLE
+-------
+[source,c]
+-------------------
+uint32_t to_sec;
+uint32_t to_usec;
+
+/* Save original timeout */
+modbus_get_indication_timeout(ctx, &to_sec, &to_usec);
+-------------------
+
+
+SEE ALSO
+--------
+linkmb:modbus_set_indication_timeout[3]
+linkmb:modbus_get_response_timeout[3]
+linkmb:modbus_set_response_timeout[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

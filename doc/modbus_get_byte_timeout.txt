@@ -39,9 +39,9 @@ modbus_get_byte_timeout(ctx, &to_sec, &to_usec);
 
 SEE ALSO
 --------
+linkmb:modbus_set_byte_timeout[3]
 linkmb:modbus_get_response_timeout[3]
 linkmb:modbus_set_response_timeout[3]
-linkmb:modbus_set_byte_timeout[3]
 
 
 AUTHORS

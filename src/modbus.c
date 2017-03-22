@@ -349,7 +349,7 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
 
     if (ctx->debug) {
         if (msg_type == MSG_INDICATION) {
-            printf("Waiting for a indication...\n");
+            printf("Waiting for an indication...\n");
         } else {
             printf("Waiting for a confirmation...\n");
         }
@@ -368,7 +368,15 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     if (msg_type == MSG_INDICATION) {
         /* Wait for a message, we don't know when the message will be
          * received */
-        p_tv = NULL;
+        if (ctx->indication_timeout.tv_sec == 0 && ctx->indication_timeout.tv_usec == 0) {
+            /* By default, the indication timeout isn't set */
+            p_tv = NULL;
+        } else {
+            /* Wait for an indication (name of a received request by a server, see schema) */
+            tv.tv_sec = ctx->indication_timeout.tv_sec;
+            tv.tv_usec = ctx->indication_timeout.tv_usec;
+            p_tv = &tv;
+        }
     } else {
         tv.tv_sec = ctx->response_timeout.tv_sec;
         tv.tv_usec = ctx->response_timeout.tv_usec;
@@ -1564,6 +1572,9 @@ void _modbus_init_common(modbus_t *ctx)
 
     ctx->byte_timeout.tv_sec = 0;
     ctx->byte_timeout.tv_usec = _BYTE_TIMEOUT;
+
+    ctx->indication_timeout.tv_sec = 0;
+    ctx->indication_timeout.tv_usec = 0;
 }
 
 /* Define the slave number */
@@ -1670,6 +1681,32 @@ int modbus_set_byte_timeout(modbus_t *ctx, uint32_t to_sec, uint32_t to_usec)
 
     ctx->byte_timeout.tv_sec = to_sec;
     ctx->byte_timeout.tv_usec = to_usec;
+    return 0;
+}
+
+/* Get the timeout interval used by the server to wait for an indication from a client */
+int modbus_get_indication_timeout(modbus_t *ctx, uint32_t *to_sec, uint32_t *to_usec)
+{
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    *to_sec = ctx->indication_timeout.tv_sec;
+    *to_usec = ctx->indication_timeout.tv_usec;
+    return 0;
+}
+
+int modbus_set_indication_timeout(modbus_t *ctx, uint32_t to_sec, uint32_t to_usec)
+{
+    /* Indication timeout can be disabled when both values are zero */
+    if (ctx == NULL || to_usec > 999999) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    ctx->indication_timeout.tv_sec = to_sec;
+    ctx->indication_timeout.tv_usec = to_usec;
     return 0;
 }
 

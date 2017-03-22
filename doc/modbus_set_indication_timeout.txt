@@ -1,0 +1,48 @@
+modbus_set_indication_timeout(3)
+================================
+
+
+NAME
+----
+modbus_set_indication_timeout - set timeout between indications
+
+
+SYNOPSIS
+--------
+*void modbus_set_indication_timeout(modbus_t *'ctx', uint32_t 'to_sec', uint32_t 'to_usec');*
+
+
+DESCRIPTION
+-----------
+The *modbus_set_indication_timeout()* function shall set the timeout interval used by
+a server to wait for a request from a client.
+
+The value of _to_usec_ argument must be in the range 0 to 999999.
+
+If both _to_sec_ and _to_usec_ are zero, this timeout will not be used at all.
+In this case, the server will wait forever.
+
+
+RETURN VALUE
+------------
+The function shall return 0 if successful. Otherwise it shall return -1 and set
+errno.
+
+
+ERRORS
+------
+*EINVAL*::
+The argument _ctx_ is NULL or _to_usec_ is larger than 1000000.
+
+
+SEE ALSO
+--------
+linkmb:modbus_get_indication_timeout[3]
+linkmb:modbus_get_response_timeout[3]
+linkmb:modbus_set_response_timeout[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>
