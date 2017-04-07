@@ -488,19 +488,28 @@ int main(int argc, char *argv[])
         printf("1-C/3 No response from slave %d with invalid request: ",
                INVALID_SERVER_ID);
         ASSERT_TRUE(rc == -1 && errno == ETIMEDOUT, "");
+
+
+        rc = modbus_set_slave(ctx, MODBUS_BROADCAST_ADDRESS);
+        ASSERT_TRUE(rc != -1, "Invalid broacast address");
+
+        rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
+                                   UT_REGISTERS_NB, tab_rp_registers);
+        printf("2/3 No reply after a broadcast query: ");
+        ASSERT_TRUE(rc == -1 && errno == ETIMEDOUT, "");
     } else {
         /* Response in TCP mode */
         printf("1/3 Response from slave %d: ", INVALID_SERVER_ID);
         ASSERT_TRUE(rc == UT_REGISTERS_NB, "");
+
+        rc = modbus_set_slave(ctx, MODBUS_BROADCAST_ADDRESS);
+        ASSERT_TRUE(rc != -1, "Invalid broacast address");
+
+        rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
+                                   UT_REGISTERS_NB, tab_rp_registers);
+        printf("2/3 Reply after a query with unit id == 0: ");
+        ASSERT_TRUE(rc == UT_REGISTERS_NB, "");
     }
-
-    rc = modbus_set_slave(ctx, MODBUS_BROADCAST_ADDRESS);
-    ASSERT_TRUE(rc != -1, "Invalid broacast address");
-
-    rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
-                               UT_REGISTERS_NB, tab_rp_registers);
-    printf("2/3 No reply after a broadcast query: ");
-    ASSERT_TRUE(rc == -1 && errno == ETIMEDOUT, "");
 
     /* Restore slave */
     modbus_set_slave(ctx, old_slave);
