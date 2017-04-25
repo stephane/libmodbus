@@ -40,6 +40,8 @@
 #  define GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__ * 10)
 #  if GCC_VERSION >= 430
 // Since GCC >= 4.30, GCC provides __builtin_bswapXX() alternatives so we switch to them
+#    undef bswap_16
+#    define bswap_16 __builtin_bswap16
 #    undef bswap_32
 #    define bswap_32 __builtin_bswap32
 #  endif
