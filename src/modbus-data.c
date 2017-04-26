@@ -43,6 +43,10 @@
 #    undef bswap_32
 #    define bswap_32 __builtin_bswap32
 #  endif
+#  if GCC_VERSION >= 480
+#    undef bswap_16
+#    define bswap_16 __builtin_bswap16
+#  endif
 #endif
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1400)
