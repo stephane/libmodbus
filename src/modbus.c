@@ -152,6 +152,12 @@ static unsigned int compute_response_length_from_request(modbus_t *ctx, uint8_t 
         /* The response is device specific (the header provides the
            length) */
         return MSG_LENGTH_UNDEFINED;
+    case MODBUS_FC_READ_FILE_RECORD:
+        length = 4 + 2 * (req[offset + 7] << 8 | req[offset + 8]);
+        break;
+    case MODBUS_FC_WRITE_FILE_RECORD:
+        length = 9 + 2 * (req[offset + 7] << 8 | req[offset + 8]);
+        break;
     case MODBUS_FC_MASK_WRITE_REGISTER:
         length = 7;
         break;
@@ -260,6 +266,9 @@ static uint8_t compute_meta_length_after_function(int function,
         } else if (function == MODBUS_FC_WRITE_MULTIPLE_COILS ||
                    function == MODBUS_FC_WRITE_MULTIPLE_REGISTERS) {
             length = 5;
+        } else if (function == MODBUS_FC_READ_FILE_RECORD ||
+                   function == MODBUS_FC_WRITE_FILE_RECORD) {
+            length = 8;
         } else if (function == MODBUS_FC_MASK_WRITE_REGISTER) {
             length = 6;
         } else if (function == MODBUS_FC_WRITE_AND_READ_REGISTERS) {
@@ -279,6 +288,12 @@ static uint8_t compute_meta_length_after_function(int function,
             break;
         case MODBUS_FC_MASK_WRITE_REGISTER:
             length = 6;
+            break;
+        case MODBUS_FC_READ_FILE_RECORD:
+            length = 3;
+            break;
+        case MODBUS_FC_WRITE_FILE_RECORD:
+            length = 8;
             break;
         default:
             length = 1;
@@ -304,6 +319,10 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
         case MODBUS_FC_WRITE_AND_READ_REGISTERS:
             length = msg[ctx->backend->header_length + 9];
             break;
+        case MODBUS_FC_READ_FILE_RECORD:
+        case MODBUS_FC_WRITE_FILE_RECORD:
+            length = msg[ctx->backend->header_length + 1] - 7;
+            break;
         default:
             length = 0;
         }
@@ -313,6 +332,10 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
             function == MODBUS_FC_REPORT_SLAVE_ID ||
             function == MODBUS_FC_WRITE_AND_READ_REGISTERS) {
             length = msg[ctx->backend->header_length + 1];
+        } else if (function == MODBUS_FC_READ_FILE_RECORD) {
+            length = msg[ctx->backend->header_length + 2] - 1;
+        } else if (function == MODBUS_FC_WRITE_FILE_RECORD) {
+            length = msg[ctx->backend->header_length + 1] - 7;
         } else {
             length = 0;
         }
