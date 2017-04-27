@@ -600,6 +600,12 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
             /* Report slave ID (bytes received) */
             req_nb_value = rsp_nb_value = rsp[offset + 1];
             break;
+        case MODBUS_FC_READ_FILE_RECORD:
+            req_nb_value = (req[offset + 7] << 8) + req[offset + 8];
+            rsp_nb_value = (rsp[offset + 2] - 1) / 2;
+        case MODBUS_FC_WRITE_FILE_RECORD:
+            req_nb_value = (req[offset + 7] << 8) + req[offset + 8];
+            rsp_nb_value = (rsp[offset + 7] << 8) + rsp[offset + 8];
         default:
             /* 1 Write functions & others */
             req_nb_value = rsp_nb_value = 1;
@@ -1234,6 +1240,67 @@ int modbus_read_input_registers(modbus_t *ctx, int addr, int nb,
     return status;
 }
 
+int modbus_read_file_record(modbus_t *ctx, int addr, int sub_addr, int nb, uint16_t *dest)
+{
+    int rc;
+    int req_length;
+    uint8_t req[_MIN_REQ_LENGTH];
+    uint8_t rsp[MAX_MESSAGE_LENGTH];
+
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (sub_addr > MODBUS_MAX_FILE_RECORD_NUMBER) {
+        if (ctx->debug) {
+            fprintf(stderr,
+                    "ERROR Too big file record number (%d > %d)\n",
+                    sub_addr, MODBUS_MAX_FILE_RECORD_NUMBER);
+        }
+        errno = EMBMDATA;
+        return -1;
+    }
+
+    req_length = ctx->backend->build_request_basis(ctx,
+                                                   MODBUS_FC_READ_FILE_RECORD,
+                                                   0, 0, req);
+
+    req_length -= 4;
+    req[req_length++] = 7;  // one request, so 7 bytes
+    req[req_length++] = 6;
+    req[req_length++] = addr >> 8;
+    req[req_length++] = addr & 0x00ff;
+    req[req_length++] = sub_addr >> 8;
+    req[req_length++] = sub_addr & 0x00ff;
+    req[req_length++] = nb >> 8;
+    req[req_length++] = nb * 0x00ff;
+
+    rc = send_msg(ctx, req, req_length);
+    if (rc > 0) {
+        int offset;
+        int i;
+
+        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        if (rc == -1)
+            return -1;
+
+        rc = check_confirmation(ctx, req, rsp, rc);
+        if (rc == -1)
+            return -1;
+
+        offset = ctx->backend->header_length;
+
+        for (i = 0; i < rc; i++) {
+
+            dest[i] = (rsp[offset + 4 + (i << 1)] << 8) |
+                       rsp[offset + 5 + (i << 1)];
+        }
+    }
+
+    return rc;
+}
+
 /* Write a value to the specified register of the remote device.
    Used by write_bit and write_register */
 static int write_single(modbus_t *ctx, int function, int addr, int value)
@@ -1398,6 +1465,64 @@ int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *src)
 
     return rc;
 }
+
+int modbus_write_file_record(modbus_t *ctx, int addr, int sub_addr, int nb, const uint16_t *src)
+{
+    int rc;
+    int i;
+    int req_length;
+    int byte_count;
+    uint8_t req[MAX_MESSAGE_LENGTH];
+
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (sub_addr > MODBUS_MAX_FILE_RECORD_NUMBER) {
+        if (ctx->debug) {
+            fprintf(stderr,
+                    "ERROR Too big file record number (%d > %d)\n",
+                    sub_addr, MODBUS_MAX_FILE_RECORD_NUMBER);
+        }
+        errno = EMBMDATA;
+        return -1;
+    }
+
+    req_length = ctx->backend->build_request_basis(ctx,
+                                                   MODBUS_FC_WRITE_FILE_RECORD,
+                                                   0, 0, req);
+
+    byte_count = nb * 2;
+    req_length -= 4;
+    req[req_length++] = 7 + byte_count;  // one request header + bytes to write
+    req[req_length++] = 6;
+    req[req_length++] = addr >> 8;
+    req[req_length++] = addr & 0x00ff;
+    req[req_length++] = sub_addr >> 8;
+    req[req_length++] = sub_addr & 0x00ff;
+    req[req_length++] = nb >> 8;
+    req[req_length++] = nb * 0x00ff;
+
+    for (i = 0; i < nb; i++) {
+        req[req_length++] = src[i] >> 8;
+        req[req_length++] = src[i] & 0x00FF;
+    }
+
+    rc = send_msg(ctx, req, req_length);
+    if (rc > 0) {
+        uint8_t rsp[MAX_MESSAGE_LENGTH];
+
+        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        if (rc == -1)
+            return -1;
+
+        rc = check_confirmation(ctx, req, rsp, rc);
+    }
+
+    return rc;
+}
+
 
 int modbus_mask_write_register(modbus_t *ctx, int addr, uint16_t and_mask, uint16_t or_mask)
 {
