@@ -53,7 +53,8 @@ int main(void)
     ctx = modbus_new_tcp("127.0.0.1", 1502);
 
     mb_mapping = modbus_mapping_new(MODBUS_MAX_READ_BITS, 0,
-                                    MODBUS_MAX_READ_REGISTERS, 0);
+                                    MODBUS_MAX_READ_REGISTERS, 0,
+                                    0, 0, 0);
     if (mb_mapping == NULL) {
         fprintf(stderr, "Failed to allocate the mapping: %s\n",
                 modbus_strerror(errno));
