@@ -65,7 +65,7 @@ static int _modbus_tcp_init_win32(void)
     WSADATA wsaData;
 
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        fprintf(stderr, "WSAStartup() returned error code %d\n",
+        modbus_trace_error("WSAStartup() returned error code %d\n",
                 (unsigned int)GetLastError());
         errno = EIO;
         return -1;
@@ -191,7 +191,7 @@ static int _modbus_tcp_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
     /* Check transaction ID */
     if (req[0] != rsp[0] || req[1] != rsp[1]) {
         if (ctx->debug) {
-            fprintf(stderr, "Invalid transaction ID received 0x%X (not 0x%X)\n",
+            modbus_trace_error("Invalid transaction ID received 0x%X (not 0x%X)\n",
                     (rsp[0] << 8) + rsp[1], (req[0] << 8) + req[1]);
         }
         errno = EMBBADDATA;
@@ -201,7 +201,7 @@ static int _modbus_tcp_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
     /* Check protocol ID */
     if (rsp[2] != 0x0 && rsp[3] != 0x0) {
         if (ctx->debug) {
-            fprintf(stderr, "Invalid protocol ID received 0x%X (not 0x0)\n",
+            modbus_trace_error("Invalid protocol ID received 0x%X (not 0x0)\n",
                     (rsp[2] << 8) + rsp[3]);
         }
         errno = EMBBADDATA;
@@ -335,7 +335,7 @@ static int _modbus_tcp_connect(modbus_t *ctx)
     }
 
     if (ctx->debug) {
-        printf("Connecting to %s:%d\n", ctx_tcp->ip, ctx_tcp->port);
+        modbus_trace("Connecting to %s:%d\n", ctx_tcp->ip, ctx_tcp->port);
     }
 
     addr.sin_family = AF_INET;
@@ -381,7 +381,7 @@ static int _modbus_tcp_pi_connect(modbus_t *ctx)
                      &ai_hints, &ai_list);
     if (rc != 0) {
         if (ctx->debug) {
-            fprintf(stderr, "Error returned by getaddrinfo: %s\n", gai_strerror(rc));
+            modbus_trace_error("Error returned by getaddrinfo: %s\n", gai_strerror(rc));
         }
         errno = ECONNREFUSED;
         return -1;
@@ -407,7 +407,7 @@ static int _modbus_tcp_pi_connect(modbus_t *ctx)
             _modbus_tcp_set_ipv4_options(s);
 
         if (ctx->debug) {
-            printf("Connecting to [%s]:%s\n", ctx_tcp_pi->node, ctx_tcp_pi->service);
+            modbus_trace("Connecting to [%s]:%s\n", ctx_tcp_pi->node, ctx_tcp_pi->service);
         }
 
         rc = _connect(s, ai_ptr->ai_addr, ai_ptr->ai_addrlen, &ctx->response_timeout);
@@ -585,7 +585,7 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
     rc = getaddrinfo(node, service, &ai_hints, &ai_list);
     if (rc != 0) {
         if (ctx->debug) {
-            fprintf(stderr, "Error returned by getaddrinfo: %s\n", gai_strerror(rc));
+            modbus_trace_error("Error returned by getaddrinfo: %s\n", gai_strerror(rc));
         }
         errno = ECONNREFUSED;
         return -1;
@@ -668,7 +668,7 @@ int modbus_tcp_accept(modbus_t *ctx, int *s)
     }
 
     if (ctx->debug) {
-        printf("The client connection from %s is accepted\n",
+        modbus_trace("The client connection from %s is accepted\n",
                inet_ntoa(addr.sin_addr));
     }
 
@@ -698,7 +698,7 @@ int modbus_tcp_pi_accept(modbus_t *ctx, int *s)
     }
 
     if (ctx->debug) {
-        printf("The client connection is accepted.\n");
+        modbus_trace("The client connection is accepted.\n");
     }
 
     return ctx->s;
@@ -710,7 +710,7 @@ static int _modbus_tcp_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, i
     while ((s_rc = select(ctx->s+1, rset, NULL, NULL, tv)) == -1) {
         if (errno == EINTR) {
             if (ctx->debug) {
-                fprintf(stderr, "A non blocked signal was caught\n");
+                modbus_trace_error("A non blocked signal was caught\n");
             }
             /* Necessary after an error */
             FD_ZERO(rset);
@@ -793,7 +793,7 @@ modbus_t* modbus_new_tcp(const char *ip, int port)
     sa.sa_handler = SIG_IGN;
     if (sigaction(SIGPIPE, &sa, NULL) < 0) {
         /* The debug flag can't be set here... */
-        fprintf(stderr, "Coud not install SIGPIPE handler.\n");
+        modbus_trace_error("Coud not install SIGPIPE handler.\n");
         return NULL;
     }
 #endif
@@ -821,14 +821,14 @@ modbus_t* modbus_new_tcp(const char *ip, int port)
         dest_size = sizeof(char) * 16;
         ret_size = strlcpy(ctx_tcp->ip, ip, dest_size);
         if (ret_size == 0) {
-            fprintf(stderr, "The IP string is empty\n");
+            modbus_trace_error("The IP string is empty\n");
             modbus_free(ctx);
             errno = EINVAL;
             return NULL;
         }
 
         if (ret_size >= dest_size) {
-            fprintf(stderr, "The IP string has been truncated\n");
+            modbus_trace_error("The IP string has been truncated\n");
             modbus_free(ctx);
             errno = EINVAL;
             return NULL;
@@ -876,14 +876,14 @@ modbus_t* modbus_new_tcp_pi(const char *node, const char *service)
         dest_size = sizeof(char) * _MODBUS_TCP_PI_NODE_LENGTH;
         ret_size = strlcpy(ctx_tcp_pi->node, node, dest_size);
         if (ret_size == 0) {
-            fprintf(stderr, "The node string is empty\n");
+            modbus_trace_error("The node string is empty\n");
             modbus_free(ctx);
             errno = EINVAL;
             return NULL;
         }
 
         if (ret_size >= dest_size) {
-            fprintf(stderr, "The node string has been truncated\n");
+            modbus_trace_error("The node string has been truncated\n");
             modbus_free(ctx);
             errno = EINVAL;
             return NULL;
@@ -899,14 +899,14 @@ modbus_t* modbus_new_tcp_pi(const char *node, const char *service)
     }
 
     if (ret_size == 0) {
-        fprintf(stderr, "The service string is empty\n");
+        modbus_trace_error("The service string is empty\n");
         modbus_free(ctx);
         errno = EINVAL;
         return NULL;
     }
 
     if (ret_size >= dest_size) {
-        fprintf(stderr, "The service string has been truncated\n");
+        modbus_trace_error("The service string has been truncated\n");
         modbus_free(ctx);
         errno = EINVAL;
         return NULL;
