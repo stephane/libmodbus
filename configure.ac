@@ -59,6 +59,7 @@ AC_CANONICAL_HOST
 os_win32="false"
 os_cygwin="false"
 os_qnx="false"
+os_sunos="false"
 case "${host_os}" in
       *mingw32*)
     os_win32="true"
@@ -68,6 +69,9 @@ case "${host_os}" in
   ;;
       *cygwin*)
     os_cygwin="true"
+  ;;
+      *solaris*)
+    os_sunos="true"
   ;;
 esac
 AM_CONDITIONAL(OS_WIN32, test "$os_win32" = "true")
@@ -131,6 +135,11 @@ if test "$os_cygwin" = "false"; then
         LIBS="$LIBS -lws2_32"
     AC_SUBST(LIBS)
     fi
+fi
+
+if test "$os_sunos" = "true"; then
+    LIBS="$LIBS -lnsl -lsocket"
+    AC_SUBST(LIBS)
 fi
 
 # Check for RS485 support (Linux kernel version 2.6.28+)
