@@ -365,15 +365,9 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     step = _STEP_FUNCTION;
     length_to_read = ctx->backend->header_length + 1;
 
-    if (msg_type == MSG_INDICATION) {
-        /* Wait for a message, we don't know when the message will be
-         * received */
-        p_tv = NULL;
-    } else {
-        tv.tv_sec = ctx->response_timeout.tv_sec;
-        tv.tv_usec = ctx->response_timeout.tv_usec;
-        p_tv = &tv;
-    }
+	tv.tv_sec = ctx->response_timeout.tv_sec;
+	v.tv_usec = ctx->response_timeout.tv_usec;
+	p_tv = &tv;
 
     while (length_to_read != 0) {
         rc = ctx->backend->select(ctx, &rset, p_tv, length_to_read);
