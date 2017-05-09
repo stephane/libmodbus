@@ -12,6 +12,7 @@
 #include <modbus.h>
 #ifdef _WIN32
 # include <winsock2.h>
+# include "usleep_win32.c"
 #else
 # include <sys/socket.h>
 #endif

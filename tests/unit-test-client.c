@@ -11,6 +11,10 @@
 #include <errno.h>
 #include <modbus.h>
 
+#ifdef _WIN32
+#include "usleep_win32.c"
+#endif
+
 #include "unit-test.h"
 
 const int EXCEPTION_RC = 2;
