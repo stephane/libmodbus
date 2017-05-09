@@ -447,9 +447,10 @@ static int _modbus_tcp_flush(modbus_t *ctx)
     do {
         /* Extract the garbage from the socket */
         char devnull[MODBUS_TCP_MAX_ADU_LENGTH];
-#ifndef OS_WIN32
-        rc = recv(ctx->s, devnull, MODBUS_TCP_MAX_ADU_LENGTH, MSG_DONTWAIT);
-#else
+#ifdef _AIX
+        rc = recv(ctx->s, devnull, MODBUS_TCP_MAX_ADU_LENGTH, MSG_NONBLOCK);
+
+#ifdef OS_WIN32
         /* On Win32, it's a bit more complicated to not wait */
         fd_set rset;
         struct timeval tv;
@@ -467,6 +468,9 @@ static int _modbus_tcp_flush(modbus_t *ctx)
             /* There is data to flush */
             rc = recv(ctx->s, devnull, MODBUS_TCP_MAX_ADU_LENGTH, 0);
         }
+#else
+        rc = recv(ctx->s, devnull, MODBUS_TCP_MAX_ADU_LENGTH, MSG_DONTWAIT);
+
 #endif
         if (rc > 0) {
             rc_sum += rc;
