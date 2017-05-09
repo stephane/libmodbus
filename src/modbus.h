@@ -110,6 +110,8 @@ MODBUS_BEGIN_DECLS
  */
 #define MODBUS_MAX_ADU_LENGTH              260
 
+#define MODBUS_MAX_SEND_RETRIES            3
+
 /* Random number to avoid errno conflicts */
 #define MODBUS_ENOBASE 112345678
 
