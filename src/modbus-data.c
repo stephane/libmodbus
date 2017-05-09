@@ -48,6 +48,9 @@
 #    define bswap_16 __builtin_bswap16
 #  endif
 #endif
+#if defined(_MSC_VER) && (_MSC_VER >= 1400)
+# define bswap_32 _byteswap_ulong
+#endif
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1400)
 #  define bswap_32 _byteswap_ulong
