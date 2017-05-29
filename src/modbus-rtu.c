@@ -103,7 +103,7 @@ static int _modbus_set_slave(modbus_t *ctx, int slave)
 }
 
 /* Builds a RTU request header */
-static int _modbus_rtu_build_request_basis(modbus_t *ctx, int function,
+int _modbus_rtu_build_request_basis(modbus_t *ctx, int function,
                                            int addr, int nb,
                                            uint8_t *req)
 {
@@ -119,7 +119,7 @@ static int _modbus_rtu_build_request_basis(modbus_t *ctx, int function,
 }
 
 /* Builds a RTU response header */
-static int _modbus_rtu_build_response_basis(sft_t *sft, uint8_t *rsp)
+int _modbus_rtu_build_response_basis(sft_t *sft, uint8_t *rsp)
 {
     /* In this case, the slave is certainly valid because a check is already
      * done in _modbus_rtu_listen */
@@ -129,7 +129,7 @@ static int _modbus_rtu_build_response_basis(sft_t *sft, uint8_t *rsp)
     return _MODBUS_RTU_PRESET_RSP_LENGTH;
 }
 
-static uint16_t crc16(uint8_t *buffer, uint16_t buffer_length)
+uint16_t crc16(uint8_t *buffer, uint16_t buffer_length)
 {
     uint8_t crc_hi = 0xFF; /* high CRC byte initialized */
     uint8_t crc_lo = 0xFF; /* low CRC byte initialized */
@@ -145,14 +145,14 @@ static uint16_t crc16(uint8_t *buffer, uint16_t buffer_length)
     return (crc_hi << 8 | crc_lo);
 }
 
-static int _modbus_rtu_prepare_response_tid(const uint8_t *req, int *req_length)
+int _modbus_rtu_prepare_response_tid(const uint8_t *req, int *req_length)
 {
     (*req_length) -= _MODBUS_RTU_CHECKSUM_LENGTH;
     /* No TID */
     return 0;
 }
 
-static int _modbus_rtu_send_msg_pre(uint8_t *req, int req_length)
+int _modbus_rtu_send_msg_pre(uint8_t *req, int req_length)
 {
     uint16_t crc = crc16(req, req_length);
     req[req_length++] = crc >> 8;
