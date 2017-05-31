@@ -41,7 +41,8 @@ MODBUS_BEGIN_DECLS
 
 typedef enum {
     _MODBUS_BACKEND_TYPE_RTU=0,
-    _MODBUS_BACKEND_TYPE_TCP
+    _MODBUS_BACKEND_TYPE_TCP, 
+    _MODBUS_BACKEND_TYPE_ASCII
 } modbus_backend_type_t;
 
 /*
