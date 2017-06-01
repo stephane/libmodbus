@@ -793,7 +793,7 @@ modbus_t* modbus_new_tcp(const char *ip, int port)
     sa.sa_handler = SIG_IGN;
     if (sigaction(SIGPIPE, &sa, NULL) < 0) {
         /* The debug flag can't be set here... */
-        fprintf(stderr, "Coud not install SIGPIPE handler.\n");
+        fprintf(stderr, "Could not install SIGPIPE handler.\n");
         return NULL;
     }
 #endif
