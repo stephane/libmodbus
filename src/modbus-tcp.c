@@ -750,8 +750,6 @@ int _modbus_rtu_build_request_basis(modbus_t *ctx, int function,
 int _modbus_rtu_build_response_basis(sft_t *sft, uint8_t *rsp);
 int _modbus_rtu_prepare_response_tid(const uint8_t *req, int *req_length);
 int _modbus_rtu_send_msg_pre(uint8_t *req, int req_length);
-/*static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
-                                const int msg_length);*/
 uint16_t crc16(uint8_t *buffer, uint16_t buffer_length);
 static int _modbus_rtutcp_check_integrity(modbus_t *ctx, uint8_t *msg,
                                 const int msg_length);
@@ -812,8 +810,8 @@ const modbus_backend_t _modbus_rtutcp_backend = {
     _modbus_tcp_send,
     _modbus_tcp_receive,
     _modbus_tcp_recv,
-	_modbus_rtutcp_check_integrity,//or just rtu_check_integrity?
-    NULL, // or _modbus_rtu_pre_check_confirmation,?
+	_modbus_rtutcp_check_integrity,
+    NULL,
     _modbus_tcp_connect,
     _modbus_tcp_close,
     _modbus_tcp_flush,
@@ -842,9 +840,6 @@ const modbus_backend_t _modbus_tcp_backend = {
     _modbus_tcp_select,
     _modbus_tcp_free
 };
-
-
-
 
 
 const modbus_backend_t _modbus_tcp_pi_backend = {
