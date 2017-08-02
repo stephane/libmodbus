@@ -325,7 +325,7 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
     ssize_t size = (WriteFile(ctx_rtu->w_ser.fd, req, req_length, &n_bytes, NULL)) ? (ssize_t)n_bytes : -1;
 
     if( ctx_rtu->ignore_self == TRUE ){
-        _modbus_ignore_bytes( ctx, size );
+        ctx_rtu->ignore_self_bytes = size;
     }
 
     return size;
@@ -345,7 +345,7 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
         ctx_rtu->set_rts(ctx, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
 
         if( ctx_rtu->ignore_self == TRUE ){
-            _modbus_ignore_bytes( ctx, size );
+            ctx_rtu->ignore_self_bytes = size;
         }
 
         return size;
@@ -354,7 +354,7 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
         ssize_t size;
         size = write(ctx->s, req, req_length);
         if( ctx_rtu->ignore_self == TRUE ){
-            _modbus_ignore_bytes( ctx, size );
+            ctx_rtu->ignore_self_bytes = size;
         }
         return size;
 #if HAVE_DECL_TIOCM_RTS
@@ -386,11 +386,42 @@ static int _modbus_rtu_receive(modbus_t *ctx, uint8_t *req)
 
 static ssize_t _modbus_rtu_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length)
 {
+    modbus_rtu_t *ctx_rtu = ctx->backend_data;
+    ssize_t bytes;
+
 #if defined(_WIN32)
-    return win32_ser_read(&((modbus_rtu_t *)ctx->backend_data)->w_ser, rsp, rsp_length);
+    bytes = win32_ser_read(&((modbus_rtu_t *)ctx->backend_data)->w_ser, rsp, rsp_length);
 #else
-    return read(ctx->s, rsp, rsp_length);
+    if( ctx_rtu->ignore_self && ctx_rtu->ignore_self_bytes ){
+        /* We still need to purge some data */
+        uint8_t discard;
+        int available;
+        
+        if( ioctl( ctx->s, FIONREAD, &available ) < 0 ){
+            LOG_DEBUG( "modbus.rtu", "IOCTL failed to get number of bytes" );
+            return -1;
+        }
+
+        /* ignore bytes until we get to the end of the data */
+        while( available-- && ctx_rtu->ignore_self_bytes ){
+            bytes = read( ctx->s, &discard, 1 );
+            if( bytes == -1 ){
+                return bytes;
+            }
+
+            ctx_rtu->ignore_self_bytes = ctx_rtu->ignore_self_bytes - 1;
+        }
+
+        if( ctx_rtu->ignore_self_bytes ){
+            /* There is still data that we need to ignore */
+            return 0;
+        }
+    }
+
+    bytes = read(ctx->s, rsp, rsp_length);
 #endif
+
+    return bytes;
 }
 
 static int _modbus_rtu_flush(modbus_t *);
@@ -1332,6 +1363,7 @@ modbus_t* modbus_new_rtu(const char *device,
     ctx_rtu->confirmation_to_ignore = FALSE;
 
     ctx_rtu->ignore_self = FALSE;
+    ctx_rtu->ignore_self_bytes = 0;
 
     return ctx;
 }

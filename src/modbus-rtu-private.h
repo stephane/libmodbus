@@ -73,6 +73,8 @@ typedef struct _modbus_rtu {
     int confirmation_to_ignore;
     /* On half-duplex connections, we may have to ignore ourself */
     int ignore_self;
+    /* How many more bytes to ignore on half-duplex connections */
+    int ignore_self_bytes;
 } modbus_rtu_t;
 
 #endif /* MODBUS_RTU_PRIVATE_H */
