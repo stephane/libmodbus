@@ -1,3 +1,9 @@
+libsynmodbus (3.2.5) UNRELEASED; urgency=medium
+
+  * Bumped version after release
+
+ -- robert <robert@robert-macbook>  Fri, 04 Aug 2017 16:04:44 -0400
+
 libsynmodbus (3.2.4) unstable; urgency=medium
 
   * Bumped version after release
