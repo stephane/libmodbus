@@ -42,6 +42,7 @@ or write).
 
 SEE ALSO
 --------
+linkmb:modbus_reply_callback[3]
 linkmb:modbus_reply_exception[3]
 linkmb:libmodbus[7]
 

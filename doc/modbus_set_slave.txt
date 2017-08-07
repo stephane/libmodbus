@@ -35,6 +35,10 @@ remote device or software drops the requests! The special value
 The broadcast address is `MODBUS_BROADCAST_ADDRESS`. This special value must be
 use when you want all Modbus devices of the network receive the request.
 
+When implementing a modbus-slave (a server) setting the *MODBUS_SLAVE_ACCEPT_ALL* address to the
+context will make that modbus_receive() will accept all requests instead of filtering out those not
+matching the set slave-id. This is useful when implementing multi-slave-implementations.
+
 
 RETURN VALUE
 ------------

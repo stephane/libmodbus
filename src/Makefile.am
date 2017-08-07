@@ -11,6 +11,8 @@ AM_CFLAGS = ${my_CFLAGS}
 
 libmodbus_la_SOURCES = \
         modbus.c \
+        modbus-reply.c \
+        modbus-reply-mapping.c \
         modbus.h \
         modbus-data.c \
         modbus-private.h \
