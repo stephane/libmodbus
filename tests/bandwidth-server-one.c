@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     int rc;
     int use_backend;
 
-     /* TCP */
+    /* TCP */
     if (argc > 1) {
         if (strcmp(argv[1], "tcp") == 0) {
             use_backend = TCP;
@@ -66,13 +66,13 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    for(;;) {
+    for (;;) {
         uint8_t query[MODBUS_TCP_MAX_ADU_LENGTH];
 
         rc = modbus_receive(ctx, query);
         if (rc > 0) {
             modbus_reply(ctx, query, rc, mb_mapping);
-        } else if (rc  == -1) {
+        } else if (rc == -1) {
             /* Connection closed by the client or error */
             break;
         }

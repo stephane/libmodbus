@@ -1,0 +1,25 @@
+---
+BasedOnStyle:  LLVM
+AccessModifierOffset: -2
+AllowShortFunctionsOnASingleLine: Inline
+BreakBeforeBraces: Custom
+BraceWrapping: {
+    AfterClass: 'false'
+    AfterEnum: 'false'
+    AfterFunction: 'true'
+    AfterNamespace: 'false'
+    AfterStruct: 'false'
+    AfterUnion: 'false'
+    BeforeCatch: 'false'
+    BeforeElse: 'false'
+}
+ColumnLimit:     0
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+IndentWidth:     4
+ObjCBlockIndentWidth: 4
+SpaceAfterCStyleCast: true
+TabWidth:        4
+UseTab:          Never
+SortIncludes:    'false'
+SpaceAfterCStyleCast: 'false'
+...

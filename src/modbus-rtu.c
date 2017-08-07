@@ -674,7 +674,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
         break;
 #endif
 #ifdef B1152000
-   case 1152000:
+    case 1152000:
         speed = B1152000;
         break;
 #endif
@@ -749,7 +749,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 
     /* Stop bit (1 or 2) */
     if (ctx_rtu->stop_bit == 1)
-        tios.c_cflag &=~ CSTOPB;
+        tios.c_cflag &= ~CSTOPB;
     else /* 2 */
         tios.c_cflag |= CSTOPB;
 
@@ -757,11 +757,11 @@ static int _modbus_rtu_connect(modbus_t *ctx)
        PARODD       Use odd parity instead of even */
     if (ctx_rtu->parity == 'N') {
         /* None */
-        tios.c_cflag &=~ PARENB;
+        tios.c_cflag &= ~PARENB;
     } else if (ctx_rtu->parity == 'E') {
         /* Even */
         tios.c_cflag |= PARENB;
-        tios.c_cflag &=~ PARODD;
+        tios.c_cflag &= ~PARODD;
     } else {
         /* Odd */
         tios.c_cflag |= PARENB;
@@ -843,7 +843,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     */
 
     /* Raw ouput */
-    tios.c_oflag &=~ OPOST;
+    tios.c_oflag &= ~OPOST;
 
     /* C_CC         Control characters
        VMIN         Minimum number of characters to read
@@ -1028,7 +1028,7 @@ int modbus_rtu_set_rts(modbus_t *ctx, int mode)
     return -1;
 }
 
-int modbus_rtu_set_custom_rts(modbus_t *ctx, void (*set_rts) (modbus_t *ctx, int on))
+int modbus_rtu_set_custom_rts(modbus_t *ctx, void (*set_rts)(modbus_t *ctx, int on))
 {
     if (ctx == NULL) {
         errno = EINVAL;
@@ -1156,7 +1156,7 @@ static int _modbus_rtu_select(modbus_t *ctx, fd_set *rset,
         return -1;
     }
 #else
-    while ((s_rc = select(ctx->s+1, rset, NULL, NULL, tv)) == -1) {
+    while ((s_rc = select(ctx->s + 1, rset, NULL, NULL, tv)) == -1) {
         if (errno == EINTR) {
             if (ctx->debug) {
                 fprintf(stderr, "A non blocked signal was caught\n");
@@ -1179,7 +1179,8 @@ static int _modbus_rtu_select(modbus_t *ctx, fd_set *rset,
     return s_rc;
 }
 
-static void _modbus_rtu_free(modbus_t *ctx) {
+static void _modbus_rtu_free(modbus_t *ctx)
+{
     if (ctx->backend_data) {
         free(((modbus_rtu_t *)ctx->backend_data)->device);
         free(ctx->backend_data);
@@ -1207,10 +1208,9 @@ const modbus_backend_t _modbus_rtu_backend = {
     _modbus_rtu_close,
     _modbus_rtu_flush,
     _modbus_rtu_select,
-    _modbus_rtu_free
-};
+    _modbus_rtu_free};
 
-modbus_t* modbus_new_rtu(const char *device,
+modbus_t *modbus_new_rtu(const char *device,
                          int baud, char parity, int data_bit,
                          int stop_bit)
 {

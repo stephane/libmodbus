@@ -76,8 +76,8 @@ void modbus_set_bits_from_byte(uint8_t *dest, int idx, const uint8_t value)
 {
     int i;
 
-    for (i=0; i < 8; i++) {
-        dest[idx+i] = (value & (1 << i)) ? 1 : 0;
+    for (i = 0; i < 8; i++) {
+        dest[idx + i] = (value & (1 << i)) ? 1 : 0;
     }
 }
 
@@ -111,8 +111,8 @@ uint8_t modbus_get_byte_from_bits(const uint8_t *src, int idx,
         nb_bits = 8;
     }
 
-    for (i=0; i < nb_bits; i++) {
-        value |= (src[idx+i] << i);
+    for (i = 0; i < nb_bits; i++) {
+        value |= (src[idx + i] << i);
     }
 
     return value;

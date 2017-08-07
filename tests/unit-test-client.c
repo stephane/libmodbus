@@ -28,19 +28,21 @@ int send_crafted_request(modbus_t *ctx, int function,
                          int backend_length, int backend_offset);
 int equal_dword(uint16_t *tab_reg, const uint32_t value);
 
-#define BUG_REPORT(_cond, _format, _args ...) \
-    printf("\nLine %d: assertion error for '%s': " _format "\n", __LINE__, # _cond, ## _args)
+#define BUG_REPORT(_cond, _format, _args...) \
+    printf("\nLine %d: assertion error for '%s': " _format "\n", __LINE__, #_cond, ##_args)
 
-#define ASSERT_TRUE(_cond, _format, __args...) {  \
-    if (_cond) {                                  \
-        printf("OK\n");                           \
-    } else {                                      \
-        BUG_REPORT(_cond, _format, ## __args);    \
-        goto close;                               \
-    }                                             \
-};
+#define ASSERT_TRUE(_cond, _format, __args...)    \
+    {                                             \
+        if (_cond) {                              \
+            printf("OK\n");                       \
+        } else {                                  \
+            BUG_REPORT(_cond, _format, ##__args); \
+            goto close;                           \
+        }                                         \
+    };
 
-int equal_dword(uint16_t *tab_reg, const uint32_t value) {
+int equal_dword(uint16_t *tab_reg, const uint32_t value)
+{
     return ((tab_reg[0] == (value >> 16)) && (tab_reg[1] == (value & 0xFFFF)));
 }
 
@@ -96,7 +98,7 @@ int main(int argc, char *argv[])
     modbus_set_debug(ctx, TRUE);
     modbus_set_error_recovery(ctx,
                               MODBUS_ERROR_RECOVERY_LINK |
-                              MODBUS_ERROR_RECOVERY_PROTOCOL);
+                                  MODBUS_ERROR_RECOVERY_PROTOCOL);
 
     if (use_backend == RTU) {
         modbus_set_slave(ctx, SERVER_ID);
@@ -114,17 +116,17 @@ int main(int argc, char *argv[])
 
     printf("1/1 No response timeout modification on connect: ");
     ASSERT_TRUE(old_response_to_sec == new_response_to_sec &&
-                old_response_to_usec == new_response_to_usec, "");
+                    old_response_to_usec == new_response_to_usec,
+                "");
 
     /* Allocate and initialize the memory to store the bits */
     nb_points = (UT_BITS_NB > UT_INPUT_BITS_NB) ? UT_BITS_NB : UT_INPUT_BITS_NB;
-    tab_rp_bits = (uint8_t *) malloc(nb_points * sizeof(uint8_t));
+    tab_rp_bits = (uint8_t *)malloc(nb_points * sizeof(uint8_t));
     memset(tab_rp_bits, 0, nb_points * sizeof(uint8_t));
 
     /* Allocate and initialize the memory to store the registers */
-    nb_points = (UT_REGISTERS_NB > UT_INPUT_REGISTERS_NB) ?
-        UT_REGISTERS_NB : UT_INPUT_REGISTERS_NB;
-    tab_rp_registers = (uint16_t *) malloc(nb_points * sizeof(uint16_t));
+    nb_points = (UT_REGISTERS_NB > UT_INPUT_REGISTERS_NB) ? UT_REGISTERS_NB : UT_INPUT_REGISTERS_NB;
+    tab_rp_registers = (uint16_t *)malloc(nb_points * sizeof(uint16_t));
     memset(tab_rp_registers, 0, nb_points * sizeof(uint16_t));
 
     printf("\nTEST WRITE/READ:\n");
@@ -163,7 +165,7 @@ int main(int argc, char *argv[])
     while (nb_points > 0) {
         int nb_bits = (nb_points > 8) ? 8 : nb_points;
 
-        value = modbus_get_byte_from_bits(tab_rp_bits, i*8, nb_bits);
+        value = modbus_get_byte_from_bits(tab_rp_bits, i * 8, nb_bits);
         ASSERT_TRUE(value == UT_BITS_TAB[i], "FAILED (%0X != %0X)\n",
                     value, UT_BITS_TAB[i]);
 
@@ -183,7 +185,7 @@ int main(int argc, char *argv[])
     nb_points = UT_INPUT_BITS_NB;
     while (nb_points > 0) {
         int nb_bits = (nb_points > 8) ? 8 : nb_points;
-        value = modbus_get_byte_from_bits(tab_rp_bits, i*8, nb_bits);
+        value = modbus_get_byte_from_bits(tab_rp_bits, i * 8, nb_bits);
         ASSERT_TRUE(value == UT_INPUT_BITS_TAB[i], "FAILED (%0X != %0X)\n",
                     value, UT_INPUT_BITS_TAB[i]);
 
@@ -218,7 +220,7 @@ int main(int argc, char *argv[])
     printf("2/5 modbus_read_registers: ");
     ASSERT_TRUE(rc == UT_REGISTERS_NB, "FAILED (nb points %d)\n", rc);
 
-    for (i=0; i < UT_REGISTERS_NB; i++) {
+    for (i = 0; i < UT_REGISTERS_NB; i++) {
         ASSERT_TRUE(tab_rp_registers[i] == UT_REGISTERS_TAB[i],
                     "FAILED (%0X != %0X)\n",
                     tab_rp_registers[i], UT_REGISTERS_TAB[i]);
@@ -230,8 +232,9 @@ int main(int argc, char *argv[])
     ASSERT_TRUE(rc == -1, "FAILED (nb_points %d)\n", rc);
 
     nb_points = (UT_REGISTERS_NB >
-                 UT_INPUT_REGISTERS_NB) ?
-        UT_REGISTERS_NB : UT_INPUT_REGISTERS_NB;
+                 UT_INPUT_REGISTERS_NB)
+                    ? UT_REGISTERS_NB
+                    : UT_INPUT_REGISTERS_NB;
     memset(tab_rp_registers, 0, nb_points * sizeof(uint16_t));
 
     /* Write registers to zero from tab_rp_registers and store read registers
@@ -252,13 +255,12 @@ int main(int argc, char *argv[])
                 "FAILED (%0X != %0X)\n",
                 tab_rp_registers[0], UT_REGISTERS_TAB[0]);
 
-    for (i=1; i < UT_REGISTERS_NB; i++) {
+    for (i = 1; i < UT_REGISTERS_NB; i++) {
         ASSERT_TRUE(tab_rp_registers[i] == 0, "FAILED (%0X != %0X)\n",
                     tab_rp_registers[i], 0);
     }
 
     /* End of many registers */
-
 
     /** INPUT REGISTERS **/
     rc = modbus_read_input_registers(ctx, UT_INPUT_REGISTERS_ADDRESS,
@@ -267,7 +269,7 @@ int main(int argc, char *argv[])
     printf("1/1 modbus_read_input_registers: ");
     ASSERT_TRUE(rc == UT_INPUT_REGISTERS_NB, "FAILED (nb points %d)\n", rc);
 
-    for (i=0; i < UT_INPUT_REGISTERS_NB; i++) {
+    for (i = 0; i < UT_INPUT_REGISTERS_NB; i++) {
         ASSERT_TRUE(tab_rp_registers[i] == UT_INPUT_REGISTERS_TAB[i],
                     "FAILED (%0X != %0X)\n",
                     tab_rp_registers[i], UT_INPUT_REGISTERS_TAB[i]);
@@ -375,7 +377,7 @@ int main(int argc, char *argv[])
     ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
 
     rc = modbus_write_register(ctx, UT_REGISTERS_ADDRESS + UT_REGISTERS_NB_MAX,
-                                tab_rp_registers[0]);
+                               tab_rp_registers[0]);
     printf("* modbus_write_register (max): ");
     ASSERT_TRUE(rc == -1 && errno == EMBXILADD, "");
 
@@ -454,11 +456,11 @@ int main(int argc, char *argv[])
                                UT_REGISTERS_NB, tab_rp_registers);
     if (use_backend == RTU) {
         const int RAW_REQ_LENGTH = 6;
-        uint8_t raw_req[] = { INVALID_SERVER_ID, 0x03, 0x00, 0x01, 0x01, 0x01 };
+        uint8_t raw_req[] = {INVALID_SERVER_ID, 0x03, 0x00, 0x01, 0x01, 0x01};
         /* Too many points */
-        uint8_t raw_invalid_req[] = { INVALID_SERVER_ID, 0x03, 0x00, 0x01, 0xFF, 0xFF };
+        uint8_t raw_invalid_req[] = {INVALID_SERVER_ID, 0x03, 0x00, 0x01, 0xFF, 0xFF};
         const int RAW_RSP_LENGTH = 7;
-        uint8_t raw_rsp[] = { INVALID_SERVER_ID, 0x03, 0x04, 0, 0, 0, 0 };
+        uint8_t raw_rsp[] = {INVALID_SERVER_ID, 0x03, 0x04, 0, 0, 0, 0};
         uint8_t rsp[MODBUS_RTU_MAX_ADU_LENGTH];
 
         /* No response in RTU mode */
@@ -467,7 +469,6 @@ int main(int argc, char *argv[])
 
         /* The slave raises a timeout on a confirmation to ignore because if an
          * indication for another slave is received, a confirmation must follow */
-
 
         /* Send a pair of indication/confirmation to the slave with a different
          * slave ID to simulate a communication on a RS485 bus. At first, the
@@ -524,7 +525,7 @@ int main(int argc, char *argv[])
     rc = modbus_report_slave_id(ctx, NB_REPORT_SLAVE_ID - 1, tab_rp_bits);
     /* Return the size required (response size) but respects the defined limit */
     ASSERT_TRUE(rc == NB_REPORT_SLAVE_ID &&
-                tab_rp_bits[NB_REPORT_SLAVE_ID - 1] == 42,
+                    tab_rp_bits[NB_REPORT_SLAVE_ID - 1] == 42,
                 "Return is rc %d (%d) and marker is %d (42)",
                 rc, NB_REPORT_SLAVE_ID, tab_rp_bits[NB_REPORT_SLAVE_ID - 1]);
 
@@ -542,7 +543,7 @@ int main(int argc, char *argv[])
     /* Print additional data as string */
     if (rc > 2) {
         printf("Additional data: ");
-        for (i=2; i < rc; i++) {
+        for (i = 2; i < rc; i++) {
             printf("%c", tab_rp_bits[i]);
         }
         printf("\n");
@@ -641,7 +642,7 @@ int main(int argc, char *argv[])
     printf("\nTEST BAD RESPONSE ERROR:\n");
 
     /* Allocate only the required space */
-    tab_rp_registers_bad = (uint16_t *) malloc(
+    tab_rp_registers_bad = (uint16_t *)malloc(
         UT_REGISTERS_NB_SPECIAL * sizeof(uint16_t));
 
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
@@ -707,8 +708,7 @@ int test_server(modbus_t *ctx, int use_backend)
         /* function, address, 5 values */
         MODBUS_FC_READ_HOLDING_REGISTERS,
         UT_REGISTERS_ADDRESS >> 8, UT_REGISTERS_ADDRESS & 0xFF,
-        0x0, 0x05
-    };
+        0x0, 0x05};
     /* Write and read registers request */
     const int RW_RAW_REQ_LEN = 13;
     uint8_t rw_raw_req[] = {
@@ -725,8 +725,7 @@ int test_server(modbus_t *ctx, int use_backend)
         /* Write byte count */
         1 * 2,
         /* One data to write... */
-        0x12, 0x34
-    };
+        0x12, 0x34};
     const int WRITE_RAW_REQ_LEN = 13;
     uint8_t write_raw_req[] = {
         slave,
@@ -737,13 +736,11 @@ int test_server(modbus_t *ctx, int use_backend)
         /* 3 values, 6 bytes */
         0x00, 0x03, 0x06,
         /* Dummy data to write */
-        0x02, 0x2B, 0x00, 0x01, 0x00, 0x64
-    };
+        0x02, 0x2B, 0x00, 0x01, 0x00, 0x64};
     const int INVALID_FC = 0x42;
     const int INVALID_FC_REQ_LEN = 6;
     uint8_t invalid_fc_raw_req[] = {
-        slave, 0x42, 0x00, 0x00, 0x00, 0x00
-    };
+        slave, 0x42, 0x00, 0x00, 0x00, 0x00};
 
     int req_length;
     uint8_t rsp[MODBUS_TCP_MAX_ADU_LENGTH];
@@ -751,14 +748,12 @@ int test_server(modbus_t *ctx, int use_backend)
         MODBUS_FC_READ_COILS,
         MODBUS_FC_READ_DISCRETE_INPUTS,
         MODBUS_FC_READ_HOLDING_REGISTERS,
-        MODBUS_FC_READ_INPUT_REGISTERS
-    };
+        MODBUS_FC_READ_INPUT_REGISTERS};
     int tab_read_nb_max[] = {
         MODBUS_MAX_READ_BITS + 1,
         MODBUS_MAX_READ_BITS + 1,
         MODBUS_MAX_READ_REGISTERS + 1,
-        MODBUS_MAX_READ_REGISTERS + 1
-    };
+        MODBUS_MAX_READ_REGISTERS + 1};
     int backend_length;
     int backend_offset;
 
@@ -793,7 +788,7 @@ int test_server(modbus_t *ctx, int use_backend)
 
     /* Try to read more values than a response could hold for all data
        types. */
-    for (i=0; i<4; i++) {
+    for (i = 0; i < 4; i++) {
         rc = send_crafted_request(ctx, tab_read_function[i],
                                   read_raw_req, READ_RAW_REQ_LEN,
                                   tab_read_nb_max[i], 0,
@@ -831,7 +826,8 @@ int test_server(modbus_t *ctx, int use_backend)
     rc = modbus_receive_confirmation(ctx, rsp);
     printf("Return an exception on unknown function code: ");
     ASSERT_TRUE(rc == (backend_length + EXCEPTION_RC) &&
-                rsp[backend_offset] == (0x80 + INVALID_FC), "")
+                    rsp[backend_offset] == (0x80 + INVALID_FC),
+                "")
 
     modbus_set_response_timeout(ctx, old_response_to_sec, old_response_to_usec);
     return 0;
@@ -839,7 +835,6 @@ close:
     modbus_set_response_timeout(ctx, old_response_to_sec, old_response_to_usec);
     return -1;
 }
-
 
 int send_crafted_request(modbus_t *ctx, int function,
                          uint8_t *req, int req_len,
@@ -849,7 +844,7 @@ int send_crafted_request(modbus_t *ctx, int function,
     uint8_t rsp[MODBUS_TCP_MAX_ADU_LENGTH];
     int j;
 
-    for (j=0; j<2; j++) {
+    for (j = 0; j < 2; j++) {
         int rc;
 
         req[1] = function;
@@ -873,15 +868,16 @@ int send_crafted_request(modbus_t *ctx, int function,
 
         modbus_send_raw_request(ctx, req, req_len * sizeof(uint8_t));
         if (j == 0) {
-            printf("* try function 0x%X: %s 0 values: ", function, bytes ? "write": "read");
+            printf("* try function 0x%X: %s 0 values: ", function, bytes ? "write" : "read");
         } else {
-            printf("* try function 0x%X: %s %d values: ", function, bytes ? "write": "read",
+            printf("* try function 0x%X: %s %d values: ", function, bytes ? "write" : "read",
                    max_value);
         }
         rc = modbus_receive_confirmation(ctx, rsp);
         ASSERT_TRUE(rc == (backend_length + EXCEPTION_RC) &&
-                    rsp[backend_offset] == (0x80 + function) &&
-                    rsp[backend_offset + 1] == MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, "");
+                        rsp[backend_offset] == (0x80 + function) &&
+                        rsp[backend_offset + 1] == MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE,
+                    "");
     }
     return 0;
 close:
