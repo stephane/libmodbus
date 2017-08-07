@@ -101,6 +101,9 @@ struct _modbus {
     struct timeval indication_timeout;
     const modbus_backend_t *backend;
     void *backend_data;
+
+    const modbus_reply_callbacks_t *reply_cb;
+    void *reply_user_ctx;
 };
 
 void _modbus_init_common(modbus_t *ctx);
