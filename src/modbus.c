@@ -1021,7 +1021,7 @@ int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
     function = req[offset];
 
     sft.slave = slave;
-    sft.function = function + 0x80;;
+    sft.function = function + 0x80;
     sft.t_id = ctx->backend->prepare_response_tid(req, &dummy_length);
     rsp_length = ctx->backend->build_response_basis(&sft, rsp);
 
