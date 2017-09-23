@@ -191,7 +191,7 @@ MODBUS_API int modbus_set_byte_timeout(modbus_t *ctx, uint32_t to_sec, uint32_t 
 MODBUS_API int modbus_get_indication_timeout(modbus_t *ctx, uint32_t *to_sec, uint32_t *to_usec);
 MODBUS_API int modbus_set_indication_timeout(modbus_t *ctx, uint32_t to_sec, uint32_t to_usec);
 
-MODBUS_API int modbus_get_header_length(modbus_t *ctx);
+MODBUS_API unsigned int modbus_get_header_length(modbus_t *ctx);
 
 MODBUS_API int modbus_connect(modbus_t *ctx);
 MODBUS_API void modbus_close(modbus_t *ctx);
