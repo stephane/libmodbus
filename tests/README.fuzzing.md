@@ -48,3 +48,4 @@ AFL has a tool to minimise the number of seeds by removing duplicate or "uninter
 
 # Notes
 * AFL does not like to be on the PATH during configure/make
+* Try with ```afl-clang-fast``` and ```afl-clang-fast++``` compilers for speed up
