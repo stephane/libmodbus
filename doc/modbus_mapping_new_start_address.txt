@@ -28,7 +28,7 @@ make available registers from 10000 to 10009, you can use:
 
 [source,c]
 -------------------
-mb_mapping = modbus_mapping_offset_start_address(0, 0, 0, 0, 10000, 10, 0, 0);
+mb_mapping = modbus_mapping_new_start_address(0, 0, 0, 0, 10000, 10, 0, 0);
 -------------------
 
 With this code, only 10 registers (`uint16_t`) are allocated.
@@ -41,7 +41,7 @@ This function is convenient to handle requests in a Modbus server/slave.
 
 RETURN VALUE
 ------------
-The _modbus_mapping_offset_new()_ function shall return the new allocated structure if
+The _modbus_mapping_new_start_address()_ function shall return the new allocated structure if
 successful. Otherwise it shall return NULL and set errno.
 
 
@@ -57,7 +57,7 @@ EXAMPLE
 -------------------
 /* The first value of each array is accessible at the defined address.
    The end address is ADDRESS + NB - 1. */
-mb_mapping = modbus_mapping_offset_start_address(BITS_ADDRESS, BITS_NB,
+mb_mapping = modbus_mapping_new_start_address(BITS_ADDRESS, BITS_NB,
                                 INPUT_BITS_ADDRESS, INPUT_BITS_NB,
                                 REGISTERS_ADDRESS, REGISTERS_NB,
                                 INPUT_REGISTERS_ADDRESS, INPUT_REGISTERS_NB);
