@@ -1761,7 +1761,7 @@ int modbus_set_debug(modbus_t *ctx, int flag)
 /* Allocates 4 arrays to store bits, input bits, registers and inputs
    registers. The pointers are stored in modbus_mapping structure.
 
-   The modbus_mapping_new_ranges() function shall return the new allocated
+   The modbus_mapping_new_start_address() function shall return the new allocated
    structure if successful. Otherwise it shall return NULL and set errno to
    ENOMEM. */
 modbus_mapping_t* modbus_mapping_new_start_address(
