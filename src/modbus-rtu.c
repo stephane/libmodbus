@@ -909,9 +909,13 @@ int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode)
 #if HAVE_DECL_TIOCSRS485
         modbus_rtu_t *ctx_rtu = ctx->backend_data;
         struct serial_rs485 rs485conf;
-        memset(&rs485conf, 0x0, sizeof(struct serial_rs485));
 
         if (mode == MODBUS_RTU_RS485) {
+            // Get
+            if (ioctl(ctx->s, TIOCGRS485, &rs485conf) < 0) {
+                return -1;
+            }
+            // Set
             rs485conf.flags = SER_RS485_ENABLED;
             if (ioctl(ctx->s, TIOCSRS485, &rs485conf) < 0) {
                 return -1;
@@ -923,6 +927,10 @@ int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode)
             /* Turn off RS485 mode only if required */
             if (ctx_rtu->serial_mode == MODBUS_RTU_RS485) {
                 /* The ioctl call is avoided because it can fail on some RS232 ports */
+                if (ioctl(ctx->s, TIOCGRS485, &rs485conf) < 0) {
+                    return -1;
+                }
+                rs485conf.flags &= ~SER_RS485_ENABLED;
                 if (ioctl(ctx->s, TIOCSRS485, &rs485conf) < 0) {
                     return -1;
                 }
