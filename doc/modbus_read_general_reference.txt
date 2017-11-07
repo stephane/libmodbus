@@ -1,0 +1,84 @@
+modbus_read_general_reference(3)
+========================
+
+
+NAME
+----
+modbus_read_general_reference - read from file registers
+
+
+SYNOPSIS
+--------
+*int modbus_read_general_reference(modbus_t *ctx, int file_no,  int read_addr, int read_nb, uint16_t *dest);*
+
+
+DESCRIPTION
+-----------
+The *modbus_read_general_reference()* function shall read the number of _read_nb_ registers of the _file_no_
+reference file at the address _read_addr_ of the remote device. The result of
+reading is stored in _dest_ array as word values (16 bits).
+
+_file_no_ has to be >= 1 and <= 10 .
+
+You must take care to allocate enough memory to store the results in _dest_
+(at least (_read_nb_ + 1 ) * sizeof(uint16_t)).
+
+The function uses the Modbus function code 0x14 (read file record).
+
+
+RETURN VALUE
+------------
+The function shall return the number of read registers + 1 
+if successful. Otherwise it shall return -1 and set errno.
+
+
+ERRORS
+------
+*EMBMDATA*::
+Too many registers requested
+*EMBXILVAL*::
+_file_no_ out of range , or file is not found.
+
+
+EXAMPLE
+-------
+[source,c]
+-------------------
+modbus_t *ctx;
+uint16_t tab_reg[64+1]; // one additional reg for filesize and reftype
+int rc;
+int i;
+
+ctx = modbus_new_tcp("127.0.0.1", 1502);
+if (modbus_connect(ctx) == -1) {
+    fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
+    modbus_free(ctx);
+    return -1;
+}
+
+ rc = modbus_read_general_reference(ctx, 1, 10 , 64, tab_reg );
+ if (rc == -1) {
+    fprintf(stderr, "%s\n", modbus_strerror(errno));
+    return -1;
+}
+
+printf("size=%d subtype_ref=%d\n", i, tab_reg[0]>>8, tab_reg[0] &0xff);
+for (i=1; i < rc; i++) {
+    printf("reg[%d]=%d (0x%X)\n", i, tab_reg[i], tab_reg[i]);
+}
+
+modbus_close(ctx);
+modbus_free(ctx);
+-------------------
+
+
+SEE ALSO
+--------
+linkmb:modbus_write_general_reference[3]
+linkmb:modbus_mapping_new_start_address_extend[3]
+linkmb:modbus_mapping_new_extend[3]
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

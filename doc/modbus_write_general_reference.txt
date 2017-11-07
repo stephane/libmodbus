@@ -1,0 +1,80 @@
+modbus_write_general_reference(3)
+========================
+
+
+NAME
+----
+modbus_write_general_reference - write to file registers
+
+
+SYNOPSIS
+--------
+*int modbus_write_general_reference(modbus_t *ctx, int file_no,  int write_addr, int write_nb, const uint16_t *src);*
+
+
+DESCRIPTION
+-----------
+The *modbus_read_general_reference()* function shall write the number of _write_nb_ registers of the _file_no_
+reference file at the address _write_addr_ of the remote device. The content for
+writing is delivered in _src_ array as word values (16 bits).
+
+_file_no_ has to be >= 1 and <= 10 .
+
+
+The function uses the Modbus function code 0x15 (write file record).
+
+
+RETURN VALUE
+------------
+The function shall return the number of written registers + 1 
+if successful. Otherwise it shall return -1 and set errno.
+
+
+ERRORS
+------
+*EMBMDATA*::
+Too many registers requested
+*EMBXILVAL*::
+_file_no_ out of range , or file is not found.
+
+
+EXAMPLE
+-------
+[source,c]
+-------------------
+modbus_t *ctx;
+uint16_t tab_reg[64]; 
+int rc;
+int i;
+
+ctx = modbus_new_tcp("127.0.0.1", 1502);
+if (modbus_connect(ctx) == -1) {
+    fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
+    modbus_free(ctx);
+    return -1;
+}
+
+for (i=0; i < 64; i++){
+    tab_reg[i]=i+i*0x100;
+}
+ rc = modbus_write_general_reference(ctx, 1, 10 , 64, tab_reg );
+ if (rc == -1) {
+    fprintf(stderr, "%s\n", modbus_strerror(errno));
+    return -1;
+}
+
+modbus_close(ctx);
+modbus_free(ctx);
+-------------------
+
+
+SEE ALSO
+--------
+linkmb:modbus_read_general_reference[3]
+linkmb:modbus_mapping_new_start_address_extend[3]
+linkmb:modbus_mapping_new_extend[3]
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

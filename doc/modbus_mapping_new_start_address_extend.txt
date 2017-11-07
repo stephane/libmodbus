@@ -1,0 +1,81 @@
+modbus_mapping_new_start_address_extend(3)
+===================================
+
+
+NAME
+----
+modbus_mapping_new_start_address_extend - allocate four arrays of bits and registers accessible from their starting addresses and file registers
+
+
+SYNOPSIS
+--------
+*modbus_mapping_t* modbus_mapping_new_start_address(int 'start_bits', int 'nb_bits',
+                                                    int 'start_input_bits', int 'nb_input_bits',
+                                                    int 'start_registers', int 'nb_registers',
+                                                    int 'start_input_registers', int 'nb_input_registers',
+                                                    'uint16_t nb_file_register[MODBUS_MAX_REFERENCE_FILES]');*
+
+
+DESCRIPTION
+-----------
+The *modbus_mapping_new_extend()*  calls linkmb:modbus_mapping_new_start_address[3] and additionally allocates up to 
+MODBUS_MAX_REFERENCE_FILES (current specification limit it to 10) arrays for file registers.
+
+Each _value_ in the array, which is not 0 allocates _value_ registers in the file of _index_ -1 .
+( The file registers start with "1" for the first file ) 
+
+[source,c]
+-------------------
+mb_mapping = modbus_mapping_new_start_address_extend(0, 0, 0, 0, 10000, 10, 0, 0,{0,100,0,20,0,0,10000,0,0,0,0});
+-------------------
+
+With this code, 3 file registers ( 2, 4 and 7 ) with the size of 100 , 20  and 10000 registers are allocated.
+
+If it isn't necessary to allocate an array for a specific type of data, you can
+pass the zero value in argument, the associated pointer will be NULL.
+
+This function is convenient to handle requests in a Modbus server/slave.
+
+
+RETURN VALUE
+------------
+The _modbus_mapping_new_start_address_extend()_ function shall return the new allocated structure if
+successful. Otherwise it shall return NULL and set errno.
+
+
+ERRORS
+------
+ENOMEM::
+Not enough memory
+
+
+EXAMPLE
+-------
+[source,c]
+-------------------
+/* The first value of each array is accessible at the defined address.
+   The end address is ADDRESS + NB - 1. */
+mb_mapping = modbus_mapping_new_start_address_extend(BITS_ADDRESS, BITS_NB,
+                                INPUT_BITS_ADDRESS, INPUT_BITS_NB,
+                                REGISTERS_ADDRESS, REGISTERS_NB,
+                                INPUT_REGISTERS_ADDRESS, INPUT_REGISTERS_NB,
+                                FILE_REGISTERS_NB[MODBUS_MAX_REFERENCE_FILES]);
+if (mb_mapping == NULL) {
+    fprintf(stderr, "Failed to allocate the mapping: %s\n",
+            modbus_strerror(errno));
+    modbus_free(ctx);
+    return -1;
+}
+-------------------
+
+SEE ALSO
+--------
+linkmb:modbus_mapping_new_start_address[3]
+linkmb:modbus_mapping_new[3]
+linkmb:modbus_mapping_free[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>
