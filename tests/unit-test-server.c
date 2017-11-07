@@ -71,11 +71,10 @@ int main(int argc, char*argv[])
 
     modbus_set_debug(ctx, TRUE);
 
-    mb_mapping = modbus_mapping_new_start_address(
-        UT_BITS_ADDRESS, UT_BITS_NB,
-        UT_INPUT_BITS_ADDRESS, UT_INPUT_BITS_NB,
-        UT_REGISTERS_ADDRESS, UT_REGISTERS_NB_MAX,
-        UT_INPUT_REGISTERS_ADDRESS, UT_INPUT_REGISTERS_NB);
+    mb_mapping = modbus_mapping_new_start_address_extend(
+        UT_BITS_ADDRESS, UT_BITS_NB, UT_INPUT_BITS_ADDRESS, UT_INPUT_BITS_NB,
+        UT_REGISTERS_ADDRESS, UT_REGISTERS_NB_MAX, UT_INPUT_REGISTERS_ADDRESS,
+        UT_INPUT_REGISTERS_NB, UT_FILE_REGISTERS_NB);
     if (mb_mapping == NULL) {
         fprintf(stderr, "Failed to allocate the mapping: %s\n",
                 modbus_strerror(errno));

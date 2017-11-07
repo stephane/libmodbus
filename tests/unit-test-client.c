@@ -49,9 +49,10 @@ int main(int argc, char *argv[])
     const int NB_REPORT_SLAVE_ID = 10;
     uint8_t *tab_rp_bits = NULL;
     uint16_t *tab_rp_registers = NULL;
+    uint16_t *tab_rp_file = NULL;
     uint16_t *tab_rp_registers_bad = NULL;
     modbus_t *ctx = NULL;
-    int i;
+    int i, j;
     uint8_t value;
     int nb_points;
     int rc;
@@ -127,6 +128,9 @@ int main(int argc, char *argv[])
     tab_rp_registers = (uint16_t *) malloc(nb_points * sizeof(uint16_t));
     memset(tab_rp_registers, 0, nb_points * sizeof(uint16_t));
 
+    tab_rp_file =
+        (uint16_t *)malloc((MAX_REGISTER_PER_QUERY + 2) * sizeof(uint16_t));
+    memset(tab_rp_file, 0, (MAX_REGISTER_PER_QUERY + 2) * sizeof(uint16_t));
     printf("\nTEST WRITE/READ:\n");
 
     /** COIL BITS **/
@@ -657,6 +661,95 @@ int main(int argc, char *argv[])
 
     printf("* modbus_read_registers at special address: ");
     ASSERT_TRUE(rc == -1 && errno == EMBXSBUSY, "");
+    /** Read File*/
+    printf("\nTEST READ GENERAL REFERENCE\n");
+    {
+
+        rc = modbus_read_general_reference(ctx, 1, 10, MAX_REGISTER_PER_QUERY,
+                                           tab_rp_file);
+        printf("modbus_read_general_reference: ");
+
+        if (rc < (MAX_REGISTER_PER_QUERY +
+                  1)) { // 2 bytes per register + 2 bytes header
+            printf("FAILED (nb points %d)\n", rc);
+            goto close;
+        }
+
+        if (((tab_rp_file[0]) >> 8) != MAX_REGISTER_PER_QUERY) {
+            printf("FAILED Received size wrong(%0X != %0X)\n",
+                   (tab_rp_file[0]) >> 8, MAX_REGISTER_PER_QUERY);
+            goto close;
+        }
+
+        if ((tab_rp_file[0] & 0xff) != 0x06) {
+            printf("FAILED Received Subrequest Reference(%0X != %0X)\n",
+                   tab_rp_file[0] & 0xff, 0x06);
+            goto close;
+        }
+
+        for (i = 0; i < MAX_REGISTER_PER_QUERY; i++) {
+            if (tab_rp_file[i + 1] != 0) {
+                printf("FAILED (%0X != %0X)\n", tab_rp_file[i + 1], 0);
+                goto close;
+            }
+        }
+        printf("OK\n");
+    }
+
+    printf("\nTEST WRITE GENERAL REFERENCE\n");
+    {
+
+        for (i = 1; i < 5; i++) {
+            rc = modbus_write_general_reference(
+                ctx, i, i * 7, UT_FILE_REGISTER_NB - i, &UT_FILE_REGISTER_TAB[i]);
+
+            printf("modbus_write_general_reference File_no %d: ", i);
+
+            if (rc < (UT_FILE_REGISTER_NB + 1 -
+                      i)) { // 2 bytes per register + 2 bytes header
+                printf("FAILED (nb points %d)\n", rc);
+                goto close;
+            }
+            printf("OK\n");
+        }
+
+        for (i = 1; i < 5; i++) {
+            rc = modbus_read_general_reference(
+                ctx, i, i * 7, UT_FILE_REGISTER_NB - 1, tab_rp_file);
+
+            printf("modbus_read_general_reference File_no %d: ", i);
+
+            if (rc < (UT_FILE_REGISTER_NB + 1 -
+                      i)) { // 2 bytes per register + 2 bytes header
+                printf("FAILED (nb points %d)\n", rc);
+                goto close;
+            }
+
+            printf("OK , Verify : ");
+
+            for (j = 0; j < (UT_FILE_REGISTER_NB - i); j++) {
+                if (tab_rp_file[j + 1] != UT_FILE_REGISTER_TAB[j + i]) {
+                    printf("FAILED (%0X != %0X) at %d \n", tab_rp_file[j + 1],
+                           UT_FILE_REGISTER_TAB[j + i], j);
+                    goto close;
+                }
+            }
+            printf("OK\n");
+        }
+    }
+
+    /* Writing to a non existing file */
+    rc = modbus_write_general_reference(ctx, 6, 0, UT_FILE_REGISTER_NB,
+                                        UT_FILE_REGISTER_TAB);
+
+    printf("modbus_write_general_reference File_no 6 ");
+
+    if (rc == -1 && errno == EMBXILVAL) { // This should fail
+        printf("OK\n");
+    } else {
+        printf("FAILED (nb points %d) errno %d \n", rc, errno);
+        goto close;
+    }
 
     /** Run a few tests to challenge the server code **/
     if (test_server(ctx, use_backend) == -1) {
@@ -685,6 +778,7 @@ close:
     /* Free the memory */
     free(tab_rp_bits);
     free(tab_rp_registers);
+    free(tab_rp_file);
 
     /* Close the connection */
     modbus_close(ctx);
