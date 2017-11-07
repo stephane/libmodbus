@@ -68,6 +68,8 @@ MODBUS_BEGIN_DECLS
 #define MODBUS_FC_WRITE_MULTIPLE_COILS      0x0F
 #define MODBUS_FC_WRITE_MULTIPLE_REGISTERS  0x10
 #define MODBUS_FC_REPORT_SLAVE_ID           0x11
+#define MODBUS_FC_READ_GENERAL_REFERENCE 0x14
+#define MODBUS_FC_WRITE_GENERAL_REFERENCE 0x15
 #define MODBUS_FC_MASK_WRITE_REGISTER       0x16
 #define MODBUS_FC_WRITE_AND_READ_REGISTERS  0x17
 
@@ -92,6 +94,7 @@ MODBUS_BEGIN_DECLS
 #define MODBUS_MAX_WRITE_REGISTERS         123
 #define MODBUS_MAX_WR_WRITE_REGISTERS      121
 #define MODBUS_MAX_WR_READ_REGISTERS       125
+#define MODBUS_MAX_REFERENCE_FILES 10
 
 /* The size of the MODBUS PDU is limited by the size constraint inherited from
  * the first MODBUS implementation on Serial Line network (max. RS485 ADU = 256
@@ -167,6 +170,7 @@ typedef struct {
     uint8_t *tab_input_bits;
     uint16_t *tab_input_registers;
     uint16_t *tab_registers;
+    uint16_t *file_registers[MODBUS_MAX_REFERENCE_FILES];
 } modbus_mapping_t;
 
 typedef enum
@@ -215,6 +219,13 @@ MODBUS_API int modbus_mask_write_register(modbus_t *ctx, int addr, uint16_t and_
 MODBUS_API int modbus_write_and_read_registers(modbus_t *ctx, int write_addr, int write_nb,
                                                const uint16_t *src, int read_addr, int read_nb,
                                                uint16_t *dest);
+MODBUS_API int modbus_read_general_reference(modbus_t *ctx, int file_no,
+                                             int read_addr, int read_nb,
+                                             uint16_t *dest);
+MODBUS_API int modbus_write_general_reference(modbus_t *ctx, int file_no,
+                                              int write_addr, int write_nb,
+                                              const uint16_t *src);
+
 MODBUS_API int modbus_report_slave_id(modbus_t *ctx, int max_dest, uint8_t *dest);
 
 MODBUS_API modbus_mapping_t* modbus_mapping_new_start_address(
@@ -223,8 +234,19 @@ MODBUS_API modbus_mapping_t* modbus_mapping_new_start_address(
     unsigned int start_registers, unsigned int nb_registers,
     unsigned int start_input_registers, unsigned int nb_input_registers);
 
+MODBUS_API modbus_mapping_t *modbus_mapping_new_start_address_extend(
+    unsigned int start_bits, unsigned int nb_bits,
+    unsigned int start_input_bits, unsigned int nb_input_bits,
+    unsigned int start_registers, unsigned int nb_registers,
+    unsigned int start_input_registers, unsigned int nb_input_registers,
+    uint16_t nb_file_registers[MODBUS_MAX_REFERENCE_FILES]);
+
 MODBUS_API modbus_mapping_t* modbus_mapping_new(int nb_bits, int nb_input_bits,
                                                 int nb_registers, int nb_input_registers);
+MODBUS_API modbus_mapping_t *modbus_mapping_new_extend(
+    int nb_bits, int nb_input_bits, int nb_registers, int nb_input_registers,
+    uint16_t nb_file_registers[MODBUS_MAX_REFERENCE_FILES]);
+
 MODBUS_API void modbus_mapping_free(modbus_mapping_t *mb_mapping);
 
 MODBUS_API int modbus_send_raw_request(modbus_t *ctx, uint8_t *raw_req, int raw_req_length);
