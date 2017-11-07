@@ -25,6 +25,7 @@
 #define SERVER_ID         17
 #define INVALID_SERVER_ID 18
 
+#define MAX_DEVICENAME_LENGHT 256
 #define MAX_REGISTER_PER_QUERY 100
 
 const uint16_t UT_BITS_ADDRESS = 0x130;

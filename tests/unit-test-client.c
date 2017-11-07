@@ -67,6 +67,10 @@ int main(int argc, char *argv[])
     int success = FALSE;
     int old_slave;
 
+    char devicename[MAX_DEVICENAME_LENGHT] = {
+        0,
+    };
+    int baudrate = 115200;
     if (argc > 1) {
         if (strcmp(argv[1], "tcp") == 0) {
             use_backend = TCP;
@@ -75,7 +79,9 @@ int main(int argc, char *argv[])
         } else if (strcmp(argv[1], "rtu") == 0) {
             use_backend = RTU;
         } else {
-            printf("Usage:\n  %s [tcp|tcppi|rtu] - Modbus client for unit testing\n\n", argv[0]);
+            printf("Usage:\n  %s [tcp|tcppi|rtu] ('device-name for rtu') "
+                   "(baudrate for rtu)  - Modbus client for unit testing\n\n",
+                   argv[0]);
             exit(1);
         }
     } else {
@@ -83,12 +89,21 @@ int main(int argc, char *argv[])
         use_backend = TCP;
     }
 
+    if (argc > 2) {
+        strncpy(devicename, argv[2], MAX_DEVICENAME_LENGHT);
+    } else {
+        strncpy(devicename, "/dev/ttyUSB1", MAX_DEVICENAME_LENGHT);
+    }
+    if (argc > 3) {
+        baudrate = atoi(argv[3]);
+    }
+
     if (use_backend == TCP) {
         ctx = modbus_new_tcp("127.0.0.1", 1502);
     } else if (use_backend == TCP_PI) {
         ctx = modbus_new_tcp_pi("::1", "1502");
     } else {
-        ctx = modbus_new_rtu("/dev/ttyUSB1", 115200, 'N', 8, 1);
+        ctx = modbus_new_rtu(devicename, baudrate, 'N', 8, 1);
     }
     if (ctx == NULL) {
         fprintf(stderr, "Unable to allocate libmodbus context\n");
