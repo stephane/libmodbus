@@ -13,13 +13,13 @@ SYNOPSIS
                                                     int 'start_input_bits', int 'nb_input_bits',
                                                     int 'start_registers', int 'nb_registers',
                                                     int 'start_input_registers', int 'nb_input_registers',
-                                                    'uint16_t nb_file_register[MODBUS_MAX_REFERENCE_FILES]');*
+                                                    'uint16_t nb_file_register[MODBUS_MAX_RECORD_FILES]');*
 
 
 DESCRIPTION
 -----------
 The *modbus_mapping_new_extend()*  calls linkmb:modbus_mapping_new_start_address[3] and additionally allocates up to 
-MODBUS_MAX_REFERENCE_FILES (current specification limit it to 10) arrays for file registers.
+MODBUS_MAX_RECORD_FILES (current specification limit it to 10) arrays for file registers.
 
 Each _value_ in the array, which is not 0 allocates _value_ registers in the file of _index_ -1 .
 ( The file registers start with "1" for the first file ) 
@@ -59,7 +59,7 @@ mb_mapping = modbus_mapping_new_start_address_extend(BITS_ADDRESS, BITS_NB,
                                 INPUT_BITS_ADDRESS, INPUT_BITS_NB,
                                 REGISTERS_ADDRESS, REGISTERS_NB,
                                 INPUT_REGISTERS_ADDRESS, INPUT_REGISTERS_NB,
-                                FILE_REGISTERS_NB[MODBUS_MAX_REFERENCE_FILES]);
+                                FILE_REGISTERS_NB[MODBUS_MAX_RECORD_FILES]);
 if (mb_mapping == NULL) {
     fprintf(stderr, "Failed to allocate the mapping: %s\n",
             modbus_strerror(errno));

@@ -1,20 +1,20 @@
-modbus_read_general_reference(3)
+modbus_read_file_register(3)
 ========================
 
 
 NAME
 ----
-modbus_read_general_reference - read from file registers
+modbus_read_file_register - read from file registers
 
 
 SYNOPSIS
 --------
-*int modbus_read_general_reference(modbus_t *ctx, int file_no,  int read_addr, int read_nb, uint16_t *dest);*
+*int modbus_read_file_register(modbus_t *ctx, int file_no,  int read_addr, int read_nb, uint16_t *dest);*
 
 
 DESCRIPTION
 -----------
-The *modbus_read_general_reference()* function shall read the number of _read_nb_ registers of the _file_no_
+The *modbus_read_file_register()* function shall read the number of _read_nb_ registers of the _file_no_
 reference file at the address _read_addr_ of the remote device. The result of
 reading is stored in _dest_ array as word values (16 bits).
 
@@ -56,7 +56,7 @@ if (modbus_connect(ctx) == -1) {
     return -1;
 }
 
- rc = modbus_read_general_reference(ctx, 1, 10 , 64, tab_reg );
+ rc = modbus_read_file_register(ctx, 1, 10 , 64, tab_reg );
  if (rc == -1) {
     fprintf(stderr, "%s\n", modbus_strerror(errno));
     return -1;
@@ -74,7 +74,7 @@ modbus_free(ctx);
 
 SEE ALSO
 --------
-linkmb:modbus_write_general_reference[3]
+linkmb:modbus_write_file_register[3]
 linkmb:modbus_mapping_new_start_address_extend[3]
 linkmb:modbus_mapping_new_extend[3]
 

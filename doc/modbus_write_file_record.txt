@@ -1,15 +1,15 @@
-modbus_write_general_reference(3)
+modbus_write_file_register(3)
 ========================
 
 
 NAME
 ----
-modbus_write_general_reference - write to file registers
+modbus_write_file_register - write to file registers
 
 
 SYNOPSIS
 --------
-*int modbus_write_general_reference(modbus_t *ctx, int file_no,  int write_addr, int write_nb, const uint16_t *src);*
+*int modbus_write_file_register(modbus_t *ctx, int file_no,  int write_addr, int write_nb, const uint16_t *src);*
 
 
 DESCRIPTION
@@ -57,7 +57,7 @@ if (modbus_connect(ctx) == -1) {
 for (i=0; i < 64; i++){
     tab_reg[i]=i+i*0x100;
 }
- rc = modbus_write_general_reference(ctx, 1, 10 , 64, tab_reg );
+ rc = modbus_write_file_register(ctx, 1, 10 , 64, tab_reg );
  if (rc == -1) {
     fprintf(stderr, "%s\n", modbus_strerror(errno));
     return -1;
@@ -70,7 +70,7 @@ modbus_free(ctx);
 
 SEE ALSO
 --------
-linkmb:modbus_read_general_reference[3]
+linkmb:modbus_read_file_register[3]
 linkmb:modbus_mapping_new_start_address_extend[3]
 linkmb:modbus_mapping_new_extend[3]
 
