@@ -100,7 +100,7 @@ MODBUS_BEGIN_DECLS
  * 10 (0x0A). 
  * (chapter 6 section 15 page 35)
  */
-#define MODBUS_MAX_RECORD_FILES            10
+#define MODBUS_MAX_RECORD_FILES            0xffff
 
 /* The size of the MODBUS PDU is limited by the size constraint inherited from
  * the first MODBUS implementation on Serial Line network (max. RS485 ADU = 256

@@ -1061,7 +1061,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
                     offset += _SUB_REQ_HDR_LENGTH;
                     nb -= _SUB_REQ_HDR_LENGTH;
 
-                    if ((file_no == 0) || (file_no > MODBUS_MAX_RECORD_FILES) ||
+                    if ((file_no == 0) ||
                         (mb_mapping->file_registers[file_no - 1] == NULL)) {
                         rsp_length = response_exception(
                             ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, TRUE,
@@ -1120,7 +1120,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
                 uint16_t f_address = (req[offset + 3] << 8) + req[offset + 4];
                 uint16_t nb_read = (req[offset + 5] << 8) + req[offset + 6];
 
-                if ((file_no == 0) || (file_no > MODBUS_MAX_RECORD_FILES) ||
+                if ((file_no == 0) || 
                     (mb_mapping->file_registers[file_no - 1] == NULL)) {
                     rsp_length = response_exception(
                         ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, TRUE,
