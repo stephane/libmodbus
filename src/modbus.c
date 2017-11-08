@@ -156,7 +156,7 @@ static unsigned int compute_response_length_from_request(modbus_t *ctx, uint8_t 
         length = 2 + req[offset + 1];
         break;
     case MODBUS_FC_READ_GENERAL_REFERENCE:
-        return MSG_LENGTH_UNDEFINED; // Lenght is dedepnding of the subrequests
+        return MSG_LENGTH_UNDEFINED; /* Lenght is dedepnding of the subrequests */
     case MODBUS_FC_MASK_WRITE_REGISTER:
         length = 7;
         break;
@@ -290,8 +290,8 @@ static uint8_t compute_meta_length_after_function(int function,
             break;
         case MODBUS_FC_WRITE_GENERAL_REFERENCE:
         case MODBUS_FC_READ_GENERAL_REFERENCE:
-            length = 1; // After the function, the number of bytes is transmitted
-                        // and at least one SUB_REQUEST
+            length = 1; /* After the function, the number of bytes is transmitted
+                         and at least one SUB_REQUEST*/
             break;
         default:
             length = 1;
@@ -1016,8 +1016,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         }
     } break;
     case MODBUS_FC_WRITE_GENERAL_REFERENCE: {
-        // Each "Read_General_Reference", aka as "Read_File", can consists of
-        // several Subrequests
+        /* Each "Write_File_Record", can consists of several Subrequests */
         uint8_t nb = req[offset + 1];
         uint16_t i;
         int nsr = 0;
@@ -1042,7 +1041,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         } else {
             /* Response is a simple copy of the request */
             memcpy(rsp + rsp_length, req + offset + 1,
-                   1 + nb); // number of bytes + the place for the nb itself
+                   1 + nb); /* number of bytes + the place for the nb itself */
             rsp_length += nb + 1;
 
             do {
@@ -1085,8 +1084,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         }
     } break;
     case MODBUS_FC_READ_GENERAL_REFERENCE: {
-        // Each "Read_General_Reference", aka as "Read_File", can consists of
-        // several Subrequests
+        /* Each "Read_FielRecord", can consists of several Subrequests */
         uint8_t nb = req[offset + 1];
         uint16_t i;
         int nsr = 0;
@@ -1104,7 +1102,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         rsp_length = ctx->backend->build_response_basis(&sft, rsp);
 
         rsp_length_byte_count =
-            rsp_length; // Place-holder of overall message-size.
+            rsp_length; /* Place-holder of overall message-size. */
         rsp[rsp_length++] = 0;
 
         do {
@@ -1152,7 +1150,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
             offset += SUB_REQUEST_LENGHT;
             nsr++;
         } while (nsr < (nb / SUB_REQUEST_LENGHT));
-        // put overall lenght of message at the reserved space in the beginning.
+        /* put overall lenght of message at the reserved space in the beginning. */
         rsp[rsp_length_byte_count] = (rsp_length - rsp_length_byte_count) - 1;
 
     } break;
@@ -1847,18 +1845,8 @@ int modbus_write_general_reference(modbus_t *ctx, int file_no, int write_addr,
 
         rc /= 2; /* rc is in byte, we count in uint16-steps */
 
-#if 0 // Does it make sense to copy back the response to the caller ? It's a
-      // copy of the request
-        offset = ctx->backend->header_length;
-
-        /* If rc is negative, the loop is jumped ! */
-        for (i = 0; i < rc; i++) {
-            /* shift reg hi_byte to temp OR with lo_byte */
-            src[i] = (rsp[offset + 2 + (i << 1)] << 8) |
-                rsp[offset + 3 + (i << 1)];
-        }
-
-#endif
+        /* It does not make sense to copy back the response to the caller, so 
+        it is left out */
     }
     return rc;
 }

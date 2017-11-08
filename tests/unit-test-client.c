@@ -685,7 +685,7 @@ int main(int argc, char *argv[])
         printf("modbus_read_general_reference: ");
 
         if (rc < (MAX_REGISTER_PER_QUERY +
-                  1)) { // 2 bytes per register + 2 bytes header
+                  1)) { /* 2 bytes per register + 2 bytes header */
             printf("FAILED (nb points %d)\n", rc);
             goto close;
         }
@@ -721,7 +721,7 @@ int main(int argc, char *argv[])
             printf("modbus_write_general_reference File_no %d: ", i);
 
             if (rc < (UT_FILE_REGISTER_NB + 1 -
-                      i)) { // 2 bytes per register + 2 bytes header
+                      i)) { /* 2 bytes per register + 2 bytes header*/
                 printf("FAILED (nb points %d)\n", rc);
                 goto close;
             }
@@ -735,7 +735,7 @@ int main(int argc, char *argv[])
             printf("modbus_read_general_reference File_no %d: ", i);
 
             if (rc < (UT_FILE_REGISTER_NB + 1 -
-                      i)) { // 2 bytes per register + 2 bytes header
+                      i)) { /* 2 bytes per register + 2 bytes header */
                 printf("FAILED (nb points %d)\n", rc);
                 goto close;
             }
@@ -759,7 +759,7 @@ int main(int argc, char *argv[])
 
     printf("modbus_write_general_reference File_no 6 ");
 
-    if (rc == -1 && errno == EMBXILVAL) { // This should fail
+    if (rc == -1 && errno == EMBXILVAL) { /* This should fail */
         printf("OK\n");
     } else {
         printf("FAILED (nb points %d) errno %d \n", rc, errno);

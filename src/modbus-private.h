@@ -40,8 +40,8 @@ MODBUS_BEGIN_DECLS
 #define _BYTE_TIMEOUT        500000
 
 #define SUB_REQUEST_LENGHT 0x07
-#define SUB_REQUEST_REF_TYPE \
-    0x06 // Reference-Type for General Reference Read + Write
+#define SUB_REQUEST_REF_TYPE 0x06 
+    /* Reference-Type for File-Record Read + Write */
 
 typedef enum {
     _MODBUS_BACKEND_TYPE_RTU=0,
