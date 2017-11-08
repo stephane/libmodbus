@@ -68,8 +68,8 @@ MODBUS_BEGIN_DECLS
 #define MODBUS_FC_WRITE_MULTIPLE_COILS      0x0F
 #define MODBUS_FC_WRITE_MULTIPLE_REGISTERS  0x10
 #define MODBUS_FC_REPORT_SLAVE_ID           0x11
-#define MODBUS_FC_READ_GENERAL_REFERENCE 0x14
-#define MODBUS_FC_WRITE_GENERAL_REFERENCE 0x15
+#define MODBUS_FC_READ_FILE_RECORD          0x14
+#define MODBUS_FC_WRITE_FILE_RECORD         0x15
 #define MODBUS_FC_MASK_WRITE_REGISTER       0x16
 #define MODBUS_FC_WRITE_AND_READ_REGISTERS  0x17
 
@@ -219,10 +219,10 @@ MODBUS_API int modbus_mask_write_register(modbus_t *ctx, int addr, uint16_t and_
 MODBUS_API int modbus_write_and_read_registers(modbus_t *ctx, int write_addr, int write_nb,
                                                const uint16_t *src, int read_addr, int read_nb,
                                                uint16_t *dest);
-MODBUS_API int modbus_read_general_reference(modbus_t *ctx, int file_no,
+MODBUS_API int modbus_read_file_record(modbus_t *ctx, int file_no,
                                              int read_addr, int read_nb,
                                              uint16_t *dest);
-MODBUS_API int modbus_write_general_reference(modbus_t *ctx, int file_no,
+MODBUS_API int modbus_write_file_record(modbus_t *ctx, int file_no,
                                               int write_addr, int write_nb,
                                               const uint16_t *src);
 

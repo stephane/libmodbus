@@ -677,12 +677,12 @@ int main(int argc, char *argv[])
     printf("* modbus_read_registers at special address: ");
     ASSERT_TRUE(rc == -1 && errno == EMBXSBUSY, "");
     /** Read File*/
-    printf("\nTEST READ GENERAL REFERENCE\n");
+    printf("\nTEST READ FILE RECORD\n");
     {
 
-        rc = modbus_read_general_reference(ctx, 1, 10, MAX_REGISTER_PER_QUERY,
+        rc = modbus_read_file_record(ctx, 1, 10, MAX_REGISTER_PER_QUERY,
                                            tab_rp_file);
-        printf("modbus_read_general_reference: ");
+        printf("modbus_read_file_record: ");
 
         if (rc < (MAX_REGISTER_PER_QUERY +
                   1)) { /* 2 bytes per register + 2 bytes header */
@@ -711,14 +711,14 @@ int main(int argc, char *argv[])
         printf("OK\n");
     }
 
-    printf("\nTEST WRITE GENERAL REFERENCE\n");
+    printf("\nTEST WRITE FILE RECORD\n");
     {
 
         for (i = 1; i < 5; i++) {
-            rc = modbus_write_general_reference(
+            rc = modbus_write_file_record(
                 ctx, i, i * 7, UT_FILE_REGISTER_NB - i, &UT_FILE_REGISTER_TAB[i]);
 
-            printf("modbus_write_general_reference File_no %d: ", i);
+            printf("modbus_write_file_record File_no %d: ", i);
 
             if (rc < (UT_FILE_REGISTER_NB + 1 -
                       i)) { /* 2 bytes per register + 2 bytes header*/
@@ -729,10 +729,10 @@ int main(int argc, char *argv[])
         }
 
         for (i = 1; i < 5; i++) {
-            rc = modbus_read_general_reference(
+            rc = modbus_read_file_record(
                 ctx, i, i * 7, UT_FILE_REGISTER_NB - 1, tab_rp_file);
 
-            printf("modbus_read_general_reference File_no %d: ", i);
+            printf("modbus_read_file_record File_no %d: ", i);
 
             if (rc < (UT_FILE_REGISTER_NB + 1 -
                       i)) { /* 2 bytes per register + 2 bytes header */
@@ -754,10 +754,10 @@ int main(int argc, char *argv[])
     }
 
     /* Writing to a non existing file */
-    rc = modbus_write_general_reference(ctx, 6, 0, UT_FILE_REGISTER_NB,
+    rc = modbus_write_file_record(ctx, 6, 0, UT_FILE_REGISTER_NB,
                                         UT_FILE_REGISTER_TAB);
 
-    printf("modbus_write_general_reference File_no 6 ");
+    printf("modbus_write_file_record File_no 6 ");
 
     if (rc == -1 && errno == EMBXILVAL) { /* This should fail */
         printf("OK\n");

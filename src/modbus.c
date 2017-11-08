@@ -152,11 +152,11 @@ static unsigned int compute_response_length_from_request(modbus_t *ctx, uint8_t 
         /* The response is device specific (the header provides the
            length) */
         return MSG_LENGTH_UNDEFINED;
-    case MODBUS_FC_WRITE_GENERAL_REFERENCE:
+    case MODBUS_FC_WRITE_FILE_RECORD:
         length = 2 + req[offset + 1];
         break;
-    case MODBUS_FC_READ_GENERAL_REFERENCE:
-        return MSG_LENGTH_UNDEFINED; /* Lenght is dedepnding of the subrequests */
+    case MODBUS_FC_READ_FILE_RECORD:
+        return MSG_LENGTH_UNDEFINED; /* Length is dedepnding of the subrequests */
     case MODBUS_FC_MASK_WRITE_REGISTER:
         length = 7;
         break;
@@ -269,8 +269,8 @@ static uint8_t compute_meta_length_after_function(int function,
             length = 6;
         } else if (function == MODBUS_FC_WRITE_AND_READ_REGISTERS) {
             length = 9;
-        } else if (function == MODBUS_FC_READ_GENERAL_REFERENCE ||
-                   function == MODBUS_FC_WRITE_GENERAL_REFERENCE) {
+        } else if (function == MODBUS_FC_READ_FILE_RECORD ||
+                   function == MODBUS_FC_WRITE_FILE_RECORD) {
             length = 1; // After the function, the number of bytes is transmitted
         } else {
             /* MODBUS_FC_READ_EXCEPTION_STATUS, MODBUS_FC_REPORT_SLAVE_ID */
@@ -288,8 +288,8 @@ static uint8_t compute_meta_length_after_function(int function,
         case MODBUS_FC_MASK_WRITE_REGISTER:
             length = 6;
             break;
-        case MODBUS_FC_WRITE_GENERAL_REFERENCE:
-        case MODBUS_FC_READ_GENERAL_REFERENCE:
+        case MODBUS_FC_WRITE_FILE_RECORD:
+        case MODBUS_FC_READ_FILE_RECORD:
             length = 1; /* After the function, the number of bytes is transmitted
                          and at least one SUB_REQUEST*/
             break;
@@ -317,8 +317,8 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
         case MODBUS_FC_WRITE_AND_READ_REGISTERS:
             length = msg[ctx->backend->header_length + 9];
             break;
-        case MODBUS_FC_WRITE_GENERAL_REFERENCE:
-        case MODBUS_FC_READ_GENERAL_REFERENCE:
+        case MODBUS_FC_WRITE_FILE_RECORD:
+        case MODBUS_FC_READ_FILE_RECORD:
             length = msg[ctx->backend->header_length + 1];
             break;
         default:
@@ -330,8 +330,8 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
             function == MODBUS_FC_REPORT_SLAVE_ID ||
             function == MODBUS_FC_WRITE_AND_READ_REGISTERS) {
             length = msg[ctx->backend->header_length + 1];
-        } else if (function == MODBUS_FC_READ_GENERAL_REFERENCE ||
-                   function == MODBUS_FC_WRITE_GENERAL_REFERENCE) {
+        } else if (function == MODBUS_FC_READ_FILE_RECORD ||
+                   function == MODBUS_FC_WRITE_FILE_RECORD) {
             length = msg[ctx->backend->header_length + 1];
         } else {
             length = 0;
@@ -616,12 +616,12 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
             req_nb_value = (req[offset + 3] << 8) + req[offset + 4];
             rsp_nb_value = (rsp[offset + 3] << 8) | rsp[offset + 4];
             break;
-        case MODBUS_FC_WRITE_GENERAL_REFERENCE:
+        case MODBUS_FC_WRITE_FILE_RECORD:
             /* Check for Bytes recevied, response is copy of the request */
             req_nb_value = req[offset + 1];
             rsp_nb_value = rsp[offset + 1];
             break;
-        case MODBUS_FC_READ_GENERAL_REFERENCE:
+        case MODBUS_FC_READ_FILE_RECORD:
             /* Check for Bytes recevied */
             req_nb_value = rsp_nb_value = rsp[offset + 1];
             break;
@@ -1015,7 +1015,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
             }
         }
     } break;
-    case MODBUS_FC_WRITE_GENERAL_REFERENCE: {
+    case MODBUS_FC_WRITE_FILE_RECORD: {
         /* Each "Write_File_Record", can consists of several Subrequests */
         uint8_t nb = req[offset + 1];
         uint16_t i;
@@ -1023,7 +1023,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         uint8_t ref_type = 0;
 
         /* Each Subrequest has at least 7 Bytes */
-        if (nb < SUB_REQUEST_LENGHT) {
+        if (nb < _SUB_REQ_HDR_LENGTH) {
             rsp_length = response_exception(
                 ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, TRUE,
                 "Illegal nb of subrequests %d in write_general_reference \n", nb);
@@ -1034,8 +1034,8 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         if (rsp_length + nb >= MODBUS_MAX_READ_REGISTERS) {
             rsp_length = response_exception(
                 ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, TRUE,
-                "Responselenght exceeds telegram-size %d in subrequests %d in "
-                "write_general_reference \n",
+                "Responselength exceeds telegram-size %d in subrequests %d in "
+                "write_file_record \n",
                 rsp_length + nb, nsr);
 
         } else {
@@ -1047,26 +1047,26 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
             do {
                 offset += 2;
                 ref_type = req[offset];
-                if (ref_type != SUB_REQUEST_REF_TYPE) {
+                if (ref_type != _SUB_REQUEST_REF_TYPE) {
                     rsp_length = response_exception(
                         ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, TRUE,
                         "Illegal reference Type %d in subrequests %d in "
-                        "write_general_reference \n",
+                        "write_file_record \n",
                         ref_type, nsr);
                 } else {
                     uint16_t file_no = (req[offset + 1] << 8) + req[offset + 2];
                     uint16_t f_address = (req[offset + 3] << 8) + req[offset + 4];
                     uint16_t nb_write = (req[offset + 5] << 8) + req[offset + 6];
 
-                    offset += SUB_REQUEST_LENGHT;
-                    nb -= SUB_REQUEST_LENGHT;
+                    offset += _SUB_REQ_HDR_LENGTH;
+                    nb -= _SUB_REQ_HDR_LENGTH;
 
                     if ((file_no == 0) || (file_no > MODBUS_MAX_REFERENCE_FILES) ||
                         (mb_mapping->file_registers[file_no - 1] == NULL)) {
                         rsp_length = response_exception(
                             ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, TRUE,
                             "Illegal parameter file %d in subrequests %d in "
-                            "write_general_reference \n",
+                            "write_file_record \n",
                             file_no, nsr);
                         break;
                     } else {
@@ -1083,7 +1083,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
             } while (nb > 0);
         }
     } break;
-    case MODBUS_FC_READ_GENERAL_REFERENCE: {
+    case MODBUS_FC_READ_FILE_RECORD: {
         /* Each "Read_FielRecord", can consists of several Subrequests */
         uint8_t nb = req[offset + 1];
         uint16_t i;
@@ -1092,10 +1092,10 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         int rsp_length_byte_count = 0;
 
         /* Each Subrequest has 7 Bytes */
-        if (nb % SUB_REQUEST_LENGHT != 0) {
+        if (nb % _SUB_REQ_HDR_LENGTH != 0) {
             rsp_length = response_exception(
                 ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, TRUE,
-                "Illegal nb of subrequests %d in read_general_reference \n", nb);
+                "Illegal nb of subrequests %d in read_read_file \n", nb);
             break;
         }
 
@@ -1109,11 +1109,11 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
             offset += 2;
             ref_type = req[offset];
 
-            if (ref_type != SUB_REQUEST_REF_TYPE) {
+            if (ref_type != _SUB_REQUEST_REF_TYPE) {
                 rsp_length = response_exception(
                     ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, TRUE,
                     "Illegal reference Type %d in subrequests %d in "
-                    "read_general_reference \n",
+                    "read_file_record \n",
                     ref_type, nsr);
             } else {
                 uint16_t file_no = (req[offset + 1] << 8) + req[offset + 2];
@@ -1131,13 +1131,13 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
                 } else if (rsp_length + nb_read >= MODBUS_MAX_READ_REGISTERS) {
                     rsp_length = response_exception(
                         ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, TRUE,
-                        "Responselenght exceeds telegram-size %d in subrequests %d in "
-                        "read_general_reference \n",
+                        "Responselength exceeds telegram-size %d in subrequests %d in "
+                        "read_file_record \n",
                         rsp_length + nb_read, nsr);
 
                 } else {
                     rsp[rsp_length++] = nb_read;
-                    rsp[rsp_length++] = SUB_REQUEST_REF_TYPE;
+                    rsp[rsp_length++] = _SUB_REQUEST_REF_TYPE;
                     /* and read the data for the response */
                     for (i = f_address; i < f_address + nb_read; i++) {
                         rsp[rsp_length++] =
@@ -1147,10 +1147,10 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
                     }
                 }
             }
-            offset += SUB_REQUEST_LENGHT;
+            offset += _SUB_REQ_HDR_LENGTH;
             nsr++;
-        } while (nsr < (nb / SUB_REQUEST_LENGHT));
-        /* put overall lenght of message at the reserved space in the beginning. */
+        } while (nsr < (nb / _SUB_REQ_HDR_LENGTH));
+        /* put overall length of message at the reserved space in the beginning. */
         rsp[rsp_length_byte_count] = (rsp_length - rsp_length_byte_count) - 1;
 
     } break;
@@ -1726,13 +1726,13 @@ int modbus_report_slave_id(modbus_t *ctx, int max_dest, uint8_t *dest)
     return rc;
 }
 
-/* Read General Reference ( aka as Read File ) reads nb registers (16-bit) from
- * an offset ( also 16-bit stepping ) of a given filenumber*/
-/* This implements only the simple case with one subrequest. More complex can be
- * created with raw-message.  */
-/* !!! Take care, that dest must have the size of at least read_nb +1  !!! */
+/* Read File Record reads nb registers (16-bit) from
+ * an offset ( also 16-bit stepping ) of a given filenumber
+ * This implements only the simple case with one subrequest. More complex can be
+ * created with raw-message.  
+ * !!! Take care, that dest array must have the size of at least read_nb +1  !!! */
 
-int modbus_read_general_reference(modbus_t *ctx, int file_no, int read_addr,
+int modbus_read_file_record(modbus_t *ctx, int file_no, int read_addr,
                                   int read_nb, uint16_t *dest)
 
 {
@@ -1751,9 +1751,9 @@ int modbus_read_general_reference(modbus_t *ctx, int file_no, int read_addr,
         errno = EMBMDATA;
         return -1;
     }
-    byte_count = SUB_REQUEST_LENGHT;
+    byte_count = _SUB_REQ_HDR_LENGTH;
     req_length = ctx->backend->build_request_basis(
-        ctx, MODBUS_FC_READ_GENERAL_REFERENCE, ((byte_count << 8) | 0x06),
+        ctx, MODBUS_FC_READ_FILE_RECORD, ((byte_count << 8) | 0x06),
         file_no, req);
 
     req[req_length++] = read_addr >> 8;
@@ -1793,11 +1793,12 @@ int modbus_read_general_reference(modbus_t *ctx, int file_no, int read_addr,
     return rc;
 }
 
-/* Write General Reference ( aka as Write File ) writes nb registers (16-bit)
- * from an offset ( also 16-bit stepping ) of a given filenumber*/
-/* This implements only the simple case with one subrequest. More complex can be
+/* Write File Record writes nb registers (16-bit)
+ * from an offset ( also 16-bit stepping ) of a given filenumber
+ * This implements only the simple case with one subrequest. More complex can be
  * created with raw-message. */
-int modbus_write_general_reference(modbus_t *ctx, int file_no, int write_addr,
+
+int modbus_write_file_record(modbus_t *ctx, int file_no, int write_addr,
                                    int write_nb, const uint16_t *src)
 
 {
@@ -1816,9 +1817,9 @@ int modbus_write_general_reference(modbus_t *ctx, int file_no, int write_addr,
         errno = EMBMDATA;
         return -1;
     }
-    byte_count = SUB_REQUEST_LENGHT + (write_nb * 2);
+    byte_count = _SUB_REQ_HDR_LENGTH + (write_nb * 2);
     req_length = ctx->backend->build_request_basis(
-        ctx, MODBUS_FC_WRITE_GENERAL_REFERENCE, ((byte_count << 8) | 0x06),
+        ctx, MODBUS_FC_WRITE_FILE_RECORD, ((byte_count << 8) | 0x06),
         file_no, req);
 
     req[req_length++] = write_addr >> 8;
