@@ -94,7 +94,13 @@ MODBUS_BEGIN_DECLS
 #define MODBUS_MAX_WRITE_REGISTERS         123
 #define MODBUS_MAX_WR_WRITE_REGISTERS      121
 #define MODBUS_MAX_WR_READ_REGISTERS       125
-#define MODBUS_MAX_REFERENCE_FILES 10
+
+/* While it is allowed for the File Number to be in the range 1 to 0xFFFF, it should be noted that
+ * interoperability with legacy equipment may be compromised if the File Number is greater than
+ * 10 (0x0A). 
+ * (chapter 6 section 15 page 35)
+ */
+#define MODBUS_MAX_RECORD_FILES            10
 
 /* The size of the MODBUS PDU is limited by the size constraint inherited from
  * the first MODBUS implementation on Serial Line network (max. RS485 ADU = 256
@@ -170,7 +176,7 @@ typedef struct {
     uint8_t *tab_input_bits;
     uint16_t *tab_input_registers;
     uint16_t *tab_registers;
-    uint16_t *file_registers[MODBUS_MAX_REFERENCE_FILES];
+    uint16_t *file_registers[MODBUS_MAX_RECORD_FILES];
 } modbus_mapping_t;
 
 typedef enum
@@ -239,13 +245,13 @@ MODBUS_API modbus_mapping_t *modbus_mapping_new_start_address_extend(
     unsigned int start_input_bits, unsigned int nb_input_bits,
     unsigned int start_registers, unsigned int nb_registers,
     unsigned int start_input_registers, unsigned int nb_input_registers,
-    uint16_t nb_file_registers[MODBUS_MAX_REFERENCE_FILES]);
+    uint16_t nb_file_registers[MODBUS_MAX_RECORD_FILES]);
 
 MODBUS_API modbus_mapping_t* modbus_mapping_new(int nb_bits, int nb_input_bits,
                                                 int nb_registers, int nb_input_registers);
 MODBUS_API modbus_mapping_t *modbus_mapping_new_extend(
     int nb_bits, int nb_input_bits, int nb_registers, int nb_input_registers,
-    uint16_t nb_file_registers[MODBUS_MAX_REFERENCE_FILES]);
+    uint16_t nb_file_registers[MODBUS_MAX_RECORD_FILES]);
 
 MODBUS_API void modbus_mapping_free(modbus_mapping_t *mb_mapping);
 

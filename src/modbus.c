@@ -1061,7 +1061,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
                     offset += _SUB_REQ_HDR_LENGTH;
                     nb -= _SUB_REQ_HDR_LENGTH;
 
-                    if ((file_no == 0) || (file_no > MODBUS_MAX_REFERENCE_FILES) ||
+                    if ((file_no == 0) || (file_no > MODBUS_MAX_RECORD_FILES) ||
                         (mb_mapping->file_registers[file_no - 1] == NULL)) {
                         rsp_length = response_exception(
                             ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, TRUE,
@@ -1120,7 +1120,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
                 uint16_t f_address = (req[offset + 3] << 8) + req[offset + 4];
                 uint16_t nb_read = (req[offset + 5] << 8) + req[offset + 6];
 
-                if ((file_no == 0) || (file_no > MODBUS_MAX_REFERENCE_FILES) ||
+                if ((file_no == 0) || (file_no > MODBUS_MAX_RECORD_FILES) ||
                     (mb_mapping->file_registers[file_no - 1] == NULL)) {
                     rsp_length = response_exception(
                         ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, TRUE,
@@ -2138,7 +2138,7 @@ modbus_mapping_t* modbus_mapping_new_start_address(
                nb_input_registers * sizeof(uint16_t));
     }
 
-    for (i = 0; i < MODBUS_MAX_REFERENCE_FILES; i++) {
+    for (i = 0; i < MODBUS_MAX_RECORD_FILES; i++) {
         mb_mapping->file_registers[i] = NULL;
     }
 
@@ -2161,7 +2161,7 @@ modbus_mapping_t* modbus_mapping_new(int nb_bits, int nb_input_bits,
    successful. Otherwise it shall return NULL and set errno to ENOMEM. */
 modbus_mapping_t *modbus_mapping_new_extend(
     int nb_bits, int nb_input_bits, int nb_registers, int nb_input_registers,
-    uint16_t nb_file_register[MODBUS_MAX_REFERENCE_FILES])
+    uint16_t nb_file_register[MODBUS_MAX_RECORD_FILES])
 {
     int i;
 
@@ -2169,7 +2169,7 @@ modbus_mapping_t *modbus_mapping_new_extend(
         nb_bits, nb_input_bits, nb_registers, nb_input_registers);
 
     if (mb_mapping) {
-        for (i = 0; i < MODBUS_MAX_REFERENCE_FILES; i++) {
+        for (i = 0; i < MODBUS_MAX_RECORD_FILES; i++) {
             if (nb_file_register[i]) {
                 mb_mapping->file_registers[i] =
                     (uint16_t *)malloc(nb_file_register[i] * sizeof(uint16_t));
@@ -2194,7 +2194,7 @@ MODBUS_API modbus_mapping_t *modbus_mapping_new_start_address_extend(
     unsigned int start_input_bits, unsigned int nb_input_bits,
     unsigned int start_registers, unsigned int nb_registers,
     unsigned int start_input_registers, unsigned int nb_input_registers,
-    uint16_t nb_file_registers[MODBUS_MAX_REFERENCE_FILES])
+    uint16_t nb_file_registers[MODBUS_MAX_RECORD_FILES])
 {
 
     int i;
@@ -2204,7 +2204,7 @@ MODBUS_API modbus_mapping_t *modbus_mapping_new_start_address_extend(
         nb_registers, start_input_registers, nb_input_registers);
 
     if (mb_mapping) {
-        for (i = 0; i < MODBUS_MAX_REFERENCE_FILES; i++) {
+        for (i = 0; i < MODBUS_MAX_RECORD_FILES; i++) {
             if (nb_file_registers[i]) {
                 mb_mapping->file_registers[i] =
                     (uint16_t *)malloc(nb_file_registers[i] * sizeof(uint16_t));
@@ -2224,7 +2224,7 @@ void modbus_mapping_free(modbus_mapping_t *mb_mapping)
         return;
     }
 
-    for (i = 0; i < MODBUS_MAX_REFERENCE_FILES; i++) {
+    for (i = 0; i < MODBUS_MAX_RECORD_FILES; i++) {
         if (mb_mapping->file_registers[i]) {
             free(mb_mapping->file_registers[i]);
         }
