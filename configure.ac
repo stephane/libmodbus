@@ -102,9 +102,7 @@ AC_LIBMODBUS_CHECK_BUILD_DOC
 AC_CHECK_DECLS([__CYGWIN__])
 
 # Checks for library functions.
-AC_FUNC_FORK
-AC_FUNC_MALLOC
-AC_CHECK_FUNCS([accept4 getaddrinfo gettimeofday inet_ntoa memset select socket strerror strlcpy])
+AC_CHECK_FUNCS([accept4 getaddrinfo gettimeofday inet_ntoa select socket strerror strlcpy])
 
 # Required for MinGW with GCC v4.8.1 on Win7
 AC_DEFINE(WINVER, 0x0501, _)
