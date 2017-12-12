@@ -639,6 +639,53 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
     return rc;
 }
 
+#ifdef USE_WHOLE_BYTE_AS_COILS
+
+static int response_io_status(uint8_t *tab_io_status,
+                              int address, int nb,
+                              uint8_t *rsp, int offset)
+{
+    int shift;
+  /* Instead of byte (not allowed in Win32) */
+    int one_byte = 0x0;
+    int i;
+    int k = 0x01;
+    int cntr = 0;
+
+    uint8_t mask = 0x01;
+    
+    for (i = address; i < address + nb; i++) {
+        int shift = i % 8;
+
+        int j = i / 8;
+
+        mask = 0x01 << shift;
+        k = 0x01 << cntr;
+
+        if ((tab_io_status[j] & mask) > 0) {
+          one_byte += k;
+        }
+
+
+        if (cntr == 7) {
+            /* Byte is full */
+            rsp[offset++] = one_byte;
+            one_byte = 0x0;
+            j += 1;
+            cntr = 0;
+        } else {
+            cntr += 1;
+        }
+    }
+
+    if (cntr > 0)
+        rsp[offset++] = one_byte;
+
+    return offset;
+}
+
+#else
+
 static int response_io_status(uint8_t *tab_io_status,
                               int address, int nb,
                               uint8_t *rsp, int offset)
@@ -664,6 +711,8 @@ static int response_io_status(uint8_t *tab_io_status,
 
     return offset;
 }
+
+#endif
 
 /* Build the exception response */
 static int response_exception(modbus_t *ctx, sft_t *sft,
