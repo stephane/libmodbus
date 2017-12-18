@@ -241,7 +241,7 @@ MODBUS_API int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
  **/
 
 /**
- * Asynchronous method call back.
+ * Asynchronous method call back.  This callback is called for all register-oriented functions.
  *
  * @param ctx The context this callback is from
  * @param function_code The function code that this callback is in response to.  One of MODBUS_FC macros
@@ -262,20 +262,48 @@ typedef void (*modbus_async_callback_t)(modbus_t *ctx,
                                         int error_code,
                                         void* callback_data );
 
+typedef void (*modbus_async_bit_callback_t)(modbus_t *ctx,
+		                            int function_code,
+					    int addr,
+					    int nb,
+					    uint8_t *data,
+					    int error_code,
+					    void* callback_data);
+
+/**
+ * Process modbus data, as a master device.  This must be called periodically 
+ * in order to properly use the asynchronous API.
+ */
 MODBUS_API void modbus_process_data_master(modbus_t *ctx);
+
+/**
+ * Read registers in an async manner.  Reads the holding registers(MODBUS_FC_READ_HOLDING_REGISTERS)
+ */
 MODBUS_API int modbus_read_registers_async(modbus_t *ctx, int addr, int nb, 
                                            modbus_async_callback_t callback, 
                                            void* callback_data );
+/**
+ * Read registers in an async manner.  Reads the input registers(MODBUS_FC_READ_INPUT_REGISTERS)
+ */
 MODBUS_API int modbus_read_input_registers_async(modbus_t *ctx, int addr, int nb, 
                                                  modbus_async_callback_t callback, 
                                                  void* callback_data );
+/**
+ * Read registers in an async manner.  Reads the coil(bit) inputs(MODBUS_FC_READ_COILS)
+ */
 MODBUS_API int modbus_read_bits_async(modbus_t *ctx, int addr, int nb, 
-                                      modbus_async_callback_t callback,
+                                      modbus_async_bit_callback_t callback,
                                       void* callback_data );
+/**
+ * Read registers in an async manner.  Reads the input(bit) inputs(MODBUS_FC_READ_INPUT_REGISTERS)
+ */
 MODBUS_API int modbus_read_input_bits_async(modbus_t *ctx, int addr, int nb, 
-                                            modbus_async_callback_t callback,
+                                            modbus_async_bit_callback_t callback,
                                             void* callback_data);
 
+/**
+ * Retruns true if we are currently in an async operation, false otherwise
+ */
 MODBUS_API int modbus_is_in_async_operation(modbus_t *ctx);
 
 /**

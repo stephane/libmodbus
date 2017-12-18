@@ -114,6 +114,7 @@ typedef struct _modbus_backend {
 struct _modbus_async_data{
     int in_async_operation;
     modbus_async_callback_t callback;
+    modbus_async_bit_callback_t bit_callback;
     void* callback_data;
     int addr;
     int nb;

@@ -1918,6 +1918,49 @@ static int read_registers_async(modbus_t *ctx, int function, int addr, int nb,
     return rc;
 }
 
+static int read_io_async(modbus_t *ctx, int function, int addr, int nb,
+                                modbus_async_bit_callback_t callback,
+                                void* callback_data )
+{
+    int rc;
+    int req_length;
+    uint8_t* req = ctx->async_data.request;
+
+    if (nb > MODBUS_MAX_READ_BITS) {
+        {
+            char message_buffer[ 1024 ];
+            snprintf(message_buffer, 1024,
+                    "Too many bits requested (%d > %d)\n",
+                    nb, MODBUS_MAX_READ_BITS);
+            LOG_ERROR( "modbus", message_buffer );
+        }
+        errno = EMBMDATA;
+        return -1;
+    }
+
+    if( callback == NULL ){
+        errno = EINVAL;
+        return -1;
+    }
+
+    ctx->async_data.in_async_operation = 1;
+    ctx->async_data.addr = addr;
+    ctx->async_data.nb = nb;
+    ctx->async_data.bit_callback = callback;
+    ctx->async_data.callback_data = callback_data;
+    ctx->async_data.function_code = function;
+    ctx->async_data.parse_step = _STEP_FUNCTION;
+    ctx->async_data.raw_data_offset = 0;
+    ctx->async_data.length_to_read = ctx->backend->header_length + 1;
+    gettimeofday( &ctx->async_data.start_time, NULL );
+
+    req_length = ctx->backend->build_request_basis(ctx, function, addr, nb, req);
+
+    rc = send_msg(ctx, req, req_length);
+
+    return rc;
+}
+
 void modbus_process_data_master(modbus_t *ctx){
     int offset;
     int rc;
@@ -2067,20 +2110,55 @@ AARON
 
     offset = ctx->backend->header_length;
 
-    for (i = 0; i < rc; i++) {
-        /* shift reg hi_byte to temp OR with lo_byte */
-        dest[i] = (buffer[offset + 2 + (i << 1)] << 8) |
-                buffer[offset + 3 + (i << 1)];
-    }
-
     ctx->async_data.in_async_operation = 0;
-    ctx->async_data.callback( ctx, 
-                      ctx->async_data.function_code,
-                      ctx->async_data.addr, 
-                      ctx->async_data.nb,
-                      ctx->async_data.data, 
-                      error_code, 
-                      ctx->async_data.callback_data );
+    switch( ctx->async_data.function_code ){
+    case MODBUS_FC_READ_HOLDING_REGISTERS:
+    case MODBUS_FC_READ_INPUT_REGISTERS:
+        for (i = 0; i < rc; i++) {
+            /* shift reg hi_byte to temp OR with lo_byte */
+            dest[i] = (buffer[offset + 2 + (i << 1)] << 8) |
+                    buffer[offset + 3 + (i << 1)];
+        }
+        ctx->async_data.callback( ctx, 
+                          ctx->async_data.function_code,
+                          ctx->async_data.addr, 
+                          ctx->async_data.nb,
+                          ctx->async_data.data, 
+                          error_code, 
+                          ctx->async_data.callback_data );
+	break;
+    case MODBUS_FC_READ_COILS:
+    case MODBUS_FC_READ_DISCRETE_INPUTS:
+	{
+            uint8_t* data = (uint8_t*)ctx->async_data.data;
+	    int pos = 0;
+	    int temp, bit;
+	    int offset_end;
+
+            offset = ctx->backend->header_length + 2;
+            offset_end = offset + rc;
+	    /* libmodbus uses 1 byte per bit when reporting the 
+	     * data back to the user
+	     */
+	    for (i = offset; i < offset_end; i++) {
+                temp = ctx->async_data.raw_data[i];
+
+                for (bit = 0x01; (bit & 0xff) && (pos < ctx->async_data.nb);) {
+                    data[pos++] = (temp & bit) ? TRUE : FALSE;
+                    bit = bit << 1;
+                }
+	    }
+
+            ctx->async_data.bit_callback( ctx, 
+                          ctx->async_data.function_code,
+                          ctx->async_data.addr, 
+                          ctx->async_data.nb,
+                          data, 
+                          error_code, 
+                          ctx->async_data.callback_data );
+	}
+	break;
+    }
 }
 
 
@@ -2135,6 +2213,54 @@ int modbus_read_input_registers_async(modbus_t *ctx, int addr, int nb,
 
     return read_registers_async( ctx, MODBUS_FC_READ_INPUT_REGISTERS,
                                  addr, nb, callback, callback_data );
+}
+
+int modbus_read_bits_async(modbus_t *ctx, int addr, int nb, modbus_async_bit_callback_t callback, void* data)
+{
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if( ctx->async_data.in_async_operation &&
+        modbus_timer_has_expired( ctx ) ){
+        /* Our timeout has expired; continue on but purge everything
+           in our buffer */
+        uint8_t buffer[ 128 ];
+        int rc;
+        do{
+            rc = ctx->backend->recv(ctx, buffer, 128 );
+        }while( rc > 0 );
+    }else if( ctx->async_data.in_async_operation ){
+        errno = EALREADY;
+        return -1;
+    }
+
+    return read_io_async( ctx, MODBUS_FC_READ_COILS, addr, nb, callback, data );
+}
+
+int modbus_read_input_bits_async(modbus_t *ctx, int addr, int nb, modbus_async_bit_callback_t callback, void* data)
+{
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if( ctx->async_data.in_async_operation &&
+        modbus_timer_has_expired( ctx ) ){
+        /* Our timeout has expired; continue on but purge everything
+           in our buffer */
+        uint8_t buffer[ 128 ];
+        int rc;
+        do{
+            rc = ctx->backend->recv(ctx, buffer, 128 );
+        }while( rc > 0 );
+    }else if( ctx->async_data.in_async_operation ){
+        errno = EALREADY;
+        return -1;
+    }
+
+    return read_io_async( ctx, MODBUS_FC_READ_DISCRETE_INPUTS, addr, nb, callback, data );
 }
 
 void modbus_set_log_function( simplelogger_log_function func ){
