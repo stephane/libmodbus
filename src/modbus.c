@@ -1904,6 +1904,7 @@ static int read_registers_async(modbus_t *ctx, int function, int addr, int nb,
     ctx->async_data.addr = addr;
     ctx->async_data.nb = nb;
     ctx->async_data.callback = callback;
+    ctx->async_data.bit_callback = NULL;
     ctx->async_data.callback_data = callback_data;
     ctx->async_data.function_code = function;
     ctx->async_data.parse_step = _STEP_FUNCTION;
@@ -1946,6 +1947,7 @@ static int read_io_async(modbus_t *ctx, int function, int addr, int nb,
     ctx->async_data.in_async_operation = 1;
     ctx->async_data.addr = addr;
     ctx->async_data.nb = nb;
+    ctx->async_data.callback = NULL;
     ctx->async_data.bit_callback = callback;
     ctx->async_data.callback_data = callback_data;
     ctx->async_data.function_code = function;
@@ -2096,13 +2098,23 @@ AARON
     if (rc == -1){
         if( error_code != 0 ){
             ctx->async_data.in_async_operation = 0;
-            ctx->async_data.callback( ctx, 
-                              ctx->async_data.function_code,
-                              ctx->async_data.addr, 
-                              0,
-                              ctx->async_data.data, 
-                              error_code, 
-                              ctx->async_data.callback_data );
+	    if( ctx->async_data.callback ){
+                ctx->async_data.callback( ctx,
+                                  ctx->async_data.function_code,
+                                  ctx->async_data.addr,
+                                  0,
+                                  ctx->async_data.data,
+                                  error_code,
+                                  ctx->async_data.callback_data );
+	    }else if( ctx->async_data.bit_callback ){
+                ctx->async_data.bit_callback( ctx,
+                                  ctx->async_data.function_code,
+                                  ctx->async_data.addr,
+                                  0,
+                                  (uint8_t*)ctx->async_data.data,
+                                  error_code,
+                                  ctx->async_data.callback_data );
+	    }
         }
         LOG_WARN( "modbus", "check_confirmation was invalid, but error code was 0" );
         return;
