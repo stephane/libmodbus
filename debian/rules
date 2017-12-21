@@ -7,3 +7,6 @@ override_dh_installchangelogs:
 
 override_dh_auto_configure:
 	dh_auto_configure -- --disable-silent-rules
+
+override_dh_strip:
+	dh_strip --dbg-package=libsynmodbus-dbg

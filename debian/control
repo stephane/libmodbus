@@ -29,3 +29,10 @@ Description: development files for the Modbus protocol library
  .
  This package contains the development files.
 
+Package: libsynmodbus-dbg
+Section: debug
+Architecture: any
+Priority: extra
+Depends: libsynmodbus5 (= ${source:Version}), ${misc:depends}
+Description: libsynmodbus debugging symbols
+ libsynmodbus debugging symbols
