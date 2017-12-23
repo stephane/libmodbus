@@ -271,40 +271,49 @@ static void _modbus_rtu_ioctl_rts(modbus_t *ctx, int on)
 }
 #endif
 
-static int _set_GPIO_pin(modbus_t *ctx,int value)
+static int _set_GPIO_value(int debug,int pin,int value)
 {
-  if(ctx->enable_rpi_rtu == 1)
+  static const char s_values_str[] = "01";
+  char path[VALUE_MAX];
+  int fd;
+  snprintf(path, VALUE_MAX, "/sys/class/gpio/gpio%d/value",pin);
+  fd = open(path, O_WRONLY);
+  if (-1 == fd)
   {
-    static const char s_values_str[] = "01";
-    char path[VALUE_MAX];
-    int fd;
-    snprintf(path, VALUE_MAX, "/sys/class/gpio/gpio%d/value", ctx->rpi_bcm_pin);
-    fd = open(path, O_WRONLY);
-    if (-1 == fd)
-    {
-       if (ctx->debug)
-       {
-        fprintf(stderr, "Failed to open gpio value for writing!\n");
-       }
-       return(-1);
-    }
-    if (1 != write(fd, &s_values_str[value], 1))
-    {
-       if (ctx->debug)
-       {
-        fprintf(stderr, "Failed to write value!\n");
-       }
-       return(-1);
-    }
-    close(fd);
-    if (ctx->debug)
-    {
-      fprintf(stderr, "GPIO%d written : %d successfully !\n",ctx->rpi_bcm_pin,value);
-    }
+     if (debug)
+     {
+      fprintf(stderr, "Failed to open gpio value for writing!\n");
+     }
+     return(-1);
+  }
+  if (1 != write(fd, &s_values_str[value], 1))
+  {
+     if (debug)
+     {
+      fprintf(stderr, "Failed to write value!\n");
+     }
+     return(-1);
+  }
+  close(fd);
+  if (debug)
+  {
+    fprintf(stderr, "GPIO%d written : %d successfully !\n",pin,value);
   }
   return 0;
 }
 
+static int _set_GPIO_pin(modbus_t *ctx,int value)
+{
+  if(ctx->enable_rpi_rtu == 1)
+  {
+    if(_set_GPIO_value(ctx->debug,ctx->rpi_bcm_pin_re,value) == 0)
+    {
+      return _set_GPIO_value(ctx->debug,ctx->rpi_bcm_pin_de,value);
+    }
+    return(-1);
+  }
+  return 0;
+}
 
 static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
 {

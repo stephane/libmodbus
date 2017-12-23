@@ -100,7 +100,8 @@ struct _modbus {
     int error_recovery;
     //pi related functionality
     int enable_rpi_rtu;
-    int rpi_bcm_pin;
+    int rpi_bcm_pin_de;
+    int rpi_bcm_pin_re;
     //pi related functionality
     struct timeval response_timeout;
     struct timeval byte_timeout;

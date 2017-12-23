@@ -242,9 +242,9 @@ MODBUS_API int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
 
 MODBUS_API int modbus_enable_rpi(modbus_t *ctx, uint8_t value);
 MODBUS_API int modbus_configure_rpi_bcm_pin(modbus_t *ctx, uint8_t value);
+MODBUS_API int modbus_configure_rpi_bcm_pins(modbus_t *ctx, uint8_t de, uint8_t re);
 MODBUS_API int modbus_rpi_pin_export_direction(modbus_t *ctx);
 MODBUS_API int modbus_rpi_pin_unexport_direction(modbus_t *ctx);
-
 
 
 /**

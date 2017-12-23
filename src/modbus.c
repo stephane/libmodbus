@@ -1980,59 +1980,127 @@ int modbus_enable_rpi(modbus_t *ctx, uint8_t value)
 
 int modbus_configure_rpi_bcm_pin(modbus_t *ctx, uint8_t value)
 {
-  ctx->rpi_bcm_pin = value;
+  return modbus_configure_rpi_bcm_pins(ctx,value,value);
+}
+
+int modbus_configure_rpi_bcm_pins(modbus_t *ctx, uint8_t de, uint8_t re)
+{
+  ctx->rpi_bcm_pin_re = re;
+  ctx->rpi_bcm_pin_de = de;
   if(ctx->debug)
   {
-    fprintf(stderr, "BCM Pin set as %d.\n",ctx->rpi_bcm_pin);
+    fprintf(stderr, "BCM Pin DE set as %d and pin RE set as %d.\n",ctx->rpi_bcm_pin_de,ctx->rpi_bcm_pin_re);
   }
-  return ctx->rpi_bcm_pin;
+  return 0;
+}
+
+static int _modbus_rpi_pin_export_direction(int debug,int rpi_bcm_pin)
+{
+  //export GPIO code
+  char buffer[BUFFER_MAX];
+  ssize_t bytes_written;
+  int fd;
+  fd = open("/sys/class/gpio/export", O_WRONLY);
+  if (-1 == fd)
+  {
+      if(debug)
+      {
+        fprintf(stderr, "Failed to open export for writing!\n");
+      }
+      return(-1);
+  }
+  bytes_written = snprintf(buffer, BUFFER_MAX, "%d",rpi_bcm_pin);
+  write(fd, buffer, bytes_written);
+  close(fd);
+  //set GPIO direction code
+  static const char s_directions_str[]  = "out";
+  char path[DIRECTION_MAX];
+  snprintf(path, DIRECTION_MAX, "/sys/class/gpio/gpio%d/direction", rpi_bcm_pin);
+  fd = open(path, O_WRONLY);
+  if (-1 == fd)
+  {
+      if(debug)
+      {
+        fprintf(stderr, "Failed to open gpio direction for writing!\n");
+      }
+      return(-1);
+  }
+  if (-1 == write(fd, &s_directions_str, 3))
+  {
+      if(debug)
+      {
+        fprintf(stderr, "Failed to set direction!\n");
+      }
+      return(-1);
+  }
+  close(fd);
+  if(debug)
+  {
+      fprintf(stderr, "RPI pin exported and pin direction configured successfully.\n");
+  }
+  
+  return 0;
+}
+
+static int _modbus_rpi_pin_unexport_direction(int debug,int rpi_bcm_pin)
+{
+  //set GPIO direction code
+  static const char s_directions_str[]  = "in";
+  char path[DIRECTION_MAX];
+  int fd;
+  snprintf(path, DIRECTION_MAX, "/sys/class/gpio/gpio%d/direction", rpi_bcm_pin);
+  fd = open(path, O_WRONLY);
+  if (-1 == fd)
+  {
+    if(debug)
+    {
+     fprintf(stderr, "Failed to open gpio direction for writing!\n");
+    }
+    return(-1);
+  }
+  if (-1 == write(fd, &s_directions_str, 2))
+  {
+      if(debug)
+      {
+        fprintf(stderr, "Failed to set direction!\n");
+      }
+      return(-1);
+  }
+  close(fd);
+  //unexport GPIO code
+  char buffer[BUFFER_MAX];
+  ssize_t bytes_written;
+  fd = open("/sys/class/gpio/unexport", O_WRONLY);
+  if (-1 == fd)
+  {
+      if(debug)
+      {
+        fprintf(stderr, "Failed to open export for writing!\n");
+      }
+      return(-1);
+  }
+  bytes_written = snprintf(buffer, BUFFER_MAX, "%d",rpi_bcm_pin);
+  write(fd, buffer, bytes_written);
+  close(fd);
+  if(debug)
+  {
+    fprintf(stderr, "RPI BCM Pin Unexported successfully.\n");
+  }
+  
+  return 0;
 }
 
 int modbus_rpi_pin_export_direction(modbus_t *ctx)
 {
   if(ctx->enable_rpi_rtu == 1)
   {
-    //export GPIO code
-    char buffer[BUFFER_MAX];
-    ssize_t bytes_written;
-    int fd;
-    fd = open("/sys/class/gpio/export", O_WRONLY);
-    if (-1 == fd)
+    if(_modbus_rpi_pin_export_direction(ctx->debug,ctx->rpi_bcm_pin_re) == 0)
     {
-        if(ctx->debug)
-        {
-          fprintf(stderr, "Failed to open export for writing!\n");
-        }
-        return(-1);
+      return _modbus_rpi_pin_export_direction(ctx->debug,ctx->rpi_bcm_pin_de);
     }
-    bytes_written = snprintf(buffer, BUFFER_MAX, "%d",ctx->rpi_bcm_pin);
-    write(fd, buffer, bytes_written);
-    close(fd);
-    //set GPIO direction code
-    static const char s_directions_str[]  = "out";
-    char path[DIRECTION_MAX];
-    snprintf(path, DIRECTION_MAX, "/sys/class/gpio/gpio%d/direction", ctx->rpi_bcm_pin);
-    fd = open(path, O_WRONLY);
-    if (-1 == fd)
+    else
     {
-        if(ctx->debug)
-        {
-          fprintf(stderr, "Failed to open gpio direction for writing!\n");
-        }
-        return(-1);
-    }
-    if (-1 == write(fd, &s_directions_str, 3))
-    {
-        if(ctx->debug)
-        {
-          fprintf(stderr, "Failed to set direction!\n");
-        }
-        return(-1);
-    }
-    close(fd);
-    if(ctx->debug)
-    {
-        fprintf(stderr, "RPI pin exported and pin direction configured successfully.\n");
+      return(-1);
     }
   }
   return 0;
@@ -2042,47 +2110,13 @@ int modbus_rpi_pin_unexport_direction(modbus_t *ctx)
 {
   if(ctx->enable_rpi_rtu == 1)
   {
-    //set GPIO direction code
-    static const char s_directions_str[]  = "in";
-    char path[DIRECTION_MAX];
-    int fd;
-    snprintf(path, DIRECTION_MAX, "/sys/class/gpio/gpio%d/direction", ctx->rpi_bcm_pin);
-    fd = open(path, O_WRONLY);
-    if (-1 == fd)
+    if(_modbus_rpi_pin_unexport_direction(ctx->debug,ctx->rpi_bcm_pin_re) == 0)
     {
-      if(ctx->debug)
-      {
-       fprintf(stderr, "Failed to open gpio direction for writing!\n");
-      }
-      return(-1);
+      return _modbus_rpi_pin_unexport_direction(ctx->debug,ctx->rpi_bcm_pin_de);
     }
-    if (-1 == write(fd, &s_directions_str, 2))
+    else
     {
-        if(ctx->debug)
-        {
-          fprintf(stderr, "Failed to set direction!\n");
-        }
-        return(-1);
-    }
-    close(fd);
-    //unexport GPIO code
-    char buffer[BUFFER_MAX];
-    ssize_t bytes_written;
-    fd = open("/sys/class/gpio/unexport", O_WRONLY);
-    if (-1 == fd)
-    {
-        if(ctx->debug)
-        {
-          fprintf(stderr, "Failed to open export for writing!\n");
-        }
-        return(-1);
-    }
-    bytes_written = snprintf(buffer, BUFFER_MAX, "%d",ctx->rpi_bcm_pin);
-    write(fd, buffer, bytes_written);
-    close(fd);
-    if(ctx->debug)
-    {
-      fprintf(stderr, "RPI BCM Pin Unexported successfully.\n");
+      return -1;
     }
   }
   return 0;

@@ -11,7 +11,9 @@ In addition to standard libmodbus API, addtional APIs are included to support GP
 
 modbus_enable_rpi                 : Sets an enable Rpi integer in ctx data structure.
 
-modbus_configure_rpi_bcm_pin      : Configures GPIO BCM pin to be used for rx-tx switching
+modbus_configure_rpi_bcm_pin      : Configures GPIO BCM pin to be used for rx-tx switching (if the RE and DE are the same)
+
+modbus_configure_rpi_bcm_pins      : Configures GPIO BCM pins (RE & DE) to be used for rx-tx switching (if the RE and DE are not on the same pin)
 
 modbus_rpi_pin_export_direction   : export configured GPIO, configures it as an output.
 
@@ -23,7 +25,9 @@ modbus_rpi_pin_unexport_direction : unexport configured GPIO, configures it as a
 
 modbus_enable_rpi(ctx);
 
-modbus_configure_rpi_bcm_pin(ctx,18);   // configures BCM pin # 18 for switching
+modbus_configure_rpi_bcm_pin(ctx,18);   // configures BCM pin # 18 for DE & RE used for switching
+
+modbus_configure_rpi_bcm_pins(ctx,17,18);   // configures BCM pin # 17 for DE and # 18 for RE used for switching
 
 modbus_rpi_pin_export_direction(ctx);   // exports configured BCM pin #
 

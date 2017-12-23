@@ -16,7 +16,8 @@
 #define BYTESIZE 8
 #define STOPBITS 1
 
-#define BCM_PIN_NO 18
+#define BCM_PIN_DE 17
+#define BCM_PIN_RE 18
 
 #define REGISTER_ADDRESS 97
 #define NO_OF_REGISTERS 1
@@ -41,7 +42,7 @@ int main(int argc, char *argv[])
     modbus_set_slave(ctx, SERVER_ID);
     modbus_get_response_timeout(ctx, &sec_to, &usec_to);
     modbus_enable_rpi(ctx,TRUE);
-    modbus_configure_rpi_bcm_pin(ctx,BCM_PIN_NO);
+    modbus_configure_rpi_bcm_pins(ctx,BCM_PIN_DE,BCM_PIN_RE);
     modbus_rpi_pin_export_direction(ctx);
     if (modbus_connect(ctx) == -1)
     {
