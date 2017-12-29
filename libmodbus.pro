@@ -4,7 +4,7 @@ TEMPLATE = aux
 MAKEFILE = Makefile.libsynmodbus
 
 configure.target = $$PWD/Makefile
-configure.commands = $$PWD/configure --prefix=$$INSTALL_PREFIX/
+configure.commands = $$PWD/configure --prefix=$$INSTALL_PREFIX/usr
 configure.depend_command = $$PWD/autogen.sh
 
 all.commands = make all
