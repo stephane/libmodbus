@@ -365,8 +365,8 @@ static char *_modbus_rtu_parse_msg2ucl(uint8_t *msg, unsigned int msg_length)
     unsigned int	cnt;
     msg_type_t		msg_type = MSG_UNKNOWN;
 
-    static char	 ucl[4096];		/* size guessed - TODO: make sure!!!!*/
-    char 	*ucl_end = ucl;
+    static char		 ucl[4096];		/* size guessed - TODO: make sure!!!!*/
+    char 		*ucl_end = ucl;
 
     /* the smallest ADU is 4 bytes long
      * 1 byte address
