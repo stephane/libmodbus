@@ -9,12 +9,6 @@
 
 MODBUS_BEGIN_DECLS
 
-const char *ucl_msg_type[] = {
-    "msg_type=unknown,",
-    "msg_type=request,",
-    "msg_type=response,"
-};
-
 #define UCL_ADDR		        "addr="
 #define UCL_BIT_FIELD		   "bit_field="
 #define UCL_CHAR		        "char="
