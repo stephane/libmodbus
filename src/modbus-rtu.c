@@ -587,7 +587,7 @@ static char *_modbus_rtu_parse_msg2ucl(uint8_t *msg, unsigned int msg_length)
  * char *ucl is a \0 terminated string describing the ucl encoded message (ADU)
 ***we should write a doc for the key words used in the ucl */
 
-int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t *cnt, void (*handle_over_ucl)(char *ucl))
+int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t *cnt, void (*handle_over_ucl)(char *ucl, int16_t *cnt))
 {
     int			 rc;
     fd_set		 rset;
@@ -681,7 +681,7 @@ int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t *cnt, void (*handle_over_ucl)(ch
 	}
 
 	if (handle_over_ucl != NULL) {
-	    handle_over_ucl(_modbus_rtu_parse_msg2ucl(msg, msg_length));
+	    handle_over_ucl(_modbus_rtu_parse_msg2ucl(msg, msg_length), cnt);
 	}
 
 	if (*cnt > 0)
