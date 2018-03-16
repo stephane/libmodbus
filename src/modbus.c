@@ -90,7 +90,7 @@ void _error_print(modbus_t *ctx, const char *context)
     }
 }
 
-static void _sleep_response_timeout(modbus_t *ctx)
+void _sleep_response_timeout(modbus_t *ctx)
 {
     /* Response timeout is always positive */
 #ifdef _WIN32
