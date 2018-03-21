@@ -89,7 +89,6 @@ static const uint8_t table_crc_lo[] = {
 
 /* array of message types */
 const char *ucl_msg_type[] = {
-    "msg_type=unknown,",
     "msg_type=request,",
     "msg_type=response,"
 };
@@ -310,288 +309,17 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
 }
 
 
-static char *_modbus_bitfield2ucl(char *ucl_end, uint8_t *msg, unsigned int cnt)
-{
-    unsigned int	i;
-    uint8_t		j;
-
-    ucl_end = stpcpy(ucl_end, UCL_DATA "[");
-    for (i=0; i < cnt; i++) {
-	for (j=7; j >= 0; j--) {
-	    if ((msg[i] & (1<<i)) != 0)
-		ucl_end = stpcpy(ucl_end, "1");
-	    else
-		ucl_end = stpcpy(ucl_end, "0");
-	}
-	ucl_end = stpcpy(ucl_end, ",");
-    }
-    ucl_end = strcpy(ucl_end, "],");
-    return ucl_end;
-}
-
-
-static char * _modbus_data2ucl(char *ucl_end, uint8_t *msg, unsigned int msg_length)
-{
-    unsigned int i;
-
-    ucl_end = stpcpy(ucl_end, UCL_DATA "[");
-    for (i=0; i < msg_length; i++)
-	ucl_end += sprintf(ucl_end, "%.2X,", msg[i]);
-    ucl_end = stpcpy(ucl_end, "],");
-
-    return ucl_end;
-}
-
-
-static char *_modbus_error2ucl(char *ucl_end, uint8_t *msg, unsigned int msg_length)
-{
-    unsigned int i;
-
-    ucl_end = strcpy(ucl_end, UCL_GARBAGE "[");
-    for (i=0; i < msg_length; i++)
-	ucl_end += sprintf(ucl_end, "%.2X,", msg[i]);
-    ucl_end = strcpy(ucl_end, "],");
-
-    return ucl_end;
-}
-
-
-/* returns a \0 terminated string of a ucl encoded msg */
-
-static char *_modbus_rtu_parse_msg2ucl(uint8_t *msg, unsigned int msg_length)
-{
-    uint8_t		msg_position = 0;
-    uint16_t		crc;
-    unsigned int	cnt;
-    msg_type_t		msg_type = MSG_UNKNOWN;
-
-    static char		 ucl[4096];		/* size guessed - TODO: make sure!!!!*/
-    char 		*ucl_end = ucl;
-
-    /* the smallest ADU is 4 bytes long
-     * 1 byte address
-     * 1 byte function (7, 11, 12 or 17)
-     * 2 bytes crc */
-    if (msg_length < 4) {
-	ucl_end = stpcpy(ucl_end, UCL_ERROR_LENGTH);
-	ucl_end = _modbus_error2ucl(ucl_end, msg, msg_length);
-	return ucl;
-    }
-
-    /* check crc */
-    crc = crc16(msg, msg_length -2);
-    if (crc != ((msg[msg_length - 2] << 8) | msg[msg_length - 1])) {
-	ucl_end = stpcpy(ucl_end, UCL_ERROR_CRC);
-	ucl_end = _modbus_error2ucl(ucl_end, msg, msg_length);
-	return ucl;
-    }
-
-    /* address */
-    ucl_end += sprintf(ucl_end, UCL_ADDR "%u,", msg[0]);
-
-    /* parse function */
-    /* better put hex values in ?? */
-    ucl_end += sprintf(ucl_end, UCL_FUNCTION "%u,", msg[1] & ~0x80);
-
-    if (msg[1] & 0x80) {
-	ucl_end = stpcpy(ucl_end, UCL_ERROR_FUNCTION);
-
-	if (msg_length == 5) {
-	    ucl_end += sprintf(ucl_end, UCL_EXCEPTION "%.2X,", msg[3]);
-	    msg_type = MSG_CONFIRMATION;
-	} else {
-	    ucl_end = stpcpy(ucl_end, UCL_ERROR_LENGTH);
-	    ucl_end = _modbus_error2ucl(ucl_end, msg, msg_length);
-	    return ucl;
-	}
-
-    } else {
-	msg_position = 2;
-        switch (msg[1]) {
-	    case MODBUS_FC_READ_COILS: /* 0x01 */
-		if (msg_length != 8) {
-
-		    cnt = msg[msg_position++];
-		    msg_type = MSG_CONFIRMATION;
-
-		    ucl_end += sprintf(ucl_end, UCL_COUNT "%u,", cnt);
-
-		    if (msg_length == (cnt + 5)) {
-			ucl_end = stpcpy(ucl_end, UCL_BIT_FIELD);
-			ucl_end = _modbus_bitfield2ucl(ucl_end, msg + (msg_position++), cnt);
-		    } else {
-			ucl_end = stpcpy(ucl_end, UCL_ERROR_LENGTH);
-			ucl_end = _modbus_error2ucl(ucl_end, msg, msg_length);
-		    }
-		} else {
-		    if (msg[msg_position] == 3) { /* unkown wether request or confirmation */
-			ucl_end = _modbus_data2ucl(ucl_end, msg + msg_position, 4);
-		    } else {
-			msg_type = MSG_INDICATION;
-			ucl_end += sprintf(ucl_end, UCL_ADDR "%.4X,", (msg[msg_position] << 8) | msg[msg_position + 1]);
-			msg_position += 2;
-			{
-			    cnt = (msg[msg_position] << 8) | msg[msg_position + 1];
-			    msg_position += 2;
-			    ucl_end += sprintf(ucl_end, UCL_COUNT  "%u,", cnt);
-			    if (cnt > 2000)
-				ucl_end = stpcpy(ucl_end, UCL_ERROR_DATA);
-			}
-		    }
-		}
-		break;
-	    case MODBUS_FC_READ_EXCEPTION_STATUS: /* 0x07 (Serial Line only) */
-		switch (msg_length) {
-		    case 4:
-			msg_type = MSG_INDICATION;
-			break;
-		    case 5:
-			msg_type = MSG_CONFIRMATION;
-			ucl_end = stpcpy(ucl_end, UCL_BIT_FIELD);
-			for (int i=7; i>=0; i--) {
-			    if ((msg[msg_position] & (1<<i)) != 0)
-				ucl_end = stpcpy(ucl_end, "1");
-			    else
-				ucl_end = strcpy(ucl_end, "0");
-			}
-			ucl_end = stpcpy(ucl_end, ",");
-			break;
-		    default: /* error */
-			ucl_end = stpcpy(ucl_end, UCL_ERROR_LENGTH);
-			ucl_end = _modbus_error2ucl(ucl_end, msg, msg_length);
-			return ucl;
-		}
-		break;
-	    case 8: /* Diagnostics (Serial Line only) */
-		if (msg_length == 10) {
-		    uint16_t sf = (msg[msg_position] << 8) | msg[msg_position + 1],
-			     df;
-		    msg_position += 2;
-
-		    df = (msg[msg_position] << 8) | msg[msg_position + 1];
-		    msg_position += 2;
-
-		    /* sub function */
-		    ucl_end += sprintf(ucl_end, UCL_SUB_FUNCTION "%u,", sf);
-		    /* data field */
-		    switch (df) {
-
-			case 2: /* diag registers */
-			    if (df != 0 && df != 0xFF00)
-				ucl_end = stpcpy(ucl_end, UCL_ERROR_DATA);
-			case 1: /* restart comm */
-			    ucl_end += sprintf(ucl_end, UCL_DATA "%.4X,", df);
-			    break;
-
-			case 3: /* Change ASCII Input Delimiter */
-			    if ((df & 0x00FF) != 0) {
-				ucl_end = stpcpy(ucl_end, UCL_ERROR_DATA);
-				ucl_end += sprintf(ucl_end, UCL_DATA "%.4X,", df);
-			    } else
-				ucl_end += sprintf(ucl_end, UCL_CHAR "%.2X", (df >> 8) & 0xFF);
-			    break;
-
-			case 4: /* Force Listen Only Mode */
-			    msg_type = MSG_INDICATION;
-			case 10: /* Clear Counters and Diagnostic Register */
-			case 20: /* Clear Overrun Counter and Flag */
-			    if (df != 0)
-				ucl_end = stpcpy(ucl_end, UCL_ERROR_DATA);
-			    ucl_end += sprintf(ucl_end, UCL_DATA "%.4X,", df);
-			    break;
-
-			case 11: /* Return Bus Message Count */
-			case 12: /* Return Bus Communication Error Count */
-			case 13: /* Return Bus Exception Error Count */
-			case 14: /* Return Server Message Count */
-			case 15: /* Return Server No Response Count */
-			case 16: /* Return Server NAK Count */
-			case 17: /* Return Server Busy Count */
-			case 18: /* Return Bus Character Overrun Count */
-			    if (df != 0)
-				msg_type = MSG_CONFIRMATION;
-			default: /* yet unparsed subfunctions */
-			    ucl_end += sprintf(ucl_end, UCL_DATA "%.4X,", df);
-			    break;
-		    }
-		} else {
-		    ucl_end = stpcpy(ucl_end, UCL_ERROR_LENGTH);
-		    ucl_end = _modbus_error2ucl(ucl_end, msg, msg_length);
-		    return ucl;
-		}
-		break;
-	    case 11:
-		/* Get Comm Event Counter (Serial Line only) */
-		switch (msg_length) {
-		    case 4:
-			msg_type = MSG_INDICATION;
-			break;
-		    case 8:
-			msg_type = MSG_CONFIRMATION;
-			ucl_end = stpcpy(ucl_end, UCL_STATUS);
-			switch (msg[msg_position] << 8 | msg[msg_position + 1]) {
-			    msg_position += 2;
-			    case 0:
-				ucl_end = stpcpy(ucl_end, UCL_IDLE);
-				break;
-			    case 0xFFFF:
-				ucl_end = stpcpy(ucl_end, UCL_BUSY);
-				break;
-			    default:
-				ucl_end = stpcpy(ucl_end, UCL_UNKNOWN);
-			}
-			ucl_end += sprintf(ucl_end, UCL_COUNT "%u,", msg[msg_position] << 8 | msg[msg_position + 1]);
-			msg_position += 2;
-			break;
-		    default: /* error */
-			ucl_end = stpcpy(ucl_end, UCL_ERROR_LENGTH);
-			ucl_end = _modbus_error2ucl(ucl_end, msg, msg_length);
-			return ucl;
-		}
-		break;
-	    case MODBUS_FC_REPORT_SLAVE_ID: /* 0x11 Report Server ID (Serial Line only) */
-		if (msg_length == 4)
-		    msg_type = MSG_INDICATION;
-		else {
-		    cnt = msg[msg_position++];
-		    msg_type = MSG_CONFIRMATION;
-		    if (msg_length == cnt + 5 )
-			ucl_end = _modbus_data2ucl(ucl_end, msg + msg_position, cnt);
-		    else {
-			ucl_end = strcpy(ucl_end, UCL_ERROR_LENGTH);
-			ucl_end = _modbus_error2ucl(ucl_end, msg, msg_length);
-		    }
-		}
-		break;
-	    default:	/* unknown function */
-		ucl_end = _modbus_error2ucl(ucl_end, msg, msg_length);
-	} /* switch */
-    } /* if */
-
-    /* message type */
-    ucl_end = stpcpy(ucl_end, ucl_msg_type[msg_type]);
-
-    /* crc */
-    ucl_end += sprintf(ucl_end, UCL_CRC "%u\n", crc);
-
-    return ucl;
-}
-
-
 /* read and print messages from the wire as long as *cnt is not 0
  * if *cnt > 0 decrease it after reading a message successfully
  * if *cnt < 0 don't change it and don't stop sniffing
  * this lets the calling function control when to stop by setting *cnt = 0
- *
- * handle_over_ucl is a function called for every received message
- * char *ucl is a \0 terminated string describing the ucl encoded message (ADU)
-***we should write a doc for the key words used in the ucl */
+ */
 
-int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t *cnt, void (*handle_over_ucl)(char *ucl, int16_t *cnt))
+int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t *cnt)
 {
     int			 rc;
     fd_set		 rset;
-    struct timeval	 pause_tv, tv;
+    struct timeval	 pause_tv, tv, date;
     int			 length_to_read;
     uint8_t		 msg_length,
 			 msg[MODBUS_RTU_MAX_ADU_LENGTH];
@@ -672,16 +400,15 @@ int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t *cnt, void (*handle_over_ucl)(ch
 	    }
 	} while (rc > 0);
 
-	/* Display the hex code of each character of the message on one line */
-	if (ctx->debug) {
+	if (0 == gettimeofday(&date, NULL)) {
+	    /* Display the hex code of each character of the message on one line */
 	    int i;
+	    printf("%ld.%3ld ", date.tv_sec, date.tv_usec / 1000);
 	    for (i=0; i < msg_length; i++)
 		printf("<%.2X>", msg[i]);
 	    printf("\n");
-	}
-
-	if (handle_over_ucl != NULL) {
-	    handle_over_ucl(_modbus_rtu_parse_msg2ucl(msg, msg_length), cnt);
+	} else { /* error getting time of day - stop listening */
+	    cnt = 0;
 	}
 
 	if (*cnt > 0)
