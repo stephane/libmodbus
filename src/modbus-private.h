@@ -50,7 +50,6 @@ typedef enum {
  *  ---------- Confirmation  Response ----------
  */
 typedef enum {
-    MSG_UNKNOWN = 0,
     /* Request message on the server side */
     MSG_INDICATION,
     /* Request message on the client side */

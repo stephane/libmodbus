@@ -87,13 +87,6 @@ static const uint8_t table_crc_lo[] = {
     0x43, 0x83, 0x41, 0x81, 0x80, 0x40
 };
 
-/* array of message types */
-const char *ucl_msg_type[] = {
-    "msg_type=request,",
-    "msg_type=response,"
-};
-
-
 /* Define the slave ID of the remote device to talk in master mode or set the
  * internal slave ID in slave mode */
 static int _modbus_set_slave(modbus_t *ctx, int slave)
