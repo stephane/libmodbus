@@ -397,10 +397,14 @@ int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t *cnt)
 	    /* Display the hex code of each character of the message on one line */
 	    int i;
 	    printf("%ld.%d ", date.tv_sec, (int) (date.tv_usec / 1000));
-	    for (i=0; i < msg_length; i++)
+	    for (i=0; i < msg_length - 2; i++)
 		printf("%.2X ", msg[i]);
-	    printf("\n");
+	    if (crc16(msg, msg_length - 2) == ((msg[msg_length - 2] << 8) | msg[msg_length - 1]))
+		printf("CRC_OK\n");
+	    else
+		printf("CRC_ERROR\n");
 	} else { /* error getting time of day - stop listening */
+	    printf("DATE_ERROR\n");
 	    cnt = 0;
 	}
 
