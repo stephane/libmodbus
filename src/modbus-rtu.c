@@ -305,7 +305,9 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
 /* read and print messages from the wire as long as *cnt is not 0
  * if *cnt > 0 decrease it after reading a message successfully
  * if *cnt < 0 don't change it and don't stop sniffing
- * this lets the calling function control when to stop by setting *cnt = 0
+ *
+ * msg_received is NULL or a function called for every received message
+ * this lets the calling program control when to stop sniffing by setting *cnt
  */
 
 int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t *cnt, void (*msg_received) (char *cnt))
