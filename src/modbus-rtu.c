@@ -308,7 +308,7 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
  * this lets the calling function control when to stop by setting *cnt = 0
  */
 
-int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t *cnt)
+int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t *cnt, void (*msg_received) (char *cnt))
 {
     int			 rc;
     fd_set		 rset;
@@ -407,6 +407,9 @@ int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t *cnt)
 	    printf("DATE_ERROR\n");
 	    cnt = 0;
 	}
+
+	if (msg_received != NULL)
+	    msg_received(cnt);
 
 	if (*cnt > 0)
 	    (*cnt)--;
