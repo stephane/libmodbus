@@ -328,7 +328,7 @@ int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t cnt, void (*msg_received) (modbu
     }
 
     /* Add a file descriptor to the set */
-    FD_ZERO(&rset);
+    FD_ZERO       (&rset);
     FD_SET(ctx->s, &rset);
 
     /* calc the minimum time between two messages (3.5 bytes long): pause_tv
@@ -367,15 +367,15 @@ int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t cnt, void (*msg_received) (modbu
 
 	/* try to read until a pause between two messages */
 	do {
-	    length_to_read = MODBUS_RTU_MAX_ADU_LENGTH;
+	    length_to_read   = MODBUS_RTU_MAX_ADU_LENGTH;
 	    s_msg.msg_length = 0;
 
 	    rc = ctx->backend->recv(ctx, s_msg.msg + s_msg.msg_length, length_to_read);
 
 	    /* Sums bytes received */
-	    s_msg.msg_length     += rc;
+	    s_msg.msg_length += rc;
 	    /* Computes remaining bytes */
-	    length_to_read -= rc;
+	    length_to_read   -= rc;
 
 	    tv.tv_sec  = pause_tv.tv_sec;
 	    tv.tv_usec = pause_tv.tv_usec;
