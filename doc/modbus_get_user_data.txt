@@ -37,7 +37,11 @@ EXAMPLE
 [source,c]
 -------------------
 modbus_t *ctx;
+<<<<<<< HEAD
 static const char* user_string = "first context";
+=======
+static const char* user_string[] = "first context";
+>>>>>>> f3436390f8f364496be09a16aad52e1de3870d03
 
 ctx = modbus_new_rtu("/dev/ttyUSB0", 115200, 'N', 8, 1);
 if (ctx == NULL) {
