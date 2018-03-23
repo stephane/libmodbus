@@ -306,18 +306,22 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
  * if *cnt > 0 decrease it after reading a message successfully
  * if *cnt < 0 don't change it and don't stop sniffing
  *
- * msg_received is NULL or a function called for every received message
- * this lets the calling program control when to stop sniffing by setting *cnt
+ * if msg_received is NULL a timestamp and the message is printed on stdout
+ *
+ * if msg_received is not NULL it is called for every received message
+ * this lets the calling program work with the message received and
+ * control when to stop sniffing by setting *cnt
+ * this execution time for this function has to be short to not miss
+ * the start of the next message
  */
 
-int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t *cnt, void (*msg_received) (char *cnt))
+int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t *cnt, void (*msg_received) (modbus_sniffed_msg_t *s_msg, int16_t *cnt))
 {
     int			 rc;
     fd_set		 rset;
     struct timeval	 pause_tv, tv, date;
     int			 length_to_read;
-    uint8_t		 msg_length,
-			 msg[MODBUS_RTU_MAX_ADU_LENGTH];
+    modbus_sniffed_msg_t s_msg;
 
     if (ctx->debug) {
 	printf("Sniffing on the wire for messages ...\n");
@@ -364,12 +368,12 @@ int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t *cnt, void (*msg_received) (char
 	/* try to read until a pause between two messages */
 	do {
 	    length_to_read = MODBUS_RTU_MAX_ADU_LENGTH;
-	    msg_length     = 0;
+	    s_msg.msg_length = 0;
 
-	    rc = ctx->backend->recv(ctx, msg + msg_length, length_to_read);
+	    rc = ctx->backend->recv(ctx, s_msg.msg + s_msg.msg_length, length_to_read);
 
 	    /* Sums bytes received */
-	    msg_length     += rc;
+	    s_msg.msg_length     += rc;
 	    /* Computes remaining bytes */
 	    length_to_read -= rc;
 
@@ -395,23 +399,24 @@ int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t *cnt, void (*msg_received) (char
 	    }
 	} while (rc > 0);
 
-	if (0 == gettimeofday(&date, NULL)) {
-	    /* Display the hex code of each character of the message on one line */
-	    int i;
-	    printf("%ld.%d ", date.tv_sec, (int) (date.tv_usec / 1000));
-	    for (i=0; i < msg_length - 2; i++)
-		printf("%.2X ", msg[i]);
-	    if (crc16(msg, msg_length - 2) == ((msg[msg_length - 2] << 8) | msg[msg_length - 1]))
-		printf("CRC_OK\n");
-	    else
-		printf("CRC_ERROR\n");
-	} else { /* error getting time of day - stop listening */
-	    printf("DATE_ERROR\n");
-	    cnt = 0;
-	}
-
 	if (msg_received != NULL)
-	    msg_received(cnt);
+	    msg_received(&s_msg, cnt);
+	else {
+	    if (0 == gettimeofday(&date, NULL)) {
+		/* Display the hex code of each character of the message on one line */
+		int i;
+		printf("%ld.%d ", date.tv_sec, (int) (date.tv_usec / 1000));
+		for (i=0; i < s_msg.msg_length - 2; i++)
+		    printf("%.2X ", s_msg.msg[i]);
+		if (crc16(s_msg.msg, s_msg.msg_length - 2) == ((s_msg.msg[s_msg.msg_length - 2] << 8) | s_msg.msg[s_msg.msg_length - 1]))
+		    printf("CRC_OK\n");
+		else
+		    printf("CRC_ERROR\n");
+	    } else { /* error getting time of day - stop listening */
+		printf("DATE_ERROR\n");
+		cnt = 0;
+	    }
+	}
 
 	if (*cnt > 0)
 	    (*cnt)--;
