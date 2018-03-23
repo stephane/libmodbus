@@ -399,6 +399,8 @@ int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t cnt, void (*msg_received) (modbu
 	    }
 	} while (rc > 0);
 
+	s_msg.crc_ok = (crc16(s_msg.msg, s_msg.msg_length - 2) == ((s_msg.msg[s_msg.msg_length - 2] << 8) | s_msg.msg[s_msg.msg_length - 1]));
+
 	if (msg_received != NULL)
 	    msg_received(&s_msg, &cnt);
 	else {
@@ -408,7 +410,7 @@ int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t cnt, void (*msg_received) (modbu
 		printf("%ld.%d ", date.tv_sec, (int) (date.tv_usec / 1000));
 		for (i=0; i < s_msg.msg_length - 2; i++)
 		    printf("%.2X ", s_msg.msg[i]);
-		if (crc16(s_msg.msg, s_msg.msg_length - 2) == ((s_msg.msg[s_msg.msg_length - 2] << 8) | s_msg.msg[s_msg.msg_length - 1]))
+		if (s_msg.crc_ok)
 		    printf("CRC_OK\n");
 		else
 		    printf("CRC_ERROR\n");
