@@ -43,7 +43,7 @@ typedef struct {
 	     crc_ok;
 } modbus_sniffed_msg_t;
 
-MODBUS_API int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t *cnt, void (*msg_received) (modbus_sniffed_msg_t *s_msg, int16_t *cnt));
+MODBUS_API int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t cnt, void (*msg_received) (modbus_sniffed_msg_t *s_msg, int16_t *cnt));
 
 MODBUS_END_DECLS
 

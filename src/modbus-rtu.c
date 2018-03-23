@@ -315,7 +315,7 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
  * the start of the next message
  */
 
-int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t *cnt, void (*msg_received) (modbus_sniffed_msg_t *s_msg, int16_t *cnt))
+int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t cnt, void (*msg_received) (modbus_sniffed_msg_t *s_msg, int16_t *cnt))
 {
     int			 rc;
     fd_set		 rset;
@@ -362,8 +362,8 @@ int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t *cnt, void (*msg_received) (modb
 	return -1;
     }
 
-    /* read messages until *cnt == 0 */
-    while ( *cnt != 0 ) {
+    /* read messages until cnt == 0 */
+    while ( cnt != 0 ) {
 
 	/* try to read until a pause between two messages */
 	do {
@@ -400,7 +400,7 @@ int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t *cnt, void (*msg_received) (modb
 	} while (rc > 0);
 
 	if (msg_received != NULL)
-	    msg_received(&s_msg, cnt);
+	    msg_received(&s_msg, &cnt);
 	else {
 	    if (0 == gettimeofday(&date, NULL)) {
 		/* Display the hex code of each character of the message on one line */
@@ -418,10 +418,10 @@ int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t *cnt, void (*msg_received) (modb
 	    }
 	}
 
-	if (*cnt > 0)
-	    (*cnt)--;
+	if (cnt > 0)
+	    cnt--;
     }
-    return *cnt;
+    return cnt;
 }
 
 
