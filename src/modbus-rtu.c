@@ -408,7 +408,7 @@ int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t cnt, void (*msg_received) (modbu
 	else {
 	    if (0 == gettimeofday(&date, NULL)) {
 		int i;
-		printf("%ld.%d ", date.tv_sec, (int) (date.tv_usec / 1000));
+		printf("%ld.%d ", date.tv_sec, (int) (date.tv_usec / 100));
 
 		/* Display the hex code of each character of the message (except crc) on one line */
 		for (i=0; i < s_msg.msg_length - 2; i++)
