@@ -60,7 +60,9 @@ TXT3 = \
         modbus_write_bits.txt \
         modbus_write_bit.txt \
         modbus_write_registers.txt \
-        modbus_write_register.txt
+        modbus_write_register.txt \
+        modbus_set_user_data.txt \
+        modbus_get_user_data.txt
 TXT7 = libmodbus.txt
 
 EXTRA_DIST = asciidoc.conf $(TXT3) $(TXT7)
