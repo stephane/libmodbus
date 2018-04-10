@@ -71,6 +71,9 @@ typedef struct _modbus_rtu {
 #endif
     /* To handle many slaves on the same link */
     int confirmation_to_ignore;
+    /* software-side local echo suppression of sent bytes since hardware
+     * does not support it or is configured to not do it */
+    bool is_echo_suppressing;
 } modbus_rtu_t;
 
 #endif /* MODBUS_RTU_PRIVATE_H */
