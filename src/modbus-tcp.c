@@ -481,6 +481,7 @@ int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
 {
     int new_s;
     int enable;
+    int type;
     struct sockaddr_in addr;
     modbus_tcp_t *ctx_tcp;
 
@@ -497,7 +498,13 @@ int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
     }
 #endif
 
-    new_s = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    type = SOCK_STREAM;
+
+#ifdef SOCK_CLOEXEC
+    type |= SOCK_CLOEXEC;
+#endif
+
+    new_s = socket(PF_INET, type, IPPROTO_TCP);
     if (new_s == -1) {
         return -1;
     }
@@ -593,10 +600,14 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
 
     new_s = -1;
     for (ai_ptr = ai_list; ai_ptr != NULL; ai_ptr = ai_ptr->ai_next) {
+        int flags = ai_ptr->ai_socktype;
         int s;
 
-        s = socket(ai_ptr->ai_family, ai_ptr->ai_socktype,
-                   ai_ptr->ai_protocol);
+#ifdef SOCK_CLOEXEC
+        flags |= SOCK_CLOEXEC;
+#endif
+
+        s = socket(ai_ptr->ai_family, flags, ai_ptr->ai_protocol);
         if (s < 0) {
             if (ctx->debug) {
                 perror("socket");
