@@ -1,7 +1,21 @@
 language: c
 
+os:
+  - linux
+
 compiler:
   - gcc
   - clang
 
-script: ./autogen.sh && ./configure && make && make check
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install ninja python-pip python-dev build-essential
+  - sudo pip install --upgrade pip
+  - sudo pip install meson
+
+script:
+  - mkdir builddir
+  - meson builddir
+  - cd builddir
+  - ninja
+  - ninja test
