@@ -9,7 +9,7 @@ compiler:
 
 before_install:
   - sudo apt-get -qq update
-  - sudo apt-get install ninja python-pip python-dev build-essential
+  - sudo apt-get install ninja python3-pip build-essential
   - sudo pip3 install --upgrade pip
   - sudo pip3 install meson
 
