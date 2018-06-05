@@ -481,7 +481,7 @@ int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
 {
     int new_s;
     int enable;
-    int type;
+    int flags;
     struct sockaddr_in addr;
     modbus_tcp_t *ctx_tcp;
 
@@ -498,13 +498,13 @@ int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
     }
 #endif
 
-    type = SOCK_STREAM;
+    flags = SOCK_STREAM;
 
 #ifdef SOCK_CLOEXEC
-    type |= SOCK_CLOEXEC;
+    flags |= SOCK_CLOEXEC;
 #endif
 
-    new_s = socket(PF_INET, type, IPPROTO_TCP);
+    new_s = socket(PF_INET, flags, IPPROTO_TCP);
     if (new_s == -1) {
         return -1;
     }
