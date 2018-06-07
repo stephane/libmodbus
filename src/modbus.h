@@ -154,7 +154,7 @@ extern const unsigned int libmodbus_version_micro;
 
 typedef struct _modbus modbus_t;
 
-typedef struct {
+typedef struct _modbus_mapping_t {
     int nb_bits;
     int start_bits;
     int nb_input_bits;
