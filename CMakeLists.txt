@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.0)
 project(LIBMODBUS VERSION 3.1.4)
 
-set(LIBMODBUS_VERSION_MICRO ${LIBMODBUS_VERSION_PATCH})
+#### CONFIGURATION ####
 
+set(LIBMODBUS_VERSION_MICRO ${LIBMODBUS_VERSION_PATCH})
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/modbus-version.h.in ${CMAKE_CURRENT_BINARY_DIR}/modbus-version.h)
 
 include(CheckIncludeFile)
@@ -41,11 +42,13 @@ include(CheckSymbolExists)
 check_symbol_exists(TIOCSRS485 sys/ioctl.h HAVE_TIOCRS485)
 check_symbol_exists(TIOCM_RTS sys/ioctl.h HAVE_TIOCM_RTS)
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+
 if(CMAKE_COMPILER_IS_GNUCC)
 add_definitions(-D_GNU_SOURCE)
 endif()
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+#### BUILD OPTIONS ####
 
 set(MODBUS_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
@@ -67,13 +70,29 @@ set(MODBUS_PUBLIC_HEADERS
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 option(BUILD_SHARED_LIBS "Build libmodbus as a shared library" ON)
-option(BUILD_STATIC_LIBS "Build libmodbus as a static library" OFF)
 
-if(${BUILD_SHARED_LIBS})
-add_library(modbus SHARED ${MODBUS_SOURCES})
-endif()
+add_library(modbus ${MODBUS_SOURCES})
+set_target_properties(modbus PROPERTIES PUBLIC_HEADER "${MODBUS_PUBLIC_HEADERS}")
 
-if(${BUILD_STATIC_LIBS})
-add_library(modbus STATIC ${MODBUS_SOURCES})
-endif()
+set(LIBMODBUS_SOVERSION_VERSION 5.1.0)
+set(LIBMODBUS_SOVERSION_SOVERSION 5)
+set_target_properties(modbus PROPERTIES
+                        VERSION ${LIBMODBUS_SOVERSION_VERSION}
+                        SOVERSION ${LIBMODBUS_SOVERSION_SOVERSION})
 
+#### INSTALL ####
+
+include(GNUInstallDirs)
+
+install(TARGETS modbus
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/modbus)
+
+set(prefix ${CMAKE_INSTALL_PREFIX})
+set(exec_prefix ${CMAKE_INSTALL_PREFIX})
+set(libdir "\${prefix}/${CMAKE_INSTALL_LIBDIR}")
+set(includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libmodbus.pc.in ${CMAKE_CURRENT_BINARY_DIR}/libmodbus.pc @ONLY)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libmodbus.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
