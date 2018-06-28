@@ -4,7 +4,7 @@ project(LIBMODBUS VERSION 3.1.4)
 #### CONFIGURATION ####
 
 set(LIBMODBUS_VERSION_MICRO ${LIBMODBUS_VERSION_PATCH})
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/modbus-version.h.in ${CMAKE_CURRENT_BINARY_DIR}/modbus-version.h)
+configure_file(src/modbus-version.h.in ${CMAKE_CURRENT_BINARY_DIR}/modbus-version.h)
 
 include(CheckIncludeFile)
 check_include_file(arpa/inet.h HAVE_ARPA_INET_H)
@@ -42,43 +42,37 @@ include(CheckSymbolExists)
 check_symbol_exists(TIOCSRS485 sys/ioctl.h HAVE_TIOCRS485)
 check_symbol_exists(TIOCM_RTS sys/ioctl.h HAVE_TIOCM_RTS)
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
-
-if(CMAKE_COMPILER_IS_GNUCC)
-add_definitions(-D_GNU_SOURCE)
-endif()
+configure_file(config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 #### BUILD OPTIONS ####
 
-set(MODBUS_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
-
-set(MODBUS_SOURCES
-    ${MODBUS_SRC_DIR}/modbus-data.c
-    ${MODBUS_SRC_DIR}/modbus-rtu.c
-    ${MODBUS_SRC_DIR}/modbus-tcp.c
-    ${MODBUS_SRC_DIR}/modbus.c
-)
-
 set(MODBUS_PUBLIC_HEADERS
-    ${MODBUS_SRC_DIR}/modbus-rtu.h
-    ${MODBUS_SRC_DIR}/modbus-tcp.h
-    ${MODBUS_SRC_DIR}/modbus.h
+    src/modbus-rtu.h
+    src/modbus-tcp.h
+    src/modbus.h
     ${CMAKE_CURRENT_BINARY_DIR}/modbus-version.h
 )
 
-
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
-
 option(BUILD_SHARED_LIBS "Build libmodbus as a shared library" ON)
 
-add_library(modbus ${MODBUS_SOURCES})
+add_library(modbus
+    src/modbus-data.c
+    src/modbus-rtu.c
+    src/modbus-tcp.c
+    src/modbus.c)
+
+target_include_directories(modbus PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 set_target_properties(modbus PROPERTIES PUBLIC_HEADER "${MODBUS_PUBLIC_HEADERS}")
+
+if(CMAKE_COMPILER_IS_GNUCC)
+target_compile_options(modbus PRIVATE -D_GNU_SOURCE)
+endif()
 
 set(LIBMODBUS_SOVERSION_VERSION 5.1.0)
 set(LIBMODBUS_SOVERSION_SOVERSION 5)
 set_target_properties(modbus PROPERTIES
-                        VERSION ${LIBMODBUS_SOVERSION_VERSION}
-                        SOVERSION ${LIBMODBUS_SOVERSION_SOVERSION})
+                      VERSION ${LIBMODBUS_SOVERSION_VERSION}
+                      SOVERSION ${LIBMODBUS_SOVERSION_SOVERSION})
 
 #### INSTALL ####
 
@@ -86,6 +80,7 @@ include(GNUInstallDirs)
 
 install(TARGETS modbus
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/modbus)
 
 set(prefix ${CMAKE_INSTALL_PREFIX})
