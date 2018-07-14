@@ -34,4 +34,16 @@
 #cmakedefine HAVE_TIOCRS485
 #cmakedefine HAVE_TIOCM_RTS
 
+#ifdef HAVE_TIOCM_RTS
+#define HAVE_DECL_TIOCM_RTS 1
+#else
+#define HAVE_DECL_TIOCM_RTS 0
+#endif
+
+#ifdef HAVE_TIOCRS485
+#define HAVE_DECL_TIOCSRS485 1
+#else
+#define HAVE_DECL_TIOCSRS485 0
+#endif
+
 #endif
