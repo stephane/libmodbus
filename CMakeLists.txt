@@ -47,6 +47,7 @@ check_symbol_exists(TIOCM_RTS sys/ioctl.h HAVE_TIOCM_RTS)
 configure_file(config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 #### BUILD OPTIONS ####
+include(GNUInstallDirs)
 
 set(MODBUS_PUBLIC_HEADERS
     src/modbus-rtu.h
@@ -64,7 +65,10 @@ add_library(modbus
     src/modbus.c)
 
 target_include_directories(modbus PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-target_include_directories(modbus PUBLIC "src")
+target_include_directories(modbus INTERFACE
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/modbus>
+)
 set_target_properties(modbus PROPERTIES PUBLIC_HEADER "${MODBUS_PUBLIC_HEADERS}")
 
 if(CMAKE_COMPILER_IS_GNUCC)
@@ -78,18 +82,17 @@ set_target_properties(modbus PROPERTIES
                       SOVERSION ${LIBMODBUS_SOVERSION_SOVERSION})
 
 #### DOCS BUILD OPTIONS ####
-include(GNUInstallDirs)
-
 option(BUILD_DOCS "Build libmodbus docs" OFF)
 if(BUILD_DOCS)
     add_subdirectory(doc)
 endif(BUILD_DOCS)
 #### INSTALL ####
 
-install(TARGETS modbus
+install(TARGETS modbus EXPORT libmodbusConfig
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/modbus)
+install(EXPORT libmodbusConfig DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake)
 
 get_filename_component(ABSOLUTE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX} ABSOLUTE)
 
