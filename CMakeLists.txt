@@ -76,9 +76,14 @@ set_target_properties(modbus PROPERTIES
                       VERSION ${LIBMODBUS_SOVERSION_VERSION}
                       SOVERSION ${LIBMODBUS_SOVERSION_SOVERSION})
 
-#### INSTALL ####
-
+#### DOCS BUILD OPTIONS ####
 include(GNUInstallDirs)
+
+option(BUILD_DOCS "Build libmodbus docs" OFF)
+if(BUILD_DOCS)
+    add_subdirectory(doc)
+endif(BUILD_DOCS)
+#### INSTALL ####
 
 install(TARGETS modbus
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
