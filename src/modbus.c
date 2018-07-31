@@ -149,6 +149,7 @@ static unsigned int compute_response_length_from_request(modbus_t *ctx, uint8_t 
         length = 3;
         break;
     case MODBUS_FC_REPORT_SLAVE_ID:
+    case MODBUS_FC_READ_DEVICE_INFORMATION:
         /* The response is device specific (the header provides the
            length) */
         return MSG_LENGTH_UNDEFINED;
@@ -280,6 +281,9 @@ static uint8_t compute_meta_length_after_function(int function,
         case MODBUS_FC_MASK_WRITE_REGISTER:
             length = 6;
             break;
+        case MODBUS_FC_READ_DEVICE_INFORMATION:
+            length = 8;
+            break;
         default:
             length = 1;
         }
@@ -313,6 +317,8 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
             function == MODBUS_FC_REPORT_SLAVE_ID ||
             function == MODBUS_FC_WRITE_AND_READ_REGISTERS) {
             length = msg[ctx->backend->header_length + 1];
+        } else if (function == MODBUS_FC_READ_DEVICE_INFORMATION) {
+            length = msg[ctx->backend->header_length + 8];
         } else {
             length = 0;
         }
@@ -599,6 +605,10 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
         case MODBUS_FC_REPORT_SLAVE_ID:
             /* Report slave ID (bytes received) */
             req_nb_value = rsp_nb_value = rsp[offset + 1];
+            break;
+        case MODBUS_FC_READ_DEVICE_INFORMATION:
+            /* Length of object in byte */
+            req_nb_value = rsp_nb_value = rsp[offset + 8];
             break;
         default:
             /* 1 Write functions & others */
@@ -1396,6 +1406,44 @@ int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *src)
         rc = check_confirmation(ctx, req, rsp, rc);
     }
 
+    return rc;
+}
+
+int modbus_read_device_information_object(modbus_t *ctx, unsigned char object_id, uint16_t *dest)
+{
+    uint8_t req[_MIN_REQ_LENGTH];
+    uint8_t rsp[MAX_MESSAGE_LENGTH];
+    int rc;
+    int req_length;
+    int offset;
+    int i;
+    req_length = ctx->backend->build_request_basis(ctx, MODBUS_FC_READ_DEVICE_INFORMATION, 0x0E04, (object_id<<8), req) - 1;
+    rc = send_msg(ctx, req, req_length);
+    if (rc > 0) {
+        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        if (rc == -1)
+            return -1;
+
+        rc = check_confirmation(ctx, req, rsp, rc);
+        if (rc == -1)
+            return -1;
+
+        offset = ctx->backend->header_length + 9;
+
+        if (object_id <= 0x06) {
+            /* Append string terminator */
+            if (rc < MAX_MESSAGE_LENGTH)
+                rsp[rc+offset] = '\0';
+            /* keep original byte order for ASCII string */
+            memcpy((void*)dest, (void*)(rsp+offset), (rc+1)*sizeof(char));
+        } else {
+            for (i = 0; i < rc / 2; i++) {
+                /* shift reg hi_byte to temp OR with lo_byte */
+                dest[i] = (rsp[offset + (i << 1)] << 8) |
+                    rsp[offset + 1 + (i << 1)];
+            }
+        }
+    }
     return rc;
 }
 

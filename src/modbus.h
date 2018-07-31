@@ -70,8 +70,18 @@ MODBUS_BEGIN_DECLS
 #define MODBUS_FC_REPORT_SLAVE_ID           0x11
 #define MODBUS_FC_MASK_WRITE_REGISTER       0x16
 #define MODBUS_FC_WRITE_AND_READ_REGISTERS  0x17
+#define MODBUS_FC_READ_DEVICE_INFORMATION   0x2B
 
 #define MODBUS_BROADCAST_ADDRESS    0
+
+/* Modbus device information object codes */
+#define MODBUS_OBJID_VENDORNAME             0x00
+#define MODBUS_OBJID_PRODUCTCODE            0x01
+#define MODBUS_OBJID_MAJOR_MINOR_REVISION   0x02
+#define MODBUS_OBJID_VENDOR_URL             0x03
+#define MODBUS_OBJID_PRODUCTNAME            0x04
+#define MODBUS_OBJID_MODELNAME              0x05
+#define MODBUS_OBJID_USERAPPLICATION        0x06
 
 /* Modbus_Application_Protocol_V1_1b.pdf (chapter 6 section 1 page 12)
  * Quantity of Coils to read (2 bytes): 1 to 2000 (0x7D0)
@@ -203,6 +213,7 @@ MODBUS_API int modbus_set_debug(modbus_t *ctx, int flag);
 
 MODBUS_API const char *modbus_strerror(int errnum);
 
+MODBUS_API int modbus_read_device_information_object(modbus_t *ctx, unsigned char object_id, uint16_t *dest);
 MODBUS_API int modbus_read_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest);
 MODBUS_API int modbus_read_input_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest);
 MODBUS_API int modbus_read_registers(modbus_t *ctx, int addr, int nb, uint16_t *dest);
