@@ -188,7 +188,7 @@ int main(int argc, char*argv[])
 
     printf("Quit the loop: %s\n", modbus_strerror(errno));
 
-    if (use_backend == TCP) {
+    if (use_backend == TCP || use_backend == TCP_PI) {
         if (s != -1) {
             close(s);
         }
