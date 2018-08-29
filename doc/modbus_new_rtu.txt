@@ -82,6 +82,9 @@ if (modbus_connect(ctx) == -1) {
 SEE ALSO
 --------
 linkmb:modbus_new_tcp[3]
+linkmb:modbus_new_tcp_pi[3]
+linkmb:modbus_new_rtutcp[3]
+linkmb:modbus_new_rtutcp_pi[3]
 linkmb:modbus_free[3]
 
 

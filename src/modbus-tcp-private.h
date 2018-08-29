@@ -41,4 +41,12 @@ typedef struct _modbus_tcp_pi {
     char service[_MODBUS_TCP_PI_SERVICE_LENGTH];
 } modbus_tcp_pi_t;
 
+ssize_t _modbus_tcp_send(modbus_t *ctx, const uint8_t *req, int req_length);
+int _modbus_tcp_receive(modbus_t *ctx, uint8_t *req);
+ssize_t _modbus_tcp_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length);
+int _modbus_tcp_connect(modbus_t *ctx);
+int _modbus_tcp_pi_connect(modbus_t *ctx);
+void _modbus_tcp_close(modbus_t *ctx);
+int _modbus_tcp_select(modbus_t *ctx, fd_set *rfds, struct timeval *tv, int length_to_read);
+
 #endif /* MODBUS_TCP_PRIVATE_H */

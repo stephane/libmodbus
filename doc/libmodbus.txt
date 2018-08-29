@@ -108,6 +108,31 @@ Create a Modbus TCP context::
     linkmb:modbus_new_tcp_pi[3]
 
 
+RTU over TCP (IPv4) Context
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The RTU over TCP backend implements a Modbus variant used for communications over
+TCP/IPv4 networks. It tunnels Modbus RTU messages over TCP.
+
+Analogue to the RTU Context before sending a message, you must set the slave (receiver) with
+linkmb:modbus_set_slave[3]. If you're running a slave, its slave number will be
+used to filter received messages.
+
+Create a Modbus RTU over TCP context::
+    linkmb:modbus_new_rtutcp[3]
+
+
+RTU over TCP PI (IPv4 and IPv6) Context
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The RTU over TCP PI (Protocol Indepedent) backend implements a Modbus variant used for
+communications over TCP IPv4 and IPv6 networks. It tunnels Modbus RTU messages over TCP.
+
+Contrary to the RTU over TCP IPv4 only backend, the RTU over TCP PI backend offers hostname
+resolution but it consumes about 1Kb of additional memory.
+
+Create a Modbus RTU over TCP context::
+    linkmb:modbus_new_rtutcp_pi[3]
+
+
 Common
 ^^^^^^
 Before using any libmodbus functions, the caller must allocate and initialize a

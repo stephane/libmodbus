@@ -163,7 +163,7 @@ static int _modbus_tcp_send_msg_pre(uint8_t *req, int req_length)
     return req_length;
 }
 
-static ssize_t _modbus_tcp_send(modbus_t *ctx, const uint8_t *req, int req_length)
+ssize_t _modbus_tcp_send(modbus_t *ctx, const uint8_t *req, int req_length)
 {
     /* MSG_NOSIGNAL
        Requests not to send SIGPIPE on errors on stream oriented
@@ -172,11 +172,11 @@ static ssize_t _modbus_tcp_send(modbus_t *ctx, const uint8_t *req, int req_lengt
     return send(ctx->s, (const char *)req, req_length, MSG_NOSIGNAL);
 }
 
-static int _modbus_tcp_receive(modbus_t *ctx, uint8_t *req) {
+int _modbus_tcp_receive(modbus_t *ctx, uint8_t *req) {
     return _modbus_receive_msg(ctx, req, MSG_INDICATION);
 }
 
-static ssize_t _modbus_tcp_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length) {
+ssize_t _modbus_tcp_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length) {
     return recv(ctx->s, (char *)rsp, rsp_length, 0);
 }
 
@@ -300,7 +300,7 @@ static int _connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen,
 }
 
 /* Establishes a modbus TCP connection with a Modbus server. */
-static int _modbus_tcp_connect(modbus_t *ctx)
+int _modbus_tcp_connect(modbus_t *ctx)
 {
     int rc;
     /* Specialized version of sockaddr for Internet socket address (same size) */
@@ -352,7 +352,7 @@ static int _modbus_tcp_connect(modbus_t *ctx)
 }
 
 /* Establishes a modbus TCP PI connection with a Modbus server. */
-static int _modbus_tcp_pi_connect(modbus_t *ctx)
+int _modbus_tcp_pi_connect(modbus_t *ctx)
 {
     int rc;
     struct addrinfo *ai_list;
@@ -430,7 +430,7 @@ static int _modbus_tcp_pi_connect(modbus_t *ctx)
 }
 
 /* Closes the network connection and socket in TCP mode */
-static void _modbus_tcp_close(modbus_t *ctx)
+void _modbus_tcp_close(modbus_t *ctx)
 {
     if (ctx->s != -1) {
         shutdown(ctx->s, SHUT_RDWR);
@@ -715,7 +715,7 @@ int modbus_tcp_pi_accept(modbus_t *ctx, int *s)
     return ctx->s;
 }
 
-static int _modbus_tcp_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int length_to_read)
+int _modbus_tcp_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int length_to_read)
 {
     int s_rc;
     while ((s_rc = select(ctx->s+1, rset, NULL, NULL, tv)) == -1) {

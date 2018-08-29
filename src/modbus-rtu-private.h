@@ -73,4 +73,13 @@ typedef struct _modbus_rtu {
     int confirmation_to_ignore;
 } modbus_rtu_t;
 
+int _modbus_rtu_build_request_basis(modbus_t *ctx, int function,
+                                    int addr, int nb,
+                                    uint8_t *req);
+int _modbus_rtu_build_response_basis(sft_t *sft, uint8_t *rsp);
+int _modbus_rtu_prepare_response_tid(const uint8_t *req, int *req_length);
+int _modbus_rtu_send_msg_pre(uint8_t *req, int req_length);
+int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
+                                const int msg_length);
+
 #endif /* MODBUS_RTU_PRIVATE_H */
