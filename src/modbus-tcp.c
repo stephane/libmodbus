@@ -624,6 +624,19 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
                 }
                 continue;
             }
+
+            if (ai_ptr->ai_family == AF_INET6) {
+              enable = 0;
+              rc = setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY,
+                            (void *) &enable, sizeof (enable));
+              if (rc != 0) {
+                  close(s);
+                  if (ctx->debug) {
+                      perror("setsockopt");
+                  }
+                  continue;
+              }
+            }
         }
 
         rc = bind(s, ai_ptr->ai_addr, ai_ptr->ai_addrlen);
