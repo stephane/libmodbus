@@ -25,6 +25,7 @@ TXT3 = \
         modbus_read_input_bits.txt \
         modbus_read_input_registers.txt \
         modbus_read_registers.txt \
+        modbus_read_file_record.txt \
         modbus_receive_confirmation.txt \
         modbus_receive.txt \
         modbus_reply_exception.txt \
@@ -60,6 +61,7 @@ TXT3 = \
         modbus_write_bits.txt \
         modbus_write_bit.txt \
         modbus_write_registers.txt \
+        modbus_write_file_record.txt \
         modbus_write_register.txt
 TXT7 = libmodbus.txt
 
