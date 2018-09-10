@@ -273,6 +273,24 @@ int main(int argc, char *argv[])
                     tab_rp_registers[i], UT_INPUT_REGISTERS_TAB[i]);
     }
 
+    /** FILE OPERATIONS **/
+    printf("\nTEST FILE OPERATIONS\n");
+    rc = modbus_write_file_record(ctx, 0x1, UT_RECORD_ADDRESS,
+                                  UT_REGISTERS_NB, UT_REGISTERS_TAB);
+    printf("1/2 modbus_write_file_record: ");
+    ASSERT_TRUE(rc == UT_REGISTERS_NB, "FAILED (nb points %d)\n", rc);
+
+    rc = modbus_read_file_record(ctx, 0x1, UT_RECORD_ADDRESS,
+                                 UT_REGISTERS_NB, tab_rp_registers);
+    printf("2/2 modbus_read_file_record: ");
+    ASSERT_TRUE(rc == UT_REGISTERS_NB, "FAILED (nb points %d)\n", rc);
+
+    for (i=0; i < UT_REGISTERS_NB; i++) {
+        ASSERT_TRUE(tab_rp_registers[i] == UT_REGISTERS_TAB[i],
+                    "%d: FAILED (%0X != %0X)\n",
+                    i, tab_rp_registers[i], UT_REGISTERS_TAB[i]);
+    }
+
     /* MASKS */
     printf("1/1 Write mask: ");
     rc = modbus_write_register(ctx, UT_REGISTERS_ADDRESS, 0x12);
