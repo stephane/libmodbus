@@ -1341,7 +1341,7 @@ int modbus_read_file_record(modbus_t *ctx, int addr, int sub_addr, int nb, uint1
 {
     int rc;
     int req_length;
-    uint8_t req[_MIN_REQ_LENGTH];
+    uint8_t req[_MIN_REQ_LENGTH + 4];
     uint8_t rsp[MAX_MESSAGE_LENGTH];
 
     if (ctx == NULL) {
