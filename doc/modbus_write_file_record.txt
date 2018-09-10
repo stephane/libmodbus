@@ -1,0 +1,37 @@
+modbus_write_file_record(3)
+===========================
+
+
+NAME
+----
+modbus_write_file_record - read registers from record in a file
+
+
+SYNOPSIS
+--------
+*int modbus_write_file_record(modbus_t *'ctx', int 'addr', int 'sub_addr', int 'nb', uint16_t *'src');*
+
+DESCRIPTION
+-----------
+The *modbus_write_file_record()* function shall write the content of the _nb_
+holding registers from the array _src_ to record at _sub_addr_ of the file at
+address _addr_ of the remote device.
+
+The function uses the Modbus function code 0x15 (write file record).
+
+RETURN VALUE
+------------
+The function shall return the number of written registers if
+successful. Otherwise it shall return -1 and set errno.
+
+
+SEE ALSO
+--------
+linkmb:modbus_read_file_record[3]
+
+
+AUTHORS
+-------
+Kamil Wcislo <mek.xgt@gmail.com>
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>
