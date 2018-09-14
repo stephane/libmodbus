@@ -9,7 +9,7 @@ modbus_write_file_record - read registers from record in a file
 
 SYNOPSIS
 --------
-*int modbus_write_file_record(modbus_t *'ctx', int 'addr', int 'sub_addr', int 'nb', uint16_t *'src');*
+*int modbus_write_file_record(modbus_t *'ctx', int 'addr', int 'sub_addr', int 'nb', const uint16_t *'src');*
 
 DESCRIPTION
 -----------
