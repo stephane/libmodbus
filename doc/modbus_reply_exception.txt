@@ -1,6 +1,7 @@
 modbus_reply_exception(3)
 =========================
 
+
 NAME
 ----
 modbus_reply_exception - send an exception reponse
@@ -8,7 +9,7 @@ modbus_reply_exception - send an exception reponse
 
 SYNOPSIS
 --------
-*int modbus_reply_exception(modbus_t *'ctx', const uint8_t *'req', unsigned int 'exception_code');
+*int modbus_reply_exception(modbus_t *'ctx', const uint8_t *'req', unsigned int 'exception_code');*
 
 
 DESCRIPTION
@@ -35,8 +36,8 @@ The initial request _req_ is required to build a valid response.
 
 RETURN VALUE
 ------------
-The function shall return the length of the response sent if
-successful. Otherwise it shall return -1 and set errno.
+The function shall return the length of the response sent if successful.
+Otherwise it shall return -1 and set errno.
 
 
 ERRORS

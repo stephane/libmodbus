@@ -28,8 +28,8 @@ nowadays it's more common to use holding registers only.
 
 RETURN VALUE
 ------------
-The function shall return the number of read input registers if
-successful. Otherwise it shall return -1 and set errno.
+The function shall return the number of read input registers if successful.
+Otherwise it shall return -1 and set errno.
 
 
 ERRORS

@@ -1,5 +1,5 @@
 modbus_strerror(3)
-=================
+==================
 
 
 NAME
@@ -15,7 +15,7 @@ SYNOPSIS
 DESCRIPTION
 -----------
 The *modbus_strerror()* function shall return a pointer to an error message
-string corresponding to the error number specified by the _errnum_ argument.  As
+string corresponding to the error number specified by the _errnum_ argument. As
 libmodbus defines additional error numbers over and above those defined by the
 operating system, applications should use *modbus_strerror()* in preference to
 the standard *strerror()* function.
@@ -23,8 +23,7 @@ the standard *strerror()* function.
 
 RETURN VALUE
 ------------
-The *modbus_strerror()* function shall return a pointer to an error message
-string.
+The function shall return a pointer to an error message string.
 
 
 ERRORS
@@ -42,6 +41,7 @@ if (modbus_connect(ctx) == -1) {
     abort();
 }
 -------------------
+
 
 SEE ALSO
 --------

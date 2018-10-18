@@ -15,7 +15,7 @@ SYNOPSIS
 DESCRIPTION
 -----------
 The *modbus_read_input_bits()* function shall read the content of the _nb_ input
-bits to the address _addr_ of the remote device.  The result of reading is stored
+bits to the address _addr_ of the remote device. The result of reading is stored
 in _dest_ array as unsigned bytes (8 bits) set to _TRUE_ or _FALSE_.
 
 You must take care to allocate enough memory to store the results in _dest_
@@ -26,8 +26,8 @@ The function uses the Modbus function code 0x02 (read input status).
 
 RETURN VALUE
 ------------
-The function shall return the number of read input status if
-successful. Otherwise it shall return -1 and set errno.
+The function shall return the number of read input status if successful.
+Otherwise it shall return -1 and set errno.
 
 
 ERRORS

@@ -26,8 +26,8 @@ The function uses the Modbus function code 0x01 (read coil status).
 
 RETURN VALUE
 ------------
-The function shall return the number of read bits if successful. Otherwise it
-shall return -1 and set errno.
+The function shall return the number of read bits if successful.
+Otherwise it shall return -1 and set errno.
 
 
 ERRORS

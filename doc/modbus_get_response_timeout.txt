@@ -20,8 +20,8 @@ used to wait for a response in the _to_sec_ and _to_usec_ arguments.
 
 RETURN VALUE
 ------------
-The function shall return 0 if successful. Otherwise it shall return -1 and set
-errno.
+The function shall return 0 if successful.
+Otherwise it shall return -1 and set errno.
 
 
 EXAMPLE

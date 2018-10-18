@@ -9,7 +9,7 @@ modbus_mapping_new_start_address - allocate four arrays of bits and registers ac
 
 SYNOPSIS
 --------
-*modbus_mapping_t* modbus_mapping_new_start_address(int 'start_bits', int 'nb_bits',
+*modbus_mapping_t *modbus_mapping_new_start_address(int 'start_bits', int 'nb_bits',
                                                     int 'start_input_bits', int 'nb_input_bits',
                                                     int 'start_registers', int 'nb_registers',
                                                     int 'start_input_registers', int 'nb_input_registers');*
@@ -17,13 +17,13 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The _modbus_mapping_new_start_address()_ function shall allocate four arrays to
+The *modbus_mapping_new_start_address()* function shall allocate four arrays to
 store bits, input bits, registers and inputs registers. The pointers are stored
-in modbus_mapping_t structure. All values of the arrays are initialized to zero.
+in 'modbus_mapping_t' structure. All values of the arrays are initialized to zero.
 
-The different starting adresses make it possible to place the mapping at any
+The different starting addresses make it possible to place the mapping at any
 address in each address space. This way, you can give access to values stored
-at high adresses without allocating memory from the address zero, for eg. to
+at high adresses without allocating memory from the address zero, e.g. to
 make available registers from 10000 to 10009, you can use:
 
 [source,c]
@@ -34,14 +34,15 @@ mb_mapping = modbus_mapping_new_start_address(0, 0, 0, 0, 10000, 10, 0, 0);
 With this code, only 10 registers (`uint16_t`) are allocated.
 
 If it isn't necessary to allocate an array for a specific type of data, you can
-pass the zero value in argument, the associated pointer will be NULL.
+pass zero as value, no memory will be allocated and the associated pointer
+will be NULL.
 
 This function is convenient to handle requests in a Modbus server/slave.
 
 
 RETURN VALUE
 ------------
-The _modbus_mapping_new_start_address()_ function shall return the new allocated structure if
+The *modbus_mapping_new_start_address()* function shall return the new allocated structure if
 successful. Otherwise it shall return NULL and set errno.
 
 
@@ -68,6 +69,7 @@ if (mb_mapping == NULL) {
     return -1;
 }
 -------------------
+
 
 SEE ALSO
 --------

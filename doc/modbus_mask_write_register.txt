@@ -24,8 +24,8 @@ The function uses the Modbus function code 0x16 (mask single register).
 
 RETURN VALUE
 ------------
-The function shall return 1 if successful. Otherwise it shall return -1 and set
-errno.
+The function shall return 1 if successful.
+Otherwise it shall return -1 and set errno.
 
 
 SEE ALSO

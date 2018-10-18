@@ -29,6 +29,7 @@ The response stored in _dest_ contains:
 The function writes at most _max_dest_ bytes from the response to _dest_ so
 you must ensure that _dest_ is large enough.
 
+
 RETURN VALUE
 ------------
 The function shall return the number of read data if successful.
@@ -39,6 +40,7 @@ been available. Thus, a return value greater than _max_dest_ means that the
 response data was truncated.
 
 Otherwise it shall return -1 and set errno.
+
 
 EXAMPLE
 -------
