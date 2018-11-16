@@ -1005,7 +1005,6 @@ void _modbus_serial_free(modbus_serial_t *ctx_serial)
     if (ctx_serial) {
         free(ctx_serial->device);
     }
-    free(ctx_serial);
 }
 
 #if HAVE_DECL_TIOCM_RTS
