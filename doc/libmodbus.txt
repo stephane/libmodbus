@@ -72,17 +72,17 @@ master (ortherwise other slaves may ignore master requests when one of the slave
 is not responding).
 
 Create a Modbus RTU context::
-    linkmb:modbus_new_rtu[3]
+    - linkmb:modbus_new_rtu[3]
 
 
 Set the serial mode::
-    linkmb:modbus_rtu_get_serial_mode[3]
-    linkmb:modbus_rtu_set_serial_mode[3]
-    linkmb:modbus_rtu_get_rts[3]
-    linkmb:modbus_rtu_set_rts[3]
-    linkmb:modbus_rtu_set_custom_rts[3]
-    linkmb:modbus_rtu_get_rts_delay[3]
-    linkmb:modbus_rtu_set_rts_delay[3]
+    -  linkmb:modbus_rtu_get_serial_mode[3]
+    -  linkmb:modbus_rtu_set_serial_mode[3]
+    -  linkmb:modbus_rtu_get_rts[3]
+    -  linkmb:modbus_rtu_set_rts[3]
+    -  linkmb:modbus_rtu_set_custom_rts[3]
+    -  linkmb:modbus_rtu_get_rts_delay[3]
+    -  linkmb:modbus_rtu_set_rts_delay[3]
 
 
 TCP (IPv4) Context
@@ -92,7 +92,7 @@ TCP/IPv4 networks. It does not require a checksum calculation as lower layer
 takes care of the same.
 
 Create a Modbus TCP context::
-    linkmb:modbus_new_tcp[3]
+    - linkmb:modbus_new_tcp[3]
 
 
 TCP PI (IPv4 and IPv6) Context
@@ -105,7 +105,7 @@ Contrary to the TCP IPv4 only backend, the TCP PI backend offers hostname
 resolution but it consumes about 1Kb of additional memory.
 
 Create a Modbus TCP context::
-    linkmb:modbus_new_tcp_pi[3]
+    - linkmb:modbus_new_tcp_pi[3]
 
 
 Common
@@ -115,65 +115,63 @@ Before using any libmodbus functions, the caller must allocate and initialize a
 are provided to modify and free a 'context':
 
 Free libmodbus context::
-    linkmb:modbus_free[3]
+    - linkmb:modbus_free[3]
 
 Set slave ID::
-    linkmb:modbus_set_slave[3]
+    - linkmb:modbus_set_slave[3]
 
 Enable debug mode::
-    linkmb:modbus_set_debug[3]
+    - linkmb:modbus_set_debug[3]
 
 Timeout settings::
-    linkmb:modbus_get_byte_timeout[3]
-    linkmb:modbus_set_byte_timeout[3]
-    linkmb:modbus_get_response_timeout[3]
-    linkmb:modbus_set_response_timeout[3]
-    linkmb:modbus_get_indication_timeout[3]
-    linkmb:modbus_set_indication_timeout[3]
+    - linkmb:modbus_get_byte_timeout[3]
+    - linkmb:modbus_set_byte_timeout[3]
+    - linkmb:modbus_get_response_timeout[3]
+    - linkmb:modbus_set_response_timeout[3]
 
 Error recovery mode::
-    linkmb:modbus_set_error_recovery[3]
+    - linkmb:modbus_set_error_recovery[3]
 
 Setter/getter of internal socket::
-    linkmb:modbus_set_socket[3]
-    linkmb:modbus_get_socket[3]
+    - linkmb:modbus_set_socket[3]
+    - linkmb:modbus_get_socket[3]
 
 Information about header::
-    linkmb:modbus_get_header_length[3]
+    - linkmb:modbus_get_header_length[3]
 
 Macros for data manipulation::
 
-- MODBUS_GET_HIGH_BYTE(data), extracts the high byte from a byte
-- MODBUS_GET_LOW_BYTE(data), extracts the low byte from a byte
-- MODBUS_GET_INT64_FROM_INT16(tab_int16, index), builds an int64 from the four
-  first int16 starting at tab_int16[index]
-- MODBUS_GET_INT32_FROM_INT16(tab_int16, index), builds an int32 from the two
-  first int16 starting at tab_int16[index]
-- MODBUS_GET_INT16_FROM_INT8(tab_int8, index), builds an int16 from the two
-  first int8 starting at tab_int8[index]
-- MODBUS_SET_INT16_TO_INT8(tab_int8, index, value), set an int16 value into
-  the two first bytes starting at tab_int8[index]
-- MODBUS_SET_INT32_TO_INT16(tab_int16, index, value), set an int32 value into
-  the two first int16 starting at tab_int16[index]
-- MODBUS_SET_INT64_TO_INT16(tab_int16, index, value), set an int64 value into
-  the four first int16 starting at tab_int16[index]
+    - MODBUS_GET_HIGH_BYTE(data), extracts the high byte from a byte
+    - MODBUS_GET_LOW_BYTE(data), extracts the low byte from a byte
+    - MODBUS_GET_INT64_FROM_INT16(tab_int16, index), builds an int64 from the four
+      first int16 starting at tab_int16[index]
+    - MODBUS_GET_INT32_FROM_INT16(tab_int16, index), builds an int32 from the two
+      first int16 starting at tab_int16[index]
+    - MODBUS_GET_INT16_FROM_INT8(tab_int8, index), builds an int16 from the two
+      first int8 starting at tab_int8[index]
+    - MODBUS_SET_INT16_TO_INT8(tab_int8, index, value), set an int16 value into
+      the two first bytes starting at tab_int8[index]
+    - MODBUS_SET_INT32_TO_INT16(tab_int16, index, value), set an int32 value into
+      the two first int16 starting at tab_int16[index]
+    - MODBUS_SET_INT64_TO_INT16(tab_int16, index, value), set an int64 value into
+      the four first int16 starting at tab_int16[index]
 
 Handling of bits and bytes::
-    linkmb:modbus_set_bits_from_byte[3]
-    linkmb:modbus_set_bits_from_bytes[3]
-    linkmb:modbus_get_byte_from_bits[3]
+    - linkmb:modbus_set_bits_from_byte[3]
+    - linkmb:modbus_set_bits_from_bytes[3]
+    - linkmb:modbus_get_byte_from_bits[3]
 
 Set or get float numbers::
-    linkmb:modbus_get_float_abcd[3]
-    linkmb:modbus_set_float_abcd[3]
-    linkmb:modbus_get_float_badc[3]
-    linkmb:modbus_set_float_badc[3]
-    linkmb:modbus_get_float_cdab[3]
-    linkmb:modbus_set_float_cdab[3]
-    linkmb:modbus_get_float_dcba[3]
-    linkmb:modbus_set_float_dcba[3]
-    linkmb:modbus_get_float[3] (deprecated)
-    linkmb:modbus_set_float[3] (deprecated)
+    - linkmb:modbus_get_float_abcd[3]
+    - linkmb:modbus_set_float_abcd[3]
+    - linkmb:modbus_get_float_badc[3]
+    - linkmb:modbus_set_float_badc[3]
+    - linkmb:modbus_get_float_cdab[3]
+    - linkmb:modbus_set_float_cdab[3]
+    - linkmb:modbus_get_float_dcba[3]
+    - linkmb:modbus_set_float_dcba[3]
+    - linkmb:modbus_get_float[3] (deprecated)
+    - linkmb:modbus_set_float[3] (deprecated)
 
 
 
@@ -183,13 +181,13 @@ The following functions are provided to establish and close a connection with
 Modbus devices:
 
 Establish a connection::
-    linkmb:modbus_connect[3]
+    - linkmb:modbus_connect[3]
 
 Close a connection::
-    linkmb:modbus_close[3]
+    - linkmb:modbus_close[3]
 
 Flush a connection::
-    linkmb:modbus_flush[3]
+    - linkmb:modbus_flush[3]
 
 
 Client
@@ -199,50 +197,45 @@ them from/to remote devices. The following functions are used by the clients to
 send Modbus requests:
 
 Read data::
-     linkmb:modbus_read_bits[3]
-     linkmb:modbus_read_input_bits[3]
-     linkmb:modbus_read_registers[3]
-     linkmb:modbus_read_input_registers[3]
-     linkmb:modbus_report_slave_id[3]
+    -  linkmb:modbus_read_bits[3]
+    -  linkmb:modbus_read_input_bits[3]
+    -  linkmb:modbus_read_registers[3]
+    -  linkmb:modbus_read_input_registers[3]
+    -  linkmb:modbus_report_slave_id[3]
 
 Write data::
-     linkmb:modbus_write_bit[3]
-     linkmb:modbus_write_register[3]
-     linkmb:modbus_write_bits[3]
-     linkmb:modbus_write_registers[3]
+    -  linkmb:modbus_write_bit[3]
+    -  linkmb:modbus_write_register[3]
+    -  linkmb:modbus_write_bits[3]
+    -  linkmb:modbus_write_registers[3]
 
 Write and read data::
-      linkmb:modbus_write_and_read_registers[3]
+    -   linkmb:modbus_write_and_read_registers[3]
 
 Raw requests::
-    linkmb:modbus_send_raw_request[3]
-    linkmb:modbus_receive_confirmation[3]
+    - linkmb:modbus_send_raw_request[3]
+    - linkmb:modbus_receive_confirmation[3]
 
 Reply an exception::
-    linkmb:modbus_reply_exception[3]
+    - linkmb:modbus_reply_exception[3]
 
 
 Server
 ~~~~~~
 The server is waiting for request from clients and must answer when it is
-concerned by the request.
+concerned by the request. The libmodbus offers the following functions to
+handle requests:
 
-In TCP mode, you must not use the usual linkmb:modbus_connect[3] to establish the connection but a pair of accept/listen calls::
-     linkmb:modbus_tcp_listen[3]
-     linkmb:modbus_tcp_accept[3]
-     linkmb:modbus_tcp_pi_listen[3]
-     linkmb:modbus_tcp_pi_accept[3]
+Data mapping::
+    -  linkmb:modbus_mapping_new[3]
+    -  linkmb:modbus_mapping_free[3]
 
-then the data can be received with::
-     linkmb:modbus_receive[3]
+Receive::
+    -  linkmb:modbus_receive[3]
 
-and a response can be send with::
-     linkmb:modbus_reply[3]
-     linkmb:modbus_reply_exception[3]
-
-To handle the mapping of your Modbus data, you must use:
-     linkmb:modbus_mapping_new[3]
-     linkmb:modbus_mapping_free[3]
+Reply::
+    -  linkmb:modbus_reply[3]
+    -  linkmb:modbus_reply_exception[3]
 
 
 ERROR HANDLING
