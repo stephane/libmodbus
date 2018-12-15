@@ -94,6 +94,10 @@ static int _modbus_set_slave(modbus_t *ctx, int slave)
     /* Broadcast address is 0 (MODBUS_BROADCAST_ADDRESS) */
     if (slave >= 0 && slave <= 247) {
         ctx->slave = slave;
+    } else if(slave == MODBUS_RTU_NO_SLAVE_SELECTION) {
+        /* The special value MODBUS_RTU_NO_SLAVE_SELECTION (0xFF) can be used in RTU
+         * rmode to return all the RTU message from all slave id in server mode */
+        ctx->slave = slave;
     } else {
         errno = EINVAL;
         return -1;
@@ -365,7 +369,7 @@ static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
 
     /* Filter on the Modbus unit identifier (slave) in RTU mode to avoid useless
      * CRC computing. */
-    if (slave != ctx->slave && slave != MODBUS_BROADCAST_ADDRESS) {
+    if ((ctx->slave != MODBUS_RTU_NO_SLAVE_SELECTION && slave != ctx->slave && slave != MODBUS_BROADCAST_ADDRESS)) {
         if (ctx->debug) {
             printf("Request for slave %d ignored (not %d)\n", slave, ctx->slave);
         }

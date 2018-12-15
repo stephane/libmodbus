@@ -22,6 +22,8 @@ MODBUS_API modbus_t* modbus_new_rtu(const char *device, int baud, char parity,
 #define MODBUS_RTU_RS232 0
 #define MODBUS_RTU_RS485 1
 
+#define MODBUS_RTU_NO_SLAVE_SELECTION 0xFF
+
 MODBUS_API int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode);
 MODBUS_API int modbus_rtu_get_serial_mode(modbus_t *ctx);
 
