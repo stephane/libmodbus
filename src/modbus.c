@@ -556,6 +556,8 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
         function < 0x80) {
         int req_nb_value;
         int rsp_nb_value;
+        int resp_addr_ok = TRUE;
+        int resp_data_ok = TRUE;
 
         /* Check function code */
         if (function != req[offset]) {
@@ -573,8 +575,6 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
         }
 
         /* Check the number of values is corresponding to the request */
-        int resp_addr_ok = TRUE;
-        int resp_data_ok = TRUE;
         switch (function) {
         case MODBUS_FC_READ_COILS:
         case MODBUS_FC_READ_DISCRETE_INPUTS:
