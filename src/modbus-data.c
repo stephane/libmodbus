@@ -123,9 +123,18 @@ float modbus_get_float_abcd(const uint16_t *src)
 {
     float f;
     uint32_t i;
+    uint8_t a, b, c, d;
 
-    i = ntohl(((uint32_t)src[0] << 16) + src[1]);
-    memcpy(&f, &i, sizeof(float));
+    a = (src[0] >> 8) & 0xFF;
+    b = (src[0] >> 0) & 0xFF;
+    c = (src[1] >> 8) & 0xFF;
+    d = (src[1] >> 0) & 0xFF;
+
+    i = (a << 24) |
+        (b << 16) |
+        (c << 8) |
+        (d << 0);
+    memcpy(&f, &i, 4);
 
     return f;
 }
@@ -135,9 +144,18 @@ float modbus_get_float_dcba(const uint16_t *src)
 {
     float f;
     uint32_t i;
+    uint8_t a, b, c, d;
 
-    i = ntohl(bswap_32((((uint32_t)src[0]) << 16) + src[1]));
-    memcpy(&f, &i, sizeof(float));
+    a = (src[0] >> 8) & 0xFF;
+    b = (src[0] >> 0) & 0xFF;
+    c = (src[1] >> 8) & 0xFF;
+    d = (src[1] >> 0) & 0xFF;
+
+    i = (d << 24) |
+        (c << 16) |
+        (b << 8) |
+        (a << 0);
+    memcpy(&f, &i, 4);
 
     return f;
 }
@@ -147,9 +165,18 @@ float modbus_get_float_badc(const uint16_t *src)
 {
     float f;
     uint32_t i;
+    uint8_t a, b, c, d;
 
-    i = ntohl((uint32_t)(bswap_16(src[0]) << 16) + bswap_16(src[1]));
-    memcpy(&f, &i, sizeof(float));
+    a = (src[0] >> 8) & 0xFF;
+    b = (src[0] >> 0) & 0xFF;
+    c = (src[1] >> 8) & 0xFF;
+    d = (src[1] >> 0) & 0xFF;
+
+    i = (b << 24) |
+        (a << 16) |
+        (d << 8) |
+        (c << 0);
+    memcpy(&f, &i, 4);
 
     return f;
 }
@@ -159,9 +186,18 @@ float modbus_get_float_cdab(const uint16_t *src)
 {
     float f;
     uint32_t i;
+    uint8_t a, b, c, d;
 
-    i = ntohl((((uint32_t)src[1]) << 16) + src[0]);
-    memcpy(&f, &i, sizeof(float));
+    a = (src[0] >> 8) & 0xFF;
+    b = (src[0] >> 0) & 0xFF;
+    c = (src[1] >> 8) & 0xFF;
+    d = (src[1] >> 0) & 0xFF;
+
+    i = (c << 24) |
+        (d << 16) |
+        (a << 8) |
+        (b << 0);
+    memcpy(&f, &i, 4);
 
     return f;
 }
@@ -176,50 +212,84 @@ float modbus_get_float(const uint16_t *src)
     memcpy(&f, &i, sizeof(float));
 
     return f;
+
 }
 
 /* Set a float to 4 bytes for Modbus w/o any conversion (ABCD) */
 void modbus_set_float_abcd(float f, uint16_t *dest)
 {
     uint32_t i;
+    uint8_t *out = (uint8_t*) dest;
+    uint8_t a, b, c, d;
 
     memcpy(&i, &f, sizeof(uint32_t));
-    i = htonl(i);
-    dest[0] = (uint16_t)(i >> 16);
-    dest[1] = (uint16_t)i;
+    a = (i >> 24) & 0xFF;
+    b = (i >> 16) & 0xFF;
+    c = (i >> 8) & 0xFF;
+    d = (i >> 0) & 0xFF;
+
+    out[0] = a;
+    out[1] = b;
+    out[2] = c;
+    out[3] = d;
 }
 
 /* Set a float to 4 bytes for Modbus with byte and word swap conversion (DCBA) */
 void modbus_set_float_dcba(float f, uint16_t *dest)
 {
     uint32_t i;
+    uint8_t *out = (uint8_t*) dest;
+    uint8_t a, b, c, d;
 
     memcpy(&i, &f, sizeof(uint32_t));
-    i = bswap_32(htonl(i));
-    dest[0] = (uint16_t)(i >> 16);
-    dest[1] = (uint16_t)i;
+    a = (i >> 24) & 0xFF;
+    b = (i >> 16) & 0xFF;
+    c = (i >> 8) & 0xFF;
+    d = (i >> 0) & 0xFF;
+
+    out[0] = d;
+    out[1] = c;
+    out[2] = b;
+    out[3] = a;
+
 }
 
 /* Set a float to 4 bytes for Modbus with byte swap conversion (BADC) */
 void modbus_set_float_badc(float f, uint16_t *dest)
 {
     uint32_t i;
+    uint8_t *out = (uint8_t*) dest;
+    uint8_t a, b, c, d;
 
     memcpy(&i, &f, sizeof(uint32_t));
-    i = htonl(i);
-    dest[0] = (uint16_t)bswap_16(i >> 16);
-    dest[1] = (uint16_t)bswap_16(i & 0xFFFF);
+    a = (i >> 24) & 0xFF;
+    b = (i >> 16) & 0xFF;
+    c = (i >> 8) & 0xFF;
+    d = (i >> 0) & 0xFF;
+
+    out[0] = b;
+    out[1] = a;
+    out[2] = d;
+    out[3] = c;
 }
 
 /* Set a float to 4 bytes for Modbus with word swap conversion (CDAB) */
 void modbus_set_float_cdab(float f, uint16_t *dest)
 {
     uint32_t i;
+    uint8_t *out = (uint8_t*) dest;
+    uint8_t a, b, c, d;
 
     memcpy(&i, &f, sizeof(uint32_t));
-    i = htonl(i);
-    dest[0] = (uint16_t)i;
-    dest[1] = (uint16_t)(i >> 16);
+    a = (i >> 24) & 0xFF;
+    b = (i >> 16) & 0xFF;
+    c = (i >> 8) & 0xFF;
+    d = (i >> 0) & 0xFF;
+
+    out[0] = c;
+    out[1] = d;
+    out[2] = a;
+    out[3] = b;
 }
 
 /* DEPRECATED - Set a float to 4 bytes in a sort of Modbus format! */
