@@ -1,0 +1,177 @@
+modbus_reply_callback(3)
+========================
+
+NAME
+----
+modbus_reply_callback - reply to a modbus-request by invoking a user-callback.
+
+SYNOPSIS
+--------
+*int modbus_reply_callback(modbus_t *'ctx', const uint8_t *'request', int 'req_length');*
+
+*int modbus_set_reply_callbacks(modbus_t *'ctx', modbus_reply_callbacks_t *'cb', void *'user_ctx');*
+
+[source,c]
+----------
+typedef struct {
+    int (*accept_rtu_slave)(void *user_ctx, int slave);
+    int (*verify)(void *user_ctx, int slave, int function, uint16_t address, int nb);
+    int (*read)(void *user_ctx, int slave, int function, uint16_t address, int nb, uint8_t bytes[], int len);
+    int (*write)(void *user_ctx, int slave, int function, uint16_t address, int nb, const uint8_t bytes[]);
+} modbus_reply_callbacks_t;
+----------
+
+DESCRIPTION
+-----------
+*modbus_set_reply_callbacks()* has to be used to set the callback-structure into the
+libmodbus-context. An optional parameter _user_ctx_ can be suppied which will be passed to the
+callback function, typically for context purpose.
+
+The *modbus_reply_callback()* function receives the request-byte-buffer and its byte-length as
+filled in and returned by *modbus_receive()*. It decodes the modbus-request and calls
+function-callbacks set by using *modbus_set_reply_callbacks()*.
+
+Compared to *modbus_reply()* mapping-based function it is designed for more complex situations where
+actions are needed to be performed instead of reading or writing to a Modbus mapping.
+
+Based on the request *modbus_reply_callback()* shall invoke one or more callbacks and send a
+response according the received request.
+
+The user has to provide three callback functions: *verify*, *read* and *write*. When implementing
+a RTU-slave, the additional *accept_rtu_slave*-callback has to be provided.
+
+At different stages *modbus_reply_callback()* calls these callbacks by passing different arguments and
+the user-context-pointer _user_ctx_ as the first one.
+
+The first callback invoked by modbus_reply_callback() is *accept_rtu_slave* if the user implements a
+RTU-slave. In its implementation the user has to check whether the slave-id, _slave_, which was
+decoded from the request, should be answered to or not and returning TRUE if so, otherwise FALSE.
+Returning FALSE will make *modbus_reply_callback()* exit immedialty and return 0.
+
+All callbacks hereafter receive the following arguments:
+
+ * _slave_ still indicating the RTU-slave-id if the modbus-instance is in RTU-mode otherwise it has
+   no meaning.
+ * _function_ containting the value of the modbus-function decoded from the request.
+ * _address_, the first register or coil-address.
+ * _nb_, the number of values to be handled.
+ * _bytes[]_, the byte-buffer containing the raw-data (write-request) or where the raw-data has to
+   be filled in (read-request).
+ * The *read*-callback additionally receives the _len_ argument indicating how many bytes can be
+   filled in.
+
+*modbus_reply_callback()* is then doing some basic sanitizing on standard-specific parameters before
+calling the second callback *verify*.
+
+This is done to verify whether the access is valid for this instance in regards to the address-range
+or the modbus-function of the request. The user has to return 0 if the range defined by _address_
+and _nb_ is inside the device's range and the modbus-function can be handled.
+
+Otherwise the user shall return EMBXILADD or EMBXILFUN respectively, *modbus_reply_callback()' then sends
+an exception as a response.
+
+The *read* and *write* callbacks are called if *verify* returned 0. The role of these callbacks is
+to extract from the buffer (write-requests) or fill into the buffer (read-requests) the requested
+data.
+
+The buffer-pointer given to these two callbacks is pointing to the beginning of the payload-section of
+the received or to-be-sent buffer. The data-format used is the one defined by the
+modbus-specification and needs to be encoded, or decoded, properly inside the callback-function.
+Coils are encoded as up to 8 coils per byte, registers are 16-bit wide and thus consume 2 bytes of the
+buffer per value. See below.
+
+The return value of the read-callback. Negative numbers or zero are interpreted as no response
+should be send. To, for example, trigger a timeout on the other side.
+
+The write-callbacks has to return 0 to signal success or a negative number to make the library
+not send any response.
+
+The library does not do any differentiation regarding the actual modbus-function and the appropriate
+invoked callback. All MODBUS_READ-functions are handled by the read-callback, all
+MODBUS_WRITE-function-requests are passed to the write-callback. When encountering the
+MODBUS_FC_WRITE_AND_READ_REGISTERS-function modbus_reply_callback is calling the write and the
+read-callback.
+
+These functions are designed for implementing a Modbus TCP server and RTU slaves.
+
+BUFFER DATA FORMAT
+------------------
+
+This table shows the relation between the byte-count and the value-count.
+
+  +------------------------------------+----------+-------------+-----------------+
+  | Name                               | Callback | Bytes-size  | Value-size (sz) |
+  +------------------------------------+----------+-------------+-----------------+
+  | MODBUS_FC_READ_COILS               | read     | (sz + 8 )/8 | as decoded      |
+  | MODBUS_FC_READ_DISCRETE_INPUTS     | read     | (sz + 8) /8 | as decoded      |
+  | MODBUS_FC_READ_HOLDING_REGISTERS   | read     | * 2         | as decoded      |
+  | MODBUS_FC_READ_INPUT_REGISTERS     | read     | * 2         | as decoded      |
+  | MODBUS_FC_WRITE_SINGLE_COIL        | write    | 1           | 1               |
+  | MODBUS_FC_WRITE_SINGLE_REGISTER    | write    | 2           | 1               |
+  | MODBUS_FC_WRITE_MULTIPLE_COILS     | write    | (sz + 8) /8 | as decoded      |
+  | MODBUS_FC_WRITE_MULTIPLE_REGISTERS | write    | * 2         | as decoded      |
+  +------------------------------------+----------+-------------+-----------------+
+
+At transport-level modbus knows two different data formats: Registers and bits. The transport-buffer
+is byte-oriented, hence the 'uint8_t *'-type.
+
+*read* is used for any read access. Based on the function-argument the user has to do the
+de-serialization from the payload format to useful data. Coils/bits are stuffed into bytes,
+registers are combined over 2 bytes in big-endian byte-order (MSB first).
+
+*write* is used for any write access. Based on the function-argument the user has to do the
+serialization into the payload buffer. The write-callback has to return the number of bytes added to
+the buffer. For example having added 9 bits two bytes have been filled and thus the return-value is
+two.
+
+Registers are of 16 bit size and are encored with their most-significant-byte first (big-endian).
+For example to put two registers into a byte buffer:
+
+    uint16_t value1 = 0x1234, value2 = 0x5678;
+
+    buf[0] = (value1 >> 8) & 0xff;
+    buf[1] =  value1       & 0xff;
+    buf[2] = (value2 >> 8) & 0xff;
+    buf[3] =  value2       & 0xff;
+
+Results in 0x12, 0x34, 0x56, 0x78 on the transport-layer.
+
+Bits are packed inside the byte-buffer. One byte can thus contain up to 8 bits  Here is an example
+which shows howto insert 4 bits
+
+    uint8_t buf[1];
+    buf[0] = (b3 << 3) | (b2 << 2) | (b1 << 1) | (b0);
+
+
+RETURN VALUE
+------------
+The function shall return the length of the response sent if successful. Otherwise it shall return
+-1 and set errno.
+
+ERRORS
+------
+*EMBMDATA*::
+Sending has failed
+
+See also the errors returned by the syscall used to send the response (eg. send
+or write).
+
+EXAMPLE
+-------
+
+The 'modbus_reply' function (based on modbus_mapping_t) is using the 'modbus_reply_callback'
+implementation for all read and write ModBus-function and is there a good example. It can be found
+in modbus.c .
+
+SEE ALSO
+--------
+linkmb:modbus_reply_exception[3]
+linkmb:modbus_reply[3]
+linkmb:modbus_set_bits_from_bytes[3]
+linkmb:libmodbus[7]
+linkmb:modbus_set_slave[3]
+
+AUTHORS
+-------
+This libmodbus documentation was written by Patrick Boettcher, based on a first
+version by Frode Tennebø <frode@tennebo.com>
