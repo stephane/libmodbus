@@ -162,6 +162,36 @@ static unsigned int compute_response_length_from_request(modbus_t *ctx, uint8_t 
     return offset + length + ctx->backend->checksum_length;
 }
 
+static unsigned int compute_response_length_from_mei(modbus_t *ctx, uint8_t *rsp,
+                                                     int rsp_length)
+{
+    int length = 0;
+    int object_cnt;
+    const int offset = ctx->backend->header_length;
+
+    if (rsp_length >= offset + 2
+        && rsp[offset] == MODBUS_FC_MODBUS_ENCAPSULATED_INTERFACE
+        && rsp[offset + 1] == MODBUS_MEI_READ_DEVICE_IDENTIFICATION)
+    {
+        length = offset + 7;
+        if (rsp_length >= length) {
+            for (object_cnt = (int)rsp[offset + 6]; object_cnt > 0; object_cnt--) {
+                length += 2;
+                if (rsp_length < length) {
+                    break;
+                }
+                length += (int)rsp[length - 1];
+            }
+            if (object_cnt == 0) {
+                /* Account for checksum. */
+                length += ctx->backend->checksum_length;
+            }
+        }
+    }
+    /* In case of success: rsp_length == length */
+    return length;
+}
+
 /* Sends a request/response */
 static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
 {
@@ -293,6 +323,7 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
                                           msg_type_t msg_type)
 {
     int function = msg[ctx->backend->header_length];
+    int add_checksum_length = TRUE;
     int length;
 
     if (msg_type == MSG_INDICATION) {
@@ -313,12 +344,70 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
             function == MODBUS_FC_REPORT_SLAVE_ID ||
             function == MODBUS_FC_WRITE_AND_READ_REGISTERS) {
             length = msg[ctx->backend->header_length + 1];
+        } else if (function == MODBUS_FC_MODBUS_ENCAPSULATED_INTERFACE) {
+            /* MEI Type == Read Device Idetification ? */
+            if (msg[ctx->backend->header_length + 1] ==
+                         MODBUS_MEI_READ_DEVICE_IDENTIFICATION) {
+                 /* Yes. Read non-variant part of data */
+                 length = 5;
+                 add_checksum_length = FALSE;
+            } else {
+                        /* Don't know length for this MEI type. Leave it to handling
+                           of MODBUS_FC_MODBUS_ENCAPSULATED_INTERFACE in
+                           check_confirmation() to react on error.
+                           Just set length such to stop reading */
+                 length = 0;
+                 add_checksum_length = FALSE;
+            }
         } else {
             length = 0;
         }
     }
 
-    length += ctx->backend->checksum_length;
+    if (add_checksum_length) {
+        length += ctx->backend->checksum_length;
+    }
+
+    return length;
+}
+
+/* Computes the length to read after the meta information for the MEI read device
+   identification. */
+static int compute_device_identification_data_length(modbus_t *ctx, uint8_t *msg,
+           msg_type_t msg_type, int msg_length, int *object_cnt, _step_t *substep)
+{
+    const int offset = ctx->backend->header_length;
+    int function = msg[offset];
+    int length = 0;
+
+    if (msg_type == MSG_CONFIRMATION) {
+        if (function == MODBUS_FC_MODBUS_ENCAPSULATED_INTERFACE) {
+            if (msg[offset + 1] ==
+                                 MODBUS_MEI_READ_DEVICE_IDENTIFICATION) {
+                /* Read variant part of data (list of objects). */
+                switch (*substep) {
+                case _STEP_META:
+                    if (*object_cnt > 0) {
+                        length = 2;
+                        (*object_cnt)--;
+                    }
+                    *substep = _STEP_DATA;
+                    break;
+                case _STEP_DATA:
+                    length = msg[msg_length - 1];
+                    if (*object_cnt == 0) {
+                        /* Only data for last object is left to read. Read
+                           checksum, as well */
+                        length += ctx->backend->checksum_length;
+                    }
+                    *substep = _STEP_META;
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+    }
 
     return length;
 }
@@ -346,6 +435,8 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     int length_to_read;
     int msg_length = 0;
     _step_t step;
+    _step_t substep = _STEP_META;
+    int object_cnt = -1;
 
     if (ctx->debug) {
         if (msg_type == MSG_INDICATION) {
@@ -446,17 +537,32 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
                     break;
                 } /* else switches straight to the next step */
             case _STEP_META:
-                length_to_read = compute_data_length_after_meta(
-                    ctx, msg, msg_type);
-                if ((msg_length + length_to_read) > (int)ctx->backend->max_adu_length) {
-                    errno = EMBBADDATA;
-                    _error_print(ctx, "too many data");
-                    return -1;
-                }
+                length_to_read = compute_data_length_after_meta(ctx, msg, msg_type);
                 step = _STEP_DATA;
+                break;
+            case _STEP_DATA:
+                /* Continue reading only for function code 0x2B / MEI type 0x0E. */
+                if (msg[ctx->backend->header_length] ==
+                                         MODBUS_FC_MODBUS_ENCAPSULATED_INTERFACE
+                    && msg[ctx->backend->header_length + 1] ==
+                                         MODBUS_MEI_READ_DEVICE_IDENTIFICATION) {
+                    if (object_cnt == -1) {
+                        /* initialize processing of list of objects */
+                        object_cnt = msg[msg_length - 1];
+                        substep = _STEP_META;
+                    }
+                    length_to_read =
+                        compute_device_identification_data_length(ctx, msg, msg_type,
+                                                      msg_length, &object_cnt, &substep);
+                }
                 break;
             default:
                 break;
+            }
+            if ((msg_length + length_to_read) > (int)ctx->backend->max_adu_length) {
+                errno = EMBBADDATA;
+                _error_print(ctx, "too many data");
+                return -1;
             }
         }
 
@@ -527,6 +633,30 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
         }
     }
 
+    if (function == MODBUS_FC_MODBUS_ENCAPSULATED_INTERFACE) {
+        rsp_length_computed = compute_response_length_from_mei(ctx, rsp, rsp_length);
+        if (rsp_length == rsp_length_computed) {
+            return rsp_length;
+        } else {
+            if (ctx->debug) {
+                if (rsp[offset + 1] != MODBUS_MEI_READ_DEVICE_IDENTIFICATION) {
+                    fprintf(stderr, "MEI %d not supported!\n", rsp[offset + 1]);
+                } else {
+                    fprintf(stderr,
+                            "Message length not corresponding to the computed length (%d != %d)\n",
+                            rsp_length, rsp_length_computed);
+                }
+            }
+
+            if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_PROTOCOL) {
+                _sleep_response_timeout(ctx);
+                modbus_flush(ctx);
+            }
+
+            errno = EMBBADDATA;
+            return -1;
+        }
+    }
     rsp_length_computed = compute_response_length_from_request(ctx, req);
 
     /* Exception code */
@@ -1868,6 +1998,70 @@ void modbus_mapping_free(modbus_mapping_t *mb_mapping)
     free(mb_mapping->tab_bits);
     free(mb_mapping);
 }
+
+/* Requests the MODBUS function READ DEVICE IDENTIFICATION (Function code 0x2B /
+   MEI Type 0x0E) of the remote device and put the response into the given array dest.
+   The return value tells how many bytes have been available and can be greater
+   than the array size dest_size, if the array is too small. But only at most
+   dest_size bytes are written to dest. The return value may be -1 to indicate
+   an error. In this case errno is set, appropriately.
+   */
+int modbus_read_device_identification(modbus_t *ctx, uint8_t read_device_id_code,
+                                      uint8_t object_id, int dest_size, uint8_t *dest)
+{
+    int rc;
+    int req_length;
+    uint8_t req[_MIN_REQ_LENGTH];
+    uint8_t rsp[MAX_MESSAGE_LENGTH];
+
+
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (read_device_id_code < 1 || read_device_id_code > 4) {
+        if (ctx->debug) {
+            fprintf(stderr,
+                    "ERROR Wrong read device id code (%d)\n",
+                    (int)read_device_id_code);
+        }
+        errno = EINVAL;
+        return -1;
+    }
+
+    req_length = ctx->backend->build_request_basis(ctx, MODBUS_FC_MODBUS_ENCAPSULATED_INTERFACE, 0, 0, req);
+
+    /* HACKISH, address and count are not used. */
+    req_length -= 4;
+
+    /* Only 3 bytes are used, rather than 4. So, that does not exceed request size. */
+    req[req_length++] = MODBUS_MEI_READ_DEVICE_IDENTIFICATION;
+    req[req_length++] = read_device_id_code;
+    req[req_length++] = object_id;
+
+    rc = send_msg(ctx, req, req_length);
+    if (rc > 0) {
+        int offset;
+
+        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        if (rc == -1)
+            return -1;
+
+        rc = check_confirmation(ctx, req, rsp, rc);
+        if (rc == -1)
+            return -1;
+
+        offset = ctx->backend->header_length;
+        rc = rc - offset - ctx->backend->checksum_length;
+
+        memcpy(dest, rsp + offset, (dest_size > rc)? rc : dest_size);
+
+    }
+
+    return rc;
+}
+
 
 #ifndef HAVE_STRLCPY
 /*
