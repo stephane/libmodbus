@@ -36,6 +36,7 @@ tests/bandwidth-server-many-up
 tests/bandwidth-server-one
 tests/random-test-client
 tests/random-test-server
+tests/read-device-identification-client
 tests/unit-test-client
 tests/unit-test.h
 tests/unit-test-server

@@ -25,3 +25,11 @@ behavior.
  the server and the client. `bandwidth-server-one` can only handles one
  connection at once with a client whereas `bandwidth-server-many-up` opens a
  connection for each new clients (with a limit).
+
+- `read-device-identification-client` requests the Modbus Encapsulated Interface
+ (MEI) function READ DEVICE IDENTIFICATION from a Modbus slave device. The slave
+ id must be given on the command line. The Basic Device Identification
+ (read_device_id_code = 1) is requested and comprises the ASCII Strings VendorName,
+ ProductCode and MajorMinorRevision (see official Modbus Application Protocol
+ Specification V1.1b, Chapter 6.21,
+ http://www.modbus.org/docs/Modbus_Application_Protocol_V1_1b.pdf).
