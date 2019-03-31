@@ -910,7 +910,8 @@ int modbus_rtu_set_serial_mode(modbus_t *ctx, modbus_rtu_mode mode)
         modbus_rtu_t *ctx_rtu = ctx->backend_data;
         struct serial_rs485 rs485conf;
 
-        if (mode == MODBUS_RTU_RS485) {
+        switch (mode) {
+        case MODBUS_RTU_RS485:
             // Get
             if (ioctl(ctx->s, TIOCGRS485, &rs485conf) < 0) {
                 return -1;
@@ -923,7 +924,7 @@ int modbus_rtu_set_serial_mode(modbus_t *ctx, modbus_rtu_mode mode)
 
             ctx_rtu->serial_mode = MODBUS_RTU_RS485;
             return 0;
-        } else if (mode == MODBUS_RTU_RS232) {
+        case MODBUS_RTU_RS232:
             /* Turn off RS485 mode only if required */
             if (ctx_rtu->serial_mode == MODBUS_RTU_RS485) {
                 /* The ioctl call is avoided because it can fail on some RS232 ports */
