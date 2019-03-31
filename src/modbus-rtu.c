@@ -898,7 +898,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     return 0;
 }
 
-int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode)
+int modbus_rtu_set_serial_mode(modbus_t *ctx, modbus_rtu_mode mode)
 {
     if (ctx == NULL) {
         errno = EINVAL;
