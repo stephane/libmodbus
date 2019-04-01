@@ -1,0 +1,24 @@
+## Operating System (VM environment) ##
+platform: x64
+image: Visual Studio 2017
+
+## Install Script ##
+install:
+  - set CYGWIN_ROOT=C:\cygwin64
+  - set PATH=%CYGWIN_ROOT%\bin;%PATH%
+  - bash --version
+  - bash -c 'autoreconf --version'
+  - bash -c 'make --version'
+
+## Disable MSBuild (default) ##
+build: off
+
+## Build Script ##
+build_script:
+  - bash autogen.sh
+  - bash configure
+  - bash -c 'make'
+
+## Test Script ##
+test_script:
+  - bash -c 'make check'
