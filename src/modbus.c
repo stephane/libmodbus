@@ -185,14 +185,11 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
             if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) {
                 int saved_errno = errno;
 
-                if ((errno == EBADF || errno == ECONNRESET || errno == EPIPE)) {
-                    modbus_close(ctx);
-                    _sleep_response_timeout(ctx);
-                    modbus_connect(ctx);
-                } else {
-                    _sleep_response_timeout(ctx);
-                    modbus_flush(ctx);
-                }
+                modbus_close(ctx);
+                modbus_flush(ctx);
+                _sleep_response_timeout(ctx);
+                modbus_connect(ctx);
+               
                 errno = saved_errno;
             }
         }
