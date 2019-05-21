@@ -57,7 +57,7 @@
 				MinimalRebuild="false"
 				ExceptionHandling="0"
 				BasicRuntimeChecks="2"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				FloatingPointModel="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
