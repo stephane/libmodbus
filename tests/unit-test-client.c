@@ -802,7 +802,6 @@ int test_server(modbus_t *ctx, int use_backend)
             goto close;
     }
 
-    /* Modbus write and read multiple registers */
     rc = send_crafted_request(ctx, MODBUS_FC_WRITE_AND_READ_REGISTERS,
                               rw_raw_req, RW_RAW_REQ_LEN,
                               MODBUS_MAX_WR_READ_REGISTERS + 1, 0,
@@ -810,8 +809,6 @@ int test_server(modbus_t *ctx, int use_backend)
     if (rc == -1)
         goto close;
 
-    /* Modbus write multiple registers with large number of values but a set a
-       small number of bytes in requests (not nb * 2 as usual). */
     rc = send_crafted_request(ctx, MODBUS_FC_WRITE_MULTIPLE_REGISTERS,
                               write_raw_req, WRITE_RAW_REQ_LEN,
                               MODBUS_MAX_WRITE_REGISTERS + 1, 6,
@@ -822,6 +819,22 @@ int test_server(modbus_t *ctx, int use_backend)
     rc = send_crafted_request(ctx, MODBUS_FC_WRITE_MULTIPLE_COILS,
                               write_raw_req, WRITE_RAW_REQ_LEN,
                               MODBUS_MAX_WRITE_BITS + 1, 6,
+                              backend_length, backend_offset);
+    if (rc == -1)
+        goto close;
+
+    /* Modbus write multiple registers with large number of values but a set a
+       small number of bytes in requests (not nb * 2 as usual). */
+    rc = send_crafted_request(ctx, MODBUS_FC_WRITE_MULTIPLE_REGISTERS,
+                              write_raw_req, WRITE_RAW_REQ_LEN,
+                              MODBUS_MAX_WRITE_REGISTERS, 6,
+                              backend_length, backend_offset);
+    if (rc == -1)
+        goto close;
+
+    rc = send_crafted_request(ctx, MODBUS_FC_WRITE_MULTIPLE_COILS,
+                              write_raw_req, WRITE_RAW_REQ_LEN,
+                              MODBUS_MAX_WRITE_BITS, 6,
                               backend_length, backend_offset);
     if (rc == -1)
         goto close;
