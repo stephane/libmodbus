@@ -1238,7 +1238,7 @@ int modbus_read_input_registers(modbus_t *ctx, int addr, int nb,
 
 /* Write a value to the specified register of the remote device.
    Used by write_bit and write_register */
-static int write_single(modbus_t *ctx, int function, int addr, int value)
+static int write_single(modbus_t *ctx, int function, int addr, const uint16_t value)
 {
     int rc;
     int req_length;
@@ -1249,7 +1249,7 @@ static int write_single(modbus_t *ctx, int function, int addr, int value)
         return -1;
     }
 
-    req_length = ctx->backend->build_request_basis(ctx, function, addr, value, req);
+    req_length = ctx->backend->build_request_basis(ctx, function, addr, (int) value, req);
 
     rc = send_msg(ctx, req, req_length);
     if (rc > 0) {
@@ -1279,7 +1279,7 @@ int modbus_write_bit(modbus_t *ctx, int addr, int status)
 }
 
 /* Writes a value in one register of the remote device */
-int modbus_write_register(modbus_t *ctx, int addr, int value)
+int modbus_write_register(modbus_t *ctx, int addr, const uint16_t value)
 {
     if (ctx == NULL) {
         errno = EINVAL;

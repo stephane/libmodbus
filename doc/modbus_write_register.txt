@@ -9,7 +9,7 @@ modbus_write_register - write a single register
 
 SYNOPSIS
 --------
-*int modbus_write_register(modbus_t *'ctx', int 'addr', int 'value');*
+*int modbus_write_register(modbus_t *'ctx', int 'addr', const uint16_t 'value');*
 
 
 DESCRIPTION
