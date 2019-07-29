@@ -1,3 +1,10 @@
+libmodbus 3.0.7 (2019-07-29)
+============================
+
+- Backport fixes for VD-1301 and VD-1302 vulnerabilities
+- Move WINVER definition before other includes (closes #350)
+- Replace signed int by unsigned
+
 libmodbus 3.0.6 (2014-02-21)
 ============================
 
