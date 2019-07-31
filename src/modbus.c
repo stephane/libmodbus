@@ -874,7 +874,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         int nb_bytes = req[offset + 5];
         int mapping_address = address - mb_mapping->start_registers;
 
-        if (nb < 1 || MODBUS_MAX_WRITE_REGISTERS < nb || nb_bytes * 8 < nb) {
+        if (nb < 1 || MODBUS_MAX_WRITE_REGISTERS < nb || nb_bytes != nb * 2) {
             rsp_length = response_exception(
                 ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, TRUE,
                 "Illegal number of values %d in write_registers (max %d)\n",
