@@ -866,7 +866,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         int nb = (req[offset + 3] << 8) + req[offset + 4];
         int nb_bytes = req[offset + 5];
 
-        if (nb < 1 || MODBUS_MAX_WRITE_REGISTERS < nb || nb_bytes * 8 < nb) {
+        if (nb < 1 || MODBUS_MAX_WRITE_REGISTERS < nb || nb_bytes != 2 * nb) {
             if (ctx->debug) {
                 fprintf(stderr,
                         "Illegal number of values %d in write_registers (max %d)\n",
