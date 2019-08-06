@@ -1,24 +1,85 @@
-## Operating System (VM environment) ##
-platform: x64
-image: Visual Studio 2017
+version: 3.1.6-{build}
 
-## Install Script ##
-install:
-  - set CYGWIN_ROOT=C:\cygwin64
-  - set PATH=%CYGWIN_ROOT%\bin;%PATH%
-  - bash --version
-  - bash -c 'autoreconf --version'
-  - bash -c 'make --version'
+image:
+  - Visual Studio 2013
+  - Visual Studio 2017
 
-## Disable MSBuild (default) ##
-build: off
+clone_depth: 1
 
-## Build Script ##
+before_build:
+  - ps: >-
+      if($env:PLATFORM -like "cygwin*") {
+        $env:CYGWIN_ROOT="C:\$env:PLATFORM"
+        $env:PATH="$env:CYGWIN_ROOT\bin;$env:PATH"
+      } else {
+        cd C:\projects\libmodbus\src\win32
+        cscript.exe configure.js
+        curl https://raw.githubusercontent.com/chemeris/msinttypes/master/stdint.h -o ..\stdint.h
+      }
+
+platform:
+  - Win32
+  - x64
+  - cygwin
+  - cygwin64
+
+matrix:
+  exclude:
+    - image: Visual Studio 2013
+      platform: cygwin
+    - image: Visual Studio 2013
+      platform: cygwin64
+    - image: Visual Studio 2017
+      platform: Win32
+    - image: Visual Studio 2017
+      platform: x64
+
+configuration: Release
+
 build_script:
-  - bash autogen.sh
-  - bash configure
-  - bash -c 'make'
+  - ps: >-
+      if($env:PLATFORM -like "cygwin*") {
+        cd $env:APPVEYOR_BUILD_FOLDER
+        bash autogen.sh
+        bash configure
+        bash -c 'make'
+      } else {
+        cd $env:APPVEYOR_BUILD_FOLDER\src\win32
+        C:\WINDOWS\Microsoft.NET\Framework\v3.5\msbuild.exe "$env:APPVEYOR_BUILD_FOLDER\src\win32\modbus.vcproj" "/p:Configuration=$env:CONFIGURATION" "/p:Platform=$env:PLATFORM"
+      }
 
-## Test Script ##
 test_script:
-  - bash -c 'make check'
+  - ps: >-
+      if($env:PLATFORM -like "cygwin*") {
+        cd $env:APPVEYOR_BUILD_FOLDER
+        bash -c 'make check'
+        echo "check was run"
+      }
+
+after_build:
+  - ps: >-
+      if($true) {
+        cd $env:APPVEYOR_BUILD_FOLDER\src
+        mkdir ..\archive
+        copy modbus.h ..\archive
+        copy modbus-version.h ..\archive
+        copy modbus-tcp.h ..\archive
+        copy modbus-rtu.h ..\archive
+        if($env:PLATFORM -like "cygwin*") {
+          copy .\.libs\cygmodbus-5.dll ..\archive
+          copy .\.libs\libmodbus.dll.a ..\archive
+          copy .\.libs\libmodbus.lai ..\archive\libmodbus.la
+        } else {
+          copy stdint.h ..\archive
+          copy "win32\$env:PLATFORM\$env:CONFIGURATION\modbus.dll" ..\archive
+          copy "win32\$env:PLATFORM\$env:CONFIGURATION\modbus.exp" ..\archive
+          copy "win32\$env:PLATFORM\$env:CONFIGURATION\modbus.lib" ..\archive
+          copy "win32\$env:PLATFORM\$env:CONFIGURATION\modbus.pdb" ..\archive
+        }
+        cd ..\archive
+        $artifactName = "modbus_" + $env:PLATFORM.ToLower() + ".zip"
+        7z a ..\$artifactName *
+      }
+
+artifacts:
+  - path: '*.zip'
