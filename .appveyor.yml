@@ -52,6 +52,7 @@ test_script:
   - ps: >-
       if($env:PLATFORM -like "cygwin*") {
         cd $env:APPVEYOR_BUILD_FOLDER
+        $ErrorActionPreference = "Stop"
         bash -c 'make check'
         echo "check was run"
       }
