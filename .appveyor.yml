@@ -12,7 +12,7 @@ before_build:
         $env:CYGWIN_ROOT="C:\$env:PLATFORM"
         $env:PATH="$env:CYGWIN_ROOT\bin;$env:PATH"
       } else {
-        cd C:\projects\libmodbus\src\win32
+        cd $env:APPVEYOR_BUILD_FOLDER\src\win32
         cscript.exe configure.js
         curl https://raw.githubusercontent.com/chemeris/msinttypes/master/stdint.h -o ..\stdint.h
       }

@@ -146,7 +146,7 @@
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				WholeProgramOptimization="false"
-				AdditionalIncludeDirectories="..\src;..;.;D:/include/msvc_std"
+				AdditionalIncludeDirectories="..\src;..;."
 				PreprocessorDefinitions="HAVE_CONFIG_H;DLLBUILD;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NONSTDC_NO_DEPRECATE=1"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
