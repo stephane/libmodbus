@@ -116,9 +116,6 @@ matrix:
            - ubuntu-toolchain-r-test
     - os: linux
       dist: xenial
-      env: TASK='lint'
-    - os: linux
-      dist: xenial
       env: TASK='spellintian'
       addons:
         apt:

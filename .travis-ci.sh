@@ -5,8 +5,6 @@
 
 set -e
 
-CPP_LINT_URL="https://raw.githubusercontent.com/google/styleguide/gh-pages/cpplint/cpplint.py";
-
 COVERITY_SCAN_BUILD_URL="https://scan.coverity.com/scripts/travisci_build_coverity_scan.sh"
 
 SPELLINGBLACKLIST=$(cat <<-BLACKLIST
@@ -32,29 +30,7 @@ SPELLINGBLACKLIST=$(cat <<-BLACKLIST
 BLACKLIST
 )
 
-if [[ $TASK = 'lint' ]]; then
-  # run the lint tool only if it is the requested task
-  # first check we've not got any generic NOLINTs
-  # count the number of generic NOLINTs
-  nolints=$(grep -IR NOLINT * | grep -v "NOLINT(" | wc -l)
-  if [[ $nolints -ne 0 ]]; then
-    # print the output for info
-    echo $(grep -IR NOLINT * | grep -v "NOLINT(")
-    echo "Found $nolints generic NOLINTs"
-    exit 1;
-  else
-    echo "Found $nolints generic NOLINTs"
-  fi;
-  # then fetch and run the main cpplint tool
-  wget -O cpplint.py $CPP_LINT_URL;
-  chmod u+x cpplint.py;
-  ./cpplint.py \
-    $(find ./ \( -name "*.h" -or -name "*.c" \) -and ! \( \
-        -wholename "./config.h" \) | xargs)
-  if [[ $? -ne 0 ]]; then
-    exit 1;
-  fi;
-elif [[ $TASK = 'spellintian' ]]; then
+if [[ $TASK = 'spellintian' ]]; then
   # run spellintian only if it is the requested task, ignoring duplicate words
   spellingfiles=$(eval "find ./ -type f -and ! \( \
       $SPELLINGBLACKLIST \
