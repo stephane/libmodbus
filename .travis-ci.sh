@@ -111,9 +111,9 @@ elif [[ $TASK = 'coverity' ]]; then
   fi;
 else
   # Otherwise compile and check as normal
-  travis_fold start "autogen.sh"
+  travis_fold start "autogen"
   ./autogen.sh;
-  travis_fold end "autogen.sh"
+  travis_fold end "autogen"
   travis_fold start "configure"
   ./configure;
   travis_fold end "configure"
