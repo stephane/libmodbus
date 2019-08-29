@@ -31,6 +31,8 @@ after_failure:
 # Disabled as otherwise the logfile is too big
 #  - if [ -f ${TRAVIS_BUILD_DIR}/config.log ]; then cat ${TRAVIS_BUILD_DIR}/config.log; fi
   - if [ -f ${TRAVIS_BUILD_DIR}/test-suite.log ]; then cat ${TRAVIS_BUILD_DIR}/test-suite.log; fi
+  - if [ -f ${TRAVIS_BUILD_DIR}/tests/test-suite.log ]; then cat ${TRAVIS_BUILD_DIR}/tests/test-suite.log; fi
+  - if [ -f ${TRAVIS_BUILD_DIR}/_build/tests/test-suite.log ]; then cat ${TRAVIS_BUILD_DIR}/_build/tests/test-suite.log; fi
   - if [ -f ${TRAVIS_BUILD_DIR}/_build/config.log ]; then cat ${TRAVIS_BUILD_DIR}/_build/config.log; fi
   - if [ -f ${TRAVIS_BUILD_DIR}/_build/sub/config.log ]; then cat ${TRAVIS_BUILD_DIR}/_build/sub/config.log; fi
   - if [ -f ${TRAVIS_BUILD_DIR}/_build/test-suite.log ]; then cat ${TRAVIS_BUILD_DIR}/_build/test-suite.log; fi
