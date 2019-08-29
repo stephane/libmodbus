@@ -3,7 +3,7 @@ modbus_reply(3)
 
 NAME
 ----
-modbus_reply - send a reponse to the received request
+modbus_reply - send a response to the received request
 
 
 SYNOPSIS

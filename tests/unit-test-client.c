@@ -622,7 +622,7 @@ int main(int argc, char *argv[])
         printf("1/2 Too small byte timeout (3ms < 5ms): ");
         ASSERT_TRUE(rc == -1 && errno == ETIMEDOUT, "");
 
-        /* Wait remaing bytes before flushing */
+        /* Wait remaining bytes before flushing */
         usleep(11 * 5000);
         modbus_flush(ctx);
 

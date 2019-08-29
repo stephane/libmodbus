@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
             use_backend = RTU;
             n_loop = 100;
         } else {
-            printf("Usage:\n  %s [tcp|rtu] - Modbus client to measure data bandwith\n\n", argv[0]);
+            printf("Usage:\n  %s [tcp|rtu] - Modbus client to measure data bandwidth\n\n", argv[0]);
             exit(1);
         }
     } else {
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
     printf("* %d KiB/s\n", rate);
     printf("\n");
 
-    /* TCP: Query and reponse header and values */
+    /* TCP: Query and response header and values */
     bytes = 12 + 9 + (nb_points / 8) + ((nb_points % 8) ? 1 : 0);
     printf("Values and TCP Modbus overhead:\n");
     printf("* %d x %d bytes\n", n_loop, bytes);
@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
     printf("* %d KiB/s\n", rate);
     printf("\n");
 
-    /* TCP:Query and reponse header and values */
+    /* TCP:Query and response header and values */
     bytes = 12 + 9 + (nb_points * sizeof(uint16_t));
     printf("Values and TCP Modbus overhead:\n");
     printf("* %d x %d bytes\n", n_loop, bytes);
@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
     printf("* %d KiB/s\n", rate);
     printf("\n");
 
-    /* TCP:Query and reponse header and values */
+    /* TCP:Query and response header and values */
     bytes = 12 + 9 + (nb_points * sizeof(uint16_t));
     printf("Values and TCP Modbus overhead:\n");
     printf("* %d x %d bytes\n", n_loop, bytes);
