@@ -23,11 +23,57 @@ install:
 script:
   - bash -ex .travis-ci.sh
 
+after_failure:
+# Disabled as otherwise the logfile is too big
+#  - if [ -f ${TRAVIS_BUILD_DIR}/config.log ]; then cat ${TRAVIS_BUILD_DIR}/config.log; fi
+  - if [ -f ${TRAVIS_BUILD_DIR}/test-suite.log ]; then cat ${TRAVIS_BUILD_DIR}/test-suite.log; fi
+  - if [ -f ${TRAVIS_BUILD_DIR}/_build/config.log ]; then cat ${TRAVIS_BUILD_DIR}/_build/config.log; fi
+  - if [ -f ${TRAVIS_BUILD_DIR}/_build/sub/config.log ]; then cat ${TRAVIS_BUILD_DIR}/_build/sub/config.log; fi
+  - if [ -f ${TRAVIS_BUILD_DIR}/_build/test-suite.log ]; then cat ${TRAVIS_BUILD_DIR}/_build/test-suite.log; fi
+  - if [ -f ${TRAVIS_BUILD_DIR}/_build/sub/test-suite.log ]; then cat ${TRAVIS_BUILD_DIR}/_build/sub/test-suite.log; fi
+
 addons:
   apt:
-    packages: &gpp_latest
+    packages: &base_build
+     # This is the absolute minimum for configure to pass
+     # Non C++ based tasks use it so they can run make builtfiles
+     - ccache
+     - libcppunit-dev
+     - bison
+     - flex
+     - uuid-dev
+     - libprotobuf-dev
+     - protobuf-compiler
+     - libprotoc-dev
+    packages: &core_build
+     # This is all the bits we need to enable all options
+     - *base_build
+     - libftdi-dev
+     - libftdi1
+     - libusb-1.0-0-dev
+     - liblo-dev
+     - libavahi-glib1
+     - libncurses5-dev
+     - libmicrohttpd-dev
+    packages: &core_build_gpp_latest
+     - *core_build
      - g++-8
-    packages: &clang_latest
+    packages: &core_build_clang_latest
+     - *core_build
+     - clang-6.0
+
+
+addons:
+  apt:
+    packages: &core_build
+     # This is all the bits we need to enable all options
+     - asciidoc
+     - xmlto
+    packages: &core_build_gpp_latest
+     - *core_build
+     - g++-8
+    packages: &core_build_clang_latest
+     - *core_build
      - clang-6.0
 
 matrix:
