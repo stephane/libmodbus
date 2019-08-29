@@ -49,8 +49,8 @@ if [[ $TASK = 'lint' ]]; then
   wget -O cpplint.py $CPP_LINT_URL;
   chmod u+x cpplint.py;
   ./cpplint.py \
-    --filter=-legal/copyright,-readability/streams,-runtime/arrays \
-    $(find ./ \( -name "*.h" -or -name "*.cpp" \) -and ! \( \
+#    --filter=-legal/copyright,-readability/streams,-runtime/arrays \
+    $(find ./ \( -name "*.h" -or -name "*.c" \) -and ! \( \
         -wholename "./config.h" | xargs)
   if [[ $? -ne 0 ]]; then
     exit 1;
@@ -91,10 +91,10 @@ elif [[ $TASK = 'codespell' ]]; then
       $SPELLINGBLACKLIST \
       \) | xargs")
   # count the number of codespell errors
-  spellingerrors=$(zrun codespell --check-filenames --check-hidden --quiet 2 --regex "[a-zA-Z0-9][\\-'a-zA-Z0-9]+[a-zA-Z0-9]" --exclude-file .codespellignore $spellingfiles 2>&1 | wc -l)
+  spellingerrors=$(zrun codespell --check-filenames --check-hidden --quiet 2 --regex "[a-zA-Z0-9][\\-'a-zA-Z0-9]+[a-zA-Z0-9]" $spellingfiles 2>&1 | wc -l)
   if [[ $spellingerrors -ne 0 ]]; then
     # print the output for info
-    zrun codespell --check-filenames --check-hidden --quiet 2 --regex "[a-zA-Z0-9][\\-'a-zA-Z0-9]+[a-zA-Z0-9]" --exclude-file .codespellignore $spellingfiles
+    zrun codespell --check-filenames --check-hidden --quiet 2 --regex "[a-zA-Z0-9][\\-'a-zA-Z0-9]+[a-zA-Z0-9]" $spellingfiles
     echo "Found $spellingerrors spelling errors via codespell"
     exit 1;
   else
@@ -111,16 +111,16 @@ elif [[ $TASK = 'coverity' ]]; then
   fi;
 else
   # Otherwise compile and check as normal
-  travis_fold start "autogen"
+#  travis_fold start "autogen"
   ./autogen.sh;
-  travis_fold end "autogen"
-  travis_fold start "configure"
+#  travis_fold end "autogen"
+#  travis_fold start "configure"
   ./configure;
-  travis_fold end "configure"
-  travis_fold start "make"
+#  travis_fold end "configure"
+#  travis_fold start "make"
   make;
-  travis_fold end "make"
-  travis_fold start "make_check"
+#  travis_fold end "make"
+#  travis_fold start "make_check"
   make check;
-  travis_fold end "make_check"
+#  travis_fold end "make_check"
 fi
