@@ -1,7 +1,126 @@
 language: c
 
-compiler:
-  - gcc
-  - clang
+os: linux
+dist: trusty
+# Short duration job, use the container/without sudo image as it boots faster
+sudo: false
+# Use the latest Travis images since they are more up to date than the stable release.
+group: edge
 
-script: ./autogen.sh && ./configure && make && make check
+before_cache:
+  - rm -f $HOME/.cache/pip/log/debug.log # erase log
+
+cache:
+  directories:
+    - $HOME/.cache/pip # pip cache
+
+before_install:
+ - if [ "$TASK" == "spellintian" -o "$TASK" == "spellintian-duplicates" ]; then sudo add-apt-repository ppa:waja/trusty-backports -y; sudo apt-get update -qq; sudo apt-get install lintian -y; fi # Install a late enough lintian
+
+install:
+  - if [ "$TASK" = "codespell" ]; then pip install --upgrade git+https://github.com/codespell-project/codespell.git; fi
+
+script:
+  - bash -ex .travis-ci.sh
+
+addons:
+  apt:
+    packages: &gpp_latest
+     - g++-8
+    packages: &clang_latest
+     - clang-6.0
+
+matrix:
+  fast_finish: true
+  include:
+    - os: linux
+      dist: xenial
+      env: TASK='codespell'
+      addons:
+        apt:
+          packages:
+           - moreutils
+    - os: osx
+      osx_image: xcode9.3
+      compiler: clang
+      env:
+      - TASK='compile'
+    - os: osx
+      osx_image: xcode9.3
+      compiler: gcc
+      env:
+      - TASK='compile'
+    - os: linux
+      dist: xenial
+      compiler: clang
+      env: TASK='compile'
+      addons:
+        apt:
+          packages:
+           - *clang_latest
+          sources:
+           - ubuntu-toolchain-r-test
+           - llvm-toolchain-xenial-6.0
+    - os: linux
+      dist: xenial
+      compiler: gcc
+      env: TASK='compile'
+      addons:
+        apt:
+          packages:
+           - *gpp_latest
+          sources:
+           - ubuntu-toolchain-r-test
+    - os: linux
+      dist: xenial
+      compiler: gcc
+      env: TASK='coverage'
+      addons:
+        apt:
+          packages:
+           - *gpp_latest
+          sources:
+           - ubuntu-toolchain-r-test
+    - os: linux
+      dist: xenial
+      compiler: gcc
+      env: TASK='coverity'
+      addons:
+        apt:
+          packages:
+           # Coverity doesn't work with g++-5 or g++-6 yet
+           - g++-4.9
+          sources:
+           - ubuntu-toolchain-r-test
+    - os: linux
+      dist: xenial
+      env: TASK='lint'
+    - os: linux
+      dist: xenial
+      env: TASK='spellintian'
+      addons:
+        apt:
+          packages:
+           - moreutils
+    - os: linux
+      dist: xenial
+      env: TASK='spellintian-duplicates'
+      addons:
+        apt:
+          packages:
+           - moreutils
+  allow_failures:
+    - os: linux
+      dist: xenial
+      compiler: gcc
+      env: TASK='coverage'
+    - os: linux
+      dist: xenial
+      compiler: gcc
+      env: TASK='coverity'
+    - os: linux
+      dist: xenial
+      env: TASK='spellintian'
+    - os: linux
+      dist: xenial
+      env: TASK='spellintian-duplicates'
