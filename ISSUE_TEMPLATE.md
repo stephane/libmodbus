@@ -16,7 +16,7 @@ Please read the following carefully before submitting this new issue.
    bug, then he/she will usually report it here by himself/herself.
    This is because he/she is interested in staying in the notification chain
    to decide about a backport as soon as a bugfix is available.
-   Otherwise you (distribution user) will be asked to do so explicitely.
+   Otherwise you (distribution user) will be asked to do so explicitly.
 
 When you get here and you are still convinced that you want report a bug:
 
