@@ -49,9 +49,8 @@ if [[ $TASK = 'lint' ]]; then
   wget -O cpplint.py $CPP_LINT_URL;
   chmod u+x cpplint.py;
   ./cpplint.py \
-#    --filter=-legal/copyright,-readability/streams,-runtime/arrays \
     $(find ./ \( -name "*.h" -or -name "*.c" \) -and ! \( \
-        -wholename "./config.h" | xargs)
+        -wholename "./config.h" \) | xargs)
   if [[ $? -ne 0 ]]; then
     exit 1;
   fi;
