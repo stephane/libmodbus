@@ -18,7 +18,7 @@ Please read the following carefully before submitting this new issue.
    to decide about a backport as soon as a bugfix is available.
    Otherwise you (distribution user) will be asked to do so explicitly.
 
-When you get here and you are still convinced that you want report a bug:
+When you get here and you are still convinced that you want to report a bug:
 
  - *Use a clear and decriptive title* for the issue to identify
 
