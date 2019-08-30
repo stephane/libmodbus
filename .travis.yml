@@ -20,6 +20,7 @@ before_install:
 
 install:
  - if [ "$TASK" = "codespell" ]; then pip install --user --upgrade git+https://github.com/codespell-project/codespell.git; fi
+ - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export XML_CATALOG_FILES=/usr/local/etc/xml/catalog; fi
 
 script:
   - bash -ex .travis-ci.sh
