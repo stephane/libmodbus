@@ -16,12 +16,10 @@ cache:
 
 before_install:
  - if [ "$TASK" == "spellintian" -o "$TASK" == "spellintian-duplicates" ]; then sudo add-apt-repository ppa:waja/trusty-backports -y; sudo apt-get update -qq; sudo apt-get install lintian -y; fi # Install a late enough lintian
- - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then if [ ! -d /usr/local/sbin ]; then sudo mkdir -p /usr/local/sbin && sudo chown -R $(whoami) /usr/local/sbin; fi; fi
 
 install:
  - if [ "$TASK" = "codespell" ]; then pip install --user --upgrade git+https://github.com/codespell-project/codespell.git; fi
- - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install asciidoc xmlto; fi
 
 script:
   - bash -ex .travis-ci.sh
@@ -41,7 +39,7 @@ after_failure:
 addons:
   apt:
     packages: &core_build
-     # This is all the bits we need to enable all options
+     # This is all the bits we need to enable all options on Linux
      - asciidoc
      - xmlto
      - tree
@@ -51,6 +49,12 @@ addons:
     packages: &core_build_clang_latest
      - *core_build
      - clang-6.0
+  homebrew:
+    packages:
+     # This is all the bits we need to enable all options on Mac
+     - asciidoc
+     - xmlto
+    update: true
 
 matrix:
   fast_finish: true
