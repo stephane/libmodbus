@@ -1233,8 +1233,28 @@ modbus_t* modbus_new_rtu(const char *device,
     }
 
     /* Check baud argument */
-    if (baud == 0) {
-        fprintf(stderr, "The baud rate value must not be zero\n");
+    if (baud <= 0) {
+        fprintf(stderr, "The baud rate value must be positive\n");
+        errno = EINVAL;
+        return NULL;
+    }
+
+    /* Check data_bit argument */
+    if (data_bit < 0) {
+        fprintf(stderr, "The data_bit value must be nonnegative\n");
+        errno = EINVAL;
+        return NULL;
+    }
+
+    /* Check stop_bit argument */
+    if (stop_bit < 0) {
+        fprintf(stderr, "The stop_bit value must be nonnegative\n");
+        errno = EINVAL;
+        return NULL;
+    }
+
+    if (parity != 'N' && parity != 'E' && parity != 'O') {
+        fprintf(stderr, "The parity must be one of: N, E, O\n");
         errno = EINVAL;
         return NULL;
     }
@@ -1264,13 +1284,7 @@ modbus_t* modbus_new_rtu(const char *device,
     strcpy(ctx_rtu->device, device);
 
     ctx_rtu->baud = baud;
-    if (parity == 'N' || parity == 'E' || parity == 'O') {
-        ctx_rtu->parity = parity;
-    } else {
-        modbus_free(ctx);
-        errno = EINVAL;
-        return NULL;
-    }
+    ctx_rtu->parity = parity;
     ctx_rtu->data_bit = data_bit;
     ctx_rtu->stop_bit = stop_bit;
 
