@@ -67,7 +67,7 @@ typedef struct _modbus_rtu {
     int rts;
     int rts_delay;
     int onebyte_time;
-    void (*set_rts) (modbus_t *ctx, int on);
+    void (*set_rts)(modbus_t *ctx, int on);
 #endif
     /* To handle many slaves on the same link */
     int confirmation_to_ignore;

@@ -16,7 +16,7 @@ MODBUS_BEGIN_DECLS
  */
 #define MODBUS_RTU_MAX_ADU_LENGTH  256
 
-MODBUS_API modbus_t* modbus_new_rtu(const char *device, int baud, char parity,
+MODBUS_API modbus_t *modbus_new_rtu(const char *device, int baud, char parity,
                                     int data_bit, int stop_bit);
 
 #define MODBUS_RTU_RS232 0
@@ -32,7 +32,7 @@ MODBUS_API int modbus_rtu_get_serial_mode(modbus_t *ctx);
 MODBUS_API int modbus_rtu_set_rts(modbus_t *ctx, int mode);
 MODBUS_API int modbus_rtu_get_rts(modbus_t *ctx);
 
-MODBUS_API int modbus_rtu_set_custom_rts(modbus_t *ctx, void (*set_rts) (modbus_t *ctx, int on));
+MODBUS_API int modbus_rtu_set_custom_rts(modbus_t *ctx, void (*set_rts)(modbus_t *ctx, int on));
 
 MODBUS_API int modbus_rtu_set_rts_delay(modbus_t *ctx, int us);
 MODBUS_API int modbus_rtu_get_rts_delay(modbus_t *ctx);
