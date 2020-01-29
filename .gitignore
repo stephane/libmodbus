@@ -44,3 +44,16 @@ tests/stamp-h2
 doc/*.html
 doc/*.3
 doc/*.7
+/src/win32/.vs
+/src/win32/Backup
+/src/win32/build
+/src/win32/Win32
+/src/win32/x64
+/src/win32/UpgradeLog.htm
+/src/win32/modbus.vcxproj.user
+/src/win32/modbus.vcxproj.filters
+/src/win32/modbus.vcxproj
+/src/win32/modbus.res
+/src/win32/modbus-9.suo
+/src/win32/modbus-9.ncb
+/src/win32/config.h
