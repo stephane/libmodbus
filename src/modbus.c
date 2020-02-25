@@ -231,7 +231,9 @@ int modbus_send_generic_request(modbus_t *ctx,
 
     sft.slave    = raw_req[0];
     sft.function = raw_req[1];
-    /* The t_id is left uninitialized */
+
+    /* The t_id is left to zero */
+    sft.t_id = 0;
 
     /* This response function only set the header so it's convenient here */
     req_length = ctx->backend->build_response_basis(&sft, req);
