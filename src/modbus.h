@@ -71,6 +71,11 @@ MODBUS_BEGIN_DECLS
 #define MODBUS_FC_MASK_WRITE_REGISTER       0x16
 #define MODBUS_FC_WRITE_AND_READ_REGISTERS  0x17
 
+#define MODBUS_FC_USERS_RANGE1_LO           0x41  // 65-72
+#define MODBUS_FC_USERS_RANGE1_HI           0x48
+#define MODBUS_FC_USERS_RANGE2_LO           0x64  // 100-110
+#define MODBUS_FC_USERS_RANGE2_HI           0x6E 
+
 #define MODBUS_BROADCAST_ADDRESS    0
 
 /* Modbus_Application_Protocol_V1_1b.pdf (chapter 6 section 1 page 12)
@@ -226,6 +231,9 @@ MODBUS_API modbus_mapping_t* modbus_mapping_new_start_address(
 MODBUS_API modbus_mapping_t* modbus_mapping_new(int nb_bits, int nb_input_bits,
                                                 int nb_registers, int nb_input_registers);
 MODBUS_API void modbus_mapping_free(modbus_mapping_t *mb_mapping);
+
+MODBUS_API int modbus_send_generic_request(modbus_t *ctx,
+                                           const uint8_t *raw_req, int raw_req_length, int wanted_resp_data_lenght);
 
 MODBUS_API int modbus_send_raw_request(modbus_t *ctx, const uint8_t *raw_req, int raw_req_length);
 
