@@ -362,10 +362,12 @@ static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
     uint16_t crc_calculated;
     uint16_t crc_received;
     int slave = msg[0];
+    modbus_rtu_t *ctx_rtu = ctx->backend_data;
 
     /* Filter on the Modbus unit identifier (slave) in RTU mode to avoid useless
      * CRC computing. */
-    if (slave != ctx->slave && slave != MODBUS_BROADCAST_ADDRESS) {
+    if (slave != ctx->slave && slave != MODBUS_BROADCAST_ADDRESS && 
+                                    ctx_rtu->disable_receive_filter == FALSE) {
         if (ctx->debug) {
             printf("Request for slave %d ignored (not %d)\n", slave, ctx->slave);
         }
@@ -1112,6 +1114,38 @@ int modbus_rtu_set_rts_delay(modbus_t *ctx, int us)
     }
 }
 
+int modbus_rtu_get_recv_filter(modbus_t *ctx)
+{
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
+        modbus_rtu_t *ctx_rtu = ctx->backend_data;
+        return (ctx_rtu->disable_receive_filter == FALSE);
+    } 
+    errno = EINVAL;
+    return -1;
+}
+
+int modbus_rtu_set_recv_filter(modbus_t *ctx, int on)
+{
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
+        modbus_rtu_t *ctx_rtu = ctx->backend_data;
+
+        ctx_rtu->disable_receive_filter = (on == FALSE);
+    }
+    /* Wrong backend specified */
+    errno = EINVAL;
+    return -1;
+}
+
 static void _modbus_rtu_close(modbus_t *ctx)
 {
     /* Restore line settings and close file descriptor in RTU mode */
@@ -1294,6 +1328,7 @@ modbus_t* modbus_new_rtu(const char *device,
 #endif
 
     ctx_rtu->confirmation_to_ignore = FALSE;
+    ctx_rtu->disable_receive_filter = FALSE;
 
     return ctx;
 }
