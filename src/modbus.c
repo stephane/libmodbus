@@ -208,7 +208,7 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
 }
 
 int modbus_send_generic_request(modbus_t *ctx, 
-				const uint8_t *raw_req, int raw_req_length, int wanted_resp_data_lenght)
+				const uint8_t *raw_req, int raw_req_length, int wanted_resp_data_length)
 {
     sft_t sft;
     uint8_t req[MAX_MESSAGE_LENGTH];
@@ -227,7 +227,7 @@ int modbus_send_generic_request(modbus_t *ctx,
         return -1;
     }
 
-    ctx->wanted_resp_data_lenght = wanted_resp_data_lenght;
+    ctx->wanted_resp_data_length = wanted_resp_data_length;
 
     sft.slave    = raw_req[0];
     sft.function = raw_req[1];
@@ -249,7 +249,7 @@ int modbus_send_generic_request(modbus_t *ctx,
 
 int modbus_send_raw_request(modbus_t *ctx, const uint8_t *raw_req, int raw_req_length)
 {
-    /* The wanted_resp_data_lenght is set to zero (cause used only in user-defined functions)  */
+    /* The wanted_resp_data_length is set to zero (cause used only in user-defined functions)  */
     return modbus_send_generic_request(ctx, raw_req, raw_req_length, 0);
 }
 
@@ -321,13 +321,13 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
             break;
         }
     } else {
-        // MSG_CONFIRMATION
+        /* MSG_CONFIRMATION */
         if ( function <= MODBUS_FC_READ_INPUT_REGISTERS ||
              function == MODBUS_FC_REPORT_SLAVE_ID ||
              function == MODBUS_FC_WRITE_AND_READ_REGISTERS )
             length = msg[ctx->backend->header_length + 1];
 	else if (is_users_function(function))
-            length = ctx->wanted_resp_data_lenght;
+            length = ctx->wanted_resp_data_length;
     }
 
     length += ctx->backend->checksum_length;
