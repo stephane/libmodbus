@@ -108,13 +108,6 @@ int main(int argc, char *argv[])
         modbus_free(ctx);
         return -1;
     }
-    modbus_get_response_timeout(ctx, &new_response_to_sec, &new_response_to_usec);
-
-    printf("** UNIT TESTING **\n");
-
-    printf("1/1 No response timeout modification on connect: ");
-    ASSERT_TRUE(old_response_to_sec == new_response_to_sec &&
-                old_response_to_usec == new_response_to_usec, "");
 
     /* Allocate and initialize the memory to store the bits */
     nb_points = (UT_BITS_NB > UT_INPUT_BITS_NB) ? UT_BITS_NB : UT_INPUT_BITS_NB;
@@ -126,6 +119,13 @@ int main(int argc, char *argv[])
         UT_REGISTERS_NB : UT_INPUT_REGISTERS_NB;
     tab_rp_registers = (uint16_t *) malloc(nb_points * sizeof(uint16_t));
     memset(tab_rp_registers, 0, nb_points * sizeof(uint16_t));
+
+    printf("** UNIT TESTING **\n");
+
+    printf("1/1 No response timeout modification on connect: ");
+    modbus_get_response_timeout(ctx, &new_response_to_sec, &new_response_to_usec);
+    ASSERT_TRUE(old_response_to_sec == new_response_to_sec &&
+                old_response_to_usec == new_response_to_usec, "");
 
     printf("\nTEST WRITE/READ:\n");
 
