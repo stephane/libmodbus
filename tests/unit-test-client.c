@@ -452,6 +452,9 @@ int main(int argc, char *argv[])
     rc = modbus_set_slave(ctx, 248);
     ASSERT_TRUE(rc == -1, "Slave address must not be allowed");
 
+    /* Save slave address for next tests before testing for quirks */
+    old_slave = modbus_get_slave(ctx);
+
     printf("2/2 Not compliant slave address allowed: ");
     modbus_enable_quirks(ctx, MODBUS_QUIRK_INVAL_ADDR);
     rc = modbus_set_slave(ctx, 248);
@@ -459,8 +462,6 @@ int main(int argc, char *argv[])
     modbus_disable_quirks(ctx, MODBUS_QUIRK_INVAL_ADDR);
 
     /** SLAVE REPLY **/
-    old_slave = modbus_get_slave(ctx);
-
     printf("\nTEST SLAVE REPLY:\n");
 
     rc = modbus_set_slave(ctx, INVALID_SERVER_ID);
