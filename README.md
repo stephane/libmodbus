@@ -30,7 +30,7 @@ Installation
 ------------
 
 You will only need to install automake, autoconf, libtool and a C compiler (gcc
-or clang) to compile the library and asciidoc and xmlto to generate the
+or clang) to compile the library and asciidoc and xml to generate the
 documentation (optional).
 
 To install, just run the usual dance, `./configure && make install`. Run
