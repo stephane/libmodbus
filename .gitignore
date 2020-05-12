@@ -57,3 +57,6 @@ doc/*.7
 /src/win32/modbus-9.suo
 /src/win32/modbus-9.ncb
 /src/win32/config.h
+/src/win32/*.user
+/src/win32/Debug
+/src/win32/Release

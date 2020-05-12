@@ -5,7 +5,6 @@
  */
 
 #include <stdio.h>
-#include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -14,6 +13,7 @@
 # include <winsock2.h>
 #else
 # include <sys/socket.h>
+#include <unistd.h>
 #endif
 
 /* For MinGW */
@@ -21,7 +21,7 @@
 # define MSG_NOSIGNAL 0
 #endif
 
-#include "unit-test.h"
+#include "unit-test.h.in"
 
 enum {
     TCP,

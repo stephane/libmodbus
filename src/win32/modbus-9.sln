@@ -3,6 +3,20 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "modbus", "modbus.vcproj", "{498E0845-C7F4-438B-8EDE-EF7FC9A74430}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "unit_tests", "unit_tests", "{0AE0D342-992D-4655-BD54-320535771DB4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "library", "library", "{56498BFD-1879-41AA-8B05-FAEAFD278C0F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unit-test-server", "unit-test-server.vcproj", "{34B982AE-43EA-4FDD-8598-DC23B2E51E74}"
+	ProjectSection(ProjectDependencies) = postProject
+		{498E0845-C7F4-438B-8EDE-EF7FC9A74430} = {498E0845-C7F4-438B-8EDE-EF7FC9A74430}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unit-test-client", "unit-test-client.vcproj", "{F6604888-C847-45C9-9E89-E4838F1CCEFE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{498E0845-C7F4-438B-8EDE-EF7FC9A74430} = {498E0845-C7F4-438B-8EDE-EF7FC9A74430}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -19,8 +33,27 @@ Global
 		{498E0845-C7F4-438B-8EDE-EF7FC9A74430}.Release|Win32.Build.0 = Release|Win32
 		{498E0845-C7F4-438B-8EDE-EF7FC9A74430}.Release|x64.ActiveCfg = Release|x64
 		{498E0845-C7F4-438B-8EDE-EF7FC9A74430}.Release|x64.Build.0 = Release|x64
+		{34B982AE-43EA-4FDD-8598-DC23B2E51E74}.Debug|Win32.ActiveCfg = Debug|x64
+		{34B982AE-43EA-4FDD-8598-DC23B2E51E74}.Debug|Win32.Build.0 = Debug|x64
+		{34B982AE-43EA-4FDD-8598-DC23B2E51E74}.Debug|x64.ActiveCfg = Debug|Win32
+		{34B982AE-43EA-4FDD-8598-DC23B2E51E74}.Release|Win32.ActiveCfg = Release|Win32
+		{34B982AE-43EA-4FDD-8598-DC23B2E51E74}.Release|Win32.Build.0 = Release|Win32
+		{34B982AE-43EA-4FDD-8598-DC23B2E51E74}.Release|x64.ActiveCfg = Release|Win32
+		{F6604888-C847-45C9-9E89-E4838F1CCEFE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F6604888-C847-45C9-9E89-E4838F1CCEFE}.Debug|Win32.Build.0 = Debug|Win32
+		{F6604888-C847-45C9-9E89-E4838F1CCEFE}.Debug|x64.ActiveCfg = Debug|x64
+		{F6604888-C847-45C9-9E89-E4838F1CCEFE}.Debug|x64.Build.0 = Debug|x64
+		{F6604888-C847-45C9-9E89-E4838F1CCEFE}.Release|Win32.ActiveCfg = Release|Win32
+		{F6604888-C847-45C9-9E89-E4838F1CCEFE}.Release|Win32.Build.0 = Release|Win32
+		{F6604888-C847-45C9-9E89-E4838F1CCEFE}.Release|x64.ActiveCfg = Release|x64
+		{F6604888-C847-45C9-9E89-E4838F1CCEFE}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{34B982AE-43EA-4FDD-8598-DC23B2E51E74} = {0AE0D342-992D-4655-BD54-320535771DB4}
+		{F6604888-C847-45C9-9E89-E4838F1CCEFE} = {0AE0D342-992D-4655-BD54-320535771DB4}
+		{498E0845-C7F4-438B-8EDE-EF7FC9A74430} = {56498BFD-1879-41AA-8B05-FAEAFD278C0F}
 	EndGlobalSection
 EndGlobal

@@ -5,13 +5,16 @@
  */
 
 #include <stdio.h>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+
 #include <modbus.h>
 
-#include "unit-test.h"
+#include "unit-test.h.in"
 
 const int EXCEPTION_RC = 2;
 
@@ -28,14 +31,14 @@ int send_crafted_request(modbus_t *ctx, int function,
                          int backend_length, int backend_offset);
 int equal_dword(uint16_t *tab_reg, const uint32_t value);
 
-#define BUG_REPORT(_cond, _format, _args ...) \
-    printf("\nLine %d: assertion error for '%s': " _format "\n", __LINE__, # _cond, ## _args)
+#define BUG_REPORT(_cond, _format, ...) \
+    printf("\nLine %d: assertion error for '%s': " _format "\n", __LINE__, # _cond, ## __VA_ARGS__)
 
-#define ASSERT_TRUE(_cond, _format, __args...) {  \
+#define ASSERT_TRUE(_cond, _format, ...) {  \
     if (_cond) {                                  \
         printf("OK\n");                           \
     } else {                                      \
-        BUG_REPORT(_cond, _format, ## __args);    \
+        BUG_REPORT(_cond, _format, ## __VA_ARGS__);    \
         goto close;                               \
     }                                             \
 };
@@ -699,6 +702,10 @@ int test_server(modbus_t *ctx, int use_backend)
 {
     int rc;
     int i;
+
+    uint32_t old_response_to_sec;
+    uint32_t old_response_to_usec;
+
     /* Read requests */
     const int READ_RAW_REQ_LEN = 6;
     const int slave = (use_backend == RTU) ? SERVER_ID : MODBUS_TCP_SLAVE;
@@ -771,9 +778,6 @@ int test_server(modbus_t *ctx, int use_backend)
     }
 
     printf("\nTEST RAW REQUESTS:\n");
-
-    uint32_t old_response_to_sec;
-    uint32_t old_response_to_usec;
 
     /* This requests can generate flushes server side so we need a higher
      * response timeout than the server. The server uses the defined response
@@ -880,7 +884,7 @@ int send_crafted_request(modbus_t *ctx, int function,
             req[5] = max_value & 0xFF;
             if (bytes) {
                 /* Write query (nb values * 2 to convert in bytes for registers) */
-                req[6] = bytes;
+                req[6] = (uint8_t)bytes;
             }
         }
 
