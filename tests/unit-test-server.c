@@ -95,6 +95,14 @@ int main(int argc, char*argv[])
         mb_mapping->tab_input_registers[i] = UT_INPUT_REGISTERS_TAB[i];;
     }
 
+
+    /* Set Device Identification data */
+    modbus_set_device_identification(ctx, MODBUS_OBJECTID_VENDORNAME, VENDOR_NAME, strlen(VENDOR_NAME));
+    modbus_set_device_identification(ctx, MODBUS_OBJECTID_PRODUCTCODE, PRODUCT_CODE, strlen(PRODUCT_CODE));
+    modbus_set_device_identification(ctx, MODBUS_OBJECTID_MAJORMINORREVISION, MAJOR_MINOR_REVISION, strlen(MAJOR_MINOR_REVISION));
+    modbus_set_device_identification(ctx, MODBUS_OBJECTID_VENDORURL, VENDOR_URL, strlen(VENDOR_URL));
+    modbus_set_device_identification(ctx, MODBUS_OBJECTID_PRODUCTNAME, PRODUCT_NAME, strlen(PRODUCT_NAME));
+
     if (use_backend == TCP) {
         s = modbus_tcp_listen(ctx, 1);
         modbus_tcp_accept(ctx, &s);
