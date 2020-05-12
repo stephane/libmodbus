@@ -73,4 +73,10 @@ const uint32_t UT_IREAL_CDAB = 0x200047F1;*/
 #define usleep(us) Sleep(us/1000)
 #endif
 
+#define VENDOR_NAME "VendorName Inc."
+#define PRODUCT_CODE "ProductCode"
+#define MAJOR_MINOR_REVISION "1.1.235"
+#define VENDOR_URL "http://www.modbus.org"
+#define PRODUCT_NAME "libmodbus"
+
 #endif /* _UNIT_TEST_H_ */
