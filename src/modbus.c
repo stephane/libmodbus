@@ -1584,6 +1584,8 @@ void _modbus_init_common(modbus_t *ctx)
 
     ctx->indication_timeout.tv_sec = 0;
     ctx->indication_timeout.tv_usec = 0;
+
+    _device_identification_init(&ctx->device_identification);
 }
 
 /* Define the slave number */
@@ -1752,6 +1754,7 @@ void modbus_free(modbus_t *ctx)
     if (ctx == NULL)
         return;
 
+    _device_identification_free(&ctx->device_identification);
     ctx->backend->free(ctx);
 }
 
@@ -1915,3 +1918,92 @@ size_t strlcpy(char *dest, const char *src, size_t dest_size)
     return (s - src - 1); /* count does not include NUL */
 }
 #endif
+
+
+void _device_identification_init(device_identification_t* dev_ids)
+{
+    int i;
+
+    dev_ids->objects = (id_object_t*)malloc(
+        sizeof(id_object_t) * MAX_DEVICE_ID_OBJECTS);
+
+    if (dev_ids->objects == NULL) {
+        errno = ENOMEM;
+        return;
+    }
+
+    dev_ids->object_count = MAX_DEVICE_ID_OBJECTS;
+
+    for (i = 0; i < dev_ids->object_count; ++i)
+        _identification_object_init(dev_ids->objects + i);
+}
+
+int _device_identification_assign(device_identification_t* dev_ids,
+    uint8_t object_id, void* data, size_t data_length)
+{
+    if (data == NULL || data_length == 0) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    return _identification_object_assign(dev_ids->objects + object_id, data, data_length);
+}
+
+void _device_identification_free(device_identification_t* dev_ids)
+{
+    int i;
+    for (i = 0; i < dev_ids->object_count; ++i)
+        _identification_object_free(dev_ids->objects + i);
+
+    free(dev_ids->objects);
+
+    dev_ids->objects = NULL;
+    dev_ids->object_count = 0;
+}
+
+void _identification_object_init(id_object_t* obj)
+{
+    obj->data = NULL;
+    obj->data_length = 0;
+}
+
+int _identification_object_assign(id_object_t* obj, void* data, size_t data_length)
+{
+    // TODO whats the real max length?
+    size_t MAX_LENGTH = 200;
+    if (data_length > MAX_LENGTH) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    _identification_object_free(obj);
+
+    obj->data = malloc(data_length);
+    if (obj->data == NULL) {
+        errno = ENOMEM;
+        return -1;
+    }
+
+    memcpy(obj->data, data, data_length);
+    obj->data_length = data_length;
+    return 0;
+}
+
+void _identification_object_free(id_object_t* obj)
+{
+    free(obj->data);
+    obj->data = NULL;
+    obj->data_length = 0;
+}
+
+int modbus_set_device_identification(modbus_t *ctx, uint8_t object_id,
+                                                void* data, size_t data_length)
+{
+    if (ctx == NULL) {
+    errno = EINVAL;
+    return -1;
+    }
+
+    return _device_identification_assign(&ctx->device_identification,
+        object_id, data, data_length);
+}

@@ -240,6 +240,19 @@ MODBUS_API int modbus_reply(modbus_t *ctx, const uint8_t *req,
 MODBUS_API int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
                                       unsigned int exception_code);
 
+enum {
+    MODBUS_OBJECTID_VENDORNAME,
+    MODBUS_OBJECTID_PRODUCTCODE,
+    MODBUS_OBJECTID_MAJORMINORREVISION,
+    MODBUS_OBJECTID_VENDORURL,
+    MODBUS_OBJECTID_PRODUCTNAME,
+    MODBUS_OBJECTID_MODELNAME,
+    MODBUS_OBJECTID_USERAPPLICATIONNAME
+};
+
+MODBUS_API int modbus_set_device_identification(modbus_t *ctx, uint8_t object_id,
+                                                void* data, size_t data_length);
+
 /**
  * UTILS FUNCTIONS
  **/
