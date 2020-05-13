@@ -312,6 +312,56 @@ int main(int argc, char *argv[])
     real = modbus_get_float_cdab(tab_rp_registers);
     ASSERT_TRUE(real == UT_REAL, "FAILED (%f != %f)\n", real, UT_REAL);
 
+
+    /** Device Identification **/
+    printf("\nDevice Identification\n");
+
+
+    {
+       int i;
+        int header_length;
+        int object_count;
+        int idx_start_objects;
+        uint8_t* ptr;
+        uint8_t rsp[MODBUS_RTU_MAX_ADU_LENGTH];
+        uint8_t req[] = { 0, MODBUS_FC_READ_DEVICE_IDENTIFICATION, 14, 1, 0 };
+
+        printf("\n  read basic device identification\n");
+
+        header_length = modbus_get_header_length(ctx);
+
+        modbus_send_raw_request(ctx, req, sizeof(req));
+        rc = modbus_receive_confirmation(ctx, rsp);
+
+        ASSERT_TRUE(rc != -1, "FAILED (%x == -1)\n", rc);
+        ASSERT_TRUE(memcmp(req + 1, rsp + header_length, 3) == 0, "Unexpected response");
+        
+        object_count = rsp[13];
+        idx_start_objects = 14;
+        ptr = rsp + idx_start_objects;
+
+        ASSERT_TRUE(object_count == 3, "Unexpected count of basic objects (%d != 3)", object_count);
+
+        for (i = 0; i < object_count; ++i)
+        {
+            int object_length = *(ptr+1);
+            ASSERT_TRUE(*ptr == i, "");
+            ASSERT_TRUE(memcmp(ptr + 2, TEST_DEVICE_ID_NAMES[i], object_length) == 0,
+                "Unexpected name ('%s' != '%s')", rsp + 2, TEST_DEVICE_ID_NAMES[i]);
+
+            ptr += object_length + 2;
+        }
+
+
+
+    }
+
+
+
+
+
+
+
     printf("\nAt this point, error messages doesn't mean the test has failed\n");
 
     /** ILLEGAL DATA ADDRESS **/

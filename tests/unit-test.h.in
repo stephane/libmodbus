@@ -79,4 +79,7 @@ const uint32_t UT_IREAL_CDAB = 0x200047F1;*/
 #define VENDOR_URL "http://www.modbus.org"
 #define PRODUCT_NAME "libmodbus"
 
+const char* TEST_DEVICE_ID_NAMES[] = {VENDOR_NAME, PRODUCT_CODE, MAJOR_MINOR_REVISION, VENDOR_URL, PRODUCT_NAME};
+
+
 #endif /* _UNIT_TEST_H_ */
