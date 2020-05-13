@@ -97,11 +97,11 @@ int main(int argc, char*argv[])
 
 
     /* Set Device Identification data */
-    modbus_set_device_identification(ctx, MODBUS_OBJECTID_VENDORNAME, VENDOR_NAME, strlen(VENDOR_NAME));
-    modbus_set_device_identification(ctx, MODBUS_OBJECTID_PRODUCTCODE, PRODUCT_CODE, strlen(PRODUCT_CODE));
-    modbus_set_device_identification(ctx, MODBUS_OBJECTID_MAJORMINORREVISION, MAJOR_MINOR_REVISION, strlen(MAJOR_MINOR_REVISION));
-    modbus_set_device_identification(ctx, MODBUS_OBJECTID_VENDORURL, VENDOR_URL, strlen(VENDOR_URL));
-    modbus_set_device_identification(ctx, MODBUS_OBJECTID_PRODUCTNAME, PRODUCT_NAME, strlen(PRODUCT_NAME));
+    modbus_set_device_identification(ctx, MODBUS_OBJECTID_VENDORNAME, VENDOR_NAME, strlen(VENDOR_NAME)+1);
+    modbus_set_device_identification(ctx, MODBUS_OBJECTID_PRODUCTCODE, PRODUCT_CODE, strlen(PRODUCT_CODE)+1);
+    modbus_set_device_identification(ctx, MODBUS_OBJECTID_MAJORMINORREVISION, MAJOR_MINOR_REVISION, strlen(MAJOR_MINOR_REVISION)+1);
+    modbus_set_device_identification(ctx, MODBUS_OBJECTID_VENDORURL, VENDOR_URL, strlen(VENDOR_URL)+1);
+    modbus_set_device_identification(ctx, MODBUS_OBJECTID_PRODUCTNAME, PRODUCT_NAME, strlen(PRODUCT_NAME)+1);
 
     if (use_backend == TCP) {
         s = modbus_tcp_listen(ctx, 1);
