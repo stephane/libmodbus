@@ -99,7 +99,9 @@ typedef struct _device_identification {
     int object_count;
 }device_identification_t;
 
-#define MAX_DEVICE_ID_OBJECTS 0xFF
+#define DEVICE_ID_MAX 0xFF
+#define DEVICE_ID_END_OF_BASIC 0x3
+#define DEVICE_ID_END_OF_REGULAR 0x7f
 
 void _device_identification_init(device_identification_t* dev_ids);
 int _device_identification_assign(device_identification_t* dev_ids,
