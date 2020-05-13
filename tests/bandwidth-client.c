@@ -50,12 +50,24 @@ int main(int argc, char *argv[])
     int rc;
     int n_loop;
     int use_backend;
+    const char* localIpAddress;
+    int port;
 
-    if (argc > 1) {
-        if (strcmp(argv[1], "tcp") == 0) {
+    if (argc > 1)
+        localIpAddress = argv[1];
+    else
+        localIpAddress = "localhost";
+
+    if (argc > 2)
+        port = atoi(argv[2]);
+    else
+        port = 1502;
+
+    if (argc > 3) {
+        if (strcmp(argv[3], "tcp") == 0) {
             use_backend = TCP;
             n_loop = 100000;
-        } else if (strcmp(argv[1], "rtu") == 0) {
+        } else if (strcmp(argv[3], "rtu") == 0) {
             use_backend = RTU;
             n_loop = 100;
         } else {
@@ -69,7 +81,7 @@ int main(int argc, char *argv[])
     }
 
     if (use_backend == TCP) {
-        ctx = modbus_new_tcp("127.0.0.1", 1502);
+        ctx = modbus_new_tcp(localIpAddress, port);
     } else {
         ctx = modbus_new_rtu("/dev/ttyUSB1", 115200, 'N', 8, 1);
         modbus_set_slave(ctx, 1);

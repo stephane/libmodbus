@@ -11,7 +11,8 @@ respects the Modbus protocol. This library can use a serial port or an Ethernet
 connection.
 
 The functions included in the library have been derived from the Modicon Modbus
-Protocol Reference Guide which can be obtained from [www.modbus.org](http://www.modbus.org).
+Protocol Reference Guide which can be obtained from Schneider at
+[www.schneiderautomation.com](http://www.schneiderautomation.com).
 
 The license of libmodbus is *LGPL v2.1 or later*.
 

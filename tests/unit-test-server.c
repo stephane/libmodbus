@@ -39,6 +39,10 @@ int main(int argc, char*argv[])
     int use_backend;
     uint8_t *query;
     int header_length;
+    char devicename[MAX_DEVICENAME_LENGHT] = {
+        0,
+    };
+    int baudrate = 115200;
 
     if (argc > 1) {
         if (strcmp(argv[1], "tcp") == 0) {
@@ -48,12 +52,23 @@ int main(int argc, char*argv[])
         } else if (strcmp(argv[1], "rtu") == 0) {
             use_backend = RTU;
         } else {
-            printf("Usage:\n  %s [tcp|tcppi|rtu] - Modbus server for unit testing\n\n", argv[0]);
+            printf("Usage:\n  %s [tcp|tcppi|rtu]  ('device-name for rtu') "
+                   "(baudrate for rtu) - Modbus server for unit testing\n\n",
+                   argv[0]);
             return -1;
         }
     } else {
         /* By default */
         use_backend = TCP;
+    }
+
+    if (argc > 2) {
+        strncpy(devicename, argv[2], MAX_DEVICENAME_LENGHT);
+    } else {
+        strncpy(devicename, "/dev/ttyUSB0", MAX_DEVICENAME_LENGHT);
+    }
+    if (argc > 3) {
+        baudrate = atoi(argv[3]);
     }
 
     if (use_backend == TCP) {
@@ -63,7 +78,7 @@ int main(int argc, char*argv[])
         ctx = modbus_new_tcp_pi("::0", "1502");
         query = malloc(MODBUS_TCP_MAX_ADU_LENGTH);
     } else {
-        ctx = modbus_new_rtu("/dev/ttyUSB0", 115200, 'N', 8, 1);
+        ctx = modbus_new_rtu(devicename, baudrate, 'N', 8, 1);
         modbus_set_slave(ctx, SERVER_ID);
         query = malloc(MODBUS_RTU_MAX_ADU_LENGTH);
     }
@@ -71,11 +86,10 @@ int main(int argc, char*argv[])
 
     modbus_set_debug(ctx, TRUE);
 
-    mb_mapping = modbus_mapping_new_start_address(
-        UT_BITS_ADDRESS, UT_BITS_NB,
-        UT_INPUT_BITS_ADDRESS, UT_INPUT_BITS_NB,
-        UT_REGISTERS_ADDRESS, UT_REGISTERS_NB_MAX,
-        UT_INPUT_REGISTERS_ADDRESS, UT_INPUT_REGISTERS_NB);
+    mb_mapping = modbus_mapping_new_start_address_extend(
+        UT_BITS_ADDRESS, UT_BITS_NB, UT_INPUT_BITS_ADDRESS, UT_INPUT_BITS_NB,
+        UT_REGISTERS_ADDRESS, UT_REGISTERS_NB_MAX, UT_INPUT_REGISTERS_ADDRESS,
+        UT_INPUT_REGISTERS_NB, UT_FILE_REGISTERS_NB);
     if (mb_mapping == NULL) {
         fprintf(stderr, "Failed to allocate the mapping: %s\n",
                 modbus_strerror(errno));

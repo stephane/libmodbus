@@ -1,7 +1,7 @@
 /*
  * Copyright © 2010-2014 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include <stdlib.h>

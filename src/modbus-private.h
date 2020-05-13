@@ -1,7 +1,7 @@
 /*
  * Copyright © 2010-2012 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #ifndef MODBUS_PRIVATE_H
@@ -38,6 +38,10 @@ MODBUS_BEGIN_DECLS
 /* Timeouts in microsecond (0.5 s) */
 #define _RESPONSE_TIMEOUT    500000
 #define _BYTE_TIMEOUT        500000
+
+/* Reference-Type for File-Record Read + Write */
+#define _SUB_REQ_HDR_LENGTH   0x07
+#define _SUB_REQUEST_REF_TYPE 0x06 
 
 typedef enum {
     _MODBUS_BACKEND_TYPE_RTU=0,

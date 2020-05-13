@@ -30,12 +30,24 @@ int main(int argc, char *argv[])
     modbus_mapping_t *mb_mapping = NULL;
     int rc;
     int use_backend;
+    const char* localIpAddress;
+    int port;
 
      /* TCP */
-    if (argc > 1) {
-        if (strcmp(argv[1], "tcp") == 0) {
+    if (argc > 1)
+        localIpAddress = argv[1];
+    else
+        localIpAddress = "localhost";
+
+    if (argc > 2)
+        port = atoi(argv[2]);
+    else
+        port = 1502;
+
+    if (argc > 3) {
+        if (strcmp(argv[3], "tcp") == 0) {
             use_backend = TCP;
-        } else if (strcmp(argv[1], "rtu") == 0) {
+        } else if (strcmp(argv[3], "rtu") == 0) {
             use_backend = RTU;
         } else {
             printf("Usage:\n  %s [tcp|rtu] - Modbus client to measure data bandwith\n\n", argv[0]);
@@ -47,7 +59,7 @@ int main(int argc, char *argv[])
     }
 
     if (use_backend == TCP) {
-        ctx = modbus_new_tcp("127.0.0.1", 1502);
+        ctx = modbus_new_tcp(localIpAddress, port);
         s = modbus_tcp_listen(ctx, 1);
         modbus_tcp_accept(ctx, &s);
 

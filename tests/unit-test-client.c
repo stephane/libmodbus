@@ -49,9 +49,10 @@ int main(int argc, char *argv[])
     const int NB_REPORT_SLAVE_ID = 10;
     uint8_t *tab_rp_bits = NULL;
     uint16_t *tab_rp_registers = NULL;
+    uint16_t *tab_rp_file = NULL;
     uint16_t *tab_rp_registers_bad = NULL;
     modbus_t *ctx = NULL;
-    int i;
+    int i, j;
     uint8_t value;
     int nb_points;
     int rc;
@@ -66,6 +67,10 @@ int main(int argc, char *argv[])
     int success = FALSE;
     int old_slave;
 
+    char devicename[MAX_DEVICENAME_LENGHT] = {
+        0,
+    };
+    int baudrate = 115200;
     if (argc > 1) {
         if (strcmp(argv[1], "tcp") == 0) {
             use_backend = TCP;
@@ -74,7 +79,9 @@ int main(int argc, char *argv[])
         } else if (strcmp(argv[1], "rtu") == 0) {
             use_backend = RTU;
         } else {
-            printf("Usage:\n  %s [tcp|tcppi|rtu] - Modbus client for unit testing\n\n", argv[0]);
+            printf("Usage:\n  %s [tcp|tcppi|rtu] ('device-name for rtu') "
+                   "(baudrate for rtu)  - Modbus client for unit testing\n\n",
+                   argv[0]);
             exit(1);
         }
     } else {
@@ -82,12 +89,21 @@ int main(int argc, char *argv[])
         use_backend = TCP;
     }
 
+    if (argc > 2) {
+        strncpy(devicename, argv[2], MAX_DEVICENAME_LENGHT);
+    } else {
+        strncpy(devicename, "/dev/ttyUSB1", MAX_DEVICENAME_LENGHT);
+    }
+    if (argc > 3) {
+        baudrate = atoi(argv[3]);
+    }
+
     if (use_backend == TCP) {
         ctx = modbus_new_tcp("127.0.0.1", 1502);
     } else if (use_backend == TCP_PI) {
         ctx = modbus_new_tcp_pi("::1", "1502");
     } else {
-        ctx = modbus_new_rtu("/dev/ttyUSB1", 115200, 'N', 8, 1);
+        ctx = modbus_new_rtu(devicename, baudrate, 'N', 8, 1);
     }
     if (ctx == NULL) {
         fprintf(stderr, "Unable to allocate libmodbus context\n");
@@ -127,6 +143,9 @@ int main(int argc, char *argv[])
     tab_rp_registers = (uint16_t *) malloc(nb_points * sizeof(uint16_t));
     memset(tab_rp_registers, 0, nb_points * sizeof(uint16_t));
 
+    tab_rp_file =
+        (uint16_t *)malloc((MAX_REGISTER_PER_QUERY + 2) * sizeof(uint16_t));
+    memset(tab_rp_file, 0, (MAX_REGISTER_PER_QUERY + 2) * sizeof(uint16_t));
     printf("\nTEST WRITE/READ:\n");
 
     /** COIL BITS **/
@@ -657,6 +676,95 @@ int main(int argc, char *argv[])
 
     printf("* modbus_read_registers at special address: ");
     ASSERT_TRUE(rc == -1 && errno == EMBXSBUSY, "");
+    /** Read File*/
+    printf("\nTEST READ FILE RECORD\n");
+    {
+
+        rc = modbus_read_file_record(ctx, 1, 10, MAX_REGISTER_PER_QUERY,
+                                           tab_rp_file);
+        printf("modbus_read_file_record: ");
+
+        if (rc < (MAX_REGISTER_PER_QUERY +
+                  1)) { /* 2 bytes per register + 2 bytes header */
+            printf("FAILED (nb points %d)\n", rc);
+            goto close;
+        }
+
+        if (((tab_rp_file[0]) >> 8) != MAX_REGISTER_PER_QUERY) {
+            printf("FAILED Received size wrong(%0X != %0X)\n",
+                   (tab_rp_file[0]) >> 8, MAX_REGISTER_PER_QUERY);
+            goto close;
+        }
+
+        if ((tab_rp_file[0] & 0xff) != 0x06) {
+            printf("FAILED Received Subrequest Reference(%0X != %0X)\n",
+                   tab_rp_file[0] & 0xff, 0x06);
+            goto close;
+        }
+
+        for (i = 0; i < MAX_REGISTER_PER_QUERY; i++) {
+            if (tab_rp_file[i + 1] != 0) {
+                printf("FAILED (%0X != %0X)\n", tab_rp_file[i + 1], 0);
+                goto close;
+            }
+        }
+        printf("OK\n");
+    }
+
+    printf("\nTEST WRITE FILE RECORD\n");
+    {
+
+        for (i = 1; i < 5; i++) {
+            rc = modbus_write_file_record(
+                ctx, i, i * 7, UT_FILE_REGISTER_NB - i, &UT_FILE_REGISTER_TAB[i]);
+
+            printf("modbus_write_file_record File_no %d: ", i);
+
+            if (rc < (UT_FILE_REGISTER_NB + 1 -
+                      i)) { /* 2 bytes per register + 2 bytes header*/
+                printf("FAILED (nb points %d)\n", rc);
+                goto close;
+            }
+            printf("OK\n");
+        }
+
+        for (i = 1; i < 5; i++) {
+            rc = modbus_read_file_record(
+                ctx, i, i * 7, UT_FILE_REGISTER_NB - 1, tab_rp_file);
+
+            printf("modbus_read_file_record File_no %d: ", i);
+
+            if (rc < (UT_FILE_REGISTER_NB + 1 -
+                      i)) { /* 2 bytes per register + 2 bytes header */
+                printf("FAILED (nb points %d)\n", rc);
+                goto close;
+            }
+
+            printf("OK , Verify : ");
+
+            for (j = 0; j < (UT_FILE_REGISTER_NB - i); j++) {
+                if (tab_rp_file[j + 1] != UT_FILE_REGISTER_TAB[j + i]) {
+                    printf("FAILED (%0X != %0X) at %d \n", tab_rp_file[j + 1],
+                           UT_FILE_REGISTER_TAB[j + i], j);
+                    goto close;
+                }
+            }
+            printf("OK\n");
+        }
+    }
+
+    /* Writing to a non existing file */
+    rc = modbus_write_file_record(ctx, 6, 0, UT_FILE_REGISTER_NB,
+                                        UT_FILE_REGISTER_TAB);
+
+    printf("modbus_write_file_record File_no 6 ");
+
+    if (rc == -1 && errno == EMBXILVAL) { /* This should fail */
+        printf("OK\n");
+    } else {
+        printf("FAILED (nb points %d) errno %d \n", rc, errno);
+        goto close;
+    }
 
     /** Run a few tests to challenge the server code **/
     if (test_server(ctx, use_backend) == -1) {
@@ -685,6 +793,7 @@ close:
     /* Free the memory */
     free(tab_rp_bits);
     free(tab_rp_registers);
+    free(tab_rp_file);
 
     /* Close the connection */
     modbus_close(ctx);
@@ -802,6 +911,7 @@ int test_server(modbus_t *ctx, int use_backend)
             goto close;
     }
 
+    /* Modbus write and read multiple registers */
     rc = send_crafted_request(ctx, MODBUS_FC_WRITE_AND_READ_REGISTERS,
                               rw_raw_req, RW_RAW_REQ_LEN,
                               MODBUS_MAX_WR_READ_REGISTERS + 1, 0,
@@ -809,6 +919,8 @@ int test_server(modbus_t *ctx, int use_backend)
     if (rc == -1)
         goto close;
 
+    /* Modbus write multiple registers with large number of values but a set a
+       small number of bytes in requests (not nb * 2 as usual). */
     rc = send_crafted_request(ctx, MODBUS_FC_WRITE_MULTIPLE_REGISTERS,
                               write_raw_req, WRITE_RAW_REQ_LEN,
                               MODBUS_MAX_WRITE_REGISTERS + 1, 6,
@@ -819,22 +931,6 @@ int test_server(modbus_t *ctx, int use_backend)
     rc = send_crafted_request(ctx, MODBUS_FC_WRITE_MULTIPLE_COILS,
                               write_raw_req, WRITE_RAW_REQ_LEN,
                               MODBUS_MAX_WRITE_BITS + 1, 6,
-                              backend_length, backend_offset);
-    if (rc == -1)
-        goto close;
-
-    /* Modbus write multiple registers with large number of values but a set a
-       small number of bytes in requests (not nb * 2 as usual). */
-    rc = send_crafted_request(ctx, MODBUS_FC_WRITE_MULTIPLE_REGISTERS,
-                              write_raw_req, WRITE_RAW_REQ_LEN,
-                              MODBUS_MAX_WRITE_REGISTERS, 6,
-                              backend_length, backend_offset);
-    if (rc == -1)
-        goto close;
-
-    rc = send_crafted_request(ctx, MODBUS_FC_WRITE_MULTIPLE_COILS,
-                              write_raw_req, WRITE_RAW_REQ_LEN,
-                              MODBUS_MAX_WRITE_BITS, 6,
                               backend_length, backend_offset);
     if (rc == -1)
         goto close;
