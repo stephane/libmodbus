@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     const char* localIpAddress;
     int port;
 
-     /* TCP */
+    /*Adding the ability to configure ip and port*/
     if (argc > 1)
         localIpAddress = argv[1];
     else
@@ -44,6 +44,7 @@ int main(int argc, char *argv[])
     else
         port = 1502;
 
+    /* TCP */
     if (argc > 3) {
         if (strcmp(argv[3], "tcp") == 0) {
             use_backend = TCP;
