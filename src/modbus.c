@@ -1123,10 +1123,9 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
 
                 if (read_dev_id_code == 4)
                     break;
-
-                ++object_id;
             }
-        }
+            ++object_id;
+       }
 
         rsp[idx_number_objects] = objects_processed;
         if (rsp[idx_more_follows]) {
@@ -2138,8 +2137,8 @@ int modbus_set_device_identification(modbus_t *ctx, uint8_t object_id,
                                                 void* data, size_t data_length)
 {
     if (ctx == NULL) {
-    errno = EINVAL;
-    return -1;
+        errno = EINVAL;
+        return -1;
     }
 
     return _device_identification_assign(&ctx->device_identification,
