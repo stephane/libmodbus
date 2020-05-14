@@ -61,6 +61,7 @@
 				FloatingPointModel="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
+				WarnAsError="true"
 				DebugInformationFormat="3"
 				CompileAs="1"
 			/>
@@ -152,6 +153,7 @@
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
+				WarnAsError="true"
 				DebugInformationFormat="3"
 				CompileAs="1"
 				DisableSpecificWarnings="4244;4267"
@@ -239,6 +241,7 @@
 				FloatingPointModel="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
+				WarnAsError="true"
 				DebugInformationFormat="0"
 				CompileAs="1"
 			/>
@@ -333,6 +336,7 @@
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
+				WarnAsError="true"
 				DebugInformationFormat="3"
 				CompileAs="1"
 				DisableSpecificWarnings="4244;4267"
