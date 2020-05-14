@@ -114,7 +114,6 @@ int _device_identification_assign(device_identification_t* dev_ids,
 
 void _device_identification_free(device_identification_t* dev_ids);
 
-void _identification_object_init(id_object_t* obj);
 int _identification_object_assign(id_object_t* obj,
                                   const void* data, size_t data_length);
 
