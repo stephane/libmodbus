@@ -318,13 +318,13 @@ int main(int argc, char *argv[])
 
 
     {
-       int i;
+        int i;
         int header_length;
         int object_count;
         int idx_start_objects;
         uint8_t* ptr;
         uint8_t rsp[MODBUS_RTU_MAX_ADU_LENGTH];
-        uint8_t req[] = { 0, MODBUS_FC_READ_DEVICE_IDENTIFICATION, 14, 1, 0 };
+        uint8_t req[] = { 0, MODBUS_FC_READ_DEVICE_IDENTIFICATION, 14, 2, 0 };
 
         printf("\n  read basic device identification\n");
 
@@ -340,7 +340,7 @@ int main(int argc, char *argv[])
         idx_start_objects = 14;
         ptr = rsp + idx_start_objects;
 
-        ASSERT_TRUE(object_count == 3, "Unexpected count of basic objects (%d != 3)", object_count);
+        ASSERT_TRUE(object_count == 5, "Unexpected count of basic objects (%d != 3)", object_count);
 
         for (i = 0; i < object_count; ++i)
         {
@@ -351,9 +351,6 @@ int main(int argc, char *argv[])
 
             ptr += object_length + 2;
         }
-
-
-
     }
 
 
