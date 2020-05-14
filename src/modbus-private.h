@@ -117,8 +117,6 @@ void _device_identification_free(device_identification_t* dev_ids);
 int _identification_object_assign(id_object_t* obj,
                                   const void* data, size_t data_length);
 
-void _identification_object_free(id_object_t* obj);
-
 struct _modbus {
     /* Slave address */
     int slave;
