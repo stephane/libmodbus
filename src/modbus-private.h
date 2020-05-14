@@ -96,7 +96,7 @@ typedef struct _identification_object {
 
 typedef struct _device_identification {
     id_object_t* objects;
-    int object_count;
+    size_t object_count;
 }device_identification_t;
 
 #define _DEVICE_ID_MAX 0xFF

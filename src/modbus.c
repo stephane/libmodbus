@@ -2061,7 +2061,6 @@ size_t strlcpy(char *dest, const char *src, size_t dest_size)
 
 void _device_identification_init(device_identification_t* dev_ids)
 {
-    int i;
     dev_ids->objects = (id_object_t*)malloc(
         sizeof(id_object_t) * _DEVICE_ID_MAX);
 
@@ -2097,12 +2096,12 @@ int _device_identification_assign(device_identification_t* dev_ids,
 
 void _device_identification_free(device_identification_t* dev_ids)
 {
-    int i;
+    size_t i;
     for (i = 0; i < dev_ids->object_count; ++i)
         _identification_object_free(dev_ids->objects + i);
 
     free(dev_ids->objects);
-
+    memset(dev_ids, 0, sizeof(device_identification_t));
     dev_ids->objects = NULL;
     dev_ids->object_count = 0;
 }
@@ -2130,8 +2129,7 @@ int _identification_object_assign(id_object_t* obj, void* data, size_t data_leng
 void _identification_object_free(id_object_t* obj)
 {
     free(obj->data);
-    obj->data = NULL;
-    obj->data_length = 0;
+    memset(obj, 0, sizeof(id_object_t));
 }
 
 int modbus_set_device_identification(modbus_t *ctx, uint8_t object_id,
