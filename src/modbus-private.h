@@ -103,6 +103,9 @@ typedef struct _device_identification {
 #define _DEVICE_ID_END_OF_BASIC 0x3
 #define _DEVICE_ID_END_OF_REGULAR 0x7f
 
+#define _MORE_FOLLOWS 0xFF
+#define _NO_MORE_FOLLOWS 0x00
+
 static const char* _VENDOR_NAME_DEFAULT = "VendorName";
 static const char* _PRODUCT_CODE_DEFAULT = "ProductCode";
 static const char* _MAJOR_MINOR_REVISION_DEFAULT = "0.0.0";

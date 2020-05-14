@@ -742,6 +742,14 @@ static int _build_read_device_identification_response(modbus_t* ctx, sft_t sft,
     uint8_t idx_number_objects;
     uint8_t objects_processed;
 
+    const int read_code_ge_basic =
+        read_dev_id_code >= MODBUS_DEVICE_IDENTIFICATION_BASIC;
+    const int read_code_ge_regular =
+        read_dev_id_code >= MODBUS_DEVICE_IDENTIFICATION_REGULAR;
+    const int read_code_ge_extended =
+        read_dev_id_code >= MODBUS_DEVICE_IDENTIFICATION_EXTENDED;
+
+
     rsp_length = ctx->backend->build_response_basis(&sft, rsp);
     rsp[rsp_length++] = mei_type;
     rsp[rsp_length++] = read_dev_id_code;
@@ -749,7 +757,7 @@ static int _build_read_device_identification_response(modbus_t* ctx, sft_t sft,
     rsp[rsp_length++] = read_dev_id_code; // TODO what to do? probably +0x80
 
     idx_more_follows = rsp_length++;
-    rsp[idx_more_follows] = 0;
+    rsp[idx_more_follows] = _NO_MORE_FOLLOWS;
     /* set more_follows:
         0x00 if single access (read_dev_id_code == 0x4) else
         0x00 if no more objects available else
@@ -768,9 +776,9 @@ static int _build_read_device_identification_response(modbus_t* ctx, sft_t sft,
 
     objects_processed = 0;
     // iterate over objects that need to be written to client
-    while ((object_id < _DEVICE_ID_END_OF_BASIC && read_dev_id_code >= 0x1) ||
-        (object_id < _DEVICE_ID_END_OF_REGULAR  && read_dev_id_code >= 0x2) ||
-        (object_id < _DEVICE_ID_MAX && read_dev_id_code >= 0x3))
+    while ((object_id < _DEVICE_ID_END_OF_BASIC && read_code_ge_basic) ||
+        (object_id < _DEVICE_ID_END_OF_REGULAR  && read_code_ge_regular) ||
+        (object_id < _DEVICE_ID_MAX && read_code_ge_extended))
     {
         id_object_t* obj = ctx->device_identification.objects + object_id;
 
@@ -780,19 +788,20 @@ static int _build_read_device_identification_response(modbus_t* ctx, sft_t sft,
             // do not fit in the message, set flag that more data follows
             // and stop until client asks for more data
             if ((rsp_length + obj->data_length + 2) > MAX_MESSAGE_LENGTH) {
-                rsp[idx_more_follows] = 0xff;
+                rsp[idx_more_follows] = _MORE_FOLLOWS;
                 rsp[idx_next_object_id] = object_id;
                 break;
             }
 
+            // write object to response
             rsp[rsp_length++] = object_id;
             rsp[rsp_length++] = obj->data_length;
             memcpy(rsp + rsp_length, obj->data, obj->data_length);
-            rsp_length += obj->data_length;
 
+            rsp_length += obj->data_length;
             ++objects_processed;
 
-            if (read_dev_id_code == 4)
+            if (read_dev_id_code == MODBUS_DEVICE_IDENTIFICATION_SPECIFIC)
                 break;
         }
         ++object_id;
@@ -1106,7 +1115,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         id_object_t* obj = ctx->device_identification.objects + object_id;
 
         if (obj->data == NULL || obj->data_length == 0) {
-            if (read_dev_id_code == 0x4){
+            if (read_dev_id_code == MODBUS_DEVICE_IDENTIFICATION_SPECIFIC){
                 // In case of an individual access: ReadDevId code 04, the
                 // ObjectId in the request gives the identification of the
                 // object to obtain, and if the Object Id doesn't match to any
@@ -1114,24 +1123,27 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
                 // exception code = 02 (Illegal data address). 
                 rsp_length = response_exception(
                     ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp, TRUE,
-                    "Modbus Object ID refers to value that is not set: 0x%0X\n", object_id);
+                    "Modbus Object ID refers to value that is not set: 0x%0X\n",
+                    object_id);
                 break;
             }
             // If the Object Id does not match any known object, the server
-            // responds as if object 0 were pointed out (restart at the beginning).
+            // responds as if object 0 were pointed out (restart at beginning).
             object_id = 0;
         }
 
         // read device id code out of range
-        if (read_dev_id_code == 0 || read_dev_id_code > 0x4) {
+        if (read_dev_id_code == 0 ||
+            read_dev_id_code > MODBUS_DEVICE_IDENTIFICATION_SPECIFIC) {
             rsp_length = response_exception(
                 ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, TRUE,
-                "Unknown Modbus Read Device ID Code: 0x%0X\n", read_dev_id_code);
+                "Unknown Modbus Read Device ID Code: 0x%0X\n",
+                read_dev_id_code);
             break;
         }
 
-        rsp_length = _build_read_device_identification_response(ctx, sft, rsp, rsp_length,
-            req[offset + 1], read_dev_id_code, object_id);
+        rsp_length = _build_read_device_identification_response(ctx, sft, rsp,
+            rsp_length, req[offset + 1], read_dev_id_code, object_id);
 
     }
         break;
@@ -1143,8 +1155,11 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
     }
 
     /* Suppress any responses when the request was a broadcast */
-    return (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU &&
-            slave == MODBUS_BROADCAST_ADDRESS) ? 0 : send_msg(ctx, rsp, rsp_length);
+    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU &&
+        slave == MODBUS_BROADCAST_ADDRESS)
+        return 0;
+
+    return send_msg(ctx, rsp, rsp_length);
 }
 
 int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
@@ -2075,11 +2090,11 @@ void _device_identification_init(device_identification_t* dev_ids)
     memset(dev_ids->objects, 0, sizeof(id_object_t) * dev_ids->object_count);
 
     _device_identification_assign(dev_ids, MODBUS_OBJECTID_VENDORNAME,
-        _VENDOR_NAME_DEFAULT, strlen(_VENDOR_NAME_DEFAULT)+1);
+        _VENDOR_NAME_DEFAULT, strlen(_VENDOR_NAME_DEFAULT) + 1);
     _device_identification_assign(dev_ids, MODBUS_OBJECTID_PRODUCTCODE,
-         _PRODUCT_CODE_DEFAULT, strlen(_PRODUCT_CODE_DEFAULT)+1);
+         _PRODUCT_CODE_DEFAULT, strlen(_PRODUCT_CODE_DEFAULT) + 1);
     _device_identification_assign(dev_ids, MODBUS_OBJECTID_VENDORNAME,
-         _MAJOR_MINOR_REVISION_DEFAULT, strlen(_MAJOR_MINOR_REVISION_DEFAULT)+1);
+         _MAJOR_MINOR_REVISION_DEFAULT, strlen(_MAJOR_MINOR_REVISION_DEFAULT) + 1);
 }
 
 int _device_identification_assign(device_identification_t* dev_ids,
@@ -2125,7 +2140,7 @@ int _identification_object_assign(id_object_t* obj, void* data, size_t data_leng
 }
 
 int modbus_set_device_identification(modbus_t *ctx, uint8_t object_id,
-                                                void* data, size_t data_length)
+                                     void* data, size_t data_length)
 {
     if (ctx == NULL) {
         errno = EINVAL;

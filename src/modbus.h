@@ -258,6 +258,12 @@ enum {
  */
 #define MODBUS_MAX_OBJECT_DATA_LENGTH (MODBUS_MAX_PDU_LENGTH - 7 - 7)
 
+enum {
+    MODBUS_DEVICE_IDENTIFICATION_BASIC = 0x01,
+    MODBUS_DEVICE_IDENTIFICATION_REGULAR = 0x02,
+    MODBUS_DEVICE_IDENTIFICATION_EXTENDED = 0x03,
+    MODBUS_DEVICE_IDENTIFICATION_SPECIFIC = 0x04
+};
 
 MODBUS_API int modbus_set_device_identification(modbus_t *ctx, uint8_t object_id,
                                                 const void* data, size_t data_length);
