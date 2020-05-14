@@ -103,6 +103,10 @@ typedef struct _device_identification {
 #define _DEVICE_ID_END_OF_BASIC 0x3
 #define _DEVICE_ID_END_OF_REGULAR 0x7f
 
+static const char* _VENDOR_NAME_DEFAULT = "VendorName";
+static const char* _PRODUCT_CODE_DEFAULT = "ProductCode";
+static const char* _MAJOR_MINOR_REVISION_DEFAULT = "0.0.0";
+
 void _device_identification_init(device_identification_t* dev_ids);
 int _device_identification_assign(device_identification_t* dev_ids,
                                   uint8_t object_id, const void* data,

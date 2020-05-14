@@ -2071,11 +2071,17 @@ void _device_identification_init(device_identification_t* dev_ids)
 
     for (i = 0; i < dev_ids->object_count; ++i)
         _identification_object_init(dev_ids->objects + i);
+
+    _device_identification(dev_ids, MODBUS_OBJECTID_VENDORNAME,
+        _VENDOR_NAME_DEFAULT, strlen(_VENDOR_NAME_DEFAULT)+1);
+    _device_identification(dev_ids, MODBUS_OBJECTID_PRODUCTCODE,
+         _PRODUCT_CODE_DEFAULT, strlen(_PRODUCT_CODE_DEFAULT)+1);
+    _device_identification(dev_ids, MODBUS_OBJECTID_VENDORNAME,
+         _MAJOR_MINOR_REVISION_DEFAULT, strlen(_MAJOR_MINOR_REVISION_DEFAULT)+1);
 }
 
 int _device_identification_assign(device_identification_t* dev_ids,
-                                  uint8_t object_id,
-                                  const void* data, size_t data_length)
+    uint8_t object_id, void* data, size_t data_length)
 {
     if (data == NULL || data_length == 0) {
         errno = EINVAL;
@@ -2104,8 +2110,7 @@ void _identification_object_init(id_object_t* obj)
     obj->data_length = 0;
 }
 
-int _identification_object_assign(id_object_t* obj,
-                                  const void* data, size_t data_length)
+int _identification_object_assign(id_object_t* obj, void* data, size_t data_length)
 {
     if (data_length > MODBUS_MAX_OBJECT_DATA_LENGTH) {
         errno = EINVAL;
@@ -2133,7 +2138,7 @@ void _identification_object_free(id_object_t* obj)
 }
 
 int modbus_set_device_identification(modbus_t *ctx, uint8_t object_id,
-                                     const void* data, size_t data_length)
+                                                void* data, size_t data_length)
 {
     if (ctx == NULL) {
         errno = EINVAL;
