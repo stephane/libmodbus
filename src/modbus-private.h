@@ -99,17 +99,21 @@ typedef struct _device_identification {
     int object_count;
 }device_identification_t;
 
-#define DEVICE_ID_MAX 0xFF
-#define DEVICE_ID_END_OF_BASIC 0x3
-#define DEVICE_ID_END_OF_REGULAR 0x7f
+#define _DEVICE_ID_MAX 0xFF
+#define _DEVICE_ID_END_OF_BASIC 0x3
+#define _DEVICE_ID_END_OF_REGULAR 0x7f
 
 void _device_identification_init(device_identification_t* dev_ids);
 int _device_identification_assign(device_identification_t* dev_ids,
-    uint8_t object_id, void* data, size_t data_length);
+                                  uint8_t object_id, const void* data,
+                                  size_t data_length);
+
 void _device_identification_free(device_identification_t* dev_ids);
 
 void _identification_object_init(id_object_t* obj);
-int _identification_object_assign(id_object_t* obj, void* data, size_t data_length);
+int _identification_object_assign(id_object_t* obj,
+                                  const void* data, size_t data_length);
+
 void _identification_object_free(id_object_t* obj);
 
 struct _modbus {

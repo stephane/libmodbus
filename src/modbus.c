@@ -1069,13 +1069,11 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
             break;
         }
 
-        // function = req[offset]
-
         rsp_length = ctx->backend->build_response_basis(&sft, rsp);
         rsp[rsp_length++] = mei_type;
         rsp[rsp_length++] = read_dev_id_code;
         
-        rsp[rsp_length++] = read_dev_id_code; // TODO what to do?
+        rsp[rsp_length++] = read_dev_id_code; // TODO what to do? probably +0x80
 
         idx_more_follows = rsp_length++;
         rsp[idx_more_follows] = 0;
@@ -1097,9 +1095,9 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
 
         objects_processed = 0;
         // iterate over objects that need to be written to client
-        while ((object_id < DEVICE_ID_END_OF_BASIC && read_dev_id_code >= 0x1) ||
-            (object_id < DEVICE_ID_END_OF_REGULAR  && read_dev_id_code >= 0x2) ||
-            (object_id < DEVICE_ID_MAX && read_dev_id_code >= 0x3))
+        while ((object_id < _DEVICE_ID_END_OF_BASIC && read_dev_id_code >= 0x1) ||
+            (object_id < _DEVICE_ID_END_OF_REGULAR  && read_dev_id_code >= 0x2) ||
+            (object_id < _DEVICE_ID_MAX && read_dev_id_code >= 0x3))
         {
             obj = ctx->device_identification.objects + object_id;
 
@@ -2062,28 +2060,30 @@ void _device_identification_init(device_identification_t* dev_ids)
     int i;
 
     dev_ids->objects = (id_object_t*)malloc(
-        sizeof(id_object_t) * DEVICE_ID_MAX);
+        sizeof(id_object_t) * _DEVICE_ID_MAX);
 
     if (dev_ids->objects == NULL) {
         errno = ENOMEM;
         return;
     }
 
-    dev_ids->object_count = DEVICE_ID_MAX;
+    dev_ids->object_count = _DEVICE_ID_MAX;
 
     for (i = 0; i < dev_ids->object_count; ++i)
         _identification_object_init(dev_ids->objects + i);
 }
 
 int _device_identification_assign(device_identification_t* dev_ids,
-    uint8_t object_id, void* data, size_t data_length)
+                                  uint8_t object_id,
+                                  const void* data, size_t data_length)
 {
     if (data == NULL || data_length == 0) {
         errno = EINVAL;
         return -1;
     }
 
-    return _identification_object_assign(dev_ids->objects + object_id, data, data_length);
+    return _identification_object_assign(dev_ids->objects + object_id,
+        data, data_length);
 }
 
 void _device_identification_free(device_identification_t* dev_ids)
@@ -2104,11 +2104,10 @@ void _identification_object_init(id_object_t* obj)
     obj->data_length = 0;
 }
 
-int _identification_object_assign(id_object_t* obj, void* data, size_t data_length)
+int _identification_object_assign(id_object_t* obj,
+                                  const void* data, size_t data_length)
 {
-    // TODO whats the real max length?
-    size_t MAX_LENGTH = 200;
-    if (data_length > MAX_LENGTH) {
+    if (data_length > MODBUS_MAX_OBJECT_DATA_LENGTH) {
         errno = EINVAL;
         return -1;
     }
@@ -2134,7 +2133,7 @@ void _identification_object_free(id_object_t* obj)
 }
 
 int modbus_set_device_identification(modbus_t *ctx, uint8_t object_id,
-                                                void* data, size_t data_length)
+                                     const void* data, size_t data_length)
 {
     if (ctx == NULL) {
         errno = EINVAL;

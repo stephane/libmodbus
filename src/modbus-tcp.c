@@ -816,6 +816,12 @@ modbus_t* modbus_new_tcp(const char *ip, int port)
     }
     _modbus_init_common(ctx);
 
+    if (ctx->device_identification.objects == NULL) {
+        modbus_free(ctx);
+        errno = ENOMEM;
+        return NULL;
+    }
+
     /* Could be changed after to reach a remote serial Modbus device */
     ctx->slave = MODBUS_TCP_SLAVE;
 
@@ -867,6 +873,12 @@ modbus_t* modbus_new_tcp_pi(const char *node, const char *service)
         return NULL;
     }
     _modbus_init_common(ctx);
+    if (ctx->device_identification.objects == NULL) {
+        modbus_free(ctx);
+        errno = ENOMEM;
+        return NULL;
+    }
+
 
     /* Could be changed after to reach a remote serial Modbus device */
     ctx->slave = MODBUS_TCP_SLAVE;

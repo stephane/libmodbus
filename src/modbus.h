@@ -250,8 +250,17 @@ enum {
     MODBUS_OBJECTID_USERAPPLICATIONNAME
 };
 
+
+/* Max size for device identification object data.
+ * Using MODBUS PDU as the base limitation of the size constraint (253 bytes) 
+ * and removing the TCP header length (7 bytes) as well as the size required for
+ * the Read Device Identification response (7 bytes).
+ */
+#define MODBUS_MAX_OBJECT_DATA_LENGTH (MODBUS_MAX_PDU_LENGTH - 7 - 7)
+
+
 MODBUS_API int modbus_set_device_identification(modbus_t *ctx, uint8_t object_id,
-                                                void* data, size_t data_length);
+                                                const void* data, size_t data_length);
 
 /**
  * UTILS FUNCTIONS
