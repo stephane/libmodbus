@@ -288,7 +288,7 @@ static uint8_t compute_meta_length_after_function(int function,
             break;
         case MODBUS_FC_READ_DEVICE_IDENTIFICATION:
             /* read next 6 bytes, last byte should be the number of objects in the message */
-            length = 6; // TODO
+            length = 6;
             break;
         default:
             length = 1;
@@ -754,7 +754,8 @@ static int _build_read_device_identification_response(modbus_t* ctx, sft_t sft,
     rsp[rsp_length++] = mei_type;
     rsp[rsp_length++] = read_dev_id_code;
 
-    rsp[rsp_length++] = read_dev_id_code; // TODO what to do? probably +0x80
+    // implementation should support direct and stream access to extended objects
+    rsp[rsp_length++] = MODBUS_CONFORMITY_LEVEL_EXTENDED_STREAM_AND_DIRECT;
 
     idx_more_follows = rsp_length++;
     rsp[idx_more_follows] = _NO_MORE_FOLLOWS;
