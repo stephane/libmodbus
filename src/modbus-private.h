@@ -91,12 +91,12 @@ typedef struct _modbus_backend {
 
 typedef struct _identification_object {
     void* data;
-    size_t data_length;
+    uint8_t data_length;
 }id_object_t;
 
 typedef struct _device_identification {
     id_object_t* objects;
-    size_t object_count;
+    uint8_t object_count;
 }device_identification_t;
 
 #define _DEVICE_ID_MAX 0xFF

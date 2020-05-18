@@ -2136,7 +2136,7 @@ int _identification_object_assign(id_object_t* obj, void* data, size_t data_leng
     }
 
     memcpy(obj->data, data, data_length);
-    obj->data_length = data_length;
+    obj->data_length = (uint8_t)data_length;
     return 0;
 }
 
