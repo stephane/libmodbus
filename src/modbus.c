@@ -2140,7 +2140,6 @@ modbus_t *modbus_mm_open(const char *device,
     modbus_t *ctx = NULL;
     ctx = modbus_new_rtu(device, baud, parity, data_bit, stop_bit);
     if (ctx == NULL) {
-        fprintf(stderr, "Unable to allocate libmodbus context\n");
         return NULL;
     }
     modbus_set_error_recovery(ctx, MODBUS_ERROR_RECOVERY_LINK | MODBUS_ERROR_RECOVERY_PROTOCOL);
