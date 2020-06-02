@@ -2092,6 +2092,11 @@ static int _modbus_rpi_pin_unexport_direction(int debug,int rpi_bcm_pin)
 
 int modbus_rpi_pin_export_direction(modbus_t *ctx)
 {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
   if(ctx->enable_rpi_rtu == 1)
   {
     if(_modbus_rpi_pin_export_direction(ctx->debug,ctx->rpi_bcm_pin_re) == 0)
@@ -2108,6 +2113,11 @@ int modbus_rpi_pin_export_direction(modbus_t *ctx)
 
 int modbus_rpi_pin_unexport_direction(modbus_t *ctx)
 {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
   if(ctx->enable_rpi_rtu == 1)
   {
     if(_modbus_rpi_pin_unexport_direction(ctx->debug,ctx->rpi_bcm_pin_re) == 0)
