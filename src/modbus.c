@@ -2092,6 +2092,11 @@ static int _modbus_rpi_pin_unexport_direction(int debug,int rpi_bcm_pin)
 
 int modbus_rpi_pin_export_direction(modbus_t *ctx)
 {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
   if(ctx->enable_rpi_rtu == 1)
   {
     if(_modbus_rpi_pin_export_direction(ctx->debug,ctx->rpi_bcm_pin_re) == 0)
@@ -2108,6 +2113,11 @@ int modbus_rpi_pin_export_direction(modbus_t *ctx)
 
 int modbus_rpi_pin_unexport_direction(modbus_t *ctx)
 {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
   if(ctx->enable_rpi_rtu == 1)
   {
     if(_modbus_rpi_pin_unexport_direction(ctx->debug,ctx->rpi_bcm_pin_re) == 0)
@@ -2120,4 +2130,46 @@ int modbus_rpi_pin_unexport_direction(modbus_t *ctx)
     }
   }
   return 0;
+}
+
+modbus_t *modbus_mm_open(const char *device,
+                         int baud, char parity, int data_bit, int stop_bit,
+                         uint8_t de, uint8_t re,
+                         uint32_t to_sec, uint32_t to_usec)
+{
+    modbus_t *ctx = NULL;
+    ctx = modbus_new_rtu(device, baud, parity, data_bit, stop_bit);
+    if (ctx == NULL) {
+        return NULL;
+    }
+    modbus_set_error_recovery(ctx, MODBUS_ERROR_RECOVERY_LINK | MODBUS_ERROR_RECOVERY_PROTOCOL);
+    modbus_set_response_timeout(ctx, to_sec, to_usec);
+    modbus_enable_rpi(ctx, TRUE);
+    modbus_configure_rpi_bcm_pins(ctx, de, re);
+    if (modbus_rpi_pin_export_direction(ctx)) {
+        modbus_mm_close(ctx);
+        errno = EINVAL;
+        return NULL;
+    }
+    if (modbus_connect(ctx) == -1)
+    {
+        int _errno = errno;
+        modbus_mm_close(ctx);
+        errno = _errno;
+        return NULL;
+    }
+    return ctx;
+}
+
+int modbus_mm_close(modbus_t *ctx)
+{
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+    /* Close the connection */
+    int ret = modbus_rpi_pin_unexport_direction(ctx);
+    modbus_close(ctx);
+    modbus_free(ctx);
+    return ret;
 }

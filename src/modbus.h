@@ -246,6 +246,14 @@ MODBUS_API int modbus_configure_rpi_bcm_pins(modbus_t *ctx, uint8_t de, uint8_t 
 MODBUS_API int modbus_rpi_pin_export_direction(modbus_t *ctx);
 MODBUS_API int modbus_rpi_pin_unexport_direction(modbus_t *ctx);
 
+// additional modbus API for MM
+
+MODBUS_API modbus_t *modbus_mm_open(const char *device,
+                                    int baud, char parity, int data_bit, int stop_bit,
+                                    uint8_t de, uint8_t re,
+                                    uint32_t to_sec, uint32_t to_usec);
+MODBUS_API int modbus_mm_close(modbus_t *ctx);
+
 
 /**
  * UTILS FUNCTIONS
