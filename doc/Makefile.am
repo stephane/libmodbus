@@ -60,6 +60,7 @@ TXT3 = \
         modbus_write_and_read_registers.txt \
         modbus_write_bits.txt \
         modbus_write_bit.txt \
+        modbus_write_file_record.txt \
         modbus_write_registers.txt \
         modbus_write_register.txt
 TXT7 = libmodbus.txt
