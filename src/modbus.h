@@ -68,6 +68,8 @@ MODBUS_BEGIN_DECLS
 #define MODBUS_FC_WRITE_MULTIPLE_COILS      0x0F
 #define MODBUS_FC_WRITE_MULTIPLE_REGISTERS  0x10
 #define MODBUS_FC_REPORT_SLAVE_ID           0x11
+#define MODBUS_FC_READ_FILE_RECORD          0x14
+#define MODBUS_FC_WRITE_FILE_RECORD         0x15
 #define MODBUS_FC_MASK_WRITE_REGISTER       0x16
 #define MODBUS_FC_WRITE_AND_READ_REGISTERS  0x17
 
@@ -80,6 +82,11 @@ MODBUS_BEGIN_DECLS
  */
 #define MODBUS_MAX_READ_BITS              2000
 #define MODBUS_MAX_WRITE_BITS             1968
+
+/* Modbus_Application_Protocol_V1_1b.pdf (chapter 6 section 14 page 33)
+ * Sub-Req. x, Record Number (2 bytes): 1 to 9999 (0x270F)
+ */
+#define MODBUS_MAX_FILE_RECORD_NUMBER     9999
 
 /* Modbus_Application_Protocol_V1_1b.pdf (chapter 6 section 3 page 15)
  * Quantity of Registers to read (2 bytes): 1 to 125 (0x7D)
@@ -211,6 +218,8 @@ MODBUS_API int modbus_write_bit(modbus_t *ctx, int coil_addr, int status);
 MODBUS_API int modbus_write_register(modbus_t *ctx, int reg_addr, const uint16_t value);
 MODBUS_API int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *data);
 MODBUS_API int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *data);
+MODBUS_API int modbus_write_file_record(modbus_t *ctx, int addr, int sub_addr, int nb, const uint16_t *src);
+MODBUS_API int modbus_read_file_record(modbus_t *ctx, int addr, int sub_addr, int nb, uint16_t *dest);
 MODBUS_API int modbus_mask_write_register(modbus_t *ctx, int addr, uint16_t and_mask, uint16_t or_mask);
 MODBUS_API int modbus_write_and_read_registers(modbus_t *ctx, int write_addr, int write_nb,
                                                const uint16_t *src, int read_addr, int read_nb,
