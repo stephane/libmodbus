@@ -1278,7 +1278,7 @@ int modbus_read_file_record(modbus_t *ctx, int addr, int sub_addr, int nb, uint1
         errno = EINVAL;
         return -1;
     }
-
+	// check if record number is within range
     if (sub_addr > MODBUS_MAX_FILE_RECORD_NUMBER) {
         if (ctx->debug) {
             fprintf(stderr,
@@ -1317,7 +1317,8 @@ int modbus_read_file_record(modbus_t *ctx, int addr, int sub_addr, int nb, uint1
             return -1;
 
         offset = ctx->backend->header_length;
-
+        // if all went well, copy returned data to caller's pointer, converting
+        // bytes into 16-bit words.
         for (i = 0; i < rc; i++) {
 
             dest[i] = (rsp[offset + 4 + (i << 1)] << 8) |
@@ -1505,7 +1506,7 @@ int modbus_write_file_record(modbus_t *ctx, int addr, int sub_addr, int nb, cons
         errno = EINVAL;
         return -1;
     }
-
+    // check record number is valid
     if (sub_addr > MODBUS_MAX_FILE_RECORD_NUMBER) {
         if (ctx->debug) {
             fprintf(stderr,
@@ -1530,7 +1531,7 @@ int modbus_write_file_record(modbus_t *ctx, int addr, int sub_addr, int nb, cons
     req[req_length++] = sub_addr & 0x00ff;
     req[req_length++] = nb >> 8;
     req[req_length++] = nb & 0x00ff;
-
+	// pack supplied data into request
     for (i = 0; i < nb; i++) {
         req[req_length++] = src[i] >> 8;
         req[req_length++] = src[i] & 0x00FF;
