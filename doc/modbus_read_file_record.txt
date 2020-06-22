@@ -1,0 +1,42 @@
+modbus_read_file_record(3)
+==========================
+
+
+NAME
+----
+modbus_read_file_record - Read values from a file register
+
+
+SYNOPSIS
+--------
+*int modbus_read_file_record(modbus_t *'ctx', int 'addr', int 'sub_addr', int 'nb', uint16_t '*dest');*
+
+
+DESCRIPTION
+-----------
+The *modbus_read_file_record()* function reads _nb_ values from file
+register _addr_, starting from position _sub_addr_ in the file register.
+
+A file register is an array of values.
+A modbus device may have up to 65535 file registers, addressed 1 to 65535
+decimal.
+Each file register contains 10000 values, addressed 0000 to 9999 decimal.
+
+This function uses the Modbus function code 0x14 (Read File Record).
+
+
+RETURN VALUE
+------------
+The function shall return the number of records read (i.e. the value of _nb_) if successful.
+Otherwise it shall return -1 and set errno.
+
+
+SEE ALSO
+--------
+linkmb:modbus_read_register[3]
+linkmb:modbus_write_file_register[3]
+
+
+AUTHORS
+-------
+The libmodbus file register support was added by Richard Ash at EA Technology.

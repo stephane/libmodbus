@@ -12,7 +12,7 @@ TXT3 = \
         modbus_get_float_dcba.txt \
         modbus_get_header_length.txt \
         modbus_get_response_timeout.txt \
-	modbus_get_slave.txt \
+        modbus_get_slave.txt \
         modbus_get_socket.txt \
         modbus_mapping_free.txt \
         modbus_mapping_new.txt \
@@ -22,6 +22,7 @@ TXT3 = \
         modbus_new_tcp_pi.txt \
         modbus_new_tcp.txt \
         modbus_read_bits.txt \
+        modbus_read_file_record.txt \
         modbus_read_input_bits.txt \
         modbus_read_input_registers.txt \
         modbus_read_registers.txt \
