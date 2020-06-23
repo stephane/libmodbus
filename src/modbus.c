@@ -1026,7 +1026,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         uint16_t record_addr = (req[offset + 5] << 8) + req[offset + 6];
         uint16_t record_len = (req[offset + 7] << 8) + req[offset + 8];
 
-        if (address < 1 || mapping_address < 0 || mapping_address > mb_mapping->nb_files) {
+        if (address < 1 || mapping_address < 0 || mapping_address >= mb_mapping->nb_files) {
             rsp_length = response_exception(
                 ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp, FALSE,
                 "Illegal file number %d in read_file_record\n", address);
@@ -1034,7 +1034,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
                 /* index of last record (zero-based) is beyond end of file */
                 (record_addr + record_len) > mb_mapping->files[mapping_address].nb_records) {
             rsp_length = response_exception(
-                ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, TRUE,
+                ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp, TRUE,
                 "Illegal request for record %d, len %d (in file len %d) in read_file_record\n",
                 record_addr, record_len, mb_mapping->files[mapping_address].nb_records);
         } else {
@@ -1057,7 +1057,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         uint16_t record_addr = (req[offset + 5] << 8) + req[offset + 6];
         uint16_t record_len = (req[offset + 7] << 8) + req[offset + 8];
 
-        if (address < 1 || mapping_address < 0 || mapping_address > mb_mapping->nb_files) {
+        if (address < 1 || mapping_address < 0 || mapping_address >= mb_mapping->nb_files) {
             rsp_length = response_exception(
                 ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp, FALSE,
                 "Illegal file number %d in write_file_record\n", address);
@@ -1066,7 +1066,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
                 /* index of last record (zero-based) is beyond end of file */
                 (record_addr + record_len) > mb_mapping->files[mapping_address].nb_records) {
             rsp_length = response_exception(
-                ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, TRUE,
+                ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp, TRUE,
                 "Illegal record %d, len 0x%0X (max %d) in write_file_record\n",
                 record_addr, record_len, mb_mapping->files[mapping_address].nb_records);
         } else {
