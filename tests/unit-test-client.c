@@ -352,6 +352,63 @@ int main(int argc, char *argv[])
         }
         free(tab_file_records);
     }
+    printf("Intentionally making bad requests to test server error handling ...\n");
+    /* Write three records to file 1 on server, starting at record 16 (beyond file end) */
+    errno = 0;
+    rc = modbus_write_file_record(ctx, UT_FILE, UT_RECORDS_NB + 1,
+                                  UT_REGISTERS_NB, UT_REGISTERS_TAB);
+    printf("1/4 modbus_write_file_record: rc %d, err %s, ", rc, modbus_strerror(errno));
+    ASSERT_TRUE(((rc == -1) && (errno == EMBXILADD)), "FAILED (incorrect error handling)\n");
+    /* Write three records to file 1 on server, starting at record 14
+     * (before file end, but write goes over) */
+    errno = 0;
+    rc = modbus_write_file_record(ctx, UT_FILE, UT_RECORDS_NB - 1,
+                                  UT_REGISTERS_NB, UT_REGISTERS_TAB);
+    printf("2/4 modbus_write_file_record: rc %d, err %s, ", rc, modbus_strerror(errno));
+    ASSERT_TRUE(((rc == -1) && (errno == EMBXILADD)), "FAILED (incorrect error handling)\n");
+    /* Write three records to file 3 on server (which does not exist),
+     * starting at record 1 (which is OK) */
+    errno = 0;
+    rc = modbus_write_file_record(ctx, UT_FILE + 2, 1,
+                                  UT_REGISTERS_NB, UT_REGISTERS_TAB);
+    printf("3/4 modbus_write_file_record: rc %d, err %s, ", rc, modbus_strerror(errno));
+    ASSERT_TRUE(((rc == -1) && (errno == EMBXILADD)), "FAILED (incorrect error handling)\n");
+    /* Write three records to file 0 on server (which is not allowed),
+     * starting at record 1 (which is OK) */
+    errno = 0;
+    rc = modbus_write_file_record(ctx, 0, 1,
+                                  UT_REGISTERS_NB, UT_REGISTERS_TAB);
+    printf("4/4 modbus_write_file_record: rc %d, err %s, ", rc, modbus_strerror(errno));
+    ASSERT_TRUE(((rc == -1) && (errno == EMBXILADD)), "FAILED (incorrect error handling)\n");
+
+    tab_file_records = (uint16_t *) malloc(UT_REGISTERS_NB * sizeof(uint16_t));
+    /* Read three records from file 1 on server, starting at record 16 (beyond file end) */
+    errno = 0;
+    rc = modbus_read_file_record(ctx, UT_FILE, UT_RECORDS_NB + 1,
+                                  UT_REGISTERS_NB, tab_file_records);
+    printf("1/4 modbus_read_file_record: rc %d, err %s, ", rc, modbus_strerror(errno));
+    ASSERT_TRUE(((rc == -1) && (errno == EMBXILADD)), "FAILED (incorrect error handling)\n");
+    /* Read three records to file 1 on server, starting at record 14
+     * (before file end, but read goes over) */
+    errno = 0;
+    rc = modbus_read_file_record(ctx, UT_FILE, UT_RECORDS_NB - 1,
+                                  UT_REGISTERS_NB, tab_file_records);
+    printf("2/4 modbus_read_file_record: rc %d, err %s, ", rc, modbus_strerror(errno));
+    ASSERT_TRUE(((rc == -1) && (errno == EMBXILADD)), "FAILED (incorrect error handling)\n");
+    /* Read three records to file 3 on server (which does not exist),
+     * starting at record 1 (which is OK) */
+    errno = 0;
+    rc = modbus_read_file_record(ctx, UT_FILE + 2, 1,
+                                  UT_REGISTERS_NB, tab_file_records);
+    printf("3/4 modbus_read_file_record: rc %d, err %s, ", rc, modbus_strerror(errno));
+    ASSERT_TRUE(((rc == -1) && (errno == EMBXILADD)), "FAILED (incorrect error handling)\n");
+    /* Write three records to file 0 on server (which is not allowed),
+     * starting at record 1 (which is OK) */
+    errno = 0;
+    rc = modbus_write_file_record(ctx, 0, 1,
+                                  UT_REGISTERS_NB, tab_file_records);
+    printf("4/4 modbus_read_file_record: rc %d, err %s, ", rc, modbus_strerror(errno));
+    ASSERT_TRUE(((rc == -1) && (errno == EMBXILADD)), "FAILED (incorrect error handling)\n");
 
     /* MASKS */
     printf("1/1 Write mask: ");
