@@ -4,39 +4,48 @@ modbus_read_file_record(3)
 
 NAME
 ----
-modbus_read_file_record - read many input registers
+modbus_read_file_record - Read records from a file
 
 
 SYNOPSIS
 --------
-*int modbus_read_file_record(modbus_t *'ctx', int 'addr', int 'sub_addr', int 'nb', uint16_t *'dest');*
+*int modbus_read_file_record(modbus_t *'ctx', int 'addr', int 'sub_addr', int 'nb', uint16_t * 'dest');*
 
 
 DESCRIPTION
 -----------
-The *modbus_read_registers()* function shall read the content of the _nb_
-registers stored in a record at _sub_addr_ in a file at _addr_ of the remote device.
-The result of reading is stored in _dest_ array as word values (16 bits).
+The *modbus_read_file_record()* function reads _nb_ records from file
+number _addr_, starting from record position _sub_addr_ in the file.
+The result of reading is stored in _dest_ array as word values (16 bits). You
+must take care to allocate enough memory to store the results in _dest_
+- (at least _nb_ * sizeof(uint16_t)).
 
-You must take care to allocate enough memory to store the results in _dest_
-(at least _nb_ * sizeof(uint16_t)).
+A file is an array of records, each of 16 bits.
 
-The function uses the Modbus function code 0x14 (read file record).
+* A modbus device may have up to 65535 files, addressed 1 to 65535 decimal.
+* Each file contains 10000 records, addressed 0000 to 9999 decimal.
+
+A maximum of 124 records (_nb_) may be retrived in a single request.
+
+This function uses the Modbus function code 0x14 (Read File Record). Note that
+althrough the ModBus Specification allows for multiple non-contiguous reads in
+the same file to be made in a single request, this function only supports a
+single contiguous read request.
 
 
 RETURN VALUE
 ------------
-The function shall return the number of read registers if
-successful. Otherwise it shall return -1 and set errno.
+The function shall return the number of records read (i.e. the value of _nb_) if successful.
+Otherwise it shall return -1 and set errno.
 
 
 SEE ALSO
 --------
-linkmb:modbus_write_file_record[3]
+linkmb:modbus_read_register[3]
+linkmb:modbus_write_file_register[3]
 
 
 AUTHORS
 -------
-Kamil Wcislo <mek.xgt@gmail.com>
-The libmodbus documentation was written by Stéphane Raimbault
-<stephane.raimbault@gmail.com>
+File record support by Kamil Wcislo <mek.xgt@gmail.com>, documentation
+extended by Richard Ash at EA Technology.
