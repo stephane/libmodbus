@@ -276,16 +276,37 @@ int main(int argc, char *argv[])
 
     /** FILE OPERATIONS **/
     printf("\nTEST FILE OPERATIONS\n");
+    /* Read the whole of the all the files on server to prove they are empty */
+    for (value = UT_FILE_ADDRESS; value < (UT_FILE_ADDRESS + UT_FILE_NB); value++) {
+        tab_file_records = (uint16_t *) malloc(UT_RECORDS_NB * sizeof(uint16_t));
+        memset(tab_file_records, 0, UT_RECORDS_NB * sizeof(uint16_t));
+
+        rc = modbus_read_file_record(ctx, value, 0,
+                                     UT_RECORDS_NB, tab_file_records);
+        printf("%d/6 modbus_read_file_record: ", value);
+        ASSERT_TRUE(rc == UT_RECORDS_NB, "FAILED (nb points %d)\n", rc);
+
+        for (i=0; i < UT_RECORDS_NB; i++) {
+            ASSERT_TRUE(tab_file_records[i] == 0x0,
+                        "%d: FAILED (%0X != %0X)\n",
+                        i, tab_file_records[i], 0x0);
+        }
+        free(tab_file_records);
+    }
+
     /* Write three records to file 1 on server, starting at record 2 */
     rc = modbus_write_file_record(ctx, UT_FILE, UT_RECORD_ADDRESS,
                                   UT_REGISTERS_NB, UT_REGISTERS_TAB);
-    printf("1/2 modbus_write_file_record: ");
+    printf("3/6 modbus_write_file_record: ");
     ASSERT_TRUE(rc == UT_REGISTERS_NB, "FAILED (nb points %d)\n", rc);
     /* Write four more records to file 1 on server, starting at record 5,
      * i.e. after previous records */
     nb_points = UT_RECORD_ADDRESS + UT_REGISTERS_NB;
     rc = modbus_write_file_record(ctx, UT_FILE, nb_points,
                                   UT_FILE_RECORD_NB, UT_FILE_TAB);
+    printf("4/6 modbus_write_file_record: ");
+    ASSERT_TRUE(rc == UT_FILE_RECORD_NB, "FAILED (nb points %d)\n", rc);
+
     /* Read back all 7 records and make sure the values are correct.
      * Allocate and initialize the memory to store the registers as we need more.
      */
@@ -296,11 +317,10 @@ int main(int argc, char *argv[])
 
     rc = modbus_read_file_record(ctx, UT_FILE, UT_RECORD_ADDRESS,
                                  nb_points, tab_file_records);
-    printf("2/2 modbus_read_file_record: ");
+    printf("5/6 modbus_read_file_record: ");
     ASSERT_TRUE(rc == nb_points, "FAILED (nb points %d)\n", rc);
 
     for (i=0; i < nb_points; i++) {
-        printf("%d: 0x%0X\n", i, tab_file_records[i]);
         if (i < UT_REGISTERS_NB) { /* first three in UT_REGISTERS_TAB */
             ASSERT_TRUE(tab_file_records[i] == UT_REGISTERS_TAB[i],
                     "%d: FAILED (%0X != %0X)\n",
@@ -312,6 +332,25 @@ int main(int argc, char *argv[])
                     "%d: FAILED (%0X != %0X)\n",
                     i, tab_file_records[i], UT_FILE_TAB[rc]);
         }
+    }
+    free(tab_file_records);
+
+    /* Read the whole of the all the files except the first to prove they are still empty */
+    for (value = UT_FILE_ADDRESS + 1; value < (UT_FILE_ADDRESS + UT_FILE_NB); value++) {
+        tab_file_records = (uint16_t *) malloc(UT_RECORDS_NB * sizeof(uint16_t));
+        memset(tab_file_records, 0, UT_RECORDS_NB * sizeof(uint16_t));
+
+        rc = modbus_read_file_record(ctx, value, 0,
+                                     UT_RECORDS_NB, tab_file_records);
+        printf("%d/6 modbus_read_file_record: ", value + 4);
+        ASSERT_TRUE(rc == UT_RECORDS_NB, "FAILED (nb points %d)\n", rc);
+
+        for (i=0; i < UT_RECORDS_NB; i++) {
+            ASSERT_TRUE(tab_file_records[i] == 0x0,
+                        "%d: FAILED (%0X != %0X)\n",
+                        i, tab_file_records[i], 0x0);
+        }
+        free(tab_file_records);
     }
 
     /* MASKS */

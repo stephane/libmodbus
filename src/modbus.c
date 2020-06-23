@@ -1035,7 +1035,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
                 (record_addr + record_len) > mb_mapping->files[mapping_address].nb_records) {
             rsp_length = response_exception(
                 ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, TRUE,
-                "Illegal record %d, len 0x%0X (max %d) in read_file_record\n",
+                "Illegal request for record %d, len %d (in file len %d) in read_file_record\n",
                 record_addr, record_len, mb_mapping->files[mapping_address].nb_records);
         } else {
             int i;
@@ -2119,7 +2119,10 @@ modbus_mapping_t* modbus_mapping_new(int nb_bits, int nb_input_bits,
 {
     return modbus_mapping_new_start_address(
         0, nb_bits, 0, nb_input_bits, 0, nb_registers, 0, nb_input_registers,
-        0, nb_files, nb_records);
+        /* Files are numbered from 1 in the specification, so 1 is the lowest
+         * start allowed.
+         */
+        1, nb_files, nb_records);
 }
 
 void _modbus_free_files(modbus_file_t *files, int nb_files)
