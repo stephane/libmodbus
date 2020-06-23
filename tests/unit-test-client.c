@@ -49,6 +49,7 @@ int main(int argc, char *argv[])
     const int NB_REPORT_SLAVE_ID = 10;
     uint8_t *tab_rp_bits = NULL;
     uint16_t *tab_rp_registers = NULL;
+    uint16_t *tab_file_records = NULL;  /* table to hold file records */
     uint16_t *tab_rp_registers_bad = NULL;
     modbus_t *ctx = NULL;
     int i;
@@ -275,20 +276,42 @@ int main(int argc, char *argv[])
 
     /** FILE OPERATIONS **/
     printf("\nTEST FILE OPERATIONS\n");
-    rc = modbus_write_file_record(ctx, 0x1, UT_RECORD_ADDRESS,
+    /* Write three records to file 1 on server, starting at record 2 */
+    rc = modbus_write_file_record(ctx, UT_FILE, UT_RECORD_ADDRESS,
                                   UT_REGISTERS_NB, UT_REGISTERS_TAB);
     printf("1/2 modbus_write_file_record: ");
     ASSERT_TRUE(rc == UT_REGISTERS_NB, "FAILED (nb points %d)\n", rc);
+    /* Write four more records to file 1 on server, starting at record 5,
+     * i.e. after previous records */
+    nb_points = UT_RECORD_ADDRESS + UT_REGISTERS_NB;
+    rc = modbus_write_file_record(ctx, UT_FILE, nb_points,
+                                  UT_FILE_RECORD_NB, UT_FILE_TAB);
+    /* Read back all 7 records and make sure the values are correct.
+     * Allocate and initialize the memory to store the registers as we need more.
+     */
+    nb_points = UT_REGISTERS_NB + UT_FILE_RECORD_NB;
 
-    rc = modbus_read_file_record(ctx, 0x1, UT_RECORD_ADDRESS,
-                                 UT_REGISTERS_NB, tab_rp_registers);
+    tab_file_records = (uint16_t *) malloc(nb_points * sizeof(uint16_t));
+    memset(tab_file_records, 0, nb_points * sizeof(uint16_t));
+
+    rc = modbus_read_file_record(ctx, UT_FILE, UT_RECORD_ADDRESS,
+                                 nb_points, tab_file_records);
     printf("2/2 modbus_read_file_record: ");
-    ASSERT_TRUE(rc == UT_REGISTERS_NB, "FAILED (nb points %d)\n", rc);
+    ASSERT_TRUE(rc == nb_points, "FAILED (nb points %d)\n", rc);
 
-    for (i=0; i < UT_REGISTERS_NB; i++) {
-        ASSERT_TRUE(tab_rp_registers[i] == UT_REGISTERS_TAB[i],
+    for (i=0; i < nb_points; i++) {
+        printf("%d: 0x%0X\n", i, tab_file_records[i]);
+        if (i < UT_REGISTERS_NB) { /* first three in UT_REGISTERS_TAB */
+            ASSERT_TRUE(tab_file_records[i] == UT_REGISTERS_TAB[i],
                     "%d: FAILED (%0X != %0X)\n",
-                    i, tab_rp_registers[i], UT_REGISTERS_TAB[i]);
+                    i, tab_file_records[i], UT_REGISTERS_TAB[i]);
+        } else { /* Rest in UT_FILE_TAB */
+            /* calculate the index in this table */
+            rc = i - UT_REGISTERS_NB;
+            ASSERT_TRUE(tab_file_records[i] == UT_FILE_TAB[rc],
+                    "%d: FAILED (%0X != %0X)\n",
+                    i, tab_file_records[i], UT_FILE_TAB[rc]);
+        }
     }
 
     /* MASKS */

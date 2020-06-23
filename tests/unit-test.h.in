@@ -37,6 +37,9 @@ const uint16_t UT_REGISTERS_ADDRESS = 0x160;
 const uint16_t UT_REGISTERS_NB = 0x3;
 const uint16_t UT_REGISTERS_NB_MAX = 0x20;
 const uint16_t UT_REGISTERS_TAB[] = { 0x022B, 0x0001, 0x0064 };
+const uint16_t UT_FILE_TAB[] = { 0x021B, 0x0002, 0x0063, 0x0042 };
+const uint16_t UT_FILE_RECORD_NB = 0x4;
+const uint16_t UT_FILE = 0x1;
 
 /* Raise a manual exception when this address is used for the first byte */
 const uint16_t UT_REGISTERS_ADDRESS_SPECIAL = 0x170;
@@ -56,9 +59,9 @@ const uint16_t UT_INPUT_REGISTERS_ADDRESS = 0x108;
 const uint16_t UT_INPUT_REGISTERS_NB = 0x1;
 const uint16_t UT_INPUT_REGISTERS_TAB[] = { 0x000A };
 
-const uint16_t UT_FILE_ADDRESS = 0x0;
-const uint16_t UT_FILE_NB = 0x2;
-const uint16_t UT_RECORDS_NB = 0x3;
+const uint16_t UT_FILE_ADDRESS = 0x0;   /* Number of first file on server */
+const uint16_t UT_FILE_NB = 0x2;        /* How many files available on server */
+const uint16_t UT_RECORDS_NB = 0xF;     /* How many records per file */
 const uint16_t UT_RECORDS_SIZE = 0x20;
 const uint16_t UT_RECORD_ADDRESS = 0x2;
 
