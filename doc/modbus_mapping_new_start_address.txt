@@ -14,7 +14,7 @@ SYNOPSIS
                                                     int 'start_registers', int 'nb_registers',
                                                     int 'start_input_registers', int 'nb_input_registers',
                                                     int 'start_files', int 'nb_files',
-                                                    int 'nb_records', int 'record_size');*
+                                                    int 'nb_records');
 
 
 DESCRIPTION
@@ -65,7 +65,7 @@ mb_mapping = modbus_mapping_new_start_address(BITS_ADDRESS, BITS_NB,
                                 REGISTERS_ADDRESS, REGISTERS_NB,
                                 INPUT_REGISTERS_ADDRESS, INPUT_REGISTERS_NB,
                                 FILES_ADDRESS, FILES_NB,
-                                RECORDS_NB, RECORDS_SIZE);
+                                RECORDS_NB);
 if (mb_mapping == NULL) {
     fprintf(stderr, "Failed to allocate the mapping: %s\n",
             modbus_strerror(errno));
