@@ -162,9 +162,8 @@ extern const unsigned int libmodbus_version_micro;
 typedef struct _modbus modbus_t;
 
 typedef struct _modbus_file_t {
-    int nb_records;
-    int record_size;
-    uint16_t **records;
+    int nb_records;     /* Maximum number of records in file */
+    uint16_t *records;  /* Pointer to memory for record storage */
 } modbus_file_t;
 
 typedef struct _modbus_mapping_t {
@@ -241,11 +240,11 @@ MODBUS_API modbus_mapping_t* modbus_mapping_new_start_address(
     unsigned int start_registers, unsigned int nb_registers,
     unsigned int start_input_registers, unsigned int nb_input_registers,
     unsigned int start_files, unsigned int nb_files,
-    unsigned int nb_records, unsigned int record_size);
+    unsigned int nb_records);
 
 MODBUS_API modbus_mapping_t* modbus_mapping_new(int nb_bits, int nb_input_bits,
                                                 int nb_registers, int nb_input_registers,
-                                                int nb_files, int nb_records, int record_size);
+                                                int nb_files, int nb_records);
 MODBUS_API void modbus_mapping_free(modbus_mapping_t *mb_mapping);
 
 MODBUS_API int modbus_send_raw_request(modbus_t *ctx, const uint8_t *raw_req, int raw_req_length);

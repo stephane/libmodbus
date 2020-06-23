@@ -77,7 +77,7 @@ int main(int argc, char*argv[])
         UT_REGISTERS_ADDRESS, UT_REGISTERS_NB_MAX,
         UT_INPUT_REGISTERS_ADDRESS, UT_INPUT_REGISTERS_NB,
         /* 2 files, each 10 records */
-        UT_FILE_ADDRESS, UT_FILE_NB, UT_RECORDS_NB, UT_RECORDS_SIZE);
+        UT_FILE_ADDRESS, UT_FILE_NB, UT_RECORDS_NB);
     if (mb_mapping == NULL) {
         fprintf(stderr, "Failed to allocate the mapping: %s\n",
                 modbus_strerror(errno));
