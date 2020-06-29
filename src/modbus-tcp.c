@@ -17,33 +17,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#ifndef _MSC_VER
-#include <unistd.h>
-#endif
-#include <signal.h>
-#include <sys/types.h>
-
-#if defined(_WIN32)
-/* Already set in modbus-tcp.h but it seems order matters in VS2005 */
-# include <winsock2.h>
-# include <ws2tcpip.h>
-# define SHUT_RDWR 2
-# define close closesocket
-#else
-# include <sys/socket.h>
-# include <sys/ioctl.h>
-
-#if defined(__OpenBSD__) || (defined(__FreeBSD__) && __FreeBSD__ < 5)
-# define OS_BSD
-# include <netinet/in_systm.h>
-#endif
-
-# include <netinet/in.h>
-# include <netinet/ip.h>
-# include <netinet/tcp.h>
-# include <arpa/inet.h>
-# include <netdb.h>
-#endif
+#include <net/socket.h>
+//#include <signal.h>
+//#include <sys/types.h>
+#include <kernel.h>
 
 #if !defined(MSG_NOSIGNAL)
 #define MSG_NOSIGNAL 0
@@ -57,22 +34,6 @@
 
 #include "modbus-tcp.h"
 #include "modbus-tcp-private.h"
-
-#ifdef OS_WIN32
-static int _modbus_tcp_init_win32(void)
-{
-    /* Initialise Windows Socket API */
-    WSADATA wsaData;
-
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        fprintf(stderr, "WSAStartup() returned error code %d\n",
-                (unsigned int)GetLastError());
-        errno = EIO;
-        return -1;
-    }
-    return 0;
-}
-#endif
 
 static int _modbus_set_slave(modbus_t *ctx, int slave)
 {
@@ -247,12 +208,14 @@ static int _modbus_tcp_set_ipv4_options(int s)
      * necessary to workaround that problem.
      **/
     /* Set the IP low delay option */
-    option = IPTOS_LOWDELAY;
+    /* Alternative required */
+    /* option = IPTOS_LOWDELAY;
     rc = setsockopt(s, IPPROTO_IP, IP_TOS,
                     (const void *)&option, sizeof(int));
     if (rc == -1) {
         return -1;
-    }
+    }*/
+
 #endif
 
     return 0;
@@ -276,12 +239,12 @@ static int _connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen,
         fd_set wset;
         int optval;
         socklen_t optlen = sizeof(optval);
-        struct timeval tv = *ro_tv;
+        //struct timeval tv = *ro_tv;
 
         /* Wait to be available in writing */
         FD_ZERO(&wset);
         FD_SET(sockfd, &wset);
-        rc = select(sockfd + 1, NULL, &wset, NULL, &tv);
+        rc = select(sockfd + 1, NULL, &wset, NULL, NULL);
         if (rc <= 0) {
             /* Timeout or fail */
             return -1;
@@ -340,7 +303,9 @@ static int _modbus_tcp_connect(modbus_t *ctx)
 
     addr.sin_family = AF_INET;
     addr.sin_port = htons(ctx_tcp->port);
-    addr.sin_addr.s_addr = inet_addr(ctx_tcp->ip);
+    //addr.sin_addr.s_addr = inet_addr(ctx_tcp->ip);
+    inet_pton(AF_INET, ctx_tcp->ip, &addr.sin_addr);
+
     rc = _connect(ctx->s, (struct sockaddr *)&addr, sizeof(addr), &ctx->response_timeout);
     if (rc == -1) {
         close(ctx->s);
@@ -525,7 +490,8 @@ int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
         addr.sin_addr.s_addr = htonl(INADDR_ANY);
     } else {
         /* Listen only specified IP address */
-        addr.sin_addr.s_addr = inet_addr(ctx_tcp->ip);
+        //addr.sin_addr.s_addr = inet_addr(ctx_tcp->ip);
+	inet_pton(AF_INET, ctx_tcp->ip, &addr.sin_addr);
     }
     if (bind(new_s, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
         close(new_s);
@@ -677,12 +643,12 @@ int modbus_tcp_accept(modbus_t *ctx, int *s)
     if (ctx->s == -1) {
         return -1;
     }
-
+/*
     if (ctx->debug) {
         printf("The client connection from %s is accepted\n",
                inet_ntoa(addr.sin_addr));
     }
-
+*/
     return ctx->s;
 }
 
@@ -718,7 +684,7 @@ int modbus_tcp_pi_accept(modbus_t *ctx, int *s)
 static int _modbus_tcp_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int length_to_read)
 {
     int s_rc;
-    while ((s_rc = select(ctx->s+1, rset, NULL, NULL, tv)) == -1) {
+    while ((s_rc = select(ctx->s+1, rset, NULL, NULL, NULL)) == -1) {
         if (errno == EINTR) {
             if (ctx->debug) {
                 fprintf(stderr, "A non blocked signal was caught\n");

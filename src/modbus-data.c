@@ -14,14 +14,7 @@
 
 #include <string.h>
 #include <assert.h>
-
-#if defined(_WIN32)
-#  include <winsock2.h>
-#else
-#  include <arpa/inet.h>
-#endif
-
-#include <config.h>
+#include <net/net_ip.h>
 
 #include "modbus.h"
 

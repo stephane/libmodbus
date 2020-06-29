@@ -14,11 +14,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <time.h>
-#ifndef _MSC_VER
-#include <unistd.h>
-#endif
-
-#include <config.h>
+//#include <posix/time.h>
 
 #include "modbus.h"
 #include "modbus-private.h"
@@ -35,11 +31,11 @@ const unsigned int libmodbus_version_micro = LIBMODBUS_VERSION_MICRO;
 #define MAX_MESSAGE_LENGTH 260
 
 /* 3 steps are used to parse the query */
-typedef enum {
+enum _step_t {
     _STEP_FUNCTION,
     _STEP_META,
     _STEP_DATA
-} _step_t;
+};
 
 const char *modbus_strerror(int errnum) {
     switch (errnum) {
@@ -99,12 +95,12 @@ static void _sleep_response_timeout(modbus_t *ctx)
           (ctx->response_timeout.tv_usec / 1000));
 #else
     /* usleep source code */
-    struct timespec request, remaining;
+    struct timespec request; /* remaining; */
     request.tv_sec = ctx->response_timeout.tv_sec;
     request.tv_nsec = ((long int)ctx->response_timeout.tv_usec) * 1000;
-    while (nanosleep(&request, &remaining) == -1 && errno == EINTR) {
+    /*while (nanosleep(&request, &remaining) == -1 && errno == EINTR) {
         request = remaining;
-    }
+    }*/
 #endif
 }
 
@@ -345,7 +341,7 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     struct timeval *p_tv;
     int length_to_read;
     int msg_length = 0;
-    _step_t step;
+    enum _step_t step;
 
     if (ctx->debug) {
         if (msg_type == MSG_INDICATION) {

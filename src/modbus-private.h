@@ -15,10 +15,13 @@
 # include <time.h>
 typedef int ssize_t;
 #endif
-#include <sys/types.h>
-#include <config.h>
 
+//#include <fcntl.h>
+//#include <sys/types.h>
+#include <net/socket.h>
 #include "modbus.h"
+#include <kernel.h>
+//#include <sys/select.h>
 
 MODBUS_BEGIN_DECLS
 
