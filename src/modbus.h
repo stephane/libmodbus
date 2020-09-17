@@ -249,24 +249,28 @@ MODBUS_API int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
      ((int64_t)tab_int16[(index) + 1] << 32) | \
      ((int64_t)tab_int16[(index) + 2] << 16) | \
       (int64_t)tab_int16[(index) + 3])
-#define MODBUS_GET_INT32_FROM_INT16(tab_int16, index) ((tab_int16[(index)] << 16) | tab_int16[(index) + 1])
-#define MODBUS_GET_INT16_FROM_INT8(tab_int8, index) ((tab_int8[(index)] << 8) | tab_int8[(index) + 1])
+#define MODBUS_GET_INT32_FROM_INT16(tab_int16, index) \
+    (((int32_t)tab_int16[(index)    ] << 16) | \
+      (int32_t)tab_int16[(index) + 1])
+#define MODBUS_GET_INT16_FROM_INT8(tab_int8, index) \
+    (((int16_t)tab_int8[(index)    ] << 8) | \
+      (int16_t)tab_int8[(index) + 1])
 #define MODBUS_SET_INT16_TO_INT8(tab_int8, index, value) \
     do { \
-        tab_int8[(index)] = (value) >> 8;  \
-        tab_int8[(index) + 1] = (value) & 0xFF; \
+        ((int8_t*)(tab_int8))[(index)    ] = (int8_t)((value) >> 8);  \
+        ((int8_t*)(tab_int8))[(index) + 1] = (int8_t)(value); \
     } while (0)
 #define MODBUS_SET_INT32_TO_INT16(tab_int16, index, value) \
     do { \
-        tab_int16[(index)    ] = (value) >> 16; \
-        tab_int16[(index) + 1] = (value); \
+        ((int16_t*)(tab_int16))[(index)    ] = (int16_t)((value) >> 16); \
+        ((int16_t*)(tab_int16))[(index) + 1] = (int16_t)(value); \
     } while (0)
 #define MODBUS_SET_INT64_TO_INT16(tab_int16, index, value) \
     do { \
-        tab_int16[(index)    ] = (value) >> 48; \
-        tab_int16[(index) + 1] = (value) >> 32; \
-        tab_int16[(index) + 2] = (value) >> 16; \
-        tab_int16[(index) + 3] = (value); \
+        ((int16_t*)(tab_int16))[(index)    ] = (int16_t)((value) >> 48); \
+        ((int16_t*)(tab_int16))[(index) + 1] = (int16_t)((value) >> 32); \
+        ((int16_t*)(tab_int16))[(index) + 2] = (int16_t)((value) >> 16); \
+        ((int16_t*)(tab_int16))[(index) + 3] = (int16_t)(value); \
     } while (0)
 
 MODBUS_API void modbus_set_bits_from_byte(uint8_t *dest, int idx, const uint8_t value);
