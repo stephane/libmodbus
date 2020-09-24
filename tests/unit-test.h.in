@@ -10,6 +10,7 @@
 /* Constants defined by configure.ac */
 #define HAVE_INTTYPES_H @HAVE_INTTYPES_H@
 #define HAVE_STDINT_H @HAVE_STDINT_H@
+#define USE_TLS @USE_TLS@
 
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
