@@ -1,6 +1,7 @@
 modbus_reply(3)
 ===============
 
+
 NAME
 ----
 modbus_reply - send a reponse to the received request
@@ -8,7 +9,7 @@ modbus_reply - send a reponse to the received request
 
 SYNOPSIS
 --------
-*int modbus_reply(modbus_t *'ctx', const uint8_t *'req', int 'req_length', modbus_mapping_t *'mb_mapping');
+*int modbus_reply(modbus_t *'ctx', const uint8_t *'req', int 'req_length', modbus_mapping_t *'mb_mapping');*
 
 
 DESCRIPTION
@@ -22,13 +23,13 @@ modbus mapping _mb_mapping_ according to the type of the manipulated data.
 
 If an error occurs, an exception response will be sent.
 
-This function is designed for Modbus server.
+This function is designed for Modbus servers.
 
 
 RETURN VALUE
 ------------
-The function shall return the length of the response sent if
-successful. Otherwise it shall return -1 and set errno.
+The function shall return the length of the response sent if successful.
+Otherwise it shall return -1 and set errno.
 
 
 ERRORS
@@ -36,7 +37,7 @@ ERRORS
 *EMBMDATA*::
 Sending has failed
 
-See also the errors returned by the syscall used to send the response (eg. send
+See also the errors returned by the syscall used to send the response (e.g. send
 or write).
 
 

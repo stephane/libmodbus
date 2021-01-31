@@ -29,8 +29,8 @@ build of raw requests.
 RETURN VALUE
 ------------
 The function shall return the full message length, counting the extra data
-relating to the backend, if successful. Otherwise it shall return -1 and set
-errno.
+relating to the backend, if successful.
+Otherwise it shall return -1 and set errno.
 
 
 EXAMPLE
@@ -56,6 +56,7 @@ modbus_receive_confirmation(ctx, rsp);
 modbus_close(ctx);
 modbus_free(ctx);
 -------------------
+
 
 SEE ALSO
 --------

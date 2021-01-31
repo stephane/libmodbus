@@ -15,7 +15,7 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-The _modbus_rtu_set_rts_delay()_ function shall set the Request To Send delay
+The *modbus_rtu_set_rts_delay()* function shall set the Request To Send delay
 period of the libmodbus context 'ctx'.
 
 This function can only be used with a context using a RTU backend.
@@ -23,7 +23,7 @@ This function can only be used with a context using a RTU backend.
 
 RETURN VALUE
 ------------
-The _modbus_rtu_set_rts_delay()_ function shall return 0 if successful.
+The function shall return 0 if successful.
 Otherwise it shall return -1 and set errno.
 
 

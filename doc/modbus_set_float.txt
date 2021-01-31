@@ -1,6 +1,7 @@
 modbus_set_float(3)
 ===================
 
+
 NAME
 ----
 modbus_set_float - set a float value from 2 registers
@@ -12,6 +13,7 @@ SYNOPSIS
 
 Warning, this function is *deprecated* since libmodbus v3.2.0 and has been
 replaced by *modbus_set_float_dcba()*.
+
 
 DESCRIPTION
 -----------
@@ -29,6 +31,7 @@ SEE ALSO
 --------
 linkmb:modbus_get_float[3]
 linkmb:modbus_set_float_dcba[3]
+
 
 AUTHORS
 -------

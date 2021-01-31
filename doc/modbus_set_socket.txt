@@ -21,7 +21,8 @@ connections to the same server.
 
 RETURN VALUE
 ------------
-The function shall return 0 if successful. Otherwise it shall return -1 and set errno.
+The function shall return 0 if successful.
+Otherwise it shall return -1 and set errno.
 
 
 EXAMPLE
@@ -44,6 +45,7 @@ if (FD_ISSET(master_socket, &rdset)) {
     }
 }
 -------------------
+
 
 SEE ALSO
 --------

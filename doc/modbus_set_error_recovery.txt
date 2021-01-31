@@ -29,7 +29,7 @@ This mode will try an infinite close/connect loop until success on send call and
 will just try one time to re-establish the connection on select/read calls (if the
 connection was down, the values to read are certainly not available any more after
 reconnection, except for slave/server). This mode will also run flush requests
-after a delay based on the current response timeout in some situations (eg.
+after a delay based on the current response timeout in some situations (e.g.
 timeout of select call). The reconnection attempt can hang for several seconds
 if the network to the remote target unit is down.
 
@@ -40,13 +40,13 @@ expected one. The response timeout delay will be used to sleep.
 
 The modes are mask values and so they are complementary.
 
-It's not recommended to enable error recovery for slave/server.
+It's not recommended to enable error recovery for a Modbus slave/server.
 
 
 RETURN VALUE
 ------------
-The function shall return 0 if successful. Otherwise it shall return -1 and set
-errno to one of the values defined below.
+The function shall return 0 if successful.
+Otherwise it shall return -1 and set errno.
 
 
 ERRORS
@@ -63,6 +63,7 @@ modbus_set_error_recovery(ctx,
                           MODBUS_ERROR_RECOVERY_LINK |
                           MODBUS_ERROR_RECOVERY_PROTOCOL);
 -------------------
+
 
 AUTHORS
 -------

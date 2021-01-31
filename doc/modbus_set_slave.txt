@@ -38,8 +38,8 @@ use when you want all Modbus devices of the network receive the request.
 
 RETURN VALUE
 ------------
-The function shall return 0 if successful. Otherwise it shall return -1 and set
-errno to one of the values defined below.
+The function shall return 0 if successful.
+Otherwise it shall return -1 and set errno to one of the values defined below.
 
 
 ERRORS
@@ -74,9 +74,11 @@ if (modbus_connect(ctx) == -1) {
 }
 -------------------
 
+
 SEE ALSO
 --------
 linkmb:modbus_get_slave[3]
+
 
 AUTHORS
 -------

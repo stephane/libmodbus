@@ -1,6 +1,7 @@
 modbus_set_debug(3)
 ===================
 
+
 NAME
 ----
 modbus_set_debug - set debug flag of the context
@@ -13,7 +14,7 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The *modbus_set_debug()* function shall set the debug flag of the *modbus_t*
+The *modbus_set_debug()* function shall set the debug flag of the 'modbus_t'
 context by using the argument _flag_. By default, the boolean flag is set to
 `FALSE`. When the _flag_ value is set to `TRUE`, many verbose messages are
 displayed on stdout and stderr. For example, this flag is useful to display the
@@ -29,7 +30,8 @@ ___________________
 
 RETURN VALUE
 ------------
-The function shall return 0 if successful. Otherwise it shall return -1 and set errno.
+The function shall return 0 if successful.
+Otherwise it shall return -1 and set errno.
 
 
 AUTHORS

@@ -36,9 +36,8 @@ used with a context using a RTU backend.
 
 RETURN VALUE
 ------------
-The function shall return `MODBUS_RTU_RS232` or `MODBUS_RTU_RS485` if
-successful. Otherwise it shall return -1 and set errno to one of the values
-defined below.
+The function shall return `MODBUS_RTU_RS232` or `MODBUS_RTU_RS485` if successful.
+Otherwise it shall return -1 and set errno.
 
 
 ERRORS

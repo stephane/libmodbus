@@ -14,7 +14,7 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-The *modbus_free()* function shall free an allocated modbus_t structure.
+The *modbus_free()* function shall free an allocated _modbus_t_ structure.
 
 
 RETURN VALUE

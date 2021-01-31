@@ -26,8 +26,8 @@ The value of _to_usec_ argument must be in the range 0 to 999999.
 
 RETURN VALUE
 ------------
-The function shall return 0 if successful. Otherwise it shall return -1 and set
-errno.
+The function shall return 0 if successful.
+Otherwise it shall return -1 and set errno.
 
 
 ERRORS

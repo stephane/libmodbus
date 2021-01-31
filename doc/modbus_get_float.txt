@@ -14,6 +14,7 @@ SYNOPSIS
 Warning, this function is *deprecated* since libmodbus v3.2.0 and has been
 replaced by *modbus_get_float_dcba()*.
 
+
 DESCRIPTION
 -----------
 The *modbus_get_float()* function shall get a float from 4 bytes in Modbus
@@ -32,6 +33,7 @@ SEE ALSO
 linkmb:modbus_set_float[3]
 linkmb:modbus_set_float_dcba[3]
 linkmb:modbus_get_float_dcba[3]
+
 
 AUTHORS
 -------

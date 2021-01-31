@@ -26,8 +26,8 @@ The function uses the Modbus function code 0x03 (read holding registers).
 
 RETURN VALUE
 ------------
-The function shall return the number of read registers
-if successful. Otherwise it shall return -1 and set errno.
+The function shall return the number of read registers if successful.
+Otherwise it shall return -1 and set errno.
 
 
 ERRORS

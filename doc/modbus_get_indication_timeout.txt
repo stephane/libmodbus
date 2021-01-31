@@ -13,7 +13,6 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-
 The *modbus_get_indication_timeout()* function shall store the timeout interval
 used to wait for an indication in the _to_sec_ and _to_usec_ arguments.
 Indication is the term used by the Modbus protocol to designate a request
@@ -24,8 +23,8 @@ The default value is zero, it means the server will wait forever.
 
 RETURN VALUE
 ------------
-The function shall return 0 if successful. Otherwise it shall return -1 and set
-errno.
+The function shall return 0 if successful.
+Otherwise it shall return -1 and set errno.
 
 
 EXAMPLE

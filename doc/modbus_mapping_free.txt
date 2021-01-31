@@ -1,5 +1,5 @@
 modbus_mapping_free(3)
-=====================
+======================
 
 
 NAME
@@ -15,7 +15,7 @@ SYNOPSIS
 DESCRIPTION
 -----------
 The function shall free the four arrays of mb_mapping_t structure and finally
-the mb_mapping_t referenced by _mb_mapping_.
+the 'modbus_mapping_t' structure referenced by _mb_mapping_.
 
 
 RETURN VALUE

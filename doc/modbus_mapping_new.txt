@@ -9,7 +9,7 @@ modbus_mapping_new - allocate four arrays of bits and registers
 
 SYNOPSIS
 --------
-*modbus_mapping_t* modbus_mapping_new(int 'nb_bits', int 'nb_input_bits', int 'nb_registers', int 'nb_input_registers');*
+*modbus_mapping_t *modbus_mapping_new(int 'nb_bits', int 'nb_input_bits', int 'nb_registers', int 'nb_input_registers');*
 
 
 DESCRIPTION
@@ -19,19 +19,20 @@ input bits, registers and inputs registers. The pointers are stored in
 modbus_mapping_t structure. All values of the arrays are initialized to zero.
 
 This function is equivalent to a call of the
-linkmb:modbus_mapping_new_start_address[3] function with all start addresses to
-`0`.
+linkmb:modbus_mapping_new_start_address[3] function with all start addresses
+set to `0`.
 
 If it isn't necessary to allocate an array for a specific type of data, you can
-pass the zero value in argument, the associated pointer will be NULL.
+pass zero as value, no memory will be allocated and the associated pointer
+will be NULL.
 
 This function is convenient to handle requests in a Modbus server/slave.
 
 
 RETURN VALUE
 ------------
-The function shall return the new allocated structure if successful. Otherwise
-it shall return NULL and set errno.
+The function shall return the new allocated structure if successful.
+Otherwise it shall return NULL and set errno.
 
 
 ERRORS
@@ -56,6 +57,7 @@ if (mb_mapping == NULL) {
     return -1;
 }
 -------------------
+
 
 SEE ALSO
 --------
