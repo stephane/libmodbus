@@ -23,8 +23,10 @@ License 3.0 (Unported) (<http://creativecommons.org/licenses/by-sa/3.0/>).
 
 The official website is [www.libmodbus.org](http://www.libmodbus.org).
 
-The library is written in C and designed to run on Linux, Mac OS X, FreeBSD and
+The library is written in C and designed to run on Linux, Mac OS X, FreeBSD, Embox,
 QNX and Windows.
+
+You can use the library on MCUs with Embox RTOS.
 
 Installation
 ------------
@@ -54,6 +56,8 @@ select the common packages (gcc, automake, libtool, etc). The directory
 To compile under OS X with [homebrew](http://mxcl.github.com/homebrew/), you
 will need to install the following dependencies first: `brew install autoconf
 automake libtool`.
+
+To build under Embox, you have to use its build system.
 
 Documentation
 -------------
