@@ -49,4 +49,5 @@ linkmb:libmodbus[7]
 AUTHORS
 -------
 The libmodbus documentation was written by Stéphane Raimbault
+<t.binder@gmx.at>
 <stephane.raimbault@gmail.com>
