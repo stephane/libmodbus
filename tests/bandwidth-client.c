@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
             use_backend = RTU;
             n_loop = 100;
         } else {
-            printf("Usage:\n  %s [tcp|rtu] - Modbus client to measure data bandwith\n\n", argv[0]);
+            printf("Usage:\n  %s [tcp|rtu] - Modbus client to measure data bandwidth\n\n", argv[0]);
             exit(1);
         }
     } else {
@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
     elapsed = end - start;
 
     rate = (n_loop * nb_points) * G_MSEC_PER_SEC / (end - start);
-    printf("Transfert rate in points/seconds:\n");
+    printf("Transfer rate in points/seconds:\n");
     printf("* %d points/s\n", rate);
     printf("\n");
 
@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
     elapsed = end - start;
 
     rate = (n_loop * nb_points) * G_MSEC_PER_SEC / (end - start);
-    printf("Transfert rate in points/seconds:\n");
+    printf("Transfer rate in points/seconds:\n");
     printf("* %d registers/s\n", rate);
     printf("\n");
 
@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
     elapsed = end - start;
 
     rate = (n_loop * nb_points) * G_MSEC_PER_SEC / (end - start);
-    printf("Transfert rate in points/seconds:\n");
+    printf("Transfer rate in points/seconds:\n");
     printf("* %d registers/s\n", rate);
     printf("\n");
 

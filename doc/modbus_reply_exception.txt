@@ -3,7 +3,7 @@ modbus_reply_exception(3)
 
 NAME
 ----
-modbus_reply_exception - send an exception reponse
+modbus_reply_exception - send an exception response
 
 
 SYNOPSIS

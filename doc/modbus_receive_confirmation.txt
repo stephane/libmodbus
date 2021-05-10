@@ -30,7 +30,7 @@ avoid crashes of your server.
 RETURN VALUE
 ------------
 The function shall store the confirmation request in _rsp_ and return the
-response length if sucessful. The returned request length can be zero if the
+response length if successful. The returned request length can be zero if the
 indication request is ignored (eg. a query for another slave in RTU
 mode). Otherwise it shall return -1 and set errno.
 

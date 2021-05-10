@@ -533,7 +533,7 @@ int main(int argc, char *argv[])
     rc = modbus_report_slave_id(ctx, NB_REPORT_SLAVE_ID, tab_rp_bits);
     ASSERT_TRUE(rc == NB_REPORT_SLAVE_ID, "");
 
-    /* Slave ID is an arbitraty number for libmodbus */
+    /* Slave ID is an arbitrary number for libmodbus */
     ASSERT_TRUE(rc > 0, "");
 
     /* Run status indicator is ON */
@@ -622,7 +622,7 @@ int main(int argc, char *argv[])
         printf("1/2 Too small byte timeout (3ms < 5ms): ");
         ASSERT_TRUE(rc == -1 && errno == ETIMEDOUT, "");
 
-        /* Wait remaing bytes before flushing */
+        /* Wait remaining bytes before flushing */
         usleep(11 * 5000);
         modbus_flush(ctx);
 

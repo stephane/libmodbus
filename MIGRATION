@@ -16,7 +16,7 @@ dynamically allocated structure modbus_t.
 
 - all function and constants are respectively prefixed by modbus_ or MODBUS_.
 
-- the POSIX error conventions are used (if an error occured, -1 or NULL is
+- the POSIX error conventions are used (if an error occurred, -1 or NULL is
   returned and errno is set accordingly).
 
 - coil status and discretes inputs are just bits and force/preset actions have

@@ -423,7 +423,7 @@ libmodbus 2.1.0 (2010-03-24)
 - Fix report slave ID request
   Patch (bzr) provided by Paul Fertser.
 - Fix #425604 - Conditional jump or move depends on uninitialised value(s)
-  Occurs on first occurence of slave timeout.
+  Occurs on first occurrence of slave timeout.
   Reported by Henrik Munktell.
 - Fix #457200 - FreeBSD support
   Patch provided by Norbert Koch.
