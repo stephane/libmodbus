@@ -231,6 +231,7 @@ static ssize_t _modbus_ascii_send(modbus_t *ctx, const uint8_t *req, int req_len
 
 static void _modbus_ascii_free(modbus_t *ctx) {
     _modbus_serial_free(ctx->backend_data);
+    free(ctx->backend_data);
     free(ctx);
 }
 
