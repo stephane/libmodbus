@@ -997,8 +997,11 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         break;
     }
 
-    /* Suppress any responses when the request was a broadcast */
+    /* Suppress any responses when the request was a broadcast unless: */
+    /* a) we are in a TCP context */
+    /* b) quirk is enabled */
     return (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU &&
+            !(ctx->quirks & MODBUS_QUIRK_BCAST_RESP) &&
             slave == MODBUS_BROADCAST_ADDRESS) ? 0 : send_msg(ctx, rsp, rsp_length);
 }
 
@@ -1757,6 +1760,30 @@ int modbus_set_debug(modbus_t *ctx, int flag)
     }
 
     ctx->debug = flag;
+    return 0;
+}
+
+/* Enable quirks in context's mask */
+int modbus_enable_quirks(modbus_t *ctx, int quirks_mask)
+{
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    ctx->quirks |= quirks_mask;
+    return 0;
+}
+
+/* Disable quirks in context's mask */
+int modbus_disable_quirks(modbus_t *ctx, int quirks_mask)
+{
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    ctx->quirks &= ~quirks_mask;
     return 0;
 }
 

@@ -96,6 +96,7 @@ struct _modbus {
     int s;
     int debug;
     int error_recovery;
+    int quirks;
     struct timeval response_timeout;
     struct timeval byte_timeout;
     struct timeval indication_timeout;

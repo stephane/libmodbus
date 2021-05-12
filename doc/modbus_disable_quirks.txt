@@ -1,0 +1,44 @@
+modbus_disable_quirks(3)
+========================
+
+
+NAME
+----
+modbus_disable_quirks - disable quirk handler
+
+
+SYNOPSIS
+--------
+*int modbus_disable_quirks(modbus_t *'ctx', int 'quirks_mask');*
+
+
+DESCRIPTION
+-----------
+The *modbus_disable_quirks()* function disables all quirks given in _quirks_mask_
+in the libmodbus context. See linkmb:modbus_enable_quirks[3] for details and a
+list of available quirks.
+
+Several quirks can be disabled at same time by using logical-or.
+
+
+RETURN VALUE
+------------
+The function shall return zero if successful. Otherwise it shall
+return -1 and set errno.
+
+
+ERRORS
+------
+*EINVAL*::
+The argument _ctx_ is NULL.
+
+
+SEE ALSO
+--------
+linkmb:modbus_enable_quirks[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>
