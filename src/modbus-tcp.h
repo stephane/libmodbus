@@ -47,6 +47,10 @@ MODBUS_API modbus_t* modbus_new_tcp_pi(const char *node, const char *service);
 MODBUS_API int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection);
 MODBUS_API int modbus_tcp_pi_accept(modbus_t *ctx, int *s);
 
+MODBUS_API modbus_t* modbus_new_tls(const char *ip_address, int port, const char *cert, const char *key, const char *ca);
+MODBUS_API int modbus_tls_listen(modbus_t *ctx, int nb_connection);
+MODBUS_API int modbus_tls_accept(modbus_t *ctx, int *s);
+
 MODBUS_END_DECLS
 
 #endif /* MODBUS_TCP_H */

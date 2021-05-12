@@ -151,6 +151,17 @@ AC_ARG_ENABLE(tests,
 	[enable_tests=yes])
 AM_CONDITIONAL(BUILD_TESTS, [test $enable_tests != no])
 
+AC_ARG_ENABLE(tls,
+	AS_HELP_STRING([--enable-tls],
+	[Build with SSL/TLS support (default: no)]),
+	[enable_tls=yes],[enable_tls=no])
+AM_CONDITIONAL(BUILD_TLS, [test $enable_tls != no])
+
+AS_IF([test $enable_tls != no],
+	[AC_DEFINE([USE_TLS], [1], [Define if SSL/TLS feature is enabled])]
+	[AC_CHECK_LIB([ssl], [SSL_new])]
+	[AC_CHECK_LIB([crypto], [CRYPTO_new_ex_data])],)
+
 AC_CONFIG_HEADERS([config.h tests/unit-test.h])
 AC_CONFIG_FILES([
         Makefile
@@ -176,6 +187,7 @@ AC_MSG_RESULT([
         cflags:                 ${CFLAGS}
         ldflags:                ${LDFLAGS}
 
+        tls:                    ${enable_tls}
         documentation:          ${ac_libmodbus_build_doc}
         tests:                  ${enable_tests}
 ])
