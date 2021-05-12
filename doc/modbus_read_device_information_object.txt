@@ -1,0 +1,88 @@
+modbus_read_device_information_object(3)
+========================================
+
+
+NAME
+----
+modbus_read_device_information_object - retrieving device information
+
+
+SYNOPSIS
+--------
+*int modbus_read_device_information_object(modbus_t *ctx, unsigned char object_id, uint16_t *dest);*
+
+
+DESCRIPTION
+-----------
+The *modbus_read_device_information_object()* function reads the content
+of a single object within the device identification registers.
+There are several standardized objects:
+
+Object ID | Type     | Object Name         | Data Type    | Mandatory
+----------+----------+---------------------+--------------+----------
+ 0x00     | Basic    | VendorName          | ASCII String | yes
+ 0x01     | Basic    | ProductCode         | ASCII String | yes
+ 0x02     | Basic    | MajorMinorRevision  | ASCII String | yes
+ 0x03     | Regular  | VendorUrl           | ASCII String | no
+ 0x04     | Regular  | ProductName         | ASCII String | no
+ 0x05     | Regular  | ModelName           | ASCII String | no
+ 0x06     | Regular  | UserApplicationName | ASCII String | no
+ 0x80 + n | Extended | Device specific     | Binary       | no
+ 
+The result of reading is stored in _dest_ array as word values (16 bits).
+
+You must take care to allocate enough memory to store the results in _dest_
+(130 * sizeof(uint16_t) will always be enough).
+
+The function uses the Modbus function code 0x2B (read device identification).
+
+
+RETURN VALUE
+------------
+The function returns the number of read bytes if successful. 
+Otherwise it shall return -1 and set errno.
+
+
+ERRORS
+------
+
+
+EXAMPLE
+-------
+[source,c]
+-------------------
+modbus_t *ctx;
+uint16_t vendor_name[130];
+int rc;
+int i;
+
+ctx = modbus_new_tcp("127.0.0.1", 1502);
+if (modbus_connect(ctx) == -1) {
+    fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
+    modbus_free(ctx);
+    return -1;
+}
+
+rc = modbus_read_device_information_object(ctx, 0x04, vendor_name);
+if (rc == -1) {
+    fprintf(stderr, "%s\n", modbus_strerror(errno));
+    return -1;
+}
+
+printf("Vendor Name: '%s'", (char*)vendor_name);
+
+modbus_close(ctx);
+modbus_free(ctx);
+-------------------
+
+
+SEE ALSO
+--------
+
+
+AUTHORS
+-------
+This function was introduced by Oliver Schwaneberg
+<oliver.schwaneberg@gmail.com>
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>
