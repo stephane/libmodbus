@@ -192,6 +192,7 @@ MODBUS_API int modbus_get_indication_timeout(modbus_t *ctx, uint32_t *to_sec, ui
 MODBUS_API int modbus_set_indication_timeout(modbus_t *ctx, uint32_t to_sec, uint32_t to_usec);
 
 MODBUS_API int modbus_get_header_length(modbus_t *ctx);
+MODBUS_API int modbus_get_checksum_length(modbus_t *ctx);
 
 MODBUS_API int modbus_connect(modbus_t *ctx);
 MODBUS_API void modbus_close(modbus_t *ctx);
@@ -237,6 +238,8 @@ MODBUS_API int modbus_reply(modbus_t *ctx, const uint8_t *req,
                             int req_length, modbus_mapping_t *mb_mapping);
 MODBUS_API int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
                                       unsigned int exception_code);
+MODBUS_API int modbus_reply_raw_response(modbus_t *ctx, const uint8_t *req,
+                                     int req_length, uint8_t *raw_rsp, int raw_rsp_length);
 
 /**
  * UTILS FUNCTIONS
@@ -291,6 +294,7 @@ MODBUS_API void modbus_set_float_cdab(float f, uint16_t *dest);
 
 #include "modbus-tcp.h"
 #include "modbus-rtu.h"
+#include "modbus-ascii.h"
 
 MODBUS_END_DECLS
 

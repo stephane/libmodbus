@@ -395,6 +395,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\modbus-ascii.c"
+				>
+			</File>
+			<File
 				RelativePath="..\modbus-tcp.c"
 				>
 			</File>
@@ -422,6 +426,14 @@
 			</File>
 			<File
 				RelativePath="..\modbus-rtu.h"
+				>
+			</File>
+			<File
+				RelativePath="..\modbus-ascii-private.h"
+				>
+			</File>
+			<File
+				RelativePath="..\modbus-ascii.h"
 				>
 			</File>
 			<File

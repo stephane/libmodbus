@@ -1037,6 +1037,34 @@ int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
     }
 }
 
+int modbus_reply_raw_response(modbus_t *ctx, const uint8_t *req,
+                         int req_length, uint8_t *raw_rsp, int raw_rsp_length)
+{
+    sft_t sft;
+    uint8_t rsp[MAX_MESSAGE_LENGTH];
+    int rsp_length;
+
+    if (raw_rsp_length < 2) {
+        /* The raw request must contain function and slave at least */
+        errno = EINVAL;
+        return -1;
+    }
+
+    sft.slave = raw_rsp[0];
+    sft.function = raw_rsp[1];
+    sft.t_id = ctx->backend->prepare_response_tid(req, &req_length);;
+    /* This response function only set the header so it's convenient here */
+    rsp_length = ctx->backend->build_response_basis(&sft, rsp);
+
+    if (raw_rsp_length > 2) {
+        /* Copy data after function code */
+        memcpy(rsp + rsp_length, raw_rsp + 2, raw_rsp_length - 2);
+        rsp_length += raw_rsp_length - 2;
+    }
+
+    return send_msg(ctx, rsp, rsp_length);
+}
+
 /* Reads IO status */
 static int read_io_status(modbus_t *ctx, int function,
                           int addr, int nb, uint8_t *dest)
@@ -1721,6 +1749,11 @@ int modbus_get_header_length(modbus_t *ctx)
     }
 
     return ctx->backend->header_length;
+}
+
+int modbus_get_checksum_length(modbus_t *ctx)
+{
+    return ctx->backend->checksum_length;
 }
 
 int modbus_connect(modbus_t *ctx)
