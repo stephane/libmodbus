@@ -911,11 +911,11 @@ int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode)
         struct serial_rs485 rs485conf;
 
         if (mode == MODBUS_RTU_RS485) {
-            // Get
+            /* Get */
             if (ioctl(ctx->s, TIOCGRS485, &rs485conf) < 0) {
                 return -1;
             }
-            // Set
+            /* Set */
             rs485conf.flags |= SER_RS485_ENABLED;
             if (ioctl(ctx->s, TIOCSRS485, &rs485conf) < 0) {
                 return -1;

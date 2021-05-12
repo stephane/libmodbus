@@ -92,6 +92,8 @@ typedef struct _modbus_backend {
 struct _modbus {
     /* Slave address */
     int slave;
+    /* used only in user-defined functions */
+    int wanted_resp_data_length;
     /* Socket or file descriptor */
     int s;
     int debug;
