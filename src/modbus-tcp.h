@@ -8,6 +8,7 @@
 #define MODBUS_TCP_H
 
 #include "modbus.h"
+#include "modbus-tcp-server.h"
 
 MODBUS_BEGIN_DECLS
 
