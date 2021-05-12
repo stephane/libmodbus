@@ -193,6 +193,9 @@ MODBUS_API int modbus_set_indication_timeout(modbus_t *ctx, uint32_t to_sec, uin
 
 MODBUS_API int modbus_get_header_length(modbus_t *ctx);
 
+MODBUS_API int modbus_set_user_data(modbus_t *ctx, void *user_data);
+MODBUS_API int modbus_get_user_data(modbus_t *ctx, void **user_data);
+
 MODBUS_API int modbus_connect(modbus_t *ctx);
 MODBUS_API void modbus_close(modbus_t *ctx);
 
