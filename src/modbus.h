@@ -73,6 +73,9 @@ MODBUS_BEGIN_DECLS
 
 #define MODBUS_BROADCAST_ADDRESS    0
 
+/* This is to allow request indications from any slave */
+#define MODBUS_ANY_SLAVE_ADDRESS    0x100
+
 /* Modbus_Application_Protocol_V1_1b.pdf (chapter 6 section 1 page 12)
  * Quantity of Coils to read (2 bytes): 1 to 2000 (0x7D0)
  * (chapter 6 section 11 page 29)

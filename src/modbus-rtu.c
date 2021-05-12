@@ -92,7 +92,7 @@ static const uint8_t table_crc_lo[] = {
 static int _modbus_set_slave(modbus_t *ctx, int slave)
 {
     /* Broadcast address is 0 (MODBUS_BROADCAST_ADDRESS) */
-    if (slave >= 0 && slave <= 247) {
+    if ((slave >= 0 && slave <= 247) || slave == MODBUS_ANY_SLAVE_ADDRESS) {
         ctx->slave = slave;
     } else {
         errno = EINVAL;
@@ -365,7 +365,7 @@ static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
 
     /* Filter on the Modbus unit identifier (slave) in RTU mode to avoid useless
      * CRC computing. */
-    if (slave != ctx->slave && slave != MODBUS_BROADCAST_ADDRESS) {
+    if (slave != ctx->slave && slave != MODBUS_BROADCAST_ADDRESS && ctx->slave != MODBUS_ANY_SLAVE_ADDRESS) {
         if (ctx->debug) {
             printf("Request for slave %d ignored (not %d)\n", slave, ctx->slave);
         }
