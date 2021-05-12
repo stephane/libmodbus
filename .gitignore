@@ -29,8 +29,7 @@ Makefile.in
 /stamp-h1
 /*.sublime-*
 /.vscode
-src/modbus-version.h
-src/win32/modbus.dll.manifest
+/src/modbus-version.h
 tests/bandwidth-client
 tests/bandwidth-server-many-up
 tests/bandwidth-server-one
@@ -44,3 +43,11 @@ tests/stamp-h2
 doc/*.html
 doc/*.3
 doc/*.7
+
+/src/win32/.vs/
+/src/win32/modbus.vs16.vcxproj.user
+/src/win32/modbus.dll.manifest
+/src/win32/config.h
+/src/win32/win32/
+/src/win32/x64/
+
