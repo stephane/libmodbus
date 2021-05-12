@@ -21,6 +21,10 @@ MODBUS_API modbus_t* modbus_new_rtu(const char *device, int baud, char parity,
 
 #define MODBUS_RTU_RS232 0
 #define MODBUS_RTU_RS485 1
+/* RS485 set logical level for RTS pin equal to 0 after sending (RS485 default) */
+#define MODBUS_RTU_RS485_RTS_AFTER_SEND MODBUS_RTU_RS485 
+/* RS485 set logical level for RTS pin equal to 0 when sending */
+#define MODBUS_RTU_RS485_RTS_ON_SEND 2
 
 MODBUS_API int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode);
 MODBUS_API int modbus_rtu_get_serial_mode(modbus_t *ctx);
