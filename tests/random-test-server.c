@@ -22,7 +22,7 @@ int main(void)
     ctx = modbus_new_tcp("127.0.0.1", 1502);
     /* modbus_set_debug(ctx, TRUE); */
 
-    mb_mapping = modbus_mapping_new(500, 500, 500, 500);
+    mb_mapping = modbus_mapping_new(500, 500, 500, 500, 0, 0, 0);
     if (mb_mapping == NULL) {
         fprintf(stderr, "Failed to allocate the mapping: %s\n",
                 modbus_strerror(errno));
