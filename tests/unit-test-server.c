@@ -5,14 +5,16 @@
  */
 
 #include <stdio.h>
-#include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <modbus.h>
 #ifdef _WIN32
 # include <winsock2.h>
+void usleep(DWORD usec);
+#define close closesocket
 #else
+#include <unistd.h>
 # include <sys/socket.h>
 #endif
 
@@ -201,3 +203,15 @@ int main(int argc, char*argv[])
 
     return 0;
 }
+
+#ifdef _WIN32
+void usleep(DWORD usec)
+{
+    LARGE_INTEGER frequency, start, now;
+    QueryPerformanceFrequency(&frequency);
+    QueryPerformanceCounter(&start);
+    do {
+        QueryPerformanceCounter((LARGE_INTEGER *) &now);
+    } while ((now.QuadPart - start.QuadPart) / (float) (frequency.QuadPart) * 1000 * 1000 < usec);
+}
+#endif
