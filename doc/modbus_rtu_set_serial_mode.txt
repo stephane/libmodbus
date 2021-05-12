@@ -9,7 +9,7 @@ modbus_rtu_set_serial_mode - set the serial mode
 
 SYNOPSIS
 --------
-*int modbus_rtu_set_serial_mode(modbus_t *'ctx', int 'mode');*
+*int modbus_rtu_set_serial_mode(modbus_t *'ctx', modbus_rtu_mode 'mode');*
 
 
 DESCRIPTION

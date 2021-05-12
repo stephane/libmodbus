@@ -19,10 +19,12 @@ MODBUS_BEGIN_DECLS
 MODBUS_API modbus_t* modbus_new_rtu(const char *device, int baud, char parity,
                                     int data_bit, int stop_bit);
 
-#define MODBUS_RTU_RS232 0
-#define MODBUS_RTU_RS485 1
+typedef enum {
+    MODBUS_RTU_RS232 = 0,
+    MODBUS_RTU_RS485 = 1
+} modbus_rtu_mode;
 
-MODBUS_API int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode);
+MODBUS_API int modbus_rtu_set_serial_mode(modbus_t *ctx, modbus_rtu_mode mode);
 MODBUS_API int modbus_rtu_get_serial_mode(modbus_t *ctx);
 
 #define MODBUS_RTU_RTS_NONE   0
