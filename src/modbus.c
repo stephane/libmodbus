@@ -1236,6 +1236,13 @@ int modbus_read_input_registers(modbus_t *ctx, int addr, int nb,
     return status;
 }
 
+
+static int is_serial_broadcast(modbus_t *ctx)
+{
+    return ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU
+	&& ctx->slave == MODBUS_BROADCAST_ADDRESS;
+}
+
 /* Write a value to the specified register of the remote device.
    Used by write_bit and write_register */
 static int write_single(modbus_t *ctx, int function, int addr, const uint16_t value)
@@ -1252,7 +1259,7 @@ static int write_single(modbus_t *ctx, int function, int addr, const uint16_t va
     req_length = ctx->backend->build_request_basis(ctx, function, addr, (int) value, req);
 
     rc = send_msg(ctx, req, req_length);
-    if (rc > 0) {
+    if (rc > 0 && !is_serial_broadcast(ctx)) {
         /* Used by write_bit and write_register */
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
@@ -1338,7 +1345,7 @@ int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *src)
     }
 
     rc = send_msg(ctx, req, req_length);
-    if (rc > 0) {
+    if (rc > 0 && !is_serial_broadcast(ctx)) {
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
         rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
@@ -1388,7 +1395,7 @@ int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *src)
     }
 
     rc = send_msg(ctx, req, req_length);
-    if (rc > 0) {
+    if (rc > 0 && !is_serial_broadcast(ctx)) {
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
         rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
@@ -1423,7 +1430,7 @@ int modbus_mask_write_register(modbus_t *ctx, int addr, uint16_t and_mask, uint1
     req[req_length++] = or_mask & 0x00ff;
 
     rc = send_msg(ctx, req, req_length);
-    if (rc > 0) {
+    if (rc > 0 && !is_serial_broadcast(ctx)) {
         /* Used by write_bit and write_register */
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
