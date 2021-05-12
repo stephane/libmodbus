@@ -58,18 +58,21 @@ MODBUS_BEGIN_DECLS
 #endif
 
 /* Modbus function codes */
-#define MODBUS_FC_READ_COILS                0x01
-#define MODBUS_FC_READ_DISCRETE_INPUTS      0x02
-#define MODBUS_FC_READ_HOLDING_REGISTERS    0x03
-#define MODBUS_FC_READ_INPUT_REGISTERS      0x04
-#define MODBUS_FC_WRITE_SINGLE_COIL         0x05
-#define MODBUS_FC_WRITE_SINGLE_REGISTER     0x06
-#define MODBUS_FC_READ_EXCEPTION_STATUS     0x07
-#define MODBUS_FC_WRITE_MULTIPLE_COILS      0x0F
-#define MODBUS_FC_WRITE_MULTIPLE_REGISTERS  0x10
-#define MODBUS_FC_REPORT_SLAVE_ID           0x11
-#define MODBUS_FC_MASK_WRITE_REGISTER       0x16
-#define MODBUS_FC_WRITE_AND_READ_REGISTERS  0x17
+#define MODBUS_FC_READ_COILS                     0x01
+#define MODBUS_FC_READ_DISCRETE_INPUTS           0x02
+#define MODBUS_FC_READ_HOLDING_REGISTERS         0x03
+#define MODBUS_FC_READ_INPUT_REGISTERS           0x04
+#define MODBUS_FC_WRITE_SINGLE_COIL              0x05
+#define MODBUS_FC_WRITE_SINGLE_REGISTER          0x06
+#define MODBUS_FC_READ_EXCEPTION_STATUS          0x07
+#define MODBUS_FC_WRITE_MULTIPLE_COILS           0x0F
+#define MODBUS_FC_WRITE_MULTIPLE_REGISTERS       0x10
+#define MODBUS_FC_REPORT_SLAVE_ID                0x11
+#define MODBUS_FC_MASK_WRITE_REGISTER            0x16
+#define MODBUS_FC_WRITE_AND_READ_REGISTERS       0x17
+#define MODBUS_FC_MODBUS_ENCAPSULATED_INTERFACE  0x2B
+
+#define MODBUS_MEI_READ_DEVICE_IDENTIFICATION    0x0E
 
 #define MODBUS_BROADCAST_ADDRESS    0
 
@@ -237,6 +240,27 @@ MODBUS_API int modbus_reply(modbus_t *ctx, const uint8_t *req,
                             int req_length, modbus_mapping_t *mb_mapping);
 MODBUS_API int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
                                       unsigned int exception_code);
+/* Requests the MODBUS function READ DEVICE IDENTIFICATION (Function code 0x2B /
+ * MEI type 0x0E) of the remote device and put the response into the given array dest.
+ * The return value tells how many bytes have been available and can be greater
+ * than the array size dest_size, if the array is too small. But only at most
+ * dest_size bytes are written to dest. The return value may be -1 to indicate
+ * an error. In this case errno is set, appropriately.
+ * When being executed without error, the contents of dest conforms to the
+ * response as defined in the the MODBUS Specification
+ * (http://www.modbus.org/docs/Modbus_Application_Protocol_V1_1b.pdf)
+ * in Chapter "6.21 Read Device Identification".
+ * A dest buffer of size 260 bytes is sufficent.
+ * Use object_id = 0 to read the first of possible multiple data blocks.
+ * Each following data block can be requested by a new call, with the object_id
+ * set to that given in the previous response. There is no need by the specification
+ * to request further data blocks.
+ */
+MODBUS_API int modbus_read_device_identification(modbus_t *ctx,
+                                                 uint8_t read_device_id_code,
+                                                 uint8_t object_id, int dest_size,
+                                                 uint8_t *dest);
+
 
 /**
  * UTILS FUNCTIONS
