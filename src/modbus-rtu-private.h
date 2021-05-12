@@ -7,6 +7,8 @@
 #ifndef MODBUS_RTU_PRIVATE_H
 #define MODBUS_RTU_PRIVATE_H
 
+#include <sys/time.h>
+
 #ifndef _MSC_VER
 #include <stdint.h>
 #else
@@ -71,6 +73,8 @@ typedef struct _modbus_rtu {
 #endif
     /* To handle many slaves on the same link */
     int confirmation_to_ignore;
+    int interframe_delay;
+    struct timeval last_frame_at;
 } modbus_rtu_t;
 
 #endif /* MODBUS_RTU_PRIVATE_H */

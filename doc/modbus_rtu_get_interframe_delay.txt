@@ -1,0 +1,47 @@
+modbus_rtu_get_interframe_delay(3)
+===========================
+
+
+NAME
+----
+modbus_rtu_get_interframe_delay - get the current value of silent interval between MODBUS frames in RTU
+
+
+SYNOPSIS
+--------
+*int modbus_rtu_get_interframe_delay(modbus_t *'ctx');*
+
+
+DESCRIPTION
+-----------
+
+The _modbus_rtu_get_interframe_delay()_ function shall get the current
+MODBUS interframe delay period of the libmodbus context 'ctx'.
+
+This function can only be used with a context using a RTU backend.
+
+
+RETURN VALUE
+------------
+The _modbus_rtu_get_interframe_delay()_ function shall return the current
+interframe delay in microseconds if successful.  Otherwise it shall return
+-1 and set errno.
+
+
+ERRORS
+------
+*EINVAL*::
+The libmodbus backend is not RTU.
+
+
+SEE ALSO
+--------
+linkmb:modbus_rtu_set_interframe_delay[3]
+
+
+AUTHORS
+-------
+oldgreen <oldoldgreen@gmail.com>
+
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>
