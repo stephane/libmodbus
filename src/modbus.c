@@ -41,7 +41,7 @@ typedef enum {
     _STEP_DATA
 } _step_t;
 
-int modbus_get_error() {
+int modbus_get_error(void) {
     return errno;
 }
 
@@ -734,7 +734,7 @@ static int response_exception(modbus_t *ctx, sft_t *sft,
 }
 
 static int _build_read_device_identification_response(modbus_t* ctx, sft_t sft,
-    char* rsp, int rsp_length, uint8_t mei_type, uint8_t read_dev_id_code,
+    uint8_t* rsp, int rsp_length, uint8_t mei_type, uint8_t read_dev_id_code,
     uint8_t object_id)
 {
     uint8_t idx_more_follows;
@@ -2099,7 +2099,7 @@ void _device_identification_init(device_identification_t* dev_ids)
 }
 
 int _device_identification_assign(device_identification_t* dev_ids,
-    uint8_t object_id, void* data, size_t data_length)
+    uint8_t object_id, const void* data, size_t data_length)
 {
     if (data == NULL || data_length == 0) {
         errno = EINVAL;
@@ -2120,7 +2120,8 @@ void _device_identification_free(device_identification_t* dev_ids)
     memset(dev_ids, 0, sizeof(device_identification_t));
 }
 
-int _identification_object_assign(id_object_t* obj, void* data, size_t data_length)
+int _identification_object_assign(id_object_t* obj, const void* data,
+    size_t data_length)
 {
     if (data_length > MODBUS_MAX_OBJECT_DATA_LENGTH) {
         errno = EINVAL;
@@ -2141,7 +2142,7 @@ int _identification_object_assign(id_object_t* obj, void* data, size_t data_leng
 }
 
 int modbus_set_device_identification(modbus_t *ctx, uint8_t object_id,
-                                     void* data, size_t data_length)
+    const void* data, size_t data_length)
 {
     if (ctx == NULL) {
         errno = EINVAL;

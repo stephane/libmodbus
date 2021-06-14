@@ -112,13 +112,12 @@ static const char* _MAJOR_MINOR_REVISION_DEFAULT = "0.0.0";
 
 void _device_identification_init(device_identification_t* dev_ids);
 int _device_identification_assign(device_identification_t* dev_ids,
-                                  uint8_t object_id, const void* data,
-                                  size_t data_length);
+    uint8_t object_id, const void* data, size_t data_length);
 
-void _device_identification_free(device_identification_t* dev_ids);
+void _device_identification_free(device_identification_t* dev_ids)  ;
 
-int _identification_object_assign(id_object_t* obj,
-                                  const void* data, size_t data_length);
+int _identification_object_assign(id_object_t* obj, const void* data,
+    size_t data_length);
 
 struct _modbus {
     /* Slave address */
