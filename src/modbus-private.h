@@ -89,6 +89,36 @@ typedef struct _modbus_backend {
     void (*free) (modbus_t *ctx);
 } modbus_backend_t;
 
+typedef struct _identification_object {
+    void* data;
+    uint8_t data_length;
+}id_object_t;
+
+typedef struct _device_identification {
+    id_object_t* objects;
+    uint8_t object_count;
+}device_identification_t;
+
+#define _DEVICE_ID_MAX 0xFF
+#define _DEVICE_ID_END_OF_BASIC 0x3
+#define _DEVICE_ID_END_OF_REGULAR 0x7f
+
+#define _MORE_FOLLOWS 0xFF
+#define _NO_MORE_FOLLOWS 0x00
+
+static const char* _VENDOR_NAME_DEFAULT = "VendorName";
+static const char* _PRODUCT_CODE_DEFAULT = "ProductCode";
+static const char* _MAJOR_MINOR_REVISION_DEFAULT = "0.0.0";
+
+void _device_identification_init(device_identification_t* dev_ids);
+int _device_identification_assign(device_identification_t* dev_ids,
+    uint8_t object_id, const void* data, size_t data_length);
+
+void _device_identification_free(device_identification_t* dev_ids)  ;
+
+int _identification_object_assign(id_object_t* obj, const void* data,
+    size_t data_length);
+
 struct _modbus {
     /* Slave address */
     int slave;
@@ -101,6 +131,8 @@ struct _modbus {
     struct timeval indication_timeout;
     const modbus_backend_t *backend;
     void *backend_data;
+
+    device_identification_t device_identification;
 };
 
 void _modbus_init_common(modbus_t *ctx);

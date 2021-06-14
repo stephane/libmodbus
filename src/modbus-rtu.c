@@ -1245,6 +1245,12 @@ modbus_t* modbus_new_rtu(const char *device,
     }
 
     _modbus_init_common(ctx);
+    if (ctx->device_identification.objects == NULL) {
+        modbus_free(ctx);
+        errno = ENOMEM;
+        return NULL;
+    }
+
     ctx->backend = &_modbus_rtu_backend;
     ctx->backend_data = (modbus_rtu_t *)malloc(sizeof(modbus_rtu_t));
     if (ctx->backend_data == NULL) {

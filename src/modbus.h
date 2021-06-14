@@ -58,18 +58,19 @@ MODBUS_BEGIN_DECLS
 #endif
 
 /* Modbus function codes */
-#define MODBUS_FC_READ_COILS                0x01
-#define MODBUS_FC_READ_DISCRETE_INPUTS      0x02
-#define MODBUS_FC_READ_HOLDING_REGISTERS    0x03
-#define MODBUS_FC_READ_INPUT_REGISTERS      0x04
-#define MODBUS_FC_WRITE_SINGLE_COIL         0x05
-#define MODBUS_FC_WRITE_SINGLE_REGISTER     0x06
-#define MODBUS_FC_READ_EXCEPTION_STATUS     0x07
-#define MODBUS_FC_WRITE_MULTIPLE_COILS      0x0F
-#define MODBUS_FC_WRITE_MULTIPLE_REGISTERS  0x10
-#define MODBUS_FC_REPORT_SLAVE_ID           0x11
-#define MODBUS_FC_MASK_WRITE_REGISTER       0x16
-#define MODBUS_FC_WRITE_AND_READ_REGISTERS  0x17
+#define MODBUS_FC_READ_COILS                 0x01
+#define MODBUS_FC_READ_DISCRETE_INPUTS       0x02
+#define MODBUS_FC_READ_HOLDING_REGISTERS     0x03
+#define MODBUS_FC_READ_INPUT_REGISTERS       0x04
+#define MODBUS_FC_WRITE_SINGLE_COIL          0x05
+#define MODBUS_FC_WRITE_SINGLE_REGISTER      0x06
+#define MODBUS_FC_READ_EXCEPTION_STATUS      0x07
+#define MODBUS_FC_WRITE_MULTIPLE_COILS       0x0F
+#define MODBUS_FC_WRITE_MULTIPLE_REGISTERS   0x10
+#define MODBUS_FC_REPORT_SLAVE_ID            0x11
+#define MODBUS_FC_MASK_WRITE_REGISTER        0x16
+#define MODBUS_FC_WRITE_AND_READ_REGISTERS   0x17
+#define MODBUS_FC_READ_DEVICE_IDENTIFICATION 0x2b
 
 #define MODBUS_BROADCAST_ADDRESS    0
 
@@ -201,6 +202,7 @@ MODBUS_API void modbus_free(modbus_t *ctx);
 MODBUS_API int modbus_flush(modbus_t *ctx);
 MODBUS_API int modbus_set_debug(modbus_t *ctx, int flag);
 
+MODBUS_API int modbus_get_error(void);
 MODBUS_API const char *modbus_strerror(int errnum);
 
 MODBUS_API int modbus_read_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest);
@@ -237,6 +239,45 @@ MODBUS_API int modbus_reply(modbus_t *ctx, const uint8_t *req,
                             int req_length, modbus_mapping_t *mb_mapping);
 MODBUS_API int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
                                       unsigned int exception_code);
+
+enum {
+    MODBUS_OBJECTID_VENDORNAME,
+    MODBUS_OBJECTID_PRODUCTCODE,
+    MODBUS_OBJECTID_MAJORMINORREVISION,
+    MODBUS_OBJECTID_VENDORURL,
+    MODBUS_OBJECTID_PRODUCTNAME,
+    MODBUS_OBJECTID_MODELNAME,
+    MODBUS_OBJECTID_USERAPPLICATIONNAME
+};
+
+enum {
+    MODBUS_DEVICE_IDENTIFICATION_BASIC = 0x01,
+    MODBUS_DEVICE_IDENTIFICATION_REGULAR = 0x02,
+    MODBUS_DEVICE_IDENTIFICATION_EXTENDED = 0x03,
+    MODBUS_DEVICE_IDENTIFICATION_SPECIFIC = 0x04
+};
+
+enum {
+    MODBUS_CONFORMITY_LEVEL_BASIC_STREAM = 0x01,
+    MODBUS_CONFORMITY_LEVEL_REGULAR_STREAM = 0x02,
+    MODBUS_CONFORMITY_LEVEL_EXTENDED_STREAM = 0x03,
+    MODBUS_CONFORMITY_LEVEL_BASIC_STREAM_AND_DIRECT = 0x81,
+    MODBUS_CONFORMITY_LEVEL_REGULAR_STREAM_AND_DIRECT = 0x82,
+    MODBUS_CONFORMITY_LEVEL_EXTENDED_STREAM_AND_DIRECT = 0x83 
+};
+
+/* Max size for device identification object data.
+ * Using MODBUS PDU as the base limitation of the size constraint (253 bytes) 
+ * and removing the TCP header length (7 bytes) as well as the size required for
+ * the Read Device Identification response (7 bytes).
+ */
+#define MODBUS_MAX_OBJECT_DATA_LENGTH (MODBUS_MAX_PDU_LENGTH - 7 - 7)
+
+
+MODBUS_API int modbus_set_device_identification(modbus_t *ctx,
+                                                uint8_t object_id,
+                                                const void* data,
+                                                size_t data_length);
 
 /**
  * UTILS FUNCTIONS
