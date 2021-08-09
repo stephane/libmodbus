@@ -416,10 +416,22 @@ static int _modbus_rtu_connect(modbus_t *ctx)
      * http://msdn.microsoft.com/en-us/library/aa450602.aspx
      */
     win32_ser_init(&ctx_rtu->w_ser);
+    
+    char device[255];
+    memset(device, 0, 255);
+    if (strnicmp(ctx_rtu->device,"COM",3) ==0)
+    {
+        strcpy(device, "\\\\.\\");
+        strcat(device, ctx_rtu->device);
+    }
+    else
+    {
+        strcpy(device, ctx_rtu->device);
+    }
 
     /* ctx_rtu->device should contain a string like "COMxx:" xx being a decimal
      * number */
-    ctx_rtu->w_ser.fd = CreateFileA(ctx_rtu->device,
+    ctx_rtu->w_ser.fd = CreateFileA(device,
                                     GENERIC_READ | GENERIC_WRITE,
                                     0,
                                     NULL,
