@@ -280,6 +280,12 @@ static uint8_t compute_meta_length_after_function(int function,
         case MODBUS_FC_MASK_WRITE_REGISTER:
             length = 6;
             break;
+        case MODBUS_FC_READ_HOLDING_REGISTERS_SNR:
+            length = 7;
+            break;
+        case MODBUS_FC_WRITE_SINGLE_REGISTER_SNR:
+            length = 10;
+            break;
         default:
             length = 1;
         }
@@ -313,6 +319,8 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
             function == MODBUS_FC_REPORT_SLAVE_ID ||
             function == MODBUS_FC_WRITE_AND_READ_REGISTERS) {
             length = msg[ctx->backend->header_length + 1];
+        } else if (function == MODBUS_FC_READ_HOLDING_REGISTERS_SNR){
+          length = msg[ctx->backend->header_length + 7];
         } else {
             length = 0;
         }
