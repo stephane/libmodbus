@@ -1,3 +1,44 @@
+libmodbus 3.1.6 (2019-07-31)
+============================
+
+- Fix awful typo in fix for VD-1301 vulnerability.
+  Thank you @karlp.
+
+libmodbus 3.1.5 (2019-07-29)
+============================
+
+- Fix URL
+- Add appveyor.com config
+- Update libmodbus.txt
+- Change arg value from int to const uint16_t in modbus_write_register
+- Mark raw_req argument as const in modbus_send_raw_request (closes #479)
+- Add unit tests for VD-1301 and VD-1302 vulnerabilities
+- Fix VD-1301 and VD-1302 vulnerabilities
+- Create CODE_OF_CONDUCT.md
+- modbus_mapping_t is now a named typedef (to allow forward declaration)
+- Rename type as flags for consistency between functions
+- Add missing SOCK_CLOEXEC flag on socket creation
+- Remove wrong and harmful checks in configure.ac
+- Oops fix OR on RS485 settings (1c5d969)
+- Only set SER_RS485_ENABLED bit of existing RS485 settings
+- Add .vscode/ to .gitignore
+- Fix wrong function name
+- Remove a duplicated semi-colon
+- Fix a small typo in test message
+- Fix modbus_reply for TCP when unit id == 0 (fixes #376)
+- New functions to define the indication timeout (#95)
+- Remove CYGWIN condition to provide bswap16 fallback (#383)
+- typo fix
+- Use builtin bswap16 of gcc 4.8 (#377)
+- Handle out-of-memory conditions more gracefully
+- [doc] Add entry points for accept/listen in libmodbus index
+- Fix typo
+- Refine issue template for Github
+- Move WINVER definition before other includes (#350)
+- Add new function modbus_get_slave()
+- Fix LIBMODBUS_VERSION_HEX encoding (closes #345)
+- tcp_modbus_accept mustn't close socket on error (closes #333)
+
 libmodbus 3.1.4 (2016-05-28)
 ============================
 
@@ -382,7 +423,7 @@ libmodbus 2.1.0 (2010-03-24)
 - Fix report slave ID request
   Patch (bzr) provided by Paul Fertser.
 - Fix #425604 - Conditional jump or move depends on uninitialised value(s)
-  Occurs on first occurence of slave timeout.
+  Occurs on first occurrence of slave timeout.
   Reported by Henrik Munktell.
 - Fix #457200 - FreeBSD support
   Patch provided by Norbert Koch.

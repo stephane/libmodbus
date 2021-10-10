@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
         } else if (strcmp(argv[1], "rtu") == 0) {
             use_backend = RTU;
         } else {
-            printf("Usage:\n  %s [tcp|rtu] - Modbus client to measure data bandwith\n\n", argv[0]);
+            printf("Usage:\n  %s [tcp|rtu] - Modbus client to measure data bandwidth\n\n", argv[0]);
             exit(1);
         }
     } else {

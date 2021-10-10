@@ -15,7 +15,7 @@ SYNOPSIS
 DESCRIPTION
 -----------
 The *modbus_set_float_badc()* function shall set a float to 4 bytes in swapped
-bytes Modbus format (BADC insted of ABCD). The _dest_ array must be pointer on
+bytes Modbus format (BADC instead of ABCD). The _dest_ array must be pointer on
 two 16 bits values to be able to store the full result of the conversion.
 
 

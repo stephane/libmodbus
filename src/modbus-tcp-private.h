@@ -1,7 +1,7 @@
 /*
  * Copyright © 2001-2011 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #ifndef MODBUS_TCP_PRIVATE_H
@@ -14,7 +14,7 @@
 #define _MODBUS_TCP_CHECKSUM_LENGTH    0
 
 /* In both structures, the transaction ID must be placed on first position
-   to have a quick access not dependant of the TCP backend */
+   to have a quick access not dependent of the TCP backend */
 typedef struct _modbus_tcp {
     /* Extract from MODBUS Messaging on TCP/IP Implementation Guide V1.0b
        (page 23/46):

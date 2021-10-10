@@ -1,7 +1,7 @@
 /*
  * Copyright © 2001-2013 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #ifndef MODBUS_H
@@ -208,7 +208,7 @@ MODBUS_API int modbus_read_input_bits(modbus_t *ctx, int addr, int nb, uint8_t *
 MODBUS_API int modbus_read_registers(modbus_t *ctx, int addr, int nb, uint16_t *dest);
 MODBUS_API int modbus_read_input_registers(modbus_t *ctx, int addr, int nb, uint16_t *dest);
 MODBUS_API int modbus_write_bit(modbus_t *ctx, int coil_addr, int status);
-MODBUS_API int modbus_write_register(modbus_t *ctx, int reg_addr, int value);
+MODBUS_API int modbus_write_register(modbus_t *ctx, int reg_addr, const uint16_t value);
 MODBUS_API int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *data);
 MODBUS_API int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *data);
 MODBUS_API int modbus_mask_write_register(modbus_t *ctx, int addr, uint16_t and_mask, uint16_t or_mask);
@@ -227,7 +227,7 @@ MODBUS_API modbus_mapping_t* modbus_mapping_new(int nb_bits, int nb_input_bits,
                                                 int nb_registers, int nb_input_registers);
 MODBUS_API void modbus_mapping_free(modbus_mapping_t *mb_mapping);
 
-MODBUS_API int modbus_send_raw_request(modbus_t *ctx, uint8_t *raw_req, int raw_req_length);
+MODBUS_API int modbus_send_raw_request(modbus_t *ctx, const uint8_t *raw_req, int raw_req_length);
 
 MODBUS_API int modbus_receive(modbus_t *ctx, uint8_t *req);
 
@@ -245,28 +245,32 @@ MODBUS_API int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
 #define MODBUS_GET_HIGH_BYTE(data) (((data) >> 8) & 0xFF)
 #define MODBUS_GET_LOW_BYTE(data) ((data) & 0xFF)
 #define MODBUS_GET_INT64_FROM_INT16(tab_int16, index) \
-    (((int64_t)tab_int16[(index)    ] << 48) + \
-     ((int64_t)tab_int16[(index) + 1] << 32) + \
-     ((int64_t)tab_int16[(index) + 2] << 16) + \
+    (((int64_t)tab_int16[(index)    ] << 48) | \
+     ((int64_t)tab_int16[(index) + 1] << 32) | \
+     ((int64_t)tab_int16[(index) + 2] << 16) | \
       (int64_t)tab_int16[(index) + 3])
-#define MODBUS_GET_INT32_FROM_INT16(tab_int16, index) ((tab_int16[(index)] << 16) + tab_int16[(index) + 1])
-#define MODBUS_GET_INT16_FROM_INT8(tab_int8, index) ((tab_int8[(index)] << 8) + tab_int8[(index) + 1])
+#define MODBUS_GET_INT32_FROM_INT16(tab_int16, index) \
+    (((int32_t)tab_int16[(index)    ] << 16) | \
+      (int32_t)tab_int16[(index) + 1])
+#define MODBUS_GET_INT16_FROM_INT8(tab_int8, index) \
+    (((int16_t)tab_int8[(index)    ] << 8) | \
+      (int16_t)tab_int8[(index) + 1])
 #define MODBUS_SET_INT16_TO_INT8(tab_int8, index, value) \
     do { \
-        tab_int8[(index)] = (value) >> 8;  \
-        tab_int8[(index) + 1] = (value) & 0xFF; \
+        ((int8_t*)(tab_int8))[(index)    ] = (int8_t)((value) >> 8);  \
+        ((int8_t*)(tab_int8))[(index) + 1] = (int8_t)(value); \
     } while (0)
 #define MODBUS_SET_INT32_TO_INT16(tab_int16, index, value) \
     do { \
-        tab_int16[(index)    ] = (value) >> 16; \
-        tab_int16[(index) + 1] = (value); \
+        ((int16_t*)(tab_int16))[(index)    ] = (int16_t)((value) >> 16); \
+        ((int16_t*)(tab_int16))[(index) + 1] = (int16_t)(value); \
     } while (0)
 #define MODBUS_SET_INT64_TO_INT16(tab_int16, index, value) \
     do { \
-        tab_int16[(index)    ] = (value) >> 48; \
-        tab_int16[(index) + 1] = (value) >> 32; \
-        tab_int16[(index) + 2] = (value) >> 16; \
-        tab_int16[(index) + 3] = (value); \
+        ((int16_t*)(tab_int16))[(index)    ] = (int16_t)((value) >> 48); \
+        ((int16_t*)(tab_int16))[(index) + 1] = (int16_t)((value) >> 32); \
+        ((int16_t*)(tab_int16))[(index) + 2] = (int16_t)((value) >> 16); \
+        ((int16_t*)(tab_int16))[(index) + 3] = (int16_t)(value); \
     } while (0)
 
 MODBUS_API void modbus_set_bits_from_byte(uint8_t *dest, int idx, const uint8_t value);

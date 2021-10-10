@@ -108,13 +108,6 @@ int main(int argc, char *argv[])
         modbus_free(ctx);
         return -1;
     }
-    modbus_get_response_timeout(ctx, &new_response_to_sec, &new_response_to_usec);
-
-    printf("** UNIT TESTING **\n");
-
-    printf("1/1 No response timeout modification on connect: ");
-    ASSERT_TRUE(old_response_to_sec == new_response_to_sec &&
-                old_response_to_usec == new_response_to_usec, "");
 
     /* Allocate and initialize the memory to store the bits */
     nb_points = (UT_BITS_NB > UT_INPUT_BITS_NB) ? UT_BITS_NB : UT_INPUT_BITS_NB;
@@ -126,6 +119,13 @@ int main(int argc, char *argv[])
         UT_REGISTERS_NB : UT_INPUT_REGISTERS_NB;
     tab_rp_registers = (uint16_t *) malloc(nb_points * sizeof(uint16_t));
     memset(tab_rp_registers, 0, nb_points * sizeof(uint16_t));
+
+    printf("** UNIT TESTING **\n");
+
+    printf("1/1 No response timeout modification on connect: ");
+    modbus_get_response_timeout(ctx, &new_response_to_sec, &new_response_to_usec);
+    ASSERT_TRUE(old_response_to_sec == new_response_to_sec &&
+                old_response_to_usec == new_response_to_usec, "");
 
     printf("\nTEST WRITE/READ:\n");
 
@@ -533,7 +533,7 @@ int main(int argc, char *argv[])
     rc = modbus_report_slave_id(ctx, NB_REPORT_SLAVE_ID, tab_rp_bits);
     ASSERT_TRUE(rc == NB_REPORT_SLAVE_ID, "");
 
-    /* Slave ID is an arbitraty number for libmodbus */
+    /* Slave ID is an arbitrary number for libmodbus */
     ASSERT_TRUE(rc > 0, "");
 
     /* Run status indicator is ON */
@@ -622,7 +622,7 @@ int main(int argc, char *argv[])
         printf("1/2 Too small byte timeout (3ms < 5ms): ");
         ASSERT_TRUE(rc == -1 && errno == ETIMEDOUT, "");
 
-        /* Wait remaing bytes before flushing */
+        /* Wait remaining bytes before flushing */
         usleep(11 * 5000);
         modbus_flush(ctx);
 
@@ -802,7 +802,6 @@ int test_server(modbus_t *ctx, int use_backend)
             goto close;
     }
 
-    /* Modbus write and read multiple registers */
     rc = send_crafted_request(ctx, MODBUS_FC_WRITE_AND_READ_REGISTERS,
                               rw_raw_req, RW_RAW_REQ_LEN,
                               MODBUS_MAX_WR_READ_REGISTERS + 1, 0,
@@ -810,8 +809,6 @@ int test_server(modbus_t *ctx, int use_backend)
     if (rc == -1)
         goto close;
 
-    /* Modbus write multiple registers with large number of values but a set a
-       small number of bytes in requests (not nb * 2 as usual). */
     rc = send_crafted_request(ctx, MODBUS_FC_WRITE_MULTIPLE_REGISTERS,
                               write_raw_req, WRITE_RAW_REQ_LEN,
                               MODBUS_MAX_WRITE_REGISTERS + 1, 6,
@@ -822,6 +819,22 @@ int test_server(modbus_t *ctx, int use_backend)
     rc = send_crafted_request(ctx, MODBUS_FC_WRITE_MULTIPLE_COILS,
                               write_raw_req, WRITE_RAW_REQ_LEN,
                               MODBUS_MAX_WRITE_BITS + 1, 6,
+                              backend_length, backend_offset);
+    if (rc == -1)
+        goto close;
+
+    /* Modbus write multiple registers with large number of values but a set a
+       small number of bytes in requests (not nb * 2 as usual). */
+    rc = send_crafted_request(ctx, MODBUS_FC_WRITE_MULTIPLE_REGISTERS,
+                              write_raw_req, WRITE_RAW_REQ_LEN,
+                              MODBUS_MAX_WRITE_REGISTERS, 6,
+                              backend_length, backend_offset);
+    if (rc == -1)
+        goto close;
+
+    rc = send_crafted_request(ctx, MODBUS_FC_WRITE_MULTIPLE_COILS,
+                              write_raw_req, WRITE_RAW_REQ_LEN,
+                              MODBUS_MAX_WRITE_BITS, 6,
                               backend_length, backend_offset);
     if (rc == -1)
         goto close;

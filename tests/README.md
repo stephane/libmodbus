@@ -21,7 +21,7 @@ programs are essential to test the Modbus protocol implementation and libmodbus
 behavior.
 
 - `bandwidth-server-one`, `bandwidth-server-many-up` and `bandwidth-client`
- return very useful information about the performance of transfert rate between
+ return very useful information about the performance of transfer rate between
  the server and the client. `bandwidth-server-one` can only handles one
  connection at once with a client whereas `bandwidth-server-many-up` opens a
  connection for each new clients (with a limit).
