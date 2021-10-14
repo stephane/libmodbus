@@ -496,6 +496,10 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     case 250000:
         dcb.BaudRate = 250000;
         break;
+    case 256000:
+        /* CBR_256000 - not defined */
+        dcb.BaudRate = 256000;
+        break;
     case 460800:
         dcb.BaudRate = 460800;
         break;
