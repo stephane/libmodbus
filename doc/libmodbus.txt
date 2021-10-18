@@ -11,8 +11,7 @@ SYNOPSIS
 --------
 *#include <modbus.h>*
 
-*cc* \`pkg-config --cflags --libs libmodbus` 'files'
-
+*cc* 'files' \`pkg-config --cflags --libs libmodbus`
 
 DESCRIPTION
 -----------
