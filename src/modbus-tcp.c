@@ -742,6 +742,8 @@ static int _modbus_tcp_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, i
 static void _modbus_tcp_free(modbus_t *ctx) {
     free(ctx->backend_data);
     free(ctx);
+
+    ctx = NULL;
 }
 
 const modbus_backend_t _modbus_tcp_backend = {
@@ -823,7 +825,6 @@ modbus_t* modbus_new_tcp(const char *ip, int port)
     ctx->backend_data = (modbus_tcp_t *)malloc(sizeof(modbus_tcp_t));
     if (ctx->backend_data == NULL) {
         modbus_free(ctx);
-        errno = ENOMEM;
         return NULL;
     }
     ctx_tcp = (modbus_tcp_t *)ctx->backend_data;
@@ -875,7 +876,6 @@ modbus_t* modbus_new_tcp_pi(const char *node, const char *service)
     ctx->backend_data = (modbus_tcp_pi_t *)malloc(sizeof(modbus_tcp_pi_t));
     if (ctx->backend_data == NULL) {
         modbus_free(ctx);
-        errno = ENOMEM;
         return NULL;
     }
     ctx_tcp_pi = (modbus_tcp_pi_t *)ctx->backend_data;

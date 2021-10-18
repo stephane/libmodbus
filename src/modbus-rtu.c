@@ -1197,6 +1197,7 @@ static void _modbus_rtu_free(modbus_t *ctx) {
     }
 
     free(ctx);
+    ctx = NULL;
 }
 
 const modbus_backend_t _modbus_rtu_backend = {
@@ -1252,7 +1253,6 @@ modbus_t* modbus_new_rtu(const char *device,
     ctx->backend_data = (modbus_rtu_t *)malloc(sizeof(modbus_rtu_t));
     if (ctx->backend_data == NULL) {
         modbus_free(ctx);
-        errno = ENOMEM;
         return NULL;
     }
     ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
@@ -1261,7 +1261,6 @@ modbus_t* modbus_new_rtu(const char *device,
     ctx_rtu->device = (char *)malloc((strlen(device) + 1) * sizeof(char));
     if (ctx_rtu->device == NULL) {
         modbus_free(ctx);
-        errno = ENOMEM;
         return NULL;
     }
     strcpy(ctx_rtu->device, device);
