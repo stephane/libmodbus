@@ -182,7 +182,6 @@ static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
 
 static void _modbus_rtu_free(modbus_t *ctx) {
   _modbus_serial_free(ctx->backend_data);
-  free(ctx->backend_data);
   free(ctx);
 }
 
