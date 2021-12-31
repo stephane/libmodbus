@@ -6,7 +6,7 @@ LICENSE file).
 After installation, you can use pkg-config to compile these tests.
 For example, to compile random-test-server run:
 
-gcc random-test-server.c -o random-test-server `pkg-config --libs --cflags libmodbus`
+`gcc random-test-server.c -o random-test-server $(pkg-config --libs --cflags libmodbus)`
 
 - `random-test-server` is necessary to launch a server before running
 random-test-client. By default, it receives and replies to Modbus query on the
