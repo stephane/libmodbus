@@ -1,3 +1,29 @@
+libmodbus 3.1.7 (2022-01-09)
+============================
+
+- modbus_reply: fix copy & paste error in sanity check (fixes #614)
+- Add SECURITY.md (closes #613)
+- Fix typo in comment (closes #588)
+- Replace obsolete AC_PROG_CC_STDC by AC_PROG_CC
+- Fix position of CC flags in documentation (closes #599)
+- Remove duplicate ';' (closes #602)
+- Add the baud rate of 256k for Windows (closes #603)
+- cosmetic changes in man page standardizing itemization
+- Fix many typos
+- Replace .dir-locals.el (Emacs) by .editorconfig
+- Include the test LICENSE in tarball
+- Install the NEWS and AUTHORS files
+- Update README.md
+- docs: fix simple typo, reponse -> response
+- Add modbus_[get|set]_indication_timeout to doc build
+- Fix warning issues
+- Move malloc before starting unit tests
+- Fixed MODBUS_GET_* macros in case of negative values
+- SPDX: change LGPL-2.1+ to LGPL-2.1-or-later
+
+Thank you to @yegorich, @i-ky, @jobol, @timgates42, @anton-bondarev, Richard
+Ash, @stefannilsson, Marc Haber, @qqq89513 and @mhei.
+
 libmodbus 3.1.6 (2019-07-31)
 ============================
 
