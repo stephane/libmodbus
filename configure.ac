@@ -101,6 +101,9 @@ AC_LIBMODBUS_CHECK_BUILD_DOC
 # workaround that problem and Cygwin doesn't define MSG_DONTWAIT.
 AC_CHECK_DECLS([__CYGWIN__])
 
+# Check for network function in libnetwork for Haiku
+AC_SEARCH_LIBS(accept, network socket)
+
 # Checks for library functions.
 AC_CHECK_FUNCS([accept4 getaddrinfo gettimeofday inet_ntoa select socket strerror strlcpy])
 
