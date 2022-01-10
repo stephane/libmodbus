@@ -34,7 +34,7 @@ ERRORS
 ------
 *EINVAL*::
 The argument _ctx_ is NULL, or both _to_sec_ and _to_usec_ are zero, or _to_usec_
-is larger than 1000000.
+is larger than 999999.
 
 
 EXAMPLE
