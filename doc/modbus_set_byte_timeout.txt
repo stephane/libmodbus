@@ -38,7 +38,7 @@ errno.
 ERRORS
 ------
 *EINVAL*::
-The argument _ctx_ is NULL or _to_usec_ is larger than 1000000.
+The argument _ctx_ is NULL or _to_usec_ is larger than 999999.
 
 
 SEE ALSO
