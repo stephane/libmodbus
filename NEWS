@@ -21,8 +21,8 @@ libmodbus 3.1.7 (2022-01-09)
 - Fixed MODBUS_GET_* macros in case of negative values
 - SPDX: change LGPL-2.1+ to LGPL-2.1-or-later
 
-Thank you to @yegorich, @i-ky, @jobol, @timgates42, @anton-bondarev, Richard
-Ash, @stefannilsson, Marc Haber, @qqq89513 and @mhei.
+Thank you to @yegorich, @i-ky, @jobol, @timgates42, @anton-bondarev,
+@richardash1981, @stefannilsson, @Zugschlus, @qqq89513 and @mhei.
 
 libmodbus 3.1.6 (2019-07-31)
 ============================
