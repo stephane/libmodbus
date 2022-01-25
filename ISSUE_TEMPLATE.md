@@ -20,7 +20,7 @@ Please read the following carefully before submitting this new issue.
 
 When you get here and you are still convinced that you want to report a bug:
 
-- *Use a clear and decriptive title* for the issue to identify
+- *Use a clear and descriptive title* for the issue to identify
 
 - *Which version of libmodbus are you using?* you can obtain this information
    from your package manager or by running `pkg-config --modversion libmodbus`.
@@ -29,7 +29,7 @@ When you get here and you are still convinced that you want to report a bug:
 - *Which operating system are you using?*
 
 - *Describe the exact steps which reproduce the problem* in as many details as
-   possible. For example, the software/equipement which runs the Modbus server, how
+   possible. For example, the software/equipment which runs the Modbus server, how
    the clients are connected (TCP, RTU, ASCII) and the source code you are using.
 
 - *Enable the debug mode*, libmodbus provides a function to display the content
@@ -62,11 +62,11 @@ everything up to and including the following line which starts with ---.
 
   <...>
 
-## Expected behaviour
+## Expected behavior
 
   <...>
 
-## Actual behaviour
+## Actual behavior
 
   <...>
 
