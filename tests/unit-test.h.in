@@ -56,6 +56,12 @@ const uint16_t UT_INPUT_REGISTERS_ADDRESS = 0x108;
 const uint16_t UT_INPUT_REGISTERS_NB = 0x1;
 const uint16_t UT_INPUT_REGISTERS_TAB[] = { 0x000A };
 
+const uint16_t UT_FILE_ADDRESS = 0x0;
+const uint16_t UT_FILE_NB = 0x2;
+const uint16_t UT_RECORDS_NB = 0x3;
+const uint16_t UT_RECORDS_SIZE = 0x20;
+const uint16_t UT_RECORD_ADDRESS = 0x2;
+
 const float UT_REAL = 123456.00;
 
 const uint32_t UT_IREAL_ABCD = 0x0020F147;

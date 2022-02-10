@@ -9,13 +9,15 @@ modbus_mapping_new - allocate four arrays of bits and registers
 
 SYNOPSIS
 --------
-*modbus_mapping_t* modbus_mapping_new(int 'nb_bits', int 'nb_input_bits', int 'nb_registers', int 'nb_input_registers');*
+*modbus_mapping_t* modbus_mapping_new(int 'nb_bits', int 'nb_input_bits',
+                                      int 'nb_registers', int 'nb_input_registers',
+                                      int 'nb_files', int 'nb_records', int 'record_size');*
 
 
 DESCRIPTION
 -----------
-The *modbus_mapping_new()* function shall allocate four arrays to store bits,
-input bits, registers and inputs registers. The pointers are stored in
+The *modbus_mapping_new()* function shall allocate six arrays to store bits,
+input bits, registers, inputs registers, files and file records. The pointers are stored in
 modbus_mapping_t structure. All values of the arrays are initialized to zero.
 
 This function is equivalent to a call of the
@@ -48,7 +50,9 @@ EXAMPLE
 mb_mapping = modbus_mapping_new(BITS_ADDRESS + BITS_NB,
                                 INPUT_BITS_ADDRESS + INPUT_BITS_NB,
                                 REGISTERS_ADDRESS + REGISTERS_NB,
-                                INPUT_REGISTERS_ADDRESS + INPUT_REGISTERS_NB);
+                                INPUT_REGISTERS_ADDRESS + INPUT_REGISTERS_NB,
+                                FILES_ADDRESS + FILES_NB,
+                                RECORDS_NB, RECORDS_SIZE);
 if (mb_mapping == NULL) {
     fprintf(stderr, "Failed to allocate the mapping: %s\n",
             modbus_strerror(errno));
