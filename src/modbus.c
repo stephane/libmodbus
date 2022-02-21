@@ -332,7 +332,6 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
    and errno is set to one of the values defined below:
    - ECONNRESET
    - EMBBADDATA
-   - EMBUNKEXC
    - ETIMEDOUT
    - read() or recv() error codes
 */
