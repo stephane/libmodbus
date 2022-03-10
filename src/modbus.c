@@ -207,7 +207,7 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
     return rc;
 }
 
-int modbus_send_raw_msg(modbus_t *ctx, const uint8_t *raw_req, int raw_req_length, int as_respone)
+int modbus_send_raw_msg(modbus_t *ctx, const uint8_t *raw_req, int raw_req_length, int as_response)
 {
     sft_t sft;
     uint8_t req[MAX_MESSAGE_LENGTH];
@@ -229,7 +229,7 @@ int modbus_send_raw_msg(modbus_t *ctx, const uint8_t *raw_req, int raw_req_lengt
     sft.slave = raw_req[0];
     sft.function = raw_req[1];
 
-    if (as_respone) {
+    if (as_response) {
         sft.t_id = ctx->backend->prepare_response_tid(req, &req_length);
     }else {
         /* The t_id is left to zero */
