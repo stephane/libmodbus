@@ -207,7 +207,7 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
     return rc;
 }
 
-int modbus_send_raw_msg(modbus_t *ctx, const uint8_t *raw_req, int raw_req_length, int as_respone)
+int modbus_send_raw_request(modbus_t *ctx, const uint8_t *raw_req, int raw_req_length)
 {
     sft_t sft;
     uint8_t req[MAX_MESSAGE_LENGTH];
@@ -229,11 +229,7 @@ int modbus_send_raw_msg(modbus_t *ctx, const uint8_t *raw_req, int raw_req_lengt
     sft.slave = raw_req[0];
     sft.function = raw_req[1];
     /* The t_id is left to zero */
-    if (as_respone) {
-        sft.t_id = ctx->backend->prepare_response_tid(req, &req_length);
-    }else {
-        sft.t_id = 0;
-    }
+    sft.t_id = 0;
     /* This response function only set the header so it's convenient here */
     req_length = ctx->backend->build_response_basis(&sft, req);
 
@@ -245,17 +241,6 @@ int modbus_send_raw_msg(modbus_t *ctx, const uint8_t *raw_req, int raw_req_lengt
 
     return send_msg(ctx, req, req_length);
 }
-
-int modbus_send_raw_request(modbus_t *ctx, const uint8_t *raw_req, int raw_req_length)
-{
-    return modbus_send_raw_msg(modbus_t *ctx, const uint8_t *raw_req, int raw_req_length, 0);
-}
-
-int modbus_send_raw_response(modbus_t *ctx, const uint8_t *raw_req, int raw_req_length)
-{
-    return modbus_send_raw_msg(modbus_t *ctx, const uint8_t *raw_req, int raw_req_length, 1);
-}
-
 
 /*
  *  ---------- Request     Indication ----------
