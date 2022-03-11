@@ -228,11 +228,10 @@ int modbus_send_raw_msg(modbus_t *ctx, const uint8_t *raw_req, int raw_req_lengt
 
     sft.slave = raw_req[0];
     sft.function = raw_req[1];
-
+    /* The t_id is left to zero */
     if (as_respone) {
         sft.t_id = ctx->backend->prepare_response_tid(req, &req_length);
     }else {
-        /* The t_id is left to zero */
         sft.t_id = 0;
     }
     /* This response function only set the header so it's convenient here */
