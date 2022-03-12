@@ -249,12 +249,12 @@ int modbus_send_raw_msg(modbus_t *ctx, const uint8_t *raw_req, int raw_req_lengt
 
 int modbus_send_raw_request(modbus_t *ctx, const uint8_t *raw_req, int raw_req_length)
 {
-    return modbus_send_raw_msg(modbus_t *ctx, const uint8_t *raw_req, int raw_req_length, FALSE);
+    return modbus_send_raw_msg(ctx, raw_req, raw_req_length, FALSE);
 }
 
 int modbus_send_raw_response(modbus_t *ctx, const uint8_t *raw_req, int raw_req_length)
 {
-    return modbus_send_raw_msg(modbus_t *ctx, const uint8_t *raw_req, int raw_req_length, TRUE);
+    return modbus_send_raw_msg(ctx, raw_req, raw_req_length, TRUE);
 }
 
 /*
