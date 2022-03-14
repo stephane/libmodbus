@@ -246,6 +246,7 @@ int modbus_send_raw_response(modbus_t *ctx, uint8_t *req, const uint8_t *raw_res
 {
     sft_t sft;
     uint8_t resp[MAX_MESSAGE_LENGTH];
+    int resp_length;
     int req_length;
 
     if (ctx == NULL) {
