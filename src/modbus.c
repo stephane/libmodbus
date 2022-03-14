@@ -207,7 +207,7 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
     return rc;
 }
 
-int modbus_send_raw_msg(modbus_t *ctx, uint8_t *req, const uint8_t *raw_req, int raw_req_length, int as_response)
+int modbus_send_raw_request(modbus_t *ctx, const uint8_t *raw_req, int raw_req_length)
 {
     sft_t sft;
     uint8_t req[MAX_MESSAGE_LENGTH];
@@ -228,13 +228,8 @@ int modbus_send_raw_msg(modbus_t *ctx, uint8_t *req, const uint8_t *raw_req, int
 
     sft.slave = raw_req[0];
     sft.function = raw_req[1];
-
-    if (as_response) {
-        sft.t_id = ctx->backend->prepare_response_tid(req, &req_length);
-    }else {
-        /* The t_id is left to zero */
-        sft.t_id = 0;
-    }
+    /* The t_id is left to zero */
+    sft.t_id = 0;
     /* This response function only set the header so it's convenient here */
     req_length = ctx->backend->build_response_basis(&sft, req);
 
@@ -247,15 +242,39 @@ int modbus_send_raw_msg(modbus_t *ctx, uint8_t *req, const uint8_t *raw_req, int
     return send_msg(ctx, req, req_length);
 }
 
-int modbus_send_raw_request(modbus_t *ctx, const uint8_t *raw_req, int raw_req_length)
+int modbus_send_raw_response(modbus_t *ctx, uint8_t *req, const uint8_t *raw_req, int raw_req_length)
 {
-    uint8_t *req;
-    return modbus_send_raw_msg(ctx, req, raw_req, raw_req_length, FALSE);
-}
+    sft_t sft;
+    uint8_t req[MAX_MESSAGE_LENGTH];
+    int req_length;
 
-int modbus_send_raw_response(modbus_t *ctx, uint8_t *req, const uint8_t *raw_resp, int raw_resp_length)
-{
-    return modbus_send_raw_msg(ctx, req, raw_resp, raw_resp_length, TRUE);
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (raw_req_length < 2 || raw_req_length > (MODBUS_MAX_PDU_LENGTH + 1)) {
+        /* The raw request must contain function and slave at least and
+           must not be longer than the maximum pdu length plus the slave
+           address. */
+        errno = EINVAL;
+        return -1;
+    }
+
+    sft.t_id = ctx->backend->prepare_response_tid(req, &req_length)
+    sft.slave = raw_req[0];
+    sft.function = raw_req[1];
+
+    /* This response function only set the header so it's convenient here */
+    req_length = ctx->backend->build_response_basis(&sft, req);
+
+    if (raw_req_length > 2) {
+        /* Copy data after function code */
+        memcpy(req + req_length, raw_req + 2, raw_req_length - 2);
+        req_length += raw_req_length - 2;
+    }
+
+    return send_msg(ctx, req, req_length);
 }
 
 /*
