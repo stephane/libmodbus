@@ -261,7 +261,7 @@ int modbus_send_raw_response(modbus_t *ctx, uint8_t *req, const uint8_t *raw_req
         return -1;
     }
 
-    sft.t_id = ctx->backend->prepare_response_tid(req, &req_length)
+    sft.t_id = ctx->backend->prepare_response_tid(req, &req_length);
     sft.slave = raw_req[0];
     sft.function = raw_req[1];
 
