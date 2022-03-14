@@ -242,9 +242,10 @@ int modbus_send_raw_request(modbus_t *ctx, const uint8_t *raw_req, int raw_req_l
     return send_msg(ctx, req, req_length);
 }
 
-int modbus_send_raw_response(modbus_t *ctx, uint8_t *req, const uint8_t *raw_req, int raw_req_length)
+int modbus_send_raw_response(modbus_t *ctx, uint8_t *req, const uint8_t *raw_resp, int raw_resp_length)
 {
     sft_t sft;
+    uint8_t resp[MAX_MESSAGE_LENGTH];
     int req_length;
 
     if (ctx == NULL) {
@@ -252,7 +253,7 @@ int modbus_send_raw_response(modbus_t *ctx, uint8_t *req, const uint8_t *raw_req
         return -1;
     }
 
-    if (raw_req_length < 2 || raw_req_length > (MODBUS_MAX_PDU_LENGTH + 1)) {
+    if (raw_resp_length < 2 || raw_resp_length > (MODBUS_MAX_PDU_LENGTH + 1)) {
         /* The raw request must contain function and slave at least and
            must not be longer than the maximum pdu length plus the slave
            address. */
@@ -261,19 +262,19 @@ int modbus_send_raw_response(modbus_t *ctx, uint8_t *req, const uint8_t *raw_req
     }
 
     sft.t_id = ctx->backend->prepare_response_tid(req, &req_length);
-    sft.slave = raw_req[0];
-    sft.function = raw_req[1];
+    sft.slave = raw_resp[0];
+    sft.function = raw_resp[1];
 
     /* This response function only set the header so it's convenient here */
-    req_length = ctx->backend->build_response_basis(&sft, req);
+    resp_length = ctx->backend->build_response_basis(&sft, resp);
 
-    if (raw_req_length > 2) {
+    if (raw_resp_length > 2) {
         /* Copy data after function code */
-        memcpy(req + req_length, raw_req + 2, raw_req_length - 2);
-        req_length += raw_req_length - 2;
+        memcpy(resp + resp_length, raw_resp + 2, raw_resp_length - 2);
+        resp_length += raw_resp_length - 2;
     }
 
-    return send_msg(ctx, req, req_length);
+    return send_msg(ctx, resp, resp_length);
 }
 
 /*
