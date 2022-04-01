@@ -5,7 +5,6 @@
  */
 
 #include <stdio.h>
-#include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -14,6 +13,7 @@
 # include <winsock2.h>
 #else
 # include <sys/socket.h>
+#include <unistd.h>
 #endif
 
 /* For MinGW */
@@ -21,7 +21,7 @@
 # define MSG_NOSIGNAL 0
 #endif
 
-#include "unit-test.h"
+#include "unit-test.h.in"
 
 enum {
     TCP,
@@ -93,6 +93,13 @@ int main(int argc, char*argv[])
     /* Initialize values of INPUT REGISTERS */
     for (i=0; i < UT_INPUT_REGISTERS_NB; i++) {
         mb_mapping->tab_input_registers[i] = UT_INPUT_REGISTERS_TAB[i];
+    }
+
+
+    /* Set Device Identification data */
+    for (i = 0; i < sizeof(TEST_DEVICE_ID_NAMES)/sizeof(TEST_DEVICE_ID_NAMES[0]); ++i) {
+        modbus_set_device_identification(ctx, i,
+            TEST_DEVICE_ID_NAMES[i], strlen(TEST_DEVICE_ID_NAMES[i])+1);
     }
 
     if (use_backend == TCP) {

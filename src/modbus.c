@@ -41,6 +41,10 @@ typedef enum {
     _STEP_DATA
 } _step_t;
 
+int modbus_get_error(void) {
+    return errno;
+}
+
 const char *modbus_strerror(int errnum) {
     switch (errnum) {
     case EMBXILFUN:
@@ -264,6 +268,8 @@ static uint8_t compute_meta_length_after_function(int function,
             length = 6;
         } else if (function == MODBUS_FC_WRITE_AND_READ_REGISTERS) {
             length = 9;
+        } else if (function == MODBUS_FC_READ_DEVICE_IDENTIFICATION) {
+            length = 3;
         } else {
             /* MODBUS_FC_READ_EXCEPTION_STATUS, MODBUS_FC_REPORT_SLAVE_ID */
             length = 0;
@@ -278,6 +284,10 @@ static uint8_t compute_meta_length_after_function(int function,
             length = 4;
             break;
         case MODBUS_FC_MASK_WRITE_REGISTER:
+            length = 6;
+            break;
+        case MODBUS_FC_READ_DEVICE_IDENTIFICATION:
+            /* read next 6 bytes, last byte should be the number of objects in the message */
             length = 6;
             break;
         default:
@@ -313,7 +323,12 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
             function == MODBUS_FC_REPORT_SLAVE_ID ||
             function == MODBUS_FC_WRITE_AND_READ_REGISTERS) {
             length = msg[ctx->backend->header_length + 1];
-        } else {
+        }
+        else if (function == MODBUS_FC_READ_DEVICE_IDENTIFICATION) {
+            /* Read next two bytes of next object */
+            length = 2;
+        }
+        else {
             length = 0;
         }
     }
@@ -345,6 +360,8 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     int length_to_read;
     int msg_length = 0;
     _step_t step;
+    int data_count = 0;
+    int data_read = 0;
 
     if (ctx->debug) {
         if (msg_type == MSG_INDICATION) {
@@ -447,12 +464,32 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
             case _STEP_META:
                 length_to_read = compute_data_length_after_meta(
                     ctx, msg, msg_type);
+
+                if (MODBUS_FC_READ_DEVICE_IDENTIFICATION == msg[ctx->backend->header_length]) {
+                    data_count = msg[msg_length - 1];
+                    if (data_count == 0) {
+                        length_to_read = 0;
+                    }
+                }
+
                 if ((msg_length + length_to_read) > (int)ctx->backend->max_adu_length) {
                     errno = EMBBADDATA;
                     _error_print(ctx, "too many data");
                     return -1;
                 }
                 step = _STEP_DATA;
+                break;
+            case _STEP_DATA: {
+                if (MODBUS_FC_READ_DEVICE_IDENTIFICATION == msg[ctx->backend->header_length]) {
+                    if (data_count > data_read) {
+                        length_to_read = msg[msg_length - 1];
+                        ++data_read;
+                        if (data_read != data_count) {
+                            length_to_read += 2;
+                        }
+                    }
+                }
+            }
                 break;
             default:
                 break;
@@ -692,6 +729,89 @@ static int response_exception(modbus_t *ctx, sft_t *sft,
     rsp_length = ctx->backend->build_response_basis(sft, rsp);
     rsp[rsp_length++] = exception_code;
 
+    return rsp_length;
+}
+
+static int _build_read_device_identification_response(modbus_t* ctx, sft_t sft,
+    uint8_t* rsp, int rsp_length, uint8_t mei_type, uint8_t read_dev_id_code,
+    uint8_t object_id)
+{
+    uint8_t idx_more_follows;
+    uint8_t idx_next_object_id;
+    uint8_t idx_number_objects;
+    uint8_t objects_processed;
+
+    const int read_code_ge_basic =
+        read_dev_id_code >= MODBUS_DEVICE_IDENTIFICATION_BASIC;
+    const int read_code_ge_regular =
+        read_dev_id_code >= MODBUS_DEVICE_IDENTIFICATION_REGULAR;
+    const int read_code_ge_extended =
+        read_dev_id_code >= MODBUS_DEVICE_IDENTIFICATION_EXTENDED;
+
+
+    rsp_length = ctx->backend->build_response_basis(&sft, rsp);
+    rsp[rsp_length++] = mei_type;
+    rsp[rsp_length++] = read_dev_id_code;
+
+    // implementation should support direct and stream access to extended objects
+    rsp[rsp_length++] = MODBUS_CONFORMITY_LEVEL_EXTENDED_STREAM_AND_DIRECT;
+
+    idx_more_follows = rsp_length++;
+    rsp[idx_more_follows] = _NO_MORE_FOLLOWS;
+    /* set more_follows:
+        0x00 if single access (read_dev_id_code == 0x4) else
+        0x00 if no more objects available else
+        0xff
+    */
+
+    idx_next_object_id = rsp_length++;
+    rsp[idx_next_object_id] = 0;
+    /* set next_object_id
+        0x00 if more_follows == 0 else
+        next object code that should have been read
+    */
+
+    idx_number_objects = rsp_length++;
+    rsp[idx_number_objects] = 0;
+
+    objects_processed = 0;
+    // iterate over objects that need to be written to client
+    while ((object_id < _DEVICE_ID_END_OF_BASIC && read_code_ge_basic) ||
+        (object_id < _DEVICE_ID_END_OF_REGULAR  && read_code_ge_regular) ||
+        (object_id < _DEVICE_ID_MAX && read_code_ge_extended))
+    {
+        id_object_t* obj = ctx->device_identification.objects + object_id;
+
+        if (obj->data != NULL && obj->data_length > 0) {
+
+            // if current response and the next object (id, length and data)
+            // do not fit in the message, set flag that more data follows
+            // and stop until client asks for more data
+            if ((rsp_length + obj->data_length + 2) > MAX_MESSAGE_LENGTH) {
+                rsp[idx_more_follows] = _MORE_FOLLOWS;
+                rsp[idx_next_object_id] = object_id;
+                break;
+            }
+
+            // write object to response
+            rsp[rsp_length++] = object_id;
+            rsp[rsp_length++] = obj->data_length;
+            memcpy(rsp + rsp_length, obj->data, obj->data_length);
+
+            rsp_length += obj->data_length;
+            ++objects_processed;
+
+            if (read_dev_id_code == MODBUS_DEVICE_IDENTIFICATION_SPECIFIC)
+                break;
+        }
+        ++object_id;
+    }
+
+    rsp[idx_number_objects] = objects_processed;
+    if (rsp[idx_more_follows]) {
+        rsp[idx_next_object_id] = object_id;
+    }
+    
     return rsp_length;
 }
 
@@ -989,6 +1109,44 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
     }
         break;
 
+    case MODBUS_FC_READ_DEVICE_IDENTIFICATION: {
+        uint8_t read_dev_id_code = req[offset + 2];
+        uint8_t object_id = req[offset + 3];
+        id_object_t* obj = ctx->device_identification.objects + object_id;
+
+        if (obj->data == NULL || obj->data_length == 0) {
+            if (read_dev_id_code == MODBUS_DEVICE_IDENTIFICATION_SPECIFIC){
+                // In case of an individual access: ReadDevId code 04, the
+                // ObjectId in the request gives the identification of the
+                // object to obtain, and if the Object Id doesn't match to any
+                // known object, the server returns an exception response with
+                // exception code = 02 (Illegal data address). 
+                rsp_length = response_exception(
+                    ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_ADDRESS, rsp, TRUE,
+                    "Modbus Object ID refers to value that is not set: 0x%0X\n",
+                    object_id);
+                break;
+            }
+            // If the Object Id does not match any known object, the server
+            // responds as if object 0 were pointed out (restart at beginning).
+            object_id = 0;
+        }
+
+        // read device id code out of range
+        if (read_dev_id_code == 0 ||
+            read_dev_id_code > MODBUS_DEVICE_IDENTIFICATION_SPECIFIC) {
+            rsp_length = response_exception(
+                ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE, rsp, TRUE,
+                "Unknown Modbus Read Device ID Code: 0x%0X\n",
+                read_dev_id_code);
+            break;
+        }
+
+        rsp_length = _build_read_device_identification_response(ctx, sft, rsp,
+            rsp_length, req[offset + 1], read_dev_id_code, object_id);
+
+    }
+        break;
     default:
         rsp_length = response_exception(
             ctx, &sft, MODBUS_EXCEPTION_ILLEGAL_FUNCTION, rsp, TRUE,
@@ -997,8 +1155,11 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
     }
 
     /* Suppress any responses when the request was a broadcast */
-    return (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU &&
-            slave == MODBUS_BROADCAST_ADDRESS) ? 0 : send_msg(ctx, rsp, rsp_length);
+    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU &&
+        slave == MODBUS_BROADCAST_ADDRESS)
+        return 0;
+
+    return send_msg(ctx, rsp, rsp_length);
 }
 
 int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
@@ -1577,6 +1738,8 @@ void _modbus_init_common(modbus_t *ctx)
 
     ctx->indication_timeout.tv_sec = 0;
     ctx->indication_timeout.tv_usec = 0;
+
+    _device_identification_init(&ctx->device_identification);
 }
 
 /* Define the slave number */
@@ -1745,6 +1908,7 @@ void modbus_free(modbus_t *ctx)
     if (ctx == NULL)
         return;
 
+    _device_identification_free(&ctx->device_identification);
     ctx->backend->free(ctx);
 }
 
@@ -1908,3 +2072,82 @@ size_t strlcpy(char *dest, const char *src, size_t dest_size)
     return (s - src - 1); /* count does not include NUL */
 }
 #endif
+
+
+void _device_identification_init(device_identification_t* dev_ids)
+{
+    dev_ids->objects = (id_object_t*)malloc(
+        sizeof(id_object_t) * _DEVICE_ID_MAX);
+
+    if (dev_ids->objects == NULL) {
+        errno = ENOMEM;
+        return;
+    }
+
+    dev_ids->object_count = _DEVICE_ID_MAX;
+
+    // zero all data ptr and object_length for all objects
+    memset(dev_ids->objects, 0, sizeof(id_object_t) * dev_ids->object_count);
+
+    _device_identification_assign(dev_ids, MODBUS_OBJECTID_VENDORNAME,
+        _VENDOR_NAME_DEFAULT, strlen(_VENDOR_NAME_DEFAULT) + 1);
+    _device_identification_assign(dev_ids, MODBUS_OBJECTID_PRODUCTCODE,
+         _PRODUCT_CODE_DEFAULT, strlen(_PRODUCT_CODE_DEFAULT) + 1);
+    _device_identification_assign(dev_ids, MODBUS_OBJECTID_VENDORNAME,
+         _MAJOR_MINOR_REVISION_DEFAULT, strlen(_MAJOR_MINOR_REVISION_DEFAULT) + 1);
+}
+
+int _device_identification_assign(device_identification_t* dev_ids,
+    uint8_t object_id, const void* data, size_t data_length)
+{
+    if (data == NULL || data_length == 0) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    return _identification_object_assign(dev_ids->objects + object_id,
+        data, data_length);
+}
+
+void _device_identification_free(device_identification_t* dev_ids)
+{
+    size_t i;
+    for (i = 0; i < dev_ids->object_count; ++i)
+        free(dev_ids->objects[i].data);
+
+    free(dev_ids->objects);
+    memset(dev_ids, 0, sizeof(device_identification_t));
+}
+
+int _identification_object_assign(id_object_t* obj, const void* data,
+    size_t data_length)
+{
+    if (data_length > MODBUS_MAX_OBJECT_DATA_LENGTH) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    free(obj->data);
+
+    obj->data = malloc(data_length);
+    if (obj->data == NULL) {
+        errno = ENOMEM;
+        return -1;
+    }
+
+    memcpy(obj->data, data, data_length);
+    obj->data_length = (uint8_t)data_length;
+    return 0;
+}
+
+int modbus_set_device_identification(modbus_t *ctx, uint8_t object_id,
+    const void* data, size_t data_length)
+{
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    return _device_identification_assign(&ctx->device_identification,
+        object_id, data, data_length);
+}

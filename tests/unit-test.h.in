@@ -26,7 +26,7 @@
 #define INVALID_SERVER_ID 18
 
 const uint16_t UT_BITS_ADDRESS = 0x130;
-const uint16_t UT_BITS_NB = 0x25;
+#define UT_BITS_NB 0x25
 const uint8_t UT_BITS_TAB[] = { 0xCD, 0x6B, 0xB2, 0x0E, 0x1B };
 
 const uint16_t UT_INPUT_BITS_ADDRESS = 0x1C4;
@@ -100,5 +100,19 @@ const uint16_t UT_IREAL_CDAB_GET[] = {0x2000, 0x47F1};
 const uint32_t UT_IREAL_DCBA = 0x0020F147;
 const uint32_t UT_IREAL_BADC = 0xF1470020;
 const uint32_t UT_IREAL_CDAB = 0x200047F1;*/
+
+#ifdef _WIN32
+#define close closesocket
+#define usleep(us) Sleep(us/1000)
+#endif
+
+#define VENDOR_NAME "VendorName Inc."
+#define PRODUCT_CODE "ProductCode"
+#define MAJOR_MINOR_REVISION "1.1.235"
+#define VENDOR_URL "http://www.modbus.org"
+#define PRODUCT_NAME "libmodbus"
+
+const char* TEST_DEVICE_ID_NAMES[] = {VENDOR_NAME, PRODUCT_CODE, MAJOR_MINOR_REVISION, VENDOR_URL, PRODUCT_NAME};
+
 
 #endif /* _UNIT_TEST_H_ */
