@@ -436,6 +436,17 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
         if (length_to_read == 0) {
             switch (step) {
             case _STEP_FUNCTION:
+                /* HACK: derive the length from the Length field of the MBAP.  */
+                if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_TCP) {
+                    int mbap_length_field = (
+                        (((int)(msg[4])) << 8) | 
+                        ((int)(msg[5]))
+                    );
+                    length_to_read = mbap_length_field - 2 /*  the unit identifier and function code.  */;
+                    step = _STEP_DATA;
+                    break;
+                }
+
                 /* Function code position */
                 length_to_read = compute_meta_length_after_function(
                     msg[ctx->backend->header_length],
