@@ -442,6 +442,11 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
                         (((int)(msg[4])) << 8) | 
                         ((int)(msg[5]))
                     );
+                    if (mbap_length_field < 2) {
+                        errno = EMBBADDATA;
+                        _error_print(ctx, "need more data");
+                        return -1;
+                    }
                     length_to_read = mbap_length_field - 2 /*  the unit identifier and function code.  */;
                     step = _STEP_DATA;
                     break;
