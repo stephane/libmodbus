@@ -137,9 +137,9 @@ static uint16_t crc16(uint8_t *buffer, uint16_t buffer_length)
 
     /* pass through message buffer */
     while (buffer_length--) {
-        i = crc_hi ^ *buffer++; /* calculate the CRC  */
-        crc_hi = crc_lo ^ table_crc_hi[i];
-        crc_lo = table_crc_lo[i];
+        i = crc_lo ^ *buffer++; /* calculate the CRC  */
+        crc_lo = crc_hi ^ table_crc_hi[i];
+        crc_hi = table_crc_lo[i];
     }
 
     return (crc_hi << 8 | crc_lo);
@@ -155,8 +155,11 @@ static int _modbus_rtu_prepare_response_tid(const uint8_t *req, int *req_length)
 static int _modbus_rtu_send_msg_pre(uint8_t *req, int req_length)
 {
     uint16_t crc = crc16(req, req_length);
-    req[req_length++] = crc >> 8;
+
+    /* According to the MODBUS specs (p. 14), the low order byte of the CRC comes
+     * first in the RTU message */
     req[req_length++] = crc & 0x00FF;
+    req[req_length++] = crc >> 8;
 
     return req_length;
 }
@@ -374,7 +377,7 @@ static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
     }
 
     crc_calculated = crc16(msg, msg_length - 2);
-    crc_received = (msg[msg_length - 2] << 8) | msg[msg_length - 1];
+    crc_received = (msg[msg_length - 1] << 8) | msg[msg_length - 2];
 
     /* Check CRC of msg */
     if (crc_calculated == crc_received) {
@@ -495,6 +498,9 @@ static int _modbus_rtu_connect(modbus_t *ctx)
         break;
     case 250000:
         dcb.BaudRate = 250000;
+        break;
+    case 256000:
+        dcb.BaudRate = 256000;
         break;
     case 460800:
         dcb.BaudRate = 460800;

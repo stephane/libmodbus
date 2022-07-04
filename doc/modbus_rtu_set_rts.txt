@@ -55,7 +55,7 @@ modbus_rtu_set_serial_mode(ctx, MODBUS_RTU_RS485);
 modbus_rtu_set_rts(ctx, MODBUS_RTU_RTS_UP);
 
 if (modbus_connect(ctx) == -1) {
-    fprintf(stderr, "Connexion failed: %s\n", modbus_strerror(errno));
+    fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
     modbus_free(ctx);
     return -1;
 }

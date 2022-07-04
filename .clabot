@@ -1,4 +1,19 @@
 {
-  "contributors": ["mhei", "jbysewski"],
-  "message": "We require contributors to sign our Contributor License Agreement. In order for us to review and merge your code, please fill https://forms.gle/5635zjphDo5JEJQSA to get yourself added."
+    "contributors": [
+        "mhei",
+        "jbysewski",
+        "peternewman",
+        "vvck",
+        "jiriki86",
+        "sirsoweird",
+        "sebastianpsm",
+        "merkag",
+        "bobbybelieve",
+        "ccdmuro",
+        "ndunks",
+        "fcntlcc",
+        "jetforme",
+    	"rm5248"
+    ],
+    "message": "We require contributors to sign our Contributor License Agreement. In order for us to review and merge your code, please fill https://forms.gle/5635zjphDo5JEJQSA to get added. Your document will be manually checked by the maintainer. Be patient..."
 }
