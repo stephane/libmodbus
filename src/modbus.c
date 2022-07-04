@@ -182,7 +182,21 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
         rc = ctx->backend->send(ctx, msg, msg_length);
         if (rc == -1) {
             _error_print(ctx, NULL);
-            if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) {
+            if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK &&
+                ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_TCP) {
+#ifdef _WIN32
+                const int wsa_err = WSAGetLastError();
+                if (wsa_err == WSAENETRESET || wsa_err == WSAENOTCONN || wsa_err == WSAENOTSOCK ||
+                    wsa_err == WSAESHUTDOWN || wsa_err == WSAEHOSTUNREACH || wsa_err == WSAECONNABORTED ||
+                    wsa_err == WSAECONNRESET || wsa_err == WSAETIMEDOUT) {
+                    modbus_close(ctx);
+                    _sleep_response_timeout(ctx);
+                    modbus_connect(ctx);
+                } else {
+                    _sleep_response_timeout(ctx);
+                    modbus_flush(ctx);
+                }
+#else
                 int saved_errno = errno;
 
                 if ((errno == EBADF || errno == ECONNRESET || errno == EPIPE)) {
@@ -194,6 +208,7 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
                     modbus_flush(ctx);
                 }
                 errno = saved_errno;
+#endif
             }
         }
     } while ((ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) &&
@@ -345,6 +360,9 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     int length_to_read;
     int msg_length = 0;
     _step_t step;
+#ifdef _WIN32
+    int wsa_err;
+#endif
 
     if (ctx->debug) {
         if (msg_type == MSG_INDICATION) {
@@ -386,7 +404,17 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
         rc = ctx->backend->select(ctx, &rset, p_tv, length_to_read);
         if (rc == -1) {
             _error_print(ctx, "select");
-            if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) {
+            if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK &&
+                ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_TCP) {
+#ifdef _WIN32
+                wsa_err = WSAGetLastError();
+
+                // no equivalent to ETIMEDOUT when select fails on Windows
+                if (wsa_err == WSAENETDOWN || wsa_err == WSAENOTSOCK) {
+                    modbus_close(ctx);
+                    modbus_connect(ctx);
+                }
+#else
                 int saved_errno = errno;
 
                 if (errno == ETIMEDOUT) {
@@ -397,6 +425,7 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
                     modbus_connect(ctx);
                 }
                 errno = saved_errno;
+#endif
             }
             return -1;
         }
@@ -409,7 +438,19 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
 
         if (rc == -1) {
             _error_print(ctx, "read");
+#ifdef _WIN32
+            wsa_err = WSAGetLastError();
             if ((ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) &&
+                (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_TCP) &&
+                (wsa_err == WSAENOTCONN || wsa_err == WSAENETRESET || wsa_err == WSAENOTSOCK ||
+                wsa_err == WSAESHUTDOWN || wsa_err == WSAECONNABORTED || wsa_err == WSAETIMEDOUT ||
+                wsa_err == WSAECONNRESET)) {
+                modbus_close(ctx);
+                modbus_connect(ctx);
+            }
+#else
+            if ((ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) &&
+                (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_TCP) &&
                 (errno == ECONNRESET || errno == ECONNREFUSED ||
                  errno == EBADF)) {
                 int saved_errno = errno;
@@ -418,6 +459,7 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
                 /* Could be removed by previous calls */
                 errno = saved_errno;
             }
+#endif
             return -1;
         }
 
