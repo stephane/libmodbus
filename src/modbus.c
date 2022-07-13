@@ -1759,6 +1759,24 @@ int modbus_set_debug(modbus_t *ctx, int flag)
     return 0;
 }
 
+int modbus_set_client_context(modbus_t *ctx, const void *cctx)
+{
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+    
+    ctx->client_context = cctx;
+    
+    return 0;
+}
+
+const void *modbus_get_client_context(modbus_t *ctx)
+{
+    return ctx->client_context;
+}
+
+
 /* Allocates 4 arrays to store bits, input bits, registers and inputs
    registers. The pointers are stored in modbus_mapping structure.
 

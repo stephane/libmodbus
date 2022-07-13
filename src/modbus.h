@@ -238,6 +238,9 @@ MODBUS_API int modbus_reply(modbus_t *ctx, const uint8_t *req,
 MODBUS_API int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
                                       unsigned int exception_code);
 
+MODBUS_API int modbus_set_client_context(modbus_t *ctx, const void *cctx);
+MODBUS_API const void* modbus_get_client_context(modbus_t *ctx);
+
 /**
  * UTILS FUNCTIONS
  **/
