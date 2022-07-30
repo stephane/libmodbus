@@ -144,7 +144,8 @@ my_CFLAGS="-Wall \
 -Wnested-externs -Wpointer-arith \
 -Wpointer-arith -Wsign-compare -Wchar-subscripts \
 -Wstrict-prototypes -Wshadow \
--Wformat-security"
+-Wformat-security \
+-Werror=switch-enum"
 AC_SUBST([my_CFLAGS])
 
 # Build options
