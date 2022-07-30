@@ -1,0 +1,83 @@
+modbus_set_user_data(1)
+=======================
+
+
+NAME
+----
+modbus_get_user_data - get the user data pointer attached to the context
+
+
+SYNOPSIS
+--------
+*int modbus_get_user_data(modbus_t *'ctx', void **'user_data');*
+
+
+DESCRIPTION
+-----------
+The *modbus_get_user_data()* function shall get the user data pointer in the
+libmodbus context.
+
+This user data has been previously attached to the context by the function
+linkmb:modbus_set_user_data[1].
+
+RETURN VALUE
+------------
+The function shall return 0 if successful. Otherwise it shall return -1 and set
+errno to one of the values defined below.
+
+
+ERRORS
+------
+*EINVAL*::
+The libmodbus context or the user_data pointer are invalid.
+
+
+EXAMPLE
+-------
+[source,c]
+-------------------
+modbus_t *ctx;
+static const char* user_string = "first context";
+
+ctx = modbus_new_rtu("/dev/ttyUSB0", 115200, 'N', 8, 1);
+if (ctx == NULL) {
+    fprintf(stderr, "Unable to create the libmodbus context\n");
+    return -1;
+}
+
+rc = modbus_set_user_data(ctx, (void*)user_string);
+if (rc == -1) {
+    fprintf(stderr, "Invalid slave ID\n");
+    modbus_free(ctx);
+    return -1;
+}
+
+if (modbus_connect(ctx) == -1) {
+    fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
+    modbus_free(ctx);
+    return -1;
+}
+
+(...)
+
+const char* the_user_string;
+
+rc = modbus_get_user_data(ctx, (void**)&the_user_string);
+if (rc == -1) {
+    fprintf(stderr, "Invalid slave ID\n");
+    modbus_free(ctx);
+    return -1;
+} else {
+    printf("The user string is %s\n", the_user_string);
+}
+
+-------------------
+
+SEE ALSO
+--------
+linkmb:modbus_set_user_data[1]
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

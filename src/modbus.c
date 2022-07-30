@@ -1597,6 +1597,8 @@ void _modbus_init_common(modbus_t *ctx)
 
     ctx->indication_timeout.tv_sec = 0;
     ctx->indication_timeout.tv_usec = 0;
+
+    ctx->user_data = NULL;
 }
 
 /* Define the slave number */
@@ -1729,6 +1731,28 @@ int modbus_set_indication_timeout(modbus_t *ctx, uint32_t to_sec, uint32_t to_us
 
     ctx->indication_timeout.tv_sec = to_sec;
     ctx->indication_timeout.tv_usec = to_usec;
+    return 0;
+}
+
+int modbus_set_user_data(modbus_t *ctx, void *user_data)
+{
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    ctx->user_data = user_data;
+    return 0;
+}
+
+int modbus_get_user_data(modbus_t *ctx, void **user_data)
+{
+    if (ctx == NULL || user_data == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    *user_data = ctx->user_data;
     return 0;
 }
 
