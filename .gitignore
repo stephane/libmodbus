@@ -41,6 +41,8 @@ tests/unit-test.h
 tests/unit-test-server
 tests/version
 tests/stamp-h2
+tests/test-gateway
+tests/test-gateway-many-up
 doc/*.html
 doc/*.3
 doc/*.7
