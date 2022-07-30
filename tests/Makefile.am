@@ -6,6 +6,7 @@ noinst_PROGRAMS = \
 	bandwidth-client \
 	random-test-server \
 	random-test-client \
+	read-device-identification-client \
 	unit-test-server \
 	unit-test-client \
 	version
@@ -27,6 +28,9 @@ random_test_server_LDADD = $(common_ldflags)
 
 random_test_client_SOURCES = random-test-client.c
 random_test_client_LDADD = $(common_ldflags)
+
+read_device_identification_client_SOURCES = read-device-identification-client.c
+read_device_identification_client_LDADD = $(common_ldflags)
 
 unit_test_server_SOURCES = unit-test-server.c unit-test.h
 unit_test_server_LDADD = $(common_ldflags)
