@@ -182,8 +182,7 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
         rc = ctx->backend->send(ctx, msg, msg_length);
         if (rc == -1) {
             _error_print(ctx, NULL);
-            if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK &&
-                ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_TCP) {
+            if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) {
 #ifdef _WIN32
                 const int wsa_err = WSAGetLastError();
                 if (wsa_err == WSAENETRESET || wsa_err == WSAENOTCONN || wsa_err == WSAENOTSOCK ||
@@ -404,8 +403,7 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
         rc = ctx->backend->select(ctx, &rset, p_tv, length_to_read);
         if (rc == -1) {
             _error_print(ctx, "select");
-            if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK &&
-                ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_TCP) {
+            if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) {
 #ifdef _WIN32
                 wsa_err = WSAGetLastError();
 
