@@ -78,7 +78,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="ws2_32.lib"
-				Version="1.0.0"
+				Version="1.0"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
 				GenerateManifest="true"
