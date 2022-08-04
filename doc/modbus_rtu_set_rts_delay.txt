@@ -4,7 +4,7 @@ modbus_rtu_set_rts_delay(3)
 
 NAME
 ----
-modbus_rtu_set_rts_delay - set the RTS delay in RTU
+modbus_rtu_set_rts_delay - set the software RTS delay in RTU
 
 
 SYNOPSIS
@@ -15,8 +15,8 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-The _modbus_rtu_set_rts_delay()_ function shall set the Request To Send delay
-period of the libmodbus context 'ctx'.
+The _modbus_rtu_set_rts_delay()_ function shall set the software Request
+To Send delay period of the libmodbus context 'ctx'.
 
 This function can only be used with a context using a RTU backend.
 
