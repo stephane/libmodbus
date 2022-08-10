@@ -1,0 +1,60 @@
+modbus_read_device_id(3)
+========================
+
+
+NAME
+----
+modbus_read_device_id - read device identification objects
+
+
+SYNOPSIS
+--------
+*int modbus_read_device_id(modbus_t *ctx, int object_id, int max_objects, void *obj_values[], int obj_lengths[]);*
+
+DESCRIPTION
+-----------
+The *modbus_read_device_id()* function shall retrieve the values of at most
+_max_objects_ objects from the object address space of the remote device,
+beginning at the object with id _object_id_ . The results will be stored in the
+byte buffers provided in the _obj_values_ array. The available space on each
+buffer is specified in the _obj_lengths_ array.
+
+Objects values are byte arrays. Per the Modbus specification, the maximum
+allowed object id is 255.
+
+The function uses the Modbus function code 0x2B (Encapsulated Interface
+Transport) with sub-function 0x0E (Read Device Identification). The method
+used (i.e the "Read Device ID code") is 0x01 (request to get the basic device
+identification (stream access)). This means that the low-level request may
+yield many objects and that it might be necessary to use more than one request.
+This function will handle making more requests internally as necessary.
+
+RETURN VALUE
+------------
+The function shall return the number of read objects if successful. Otherwise it
+shall return -1 and set errno. Note that it is possible that less objects are
+retrieved than requested.
+
+The value of each object retrieved will be placed in the corresponding buffer in
+_obj_values_ and its full size (as reported by the device) will be placed in the
+corresponding item of the _obj_lenghts_ array. If the length value after this
+function vall is greater than what it was before, it means that the object was
+truncated.
+
+ERRORS
+------
+*EINVAL*::
+The requested object are outside the valid range.
+
+
+SEE ALSO
+--------
+linkmb:modbus_read_input_bits[3]
+linkmb:modbus_read_input_registers[3]
+linkmb:report_slave_id[3]
+Section 6.21 of the Modbus Specification V1.1b
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>
