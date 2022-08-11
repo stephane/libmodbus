@@ -9,48 +9,109 @@ modbus_read_device_id - read device identification objects
 
 SYNOPSIS
 --------
-*int modbus_read_device_id(modbus_t *ctx, int object_id, int max_objects, void *obj_values[], int obj_lengths[]);*
+
+*modbus_read_device_id(modbus_t *ctx, int read_code, int object_id,
+                       int max_objects, uint8_t obj_ids[],
+                       uint8_t *obj_values[], int obj_lengths[],
+                       int *conformity, int *next_object_id);*
 
 DESCRIPTION
 -----------
 The *modbus_read_device_id()* function shall retrieve the values of at most
 _max_objects_ objects from the object address space of the remote device,
 beginning at the object with id _object_id_ . The results will be stored in the
-byte buffers provided in the _obj_values_ array. The available space on each
-buffer is specified in the _obj_lengths_ array.
+buffers provided (_obj_ids_, _obj_values_, _obj_lengths_) which must be able to
+hold _max_objects_ elements each. Each element of _obj_values_ must be a byte
+buffer whose size must be given in the corresponding element of _obj_lengths_.
 
 Objects values are byte arrays. Per the Modbus specification, the maximum
-allowed object id is 255.
+allowed object id is 255. Since an object must fit into a single response, the
+maximum size of a single object is bounded by the PDU size.
 
 The function uses the Modbus function code 0x2B (Encapsulated Interface
 Transport) with sub-function 0x0E (Read Device Identification). The method
-used (i.e the "Read Device ID code") is 0x01 (request to get the basic device
-identification (stream access)). This means that the low-level request may
-yield many objects and that it might be necessary to use more than one request.
-This function will handle making more requests internally as necessary.
+used (i.e the "Read Device ID code") is given by the _read_code_ argument and
+can take any of the following values:::
+* _MODBUS_FC_READ_DEV_ID_BASIC_STREAM_ read the Basic (mandatory) parameters in stream mode
+* _MODBUS_FC_READ_DEV_ID_REGULAR_STREAM_ read the Regular (optional, device independent) parameters in stream mode
+* _MODBUS_FC_READ_DEV_ID_EXT_STREAM_ read the Extended (optional, device dependant) parameters in stream mode
+* _MODBUS_FC_READ_DEV_ID_INDIVIDUAL_ read any parameter individually
+
+In case of stream access, the device may return many objects and it might not
+return all the objects (because of PDU limitations). In that case the device
+will indicate that additional requests are necessary and the next object id that
+must be requested (whose value will be greated than zero) will be returned in
+the location pointed at by _next_object_id_ (if it is not null). If there are
+no more object, that value will be zero.
+
+The conformity level as reported by the device will be stored in the location
+pointed to by _conformity_ (if it is not null). This value indicates the
+category (Basic, Regular or Extended) of objects supported by the device as
+well as the type of access (Stream-only or Stream and Individual). The following
+macros are provided to assis in parsing these values:::
+* _MODBUS_READ_DEV_ID_CONFORMITY_CAT(conformity)_ Get the category of object
+  supported (_MODBUS_FC_READ_DEV_ID_BASIC_STREAM_, _MODBUS_FC_READ_DEV_ID_REGULAR_STREAM_
+  or _MODBUS_FC_READ_DEV_ID_EXT_STREAM_)
+* _MODBUS_READ_DEV_ID_SUPPORTS_INDIVIDUAL(conformity)_ Evaluates to a true value
+  if individual access is supported.
 
 RETURN VALUE
 ------------
-The function shall return the number of read objects if successful. Otherwise it
-shall return -1 and set errno. Note that it is possible that less objects are
-retrieved than requested.
+On success, the function shall return the number of objects retrieved from the
+device, which may be larger than the number of object returned to the user if
+the device returns more than _max_objects_ objects if successful. In case of
+errors, it shall return -1 and set errno. Note that it is also possible that
+less objects are retrieved than requested.
 
-The value of each object retrieved will be placed in the corresponding buffer in
-_obj_values_ and its full size (as reported by the device) will be placed in the
-corresponding item of the _obj_lenghts_ array. If the length value after this
-function vall is greater than what it was before, it means that the object was
-truncated.
+For each object retrieved, its id will be stored in _obj_ids_ array, its value
+in the corresponding entry in the _obj_values_ array and its full size (as
+reported by the device) will be placed in the corresponding item of the
+_obj_lenghts_ array. If the length value after this function call is greater
+than what it was before, it means that the object was truncated.
+
+Note that the object values are copied verbatim from the device and in the case
+of strings, may not be null-terminated.
 
 ERRORS
 ------
 *EINVAL*::
-The requested object are outside the valid range.
+The requested objects are outside the valid range.
 
+EXAMPLE
+-------
+
+This example shows how to call the function repeatedly to retrieve as many
+objects are possible.
+
+[source,c]
+-------------------
+static int read_dev_id_repeatedly(modbus_t *ctx, int read_code, int object_id,
+                                  int max_objects, uint8_t *obj_ids,
+                                  uint8_t **obj_values, int *obj_lengths,
+                                  int *conformity)
+{
+    int total_retrieved = 0, n_retrieved;
+
+    do {
+        n_retrieved = modbus_read_device_id(ctx, read_code, object_id,
+            max_objects, obj_ids, obj_values, obj_lengths, conformity,
+            &object_id);
+
+        total_retrieved += n_retrieved;
+        obj_ids += n_retrieved;
+        obj_values += n_retrieved;
+        obj_lengths += n_retrieved;
+        max_objects -= n_retrieved;
+    } while (n_retrieved > 0 && object_id > 0
+             && object_id < MODBUS_DEVID_MAX_OBJ_ID && max_objects > 0);
+
+    return total_retrieved;
+}
+-------------------
 
 SEE ALSO
 --------
-linkmb:modbus_read_input_bits[3]
-linkmb:modbus_read_input_registers[3]
+linkmb:modbus_read_device_id_single[3]
 linkmb:report_slave_id[3]
 Section 6.21 of the Modbus Specification V1.1b
 

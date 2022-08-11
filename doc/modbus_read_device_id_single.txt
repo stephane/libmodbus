@@ -1,0 +1,72 @@
+modbus_read_device_id_single(3)
+========================
+
+
+NAME
+----
+modbus_read_device_id - read device identification objects
+
+
+SYNOPSIS
+--------
+
+*int modbus_read_device_id_single(modbus_t *ctx, int object_id, uint8_t *obj_id,
+                                  uint8_t *obj_value, int obj_length,
+                                  int *conformity);*
+
+DESCRIPTION
+-----------
+*modbus_read_device_id_single(3)* shall retrieve a single object from the
+object address space of the remote device. It uses the Modbus function code 0x2B
+(Encapsulated Interface Transport) with sub-function 0x0E (Read Device
+Identification) and "Read Device Id Code" 0x04 ("Individual Access"). It
+requires a device with conformity level greater than 0x80.
+
+This function is a wrapper around *modbus_read_device_id(3)*. Refer to the
+documentation of that function for more information.
+
+RETURN VALUE
+------------
+On success, the function shall return the length of objects retrieved as
+reported by device, which may be larger than the value specified in obj_length,
+in which case it means that the objecs is truncated. In case of errors, it shall
+return -1 and set errno.
+
+Note that the object values are copied verbatim from the device and in the case
+of strings, may not be null-terminated.
+
+ERRORS
+------
+*EINVAL*::
+The requested objects are outside the valid range.
+
+EXAMPLE
+-------
+
+This function can be implemented in terms of *modbus_read_device_id(3)*
+
+[source,c]
+-------------------
+int modbus_read_device_id_single(modbus_t *ctx, int object_id, uint8_t *obj_id,
+                                 uint8_t *obj_value, int obj_length,
+                                 int *conformity)
+{
+    if (modbus_read_device_id(ctx, MODBUS_FC_READ_DEV_ID_INDIVIDUAL, object_id,
+                              1, obj_id, &obj_value, &obj_length, conformity,
+                              NULL)) {
+        return -1;
+    }
+    return obj_length;
+}
+-------------------
+
+SEE ALSO
+--------
+linkmb:modbus_read_device_id[3]
+linkmb:report_slave_id[3]
+Section 6.21 of the Modbus Specification V1.1b
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>
