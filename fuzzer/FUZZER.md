@@ -4,7 +4,6 @@ export CC=clang
 export CXX=clang++
 export CFLAGS="-fsanitize=fuzzer-no-link,address -g -O2"
 export LIB_FUZZING_ENGINE=-fsanitize=fuzzer
-export LDFLAGS=-fsanitize=address 
 ```
 
 #### Compile application
