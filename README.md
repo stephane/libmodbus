@@ -1,7 +1,7 @@
 A groovy modbus library
 =======================
 
-[![Build Status](https://travis-ci.org/stephane/libmodbus.svg?branch=master)](https://travis-ci.org/stephane/libmodbus)
+![Build Status](https://github.com/stephane/libmodbus/actions/workflows/build.yml/badge.svg)
 
 Overview
 --------
