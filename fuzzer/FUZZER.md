@@ -27,3 +27,9 @@ unzip input.zip
 FuzzClient coverage/ input/ 
 FuzzServer coverage/ input/
 ```
+
+#### Bug Reproduce
+```
+./FuzzClient crash-*
+./FuzzServer crash-*
+```
