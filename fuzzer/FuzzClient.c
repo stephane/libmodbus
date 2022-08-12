@@ -97,7 +97,7 @@ extern int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     Fuzzer *fuzzer = (Fuzzer*)malloc(sizeof(Fuzzer));
     fuzzer->port = PORT;
     fuzzer->size = size;
-    fuzzer->buffer = data;
+    fuzzer->buffer = (uint8_t *)data;
 
     fuzzinit(fuzzer);
 

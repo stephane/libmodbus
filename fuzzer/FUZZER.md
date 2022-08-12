@@ -2,7 +2,7 @@
 ```
 export CC=clang
 export CXX=clang++
-export CFLAGS=-fsanitize=fuzzer-no-link,address
+export CFLAGS="-fsanitize=fuzzer-no-link,address -g -O2"
 export LIB_FUZZING_ENGINE=-fsanitize=fuzzer
 export LDFLAGS=-fsanitize=address 
 ```
@@ -10,7 +10,7 @@ export LDFLAGS=-fsanitize=address
 #### Compile application
 ```
 ./autogen.sh
-./configure --disable-shared CC=$CC CFLAGS=$CFLAGS LDFLAGS=$LDFLAGS
+./configure --disable-shared CC="$CC" CFLAGS="$CFLAGS" LDFLAGS="$CFLAGS"
 make -j$(nproc)
 ```
 

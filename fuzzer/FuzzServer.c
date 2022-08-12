@@ -79,7 +79,7 @@ extern int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     fuzzer->port = PORT;
 
     fuzzer->size = size;
-    fuzzer->buffer = data;
+    fuzzer->buffer = (uint8_t *)data;
 
     pthread_create(&fuzzer->thread, NULL,client,fuzzer);
     server(fuzzer);
