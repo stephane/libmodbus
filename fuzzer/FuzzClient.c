@@ -29,15 +29,13 @@ limitations under the License.
 #define kMaxInputLength MODBUS_RTU_MAX_ADU_LENGTH
 
 struct Fuzzer{
-    uint16_t    port;    
-    char*       file;
+    int         socket;
+    uint16_t    port;
 
-    FILE*       inFile;
     uint64_t    size;
     uint8_t*    buffer;
 
     pthread_t   thread;
-    int         socket;
 };
 typedef struct Fuzzer Fuzzer;
 
