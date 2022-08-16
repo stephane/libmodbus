@@ -1,0 +1,39 @@
+modbus_tcp_server_stop(3)
+=========================
+
+
+NAME
+----
+modbus_tcp_server_stop - destroy a tcp modbus server context
+
+
+SYNOPSIS
+--------
+*int modbus_tcp_server_stop(modbus_tcp_server_t* mb_srv_ctx);*
+
+
+DESCRIPTION
+-----------
+The *modbus_tcp_server_stop()* function shall set a shutdown flag
+which is processed by modbus_server_handle.
+
+This causes modbus_server_handle to free all context allocated with 
+*modbus_tcp_server_create()*, and closes all currently connected 
+modbus clients.
+
+
+RETURN VALUE
+------------
+The function shall return 0 if successful. Otherwise it shall return -1 and set
+errno
+
+
+SEE ALSO
+--------
+linkmb:modbus_server_create[3]
+linkmb:modbus_server_handle[3]
+
+
+AUTHORS
+-------
+The libmodbus server documentation was written by DEIF A/S

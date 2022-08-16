@@ -1,0 +1,36 @@
+modbus_tcp_server_start(3)
+==========================
+
+
+NAME
+----
+modbus_tcp_server_start - create a tcp modbus server context
+
+
+SYNOPSIS
+--------
+*modbus_tcp_server_t* modbus_tcp_server_start(char* ipaddr, uint16_t port, uint16_t max_connections);*
+
+
+DESCRIPTION
+-----------
+The *modbus_tcp_server_start()* function shall prepare a context for a
+standard modbus tcp server on _port_ with suport for max 
+_max_connections_ simultainious connections.
+
+
+RETURN VALUE
+------------
+The function shall return a context for the modbus server if successful. 
+Otherwise it shall return NULL and set errno.
+
+
+SEE ALSO
+--------
+linkmb:modbus_server_destroy[3]
+linkmb:modbus_server_handle[3]
+
+
+AUTHORS
+-------
+The libmodbus server documentation was written by DEIF A/S
