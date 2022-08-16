@@ -18,7 +18,10 @@ const int EXCEPTION_RC = 2;
 enum {
     TCP,
     TCP_PI,
-    RTU
+    RTU,
+#if defined(USE_TLS)
+    TLS
+#endif
 };
 
 int test_server(modbus_t *ctx, int use_backend);
@@ -79,8 +82,15 @@ int main(int argc, char *argv[])
             use_backend = TCP_PI;
         } else if (strcmp(argv[1], "rtu") == 0) {
             use_backend = RTU;
+        } else if (strcmp(argv[1], "tls") == 0) {
+#if defined(USE_TLS)
+            use_backend = TLS;
+#elif
+            printf("Compiled without TLS support.\n");
+            return -1;
+#endif
         } else {
-            printf("Usage:\n  %s [tcp|tcppi|rtu] - Modbus client for unit testing\n\n", argv[0]);
+            printf("Usage:\n  %s [tcp|tcppi|rtu|tls] - Modbus client for unit testing\n\n", argv[0]);
             exit(1);
         }
     } else {
@@ -92,6 +102,10 @@ int main(int argc, char *argv[])
         ctx = modbus_new_tcp("127.0.0.1", 1502);
     } else if (use_backend == TCP_PI) {
         ctx = modbus_new_tcp_pi("::1", "1502");
+#if defined(USE_TLS)
+    } else if (use_backend == TLS) {
+        ctx = modbus_new_tls("127.0.0.1", 1502, "client.pem", "client.key", "ca.pem");
+#endif
     } else {
         ctx = modbus_new_rtu("/dev/ttyUSB1", 115200, 'N', 8, 1);
     }

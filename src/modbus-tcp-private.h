@@ -41,4 +41,18 @@ typedef struct _modbus_tcp_pi {
     char service[_MODBUS_TCP_PI_SERVICE_LENGTH];
 } modbus_tcp_pi_t;
 
+#if defined(USE_TLS)
+typedef struct _modbus_tls {
+    /* Transaction ID */
+    uint16_t t_id;
+    /* TCP port */
+    int port;
+    /* IP address */
+    char ip[16];
+    /* TLS context and connection */
+    SSL_CTX *ctx;
+    SSL *ssl;
+} modbus_tls_t;
+#endif
+
 #endif /* MODBUS_TCP_PRIVATE_H */
