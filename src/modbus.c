@@ -183,6 +183,19 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
         if (rc == -1) {
             _error_print(ctx, NULL);
             if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) {
+#ifdef _WIN32
+                const int wsa_err = WSAGetLastError();
+                if (wsa_err == WSAENETRESET || wsa_err == WSAENOTCONN || wsa_err == WSAENOTSOCK ||
+                    wsa_err == WSAESHUTDOWN || wsa_err == WSAEHOSTUNREACH || wsa_err == WSAECONNABORTED ||
+                    wsa_err == WSAECONNRESET || wsa_err == WSAETIMEDOUT) {
+                    modbus_close(ctx);
+                    _sleep_response_timeout(ctx);
+                    modbus_connect(ctx);
+                } else {
+                    _sleep_response_timeout(ctx);
+                    modbus_flush(ctx);
+                }
+#else
                 int saved_errno = errno;
 
                 if ((errno == EBADF || errno == ECONNRESET || errno == EPIPE)) {
@@ -194,6 +207,7 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
                     modbus_flush(ctx);
                 }
                 errno = saved_errno;
+#endif
             }
         }
     } while ((ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) &&
@@ -345,6 +359,9 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     int length_to_read;
     int msg_length = 0;
     _step_t step;
+#ifdef _WIN32
+    int wsa_err;
+#endif
 
     if (ctx->debug) {
         if (msg_type == MSG_INDICATION) {
@@ -387,6 +404,15 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
         if (rc == -1) {
             _error_print(ctx, "select");
             if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) {
+#ifdef _WIN32
+                wsa_err = WSAGetLastError();
+
+                // no equivalent to ETIMEDOUT when select fails on Windows
+                if (wsa_err == WSAENETDOWN || wsa_err == WSAENOTSOCK) {
+                    modbus_close(ctx);
+                    modbus_connect(ctx);
+                }
+#else
                 int saved_errno = errno;
 
                 if (errno == ETIMEDOUT) {
@@ -397,6 +423,7 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
                     modbus_connect(ctx);
                 }
                 errno = saved_errno;
+#endif
             }
             return -1;
         }
@@ -409,7 +436,19 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
 
         if (rc == -1) {
             _error_print(ctx, "read");
+#ifdef _WIN32
+            wsa_err = WSAGetLastError();
             if ((ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) &&
+                (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_TCP) &&
+                (wsa_err == WSAENOTCONN || wsa_err == WSAENETRESET || wsa_err == WSAENOTSOCK ||
+                wsa_err == WSAESHUTDOWN || wsa_err == WSAECONNABORTED || wsa_err == WSAETIMEDOUT ||
+                wsa_err == WSAECONNRESET)) {
+                modbus_close(ctx);
+                modbus_connect(ctx);
+            }
+#else
+            if ((ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) &&
+                (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_TCP) &&
                 (errno == ECONNRESET || errno == ECONNREFUSED ||
                  errno == EBADF)) {
                 int saved_errno = errno;
@@ -418,6 +457,7 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
                 /* Could be removed by previous calls */
                 errno = saved_errno;
             }
+#endif
             return -1;
         }
 
@@ -555,6 +595,8 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
         function < 0x80) {
         int req_nb_value;
         int rsp_nb_value;
+        int resp_addr_ok = TRUE;
+        int resp_data_ok = TRUE;
 
         /* Check function code */
         if (function != req[offset]) {
@@ -591,6 +633,10 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
             break;
         case MODBUS_FC_WRITE_MULTIPLE_COILS:
         case MODBUS_FC_WRITE_MULTIPLE_REGISTERS:
+            /* address in request and response must be equal */
+            if ((req[offset + 1] != rsp[offset + 1]) || (req[offset + 2] != rsp[offset + 2])) {
+                resp_addr_ok = FALSE;
+            }
             /* N Write functions */
             req_nb_value = (req[offset + 3] << 8) + req[offset + 4];
             rsp_nb_value = (rsp[offset + 3] << 8) | rsp[offset + 4];
@@ -599,17 +645,31 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
             /* Report slave ID (bytes received) */
             req_nb_value = rsp_nb_value = rsp[offset + 1];
             break;
+        case MODBUS_FC_WRITE_SINGLE_COIL:
+        case MODBUS_FC_WRITE_SINGLE_REGISTER:
+            /* address in request and response must be equal */
+            if ((req[offset + 1] != rsp[offset + 1]) || (req[offset + 2] != rsp[offset + 2])) {
+                resp_addr_ok = FALSE;
+            }
+            /* data in request and response must be equal */
+            if ((req[offset + 3] != rsp[offset + 3]) || (req[offset + 4] != rsp[offset + 4])) {
+                resp_data_ok = FALSE;
+            }
+            /* 1 Write functions & others */
+            req_nb_value = rsp_nb_value = 1;
+            break;
         default:
             /* 1 Write functions & others */
             req_nb_value = rsp_nb_value = 1;
+            break;
         }
 
-        if (req_nb_value == rsp_nb_value) {
+        if ((req_nb_value == rsp_nb_value) && (resp_addr_ok == TRUE) && (resp_data_ok == TRUE)) {
             rc = rsp_nb_value;
         } else {
             if (ctx->debug) {
                 fprintf(stderr,
-                        "Quantity not corresponding to the request (%d != %d)\n",
+                        "Received data not corresponding to the request (%d != %d)\n",
                         rsp_nb_value, req_nb_value);
             }
 
@@ -1405,7 +1465,7 @@ int modbus_mask_write_register(modbus_t *ctx, int addr, uint16_t and_mask, uint1
     int rc;
     int req_length;
     /* The request length can not exceed _MIN_REQ_LENGTH - 2 and 4 bytes to
-     * store the masks. The ugly subtraction is there to remove the 'nb' value
+     * store the masks. The ugly substraction is there to remove the 'nb' value
      * (2 bytes) which is not used. */
     uint8_t req[_MIN_REQ_LENGTH + 2];
 
