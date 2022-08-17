@@ -740,7 +740,20 @@ static int _modbus_tcp_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, i
 }
 
 static void _modbus_tcp_free(modbus_t *ctx) {
-    free(ctx->backend_data);
+    if (ctx->backend_data) {
+        free(ctx->backend_data);
+    }
+    free(ctx);
+}
+
+static void _modbus_tcp_pi_free(modbus_t *ctx) {
+    if (ctx->backend_data) {
+        modbus_tcp_pi_t *ctx_tcp_pi = ctx->backend_data;
+        free(ctx_tcp_pi->node);
+        free(ctx_tcp_pi->service);
+        free(ctx->backend_data);
+    }
+
     free(ctx);
 }
 
@@ -786,7 +799,7 @@ const modbus_backend_t _modbus_tcp_pi_backend = {
     _modbus_tcp_close,
     _modbus_tcp_flush,
     _modbus_tcp_select,
-    _modbus_tcp_free
+    _modbus_tcp_pi_free
 };
 
 modbus_t* modbus_new_tcp(const char *ip, int port)
@@ -858,8 +871,6 @@ modbus_t* modbus_new_tcp_pi(const char *node, const char *service)
 {
     modbus_t *ctx;
     modbus_tcp_pi_t *ctx_tcp_pi;
-    size_t dest_size;
-    size_t ret_size;
 
     ctx = (modbus_t *)malloc(sizeof(modbus_t));
     if (ctx == NULL) {
@@ -879,47 +890,32 @@ modbus_t* modbus_new_tcp_pi(const char *node, const char *service)
         return NULL;
     }
     ctx_tcp_pi = (modbus_tcp_pi_t *)ctx->backend_data;
+    ctx_tcp_pi->node = NULL;
+    ctx_tcp_pi->service = NULL;
 
-    if (node == NULL) {
+    if (node != NULL) {
+        ctx_tcp_pi->node = strdup(node);
+    } else {
         /* The node argument can be empty to indicate any hosts */
-        ctx_tcp_pi->node[0] = 0;
-    } else {
-        dest_size = sizeof(char) * _MODBUS_TCP_PI_NODE_LENGTH;
-        ret_size = strlcpy(ctx_tcp_pi->node, node, dest_size);
-        if (ret_size == 0) {
-            fprintf(stderr, "The node string is empty\n");
-            modbus_free(ctx);
-            errno = EINVAL;
-            return NULL;
-        }
-
-        if (ret_size >= dest_size) {
-            fprintf(stderr, "The node string has been truncated\n");
-            modbus_free(ctx);
-            errno = EINVAL;
-            return NULL;
-        }
+        ctx_tcp_pi->node = strdup("");
     }
 
-    if (service != NULL) {
-        dest_size = sizeof(char) * _MODBUS_TCP_PI_SERVICE_LENGTH;
-        ret_size = strlcpy(ctx_tcp_pi->service, service, dest_size);
-    } else {
-        /* Empty service is not allowed, error caught below. */
-        ret_size = 0;
-    }
-
-    if (ret_size == 0) {
-        fprintf(stderr, "The service string is empty\n");
+    if (ctx_tcp_pi->node == NULL) {
         modbus_free(ctx);
-        errno = EINVAL;
+        errno = ENOMEM;
         return NULL;
     }
 
-    if (ret_size >= dest_size) {
-        fprintf(stderr, "The service string has been truncated\n");
+    if (service != NULL && service[0] != '\0') {
+        ctx_tcp_pi->service = strdup(service);
+    } else {
+        /* Default Modbus port number */
+        ctx_tcp_pi->service = strdup("502");
+    }
+
+    if (ctx_tcp_pi->service == NULL) {
         modbus_free(ctx);
-        errno = EINVAL;
+        errno = ENOMEM;
         return NULL;
     }
 

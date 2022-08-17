@@ -681,9 +681,6 @@ int main(int argc, char *argv[])
     ctx = modbus_new_rtu("/dev/dummy", 0, 'A', 0, 0);
     ASSERT_TRUE(ctx == NULL && errno == EINVAL, "");
 
-    ctx = modbus_new_tcp_pi(NULL, NULL);
-    ASSERT_TRUE(ctx == NULL && errno == EINVAL, "");
-
     printf("\nALL TESTS PASS WITH SUCCESS.\n");
     success = TRUE;
 
