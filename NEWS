@@ -1,3 +1,18 @@
+libmodbus 3.1.8 (2022-08-17)
+============================
+
+- Major rewrite of documentation with Material for mkdocs
+- Reduce memory use of TCP PI backend (closes #621)
+- Fixed MODBUS_ERROR_RECOVERY_LINK not working on Windows (@embeddedmz)
+- Replace Travis CI by GitHub CI
+- Fix linker error for Windows (VCLinkerTool)
+- Address check in single register / coil responses added (#463)
+- Swap CRC bytes in request data but not at CRC computing (#397)
+- Fix float endianness issue on big endian architecture
+- Fix comment about EMBUNKEXC (closes #566)
+- Fix network library detection on Haiku
+- Fix typos (closes #620)
+
 libmodbus 3.1.7 (2022-01-09)
 ============================
 
