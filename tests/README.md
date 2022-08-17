@@ -1,8 +1,12 @@
-# License
+# Tests
+
+## License
+
 Test programs of this directory are provided under BSD license (see associated
 LICENSE file).
 
-# Compilation
+## Compilation
+
 After installation, you can use pkg-config to compile these tests.
 For example, to compile random-test-server run:
 

@@ -62,11 +62,11 @@ everything up to and including the following line which starts with ---.
 
   <...>
 
-## Expected behavior
+## Actual behavior if applicable
 
   <...>
 
-## Actual behavior
+## Expected behavior or suggestion
 
   <...>
 
