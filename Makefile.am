@@ -9,7 +9,7 @@ CLEANFILES += libmodbus.pc
 
 dist_doc_DATA = MIGRATION README.md AUTHORS NEWS
 
-SUBDIRS = src doc
+SUBDIRS = src
 
 if BUILD_TESTS
 SUBDIRS += tests
