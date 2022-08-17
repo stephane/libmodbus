@@ -18,8 +18,10 @@ The *modbus_rtu_get_rts()* function shall get the current Request To Send mode
 of the libmodbus context _ctx_. The possible returned values are:
 
 * MODBUS_RTU_RTS_NONE
-* MODBUS_RTU_RTS_UP
-* MODBUS_RTU_RTS_DOWN
+* MODBUS_RTU_RTS_SOFTWARE_UP
+* MODBUS_RTU_RTS_SOFTWARE_DOWN
+* MODBUS_RTU_RTS_HARDWARE_UP
+* MODBUS_RTU_RTS_HARDWARE_DOWN
 
 This function can only be used with a context using a RTU backend.
 

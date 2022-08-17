@@ -4,7 +4,7 @@ modbus_rtu_get_rts_delay(3)
 
 NAME
 ----
-modbus_rtu_get_rts_delay - get the current RTS delay in RTU
+modbus_rtu_get_rts_delay - get the current software RTS delay in RTU
 
 
 SYNOPSIS
@@ -15,16 +15,16 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-The _modbus_rtu_get_rts_delay()_ function shall get the current Request To Send
-delay period of the libmodbus context 'ctx'.
+The _modbus_rtu_get_rts_delay()_ function shall get the current software Request
+To Send delay period of the libmodbus context 'ctx'.
 
 This function can only be used with a context using a RTU backend.
 
 
 RETURN VALUE
 ------------
-The _modbus_rtu_get_rts_delay()_ function shall return the current RTS delay in
-microseconds if successful. Otherwise it shall return -1 and set errno.
+The _modbus_rtu_get_rts_delay()_ function shall return the current softwarte RTS
+delay in microseconds if successful. Otherwise it shall return -1 and set errno.
 
 
 ERRORS

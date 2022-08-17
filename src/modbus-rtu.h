@@ -25,9 +25,11 @@ MODBUS_API modbus_t* modbus_new_rtu(const char *device, int baud, char parity,
 MODBUS_API int modbus_rtu_set_serial_mode(modbus_t *ctx, int mode);
 MODBUS_API int modbus_rtu_get_serial_mode(modbus_t *ctx);
 
-#define MODBUS_RTU_RTS_NONE   0
-#define MODBUS_RTU_RTS_UP     1
-#define MODBUS_RTU_RTS_DOWN   2
+#define MODBUS_RTU_RTS_NONE            0
+#define MODBUS_RTU_RTS_SOFTWARE_UP     1
+#define MODBUS_RTU_RTS_SOFTWARE_DOWN   2
+#define MODBUS_RTU_RTS_HARDWARE_UP     3
+#define MODBUS_RTU_RTS_HARDWARE_DOWN   4
 
 MODBUS_API int modbus_rtu_set_rts(modbus_t *ctx, int mode);
 MODBUS_API int modbus_rtu_get_rts(modbus_t *ctx);
@@ -36,6 +38,10 @@ MODBUS_API int modbus_rtu_set_custom_rts(modbus_t *ctx, void (*set_rts) (modbus_
 
 MODBUS_API int modbus_rtu_set_rts_delay(modbus_t *ctx, int us);
 MODBUS_API int modbus_rtu_get_rts_delay(modbus_t *ctx);
+MODBUS_API int modbus_rtu_set_hw_rts_delay_before_send(modbus_t* ctx, int ms);
+MODBUS_API int modbus_rtu_get_hw_rts_delay_before_send(modbus_t* ctx);
+MODBUS_API int modbus_rtu_set_hw_rts_delay_after_send(modbus_t* ctx, int ms);
+MODBUS_API int modbus_rtu_get_hw_rts_delay_after_send(modbus_t* ctx);
 
 MODBUS_END_DECLS
 

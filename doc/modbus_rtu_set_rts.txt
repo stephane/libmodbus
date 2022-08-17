@@ -18,13 +18,16 @@ The *modbus_rtu_set_rts()* function shall set the Request To Send mode to
 communicate on a RS485 serial bus. By default, the mode is set to
 `MODBUS_RTU_RTS_NONE` and no signal is issued before writing data on the wire.
 
-To enable the RTS mode, the values `MODBUS_RTU_RTS_UP` or `MODBUS_RTU_RTS_DOWN`
-must be used, these modes enable the RTS mode and set the polarity at the same
-time. When `MODBUS_RTU_RTS_UP` is used, an ioctl call is made with RTS flag
-enabled then data is written on the bus after a delay of 1 ms, then another
-ioctl call is made with the RTS flag disabled and again a delay of 1 ms occurs.
-The `MODBUS_RTU_RTS_DOWN` mode applies the same procedure but with an inverted
-RTS flag.
+To enable the RTS mode, the values `MODBUS_RTU_RTS_SOFTWARE_UP`,
+`MODBUS_RTU_RTS_SOFTWARE_DOWN`, `MODBUS_RTU_RTS_HARDWARE_UP` or
+`MODBUS_RTU_RTS_HARDWARE_DOWN` must be used, these modes enable the RTS mode
+and set the polarity at the same time. When `MODBUS_RTU_RTS_SOFTWARE_UP` is used, an ioctl
+call is made with RTS flag enabled then data is written on the bus after a delay
+of 1 ms, then another ioctl call is made with the RTS flag disabled and again a
+delay of 1 ms occurs. The `MODBUS_RTU_RTS_SOFTWARE_DOWN` mode applies the same procedure
+but with an inverted RTS flag. `MODBUS_RTU_RTS_HARDWARE_UP` and `MODBUS_RTU_RTS_HARDWARE_DOWN`
+tells the serial driver to set the RTS to the correct state before and after transmission and
+allows for more accurate communication than the other two options.
 
 This function can only be used with a context using a RTU backend.
 
@@ -43,7 +46,7 @@ The libmodbus backend isn't RTU or the mode given in argument is invalid.
 
 EXAMPLE
 -------
-.Enable the RTS mode with positive polarity
+.Enable the RTS mode with positive polarity using software bit banging
 [source,c]
 -------------------
 modbus_t *ctx;
@@ -52,7 +55,7 @@ uint16_t tab_reg[10];
 ctx = modbus_new_rtu("/dev/ttyS0", 115200, 'N', 8, 1);
 modbus_set_slave(ctx, 1);
 modbus_rtu_set_serial_mode(ctx, MODBUS_RTU_RS485);
-modbus_rtu_set_rts(ctx, MODBUS_RTU_RTS_UP);
+modbus_rtu_set_rts(ctx, MODBUS_RTU_RTS_SOFTWARE_UP);
 
 if (modbus_connect(ctx) == -1) {
     fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
