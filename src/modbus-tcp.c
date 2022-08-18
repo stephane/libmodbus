@@ -323,7 +323,7 @@ static int _modbus_tcp_connect(modbus_t *ctx)
 #endif
 
     ctx->s = socket(PF_INET, flags, 0);
-    if (ctx->s == -1) {
+    if (ctx->s < 0) {
         return -1;
     }
 
@@ -432,7 +432,7 @@ static int _modbus_tcp_pi_connect(modbus_t *ctx)
 /* Closes the network connection and socket in TCP mode */
 static void _modbus_tcp_close(modbus_t *ctx)
 {
-    if (ctx->s != -1) {
+    if (ctx->s >= 0) {
         shutdown(ctx->s, SHUT_RDWR);
         close(ctx->s);
         ctx->s = -1;
@@ -674,7 +674,7 @@ int modbus_tcp_accept(modbus_t *ctx, int *s)
     ctx->s = accept(*s, (struct sockaddr *)&addr, &addrlen);
 #endif
 
-    if (ctx->s == -1) {
+    if (ctx->s < 0) {
         return -1;
     }
 
@@ -704,7 +704,7 @@ int modbus_tcp_pi_accept(modbus_t *ctx, int *s)
     ctx->s = accept(*s, (struct sockaddr *)&addr, &addrlen);
 #endif
 
-    if (ctx->s == -1) {
+    if (ctx->s < 0) {
         return -1;
     }
 

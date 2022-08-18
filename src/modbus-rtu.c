@@ -595,7 +595,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 #endif
 
     ctx->s = open(ctx_rtu->device, flags);
-    if (ctx->s == -1) {
+    if (ctx->s < 0) {
         if (ctx->debug) {
             fprintf(stderr, "ERROR Can't open the device %s (%s)\n",
                     ctx_rtu->device, strerror(errno));
@@ -1135,7 +1135,7 @@ static void _modbus_rtu_close(modbus_t *ctx)
                 (int)GetLastError());
     }
 #else
-    if (ctx->s != -1) {
+    if (ctx->s >= 0) {
         tcsetattr(ctx->s, TCSANOW, &ctx_rtu->old_tios);
         close(ctx->s);
         ctx->s = -1;
