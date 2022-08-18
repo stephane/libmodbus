@@ -786,6 +786,13 @@ int test_server(modbus_t *ctx, int use_backend)
     modbus_get_response_timeout(ctx, &old_response_to_sec, &old_response_to_usec);
     modbus_set_response_timeout(ctx, 0, 600000);
 
+    int old_s = modbus_get_socket(ctx);
+    modbus_set_socket(ctx, -1);
+    rc = modbus_receive(ctx, rsp);
+    modbus_set_socket(ctx, old_s);
+    printf("* modbus_receive with invalid socket: ");
+    ASSERT_TRUE(rc == -1, "FAILED (%d)\n", rc);
+
     req_length = modbus_send_raw_request(ctx, read_raw_req, READ_RAW_REQ_LEN);
     printf("* modbus_send_raw_request: ");
     ASSERT_TRUE(req_length == (backend_length + 5), "FAILED (%d)\n", req_length);
