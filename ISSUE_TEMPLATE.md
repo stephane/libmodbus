@@ -34,7 +34,7 @@ When you get here and you are still convinced that you want to report a bug:
 
 - *Enable the debug mode*, libmodbus provides a function to display the content
    of the Modbus messages and it's very convenient to analyze issues
-   (<http://libmodbus.org/docs/latest/modbus_set_debug.html>).
+   (<http://libmodbus.org/docs/modbus_set_debug/>).
 
 Good bug reports provide right and quick fixes!
 
@@ -62,11 +62,11 @@ everything up to and including the following line which starts with ---.
 
   <...>
 
-## Expected behavior
+## Actual behavior if applicable
 
   <...>
 
-## Actual behavior
+## Expected behavior or suggestion
 
   <...>
 
