@@ -1,5 +1,5 @@
 /*
- * Copyright © 2008-2014 Stéphane Raimbault <stephane.raimbault@gmail.com>
+ * Copyright © Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -681,9 +681,6 @@ int main(int argc, char *argv[])
     ctx = modbus_new_rtu("/dev/dummy", 0, 'A', 0, 0);
     ASSERT_TRUE(ctx == NULL && errno == EINVAL, "");
 
-    ctx = modbus_new_tcp_pi(NULL, NULL);
-    ASSERT_TRUE(ctx == NULL && errno == EINVAL, "");
-
     printf("\nALL TESTS PASS WITH SUCCESS.\n");
     success = TRUE;
 
@@ -788,6 +785,13 @@ int test_server(modbus_t *ctx, int use_backend)
      */
     modbus_get_response_timeout(ctx, &old_response_to_sec, &old_response_to_usec);
     modbus_set_response_timeout(ctx, 0, 600000);
+
+    int old_s = modbus_get_socket(ctx);
+    modbus_set_socket(ctx, -1);
+    rc = modbus_receive(ctx, rsp);
+    modbus_set_socket(ctx, old_s);
+    printf("* modbus_receive with invalid socket: ");
+    ASSERT_TRUE(rc == -1, "FAILED (%d)\n", rc);
 
     req_length = modbus_send_raw_request(ctx, read_raw_req, READ_RAW_REQ_LEN);
     printf("* modbus_send_raw_request: ");
