@@ -1,0 +1,40 @@
+modbus_get_client_context(3)
+============================
+
+
+NAME
+----
+modbus_get_client_context - returns the client context value from the libmodbus
+context
+
+
+SYNOPSIS
+--------
+*const void *modbus_get_client_context(modbus_t *'ctx');*
+
+
+DESCRIPTION
+-----------
+The *modbus_get_client_context()* function shall return the client context value
+from the libmodbus context.
+
+
+RETURN VALUE
+------------
+The function shall return the client context or NULL.
+
+
+ERRORS
+------
+This function does not return an error.
+
+
+SEE ALSO
+--------
+linkmb:modbus_set_client_context[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>

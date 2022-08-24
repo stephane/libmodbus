@@ -172,6 +172,9 @@ Set or get float numbers::
     - linkmb:modbus_get_float[3] (deprecated)
     - linkmb:modbus_set_float[3] (deprecated)
 
+Set or get the client context::
+    - linkmb:modbus_set_client_context[3]
+    - linkmb:modbus_get_client_context[3]
 
 
 Connection

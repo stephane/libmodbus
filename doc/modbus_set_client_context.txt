@@ -1,0 +1,66 @@
+modbus_set_client_context(3)
+============================
+
+
+NAME
+----
+modbus_set_client_context - set context information (usually a pointer) for use
+by the client
+
+
+SYNOPSIS
+--------
+*int modbus_set_client_context(modbus_t *'ctx', void *'cctx')*
+
+
+DESCRIPTION
+-----------
+The *modbus_set_client_context()* function can be used to set arbitrary client
+context information. The actual value is not used by libmodbus, but instead
+is available to client callback functions via *modbus_set_client_context()*.
+
+
+RETURN VALUE
+------------
+The function shall return 0 if successful. Otherwise it shall return -1 and set
+errno to one of the values defined below.
+
+
+ERRORS
+------
+*EINVAL*::
+The libmodbus context is NULL.
+
+
+EXAMPLE
+-------
+.Set and get the client context
+[source,cpp]
+-------------------
+modbus_t *ctx;
+uint16_t tab_reg[10];
+struct ClientContext {
+    int clientData1;
+    int clientData2;
+};
+ClientContext *cctx = new ClientContext();
+
+ctx = modbus_new_rtu("/dev/ttyS0", 115200, 'N', 8, 1);
+modbus_set_slave(ctx, 1);
+modbus_rtu_set_serial_mode(ctx, MODBUS_RTU_RS485);
+modbus_set_client_context(ctx, cctx);
+
+ClientContext *myCCTX = reinterpret_cast<ClientContext*>(modbus_get_client_context(ctx));
+
+modbus_free(ctx);
+-------------------
+
+SEE ALSO
+--------
+linkmb:modbus_get_client_context[3]
+
+
+AUTHORS
+-------
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>
