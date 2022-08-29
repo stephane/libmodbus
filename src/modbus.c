@@ -129,7 +129,7 @@ int modbus_flush(modbus_t *ctx)
 static unsigned int compute_response_length_from_request(modbus_t *ctx, uint8_t *req)
 {
     int length;
-    const int offset = ctx->backend->header_length;
+    const unsigned int offset = ctx->backend->header_length;
 
     switch (req[offset]) {
     case MODBUS_FC_READ_COILS:
@@ -356,7 +356,7 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     fd_set rset;
     struct timeval tv;
     struct timeval *p_tv;
-    int length_to_read;
+    unsigned int length_to_read;
     int msg_length = 0;
     _step_t step;
 #ifdef _WIN32
@@ -494,7 +494,7 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
             case _STEP_META:
                 length_to_read = compute_data_length_after_meta(
                     ctx, msg, msg_type);
-                if ((msg_length + length_to_read) > (int)ctx->backend->max_adu_length) {
+                if ((msg_length + length_to_read) > ctx->backend->max_adu_length) {
                     errno = EMBBADDATA;
                     _error_print(ctx, "too many data");
                     return -1;
@@ -559,7 +559,7 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
 {
     int rc;
     int rsp_length_computed;
-    const int offset = ctx->backend->header_length;
+    const unsigned int offset = ctx->backend->header_length;
     const int function = rsp[offset];
 
     if (ctx->backend->pre_check_confirmation) {
@@ -577,7 +577,7 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
 
     /* Exception code */
     if (function >= 0x80) {
-        if (rsp_length == (offset + 2 + (int)ctx->backend->checksum_length) &&
+        if (rsp_length == (int)(offset + 2 + ctx->backend->checksum_length) &&
             req[offset] == (rsp[offset] - 0x80)) {
             /* Valid exception code received */
 
@@ -771,7 +771,7 @@ static int response_exception(modbus_t *ctx, sft_t *sft,
 int modbus_reply(modbus_t *ctx, const uint8_t *req,
                  int req_length, modbus_mapping_t *mb_mapping)
 {
-    int offset;
+    unsigned int offset;
     int slave;
     int function;
     uint16_t address;
@@ -1071,7 +1071,7 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
 int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
                            unsigned int exception_code)
 {
-    int offset;
+    unsigned int offset;
     int slave;
     int function;
     uint8_t rsp[MAX_MESSAGE_LENGTH];
@@ -1117,10 +1117,11 @@ static int read_io_status(modbus_t *ctx, int function,
 
     rc = send_msg(ctx, req, req_length);
     if (rc > 0) {
-        int i, temp, bit;
+        unsigned int i;
+        int temp, bit;
         int pos = 0;
-        int offset;
-        int offset_end;
+        unsigned int offset;
+        unsigned int offset_end;
 
         rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
         if (rc == -1)
@@ -1228,7 +1229,7 @@ static int read_registers(modbus_t *ctx, int function, int addr, int nb,
 
     rc = send_msg(ctx, req, req_length);
     if (rc > 0) {
-        int offset;
+        unsigned int offset;
         int i;
 
         rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
@@ -1561,7 +1562,7 @@ int modbus_write_and_read_registers(modbus_t *ctx,
 
     rc = send_msg(ctx, req, req_length);
     if (rc > 0) {
-        int offset;
+        unsigned int offset;
 
         rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
         if (rc == -1)
@@ -1604,7 +1605,7 @@ int modbus_report_slave_id(modbus_t *ctx, int max_dest, uint8_t *dest)
     rc = send_msg(ctx, req, req_length);
     if (rc > 0) {
         int i;
-        int offset;
+        unsigned int offset;
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
         rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
@@ -1779,7 +1780,7 @@ int modbus_set_indication_timeout(modbus_t *ctx, uint32_t to_sec, uint32_t to_us
     return 0;
 }
 
-int modbus_get_header_length(modbus_t *ctx)
+unsigned int modbus_get_header_length(modbus_t *ctx)
 {
     if (ctx == NULL) {
         errno = EINVAL;
