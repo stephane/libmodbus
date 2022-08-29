@@ -1,0 +1,47 @@
+modbus_rtu_get_suppress_echo(3)
+===============================
+
+
+NAME
+----
+modbus_rtu_get_suppress_echo - get local echo suppression status
+
+
+SYNOPSIS
+--------
+*int modbus_rtu_get_suppress_echo(modbus_t *'ctx');*
+
+
+DESCRIPTION
+-----------
+The _modbus_rtu_get_suppress_echo()_ function shall return the current
+enabled/disable state of local echo suppression workaround of
+the libmodbus context 'ctx'.
+
+This function can only be used with a context using a RTU backend.
+
+
+RETURN VALUE
+------------
+The _modbus_rtu_get_suppress_echo()_ function shall return 0 if workaround
+is disable, 1 when it is enabled.
+Otherwise it shall return -1 and set errno.
+
+
+ERRORS
+------
+*EINVAL*::
+The libmodbus backend is not RTU.
+
+
+SEE ALSO
+--------
+linkmb:modbus_rtu_set_suppress_echo[3]
+
+
+AUTHORS
+-------
+Michael Heimpold <mhei@heimpold.de>
+
+The libmodbus documentation was written by Stéphane Raimbault
+<stephane.raimbault@gmail.com>
