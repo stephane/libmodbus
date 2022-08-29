@@ -5,11 +5,18 @@
  */
 
 #include <stdio.h>
-#include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <modbus.h>
+
+#if defined(_WIN32)
+# include <winsock2.h>
+# include <ws2tcpip.h>
+void usleep(DWORD usec);
+#else
+#include <unistd.h>
+#endif
 
 #include "unit-test.h"
 
@@ -29,14 +36,14 @@ int send_crafted_request(modbus_t *ctx, int function,
 int equal_dword(uint16_t *tab_reg, const uint32_t value);
 int is_memory_equal(const void *s1, const void *s2, size_t size);
 
-#define BUG_REPORT(_cond, _format, _args ...) \
-    printf("\nLine %d: assertion error for '%s': " _format "\n", __LINE__, # _cond, ## _args)
+#define BUG_REPORT(_cond, _format, ...) \
+    printf("\nLine %d: assertion error for '%s': " _format "\n", __LINE__, # _cond, ## __VA_ARGS__)
 
-#define ASSERT_TRUE(_cond, _format, __args...) {  \
+#define ASSERT_TRUE(_cond, _format, ...) {  \
     if (_cond) {                                  \
         printf("OK\n");                           \
     } else {                                      \
-        BUG_REPORT(_cond, _format, ## __args);    \
+        BUG_REPORT(_cond, _format, ## __VA_ARGS__);    \
         goto close;                               \
     }                                             \
 };
@@ -152,12 +159,14 @@ int main(int argc, char *argv[])
 
     /* Multiple bits */
     {
-        uint8_t tab_value[UT_BITS_NB];
+        uint8_t *tab_value = (uint8_t *) malloc(UT_BITS_NB);
 
         modbus_set_bits_from_bytes(tab_value, 0, UT_BITS_NB, UT_BITS_TAB);
         rc = modbus_write_bits(ctx, UT_BITS_ADDRESS, UT_BITS_NB, tab_value);
         printf("1/2 modbus_write_bits: ");
         ASSERT_TRUE(rc == UT_BITS_NB, "");
+
+        free(tab_value);
     }
 
     rc = modbus_read_bits(ctx, UT_BITS_ADDRESS, UT_BITS_NB, tab_rp_bits);
@@ -890,7 +899,7 @@ int send_crafted_request(modbus_t *ctx, int function,
             req[5] = max_value & 0xFF;
             if (bytes) {
                 /* Write query (nb values * 2 to convert in bytes for registers) */
-                req[6] = bytes;
+                req[6] = (uint8_t) bytes;
             }
         }
 
@@ -910,3 +919,15 @@ int send_crafted_request(modbus_t *ctx, int function,
 close:
     return -1;
 }
+
+#if defined(_WIN32)
+void usleep(DWORD usec)
+{
+    LARGE_INTEGER frequency, start, now;
+    QueryPerformanceFrequency(&frequency);
+    QueryPerformanceCounter(&start);
+    do {
+        QueryPerformanceCounter((LARGE_INTEGER *) &now);
+    } while ((now.QuadPart - start.QuadPart) / (float) (frequency.QuadPart) * 1000 * 1000 < usec);
+}
+#endif
