@@ -34,6 +34,6 @@ successful. Otherwise it shall return -1 and set errno.
 
 ## See also
 
-- [modbus_read_input_bits](modbus_read_input_bits)
-- [modbus_write_register](modbus_write_register)
-- [modbus_write_registers](modbus_write_registers)
+- [modbus_read_input_bits](modbus_read_input_bits.md)
+- [modbus_write_register](modbus_write_register.md)
+- [modbus_write_registers](modbus_write_registers.md)

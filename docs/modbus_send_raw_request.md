@@ -54,4 +54,4 @@ modbus_free(ctx);
 
 ## See also
 
-- [modbus_receive_confirmation](modbus_receive_confirmation)
+- [modbus_receive_confirmation](modbus_receive_confirmation.md)

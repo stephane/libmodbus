@@ -61,5 +61,5 @@ modbus_free(ctx);
 
 ## See also
 
-- [modbus_write_register](modbus_write_register)
-- [modbus_write_registers](modbus_write_registers)
+- [modbus_write_register](modbus_write_register.md)
+- [modbus_write_registers](modbus_write_registers.md)

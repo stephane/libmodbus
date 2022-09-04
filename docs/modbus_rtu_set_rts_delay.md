@@ -28,4 +28,4 @@ Otherwise it shall return -1 and set errno.
 
 ## See also
 
-- [modbus_rtu_get_rts_delay](modbus_rtu_get_rts_delay)
+- [modbus_rtu_get_rts_delay](modbus_rtu_get_rts_delay.md)

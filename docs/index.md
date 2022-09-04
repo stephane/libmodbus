@@ -42,7 +42,7 @@ Ethernet TCP) called backends in *libmodbus*.
 
 The first step is to allocate and set a `modbus_t` context according to the
 required backend (RTU or TCP) with a dedicated function, such as
-[modbus_new_rtu](modbus_new_rtu).
+[modbus_new_rtu](modbus_new_rtu.md).
 The function will return an opaque structure called `modbus_t` containing all
 necessary information to establish a connection with other Modbus devices
 according to the selected backend.
@@ -69,7 +69,7 @@ always initiated by the master.
 
 Many Modbus devices can be connected together on the same physical link so
 before sending a message, you must set the slave (receiver) with
-[modbus_set_slave](mobus_set_slave). If you're running a slave, its slave number
+[modbus_set_slave](modbus_set_slave.md). If you're running a slave, its slave number
 will be used to filter received messages.
 
 The libmodbus implementation of RTU isn't time based as stated in original
@@ -80,17 +80,17 @@ must take care to set a response timeout of slaves less than response timeout of
 master (ortherwise other slaves may ignore master requests when one of the slave
 is not responding).
 
-To create a Modbus RTU context, you should use [modbus_new_rtu](modbus_new_rtu).
+To create a Modbus RTU context, you should use [modbus_new_rtu](modbus_new_rtu.md).
 
 You can tweak the serial mode with the following functions:
 
-- [modbus_rtu_get_serial_mode](modbus_rtu_get_serial_mode)
-- [modbus_rtu_set_serial_mode](modbus_rtu_set_serial_mode)
-- [modbus_rtu_get_rts](modbus_rtu_get_rts)
-- [modbus_rtu_set_rts](modbus_rtu_set_rts)
-- [modbus_rtu_set_custom_rts](modbus_rtu_set_custom_rts)
-- [modbus_rtu_get_rts_delay](modbus_rtu_get_rts_delay)
-- [modbus_rtu_set_rts_delay](modbus_rtu_set_rts_delay)
+- [modbus_rtu_get_serial_mode](modbus_rtu_get_serial_mode.md)
+- [modbus_rtu_set_serial_mode](modbus_rtu_set_serial_mode.md)
+- [modbus_rtu_get_rts](modbus_rtu_get_rts.md)
+- [modbus_rtu_set_rts](modbus_rtu_set_rts.md)
+- [modbus_rtu_set_custom_rts](modbus_rtu_set_custom_rts.md)
+- [modbus_rtu_get_rts_delay](modbus_rtu_get_rts_delay.md)
+- [modbus_rtu_set_rts_delay](modbus_rtu_set_rts_delay.md)
 
 ### TCP (IPv4) Context
 
@@ -98,7 +98,7 @@ The TCP backend implements a Modbus variant used for communications over
 TCP/IPv4 networks. It does not require a checksum calculation as lower layer
 takes care of the same.
 
-To create a Modbus TCP context, you should use [modbus_new_tcp](modbus_new_tcp).
+To create a Modbus TCP context, you should use [modbus_new_tcp](modbus_new_tcp.md).
 
 ### TCP PI (IPv4 and IPv6) Context
 
@@ -109,25 +109,25 @@ calculation as lower layer takes care of the same.
 Contrary to the TCP IPv4 only backend, the TCP PI backend offers hostname
 resolution but it consumes about 1Kb of additional memory.
 
-Create a Modbus TCP PI context, you should use [modbus_new_tcp_pi](modbus_new_tcp_pi).
+Create a Modbus TCP PI context, you should use [modbus_new_tcp_pi](modbus_new_tcp_pi.md).
 
 ## Connection
 
 The following functions are provided to establish and close a connection with
 Modbus devices:
 
-- [modbus_connect](modbus_connect) establishes a connection.
-- [modbus_close](modbus_close) closes a connection.
-- [modbus_flush](modbus_flush) flushed a connection.
+- [modbus_connect](modbus_connect.md) establishes a connection.
+- [modbus_close](modbus_close.md) closes a connection.
+- [modbus_flush](modbus_flush.md) flushed a connection.
 
 In RTU, you should define the slave ID of your client with
-[modbus_set_slave](modbus_set_slave).
+[modbus_set_slave](modbus_set_slave.md).
 
 To analyse the exchanged data, you can enable the debug mode with
-[modbus_set_debug](modbus_set_debug).
+[modbus_set_debug](modbus_set_debug.md).
 
 Once you have completed the communication or at the end of your program, you
-should free the resources with the common function, [modbus_free](modbus_free)
+should free the resources with the common function, [modbus_free](modbus_free.md)
 
 ## Reads and writes from the client
 
@@ -137,31 +137,31 @@ send Modbus requests:
 
 To read data:
 
-- [modbus_read_bits](modbus_read_bits)
-- [modbus_read_input_bits](modbus_read_input_bits)
-- [modbus_read_registers](modbus_read_registers)
-- [modbus_read_input_registers](modbus_read_input_registers)
-- [modbus_report_slave_id](modbus_report_slave_id)
+- [modbus_read_bits](modbus_read_bits.md)
+- [modbus_read_input_bits](modbus_read_input_bits.md)
+- [modbus_read_registers](modbus_read_registers.md)
+- [modbus_read_input_registers](modbus_read_input_registers.md)
+- [modbus_report_slave_id](modbus_report_slave_id.md)
 
 To write data:
 
-- [modbus_write_bit](modbus_write_bit)
-- [modbus_write_register](modbus_write_register)
-- [modbus_write_bits](modbus_write_bits)
-- [modbus_write_registers](modbus_write_registers)
+- [modbus_write_bit](modbus_write_bit.md)
+- [modbus_write_register](modbus_write_register.md)
+- [modbus_write_bits](modbus_write_bits.md)
+- [modbus_write_registers](modbus_write_registers.md)
 
 To write and read data in a single operation:
 
-- [modbus_write_and_read_registers](modbus_write_and_read_registers)
+- [modbus_write_and_read_registers](modbus_write_and_read_registers.md)
 
 To send and receive low-level requests:
 
-- [modbus_send_raw_request](modbus_send_raw_request)
-- [modbus_receive_confirmation](modbus_receive_confirmation)
+- [modbus_send_raw_request](modbus_send_raw_request.md)
+- [modbus_receive_confirmation](modbus_receive_confirmation.md)
 
 To reply to an exception:
 
-- [modbus_reply_exception](modbus_reply_exception)
+- [modbus_reply_exception](modbus_reply_exception.md)
 
 ## Handling requests from server
 
@@ -171,39 +171,39 @@ handle requests:
 
 Data mapping:
 
-- [modbus_mapping_new](modbus_mapping_new)
-- [modbus_mapping_free](modbus_mapping_free)
+- [modbus_mapping_new](modbus_mapping_new.md)
+- [modbus_mapping_free](modbus_mapping_free.md)
 
 Receive:
 
-- [modbus_receive](modbus_receive)
+- [modbus_receive](modbus_receive.md)
 
 Reply:
 
-- [modbus_reply](modbus_reply)
-- [modbus_reply_exception](modbus_reply_exception)
+- [modbus_reply](modbus_reply.md)
+- [modbus_reply_exception](modbus_reply_exception.md)
 
 ## Advanced functions
 
 Timeout settings:
 
-- [modbus_get_byte_timeout](modbus_get_byte_timeout)
-- [modbus_set_byte_timeout](modbus_set_byte_timeout)
-- [modbus_get_response_timeout](modbus_get_response_timeout)
-- [modbus_set_response_timeout](modbus_set_response_timeout)
+- [modbus_get_byte_timeout](modbus_get_byte_timeout.md)
+- [modbus_set_byte_timeout](modbus_set_byte_timeout.md)
+- [modbus_get_response_timeout](modbus_get_response_timeout.md)
+- [modbus_set_response_timeout](modbus_set_response_timeout.md)
 
 Error recovery mode:
 
-- [modbus_set_error_recovery](modbus_set_error_recovery)
+- [modbus_set_error_recovery](modbus_set_error_recovery.md)
 
 Setter/getter of internal socket:
 
-- [modbus_set_socket](modbus_set_socket)
-- [modbus_get_socket](modbus_get_socket)
+- [modbus_set_socket](modbus_set_socket.md)
+- [modbus_get_socket](modbus_get_socket.md)
 
 Information about header:
 
-- [modbus_get_header_length](modbus_get_header_length)
+- [modbus_get_header_length](modbus_get_header_length.md)
 
 ## Data handling
 
@@ -220,22 +220,22 @@ Macros for data manipulation:
 
 Handling of bits and bytes:
 
-- [modbus_set_bits_from_byte](modbus_set_bits_from_byte)
-- [modbus_set_bits_from_bytes](modbus_set_bits_from_bytes)
-- [modbus_get_byte_from_bits](modbus_get_byte_from_bits)
+- [modbus_set_bits_from_byte](modbus_set_bits_from_byte.md)
+- [modbus_set_bits_from_bytes](modbus_set_bits_from_bytes.md)
+- [modbus_get_byte_from_bits](modbus_get_byte_from_bits.md)
 
 Set or get float numbers:
 
-- [modbus_get_float_abcd](modbus_get_float_abcd)
-- [modbus_set_float_abcd](modbus_set_float_abcd)
-- [modbus_get_float_badc](modbus_get_float_badc)
-- [modbus_set_float_badc](modbus_set_float_badc)
-- [modbus_get_float_cdab](modbus_get_float_cdab)
-- [modbus_set_float_cdab](modbus_set_float_cdab)
-- [modbus_get_float_dcba](modbus_get_float_dcba)
-- [modbus_set_float_dcba](modbus_set_float_dcba)
-- [modbus_get_float](modbus_get_float) **deprecated**
-- [modbus_set_float](modbus_set_float) **deprecated**
+- [modbus_get_float_abcd](modbus_get_float_abcd.md)
+- [modbus_set_float_abcd](modbus_set_float_abcd.md)
+- [modbus_get_float_badc](modbus_get_float_badc.md)
+- [modbus_set_float_badc](modbus_set_float_badc.md)
+- [modbus_get_float_cdab](modbus_get_float_cdab.md)
+- [modbus_set_float_cdab](modbus_set_float_cdab.md)
+- [modbus_get_float_dcba](modbus_get_float_dcba.md)
+- [modbus_set_float_dcba](modbus_set_float_dcba.md)
+- [modbus_get_float](modbus_get_float.md) **deprecated**
+- [modbus_set_float](modbus_set_float.md) **deprecated**
 
 ## Error handling
 
@@ -247,7 +247,7 @@ shall return either a NULL value (if returning a pointer) or a negative value
 
 The *modbus_strerror()* function is provided to translate libmodbus-specific
 error codes into error message strings; for details refer to
-[modbus_strerror](modbus_strerror).
+[modbus_strerror](modbus_strerror.md).
 
 ## Miscellaneous
 

@@ -40,4 +40,4 @@ rc = modbus_receive_confirmation(ctx, rsp);
 
 ## See also
 
-- [modbus_send_raw_request](modbus_send_raw_request)
+- [modbus_send_raw_request](modbus_send_raw_request.md)

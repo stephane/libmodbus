@@ -23,7 +23,7 @@ The function shall return a float.
 
 ## See also
 
-- [modbus_set_float_abcd](modbus_set_float_abcd)
-- [modbus_get_float_badc](modbus_get_float_badc)
-- [modbus_get_float_cdab](modbus_get_float_cdab)
-- [modbus_get_float_dcba](modbus_get_float_dcba)
+- [modbus_set_float_abcd](modbus_set_float_abcd.md)
+- [modbus_get_float_badc](modbus_get_float_badc.md)
+- [modbus_get_float_cdab](modbus_get_float_cdab.md)
+- [modbus_get_float_dcba](modbus_get_float_dcba.md)

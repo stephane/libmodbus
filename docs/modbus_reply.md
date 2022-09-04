@@ -36,4 +36,4 @@ See also the errors returned by the syscall used to send the response (eg. send 
 
 ## See also
 
-- [modbus_reply_exception](modbus_reply_exception)
+- [modbus_reply_exception](modbus_reply_exception.md)

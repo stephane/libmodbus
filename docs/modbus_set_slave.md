@@ -69,4 +69,4 @@ if (modbus_connect(ctx) == -1) {
 
 ## See also
 
-- [modbus_get_slave](modbus_get_slave)
+- [modbus_get_slave](modbus_get_slave.md)

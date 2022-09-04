@@ -17,7 +17,7 @@ socket of the context `ctx`. This function is used by Modbus slave/server to
 receive and analyze indication request sent by the masters/clients.
 
 If you need to use another socket or file descriptor than the one defined in the
-context `ctx`, see the function [modbus_set_socket](modbus_set_socket).
+context `ctx`, see the function [modbus_set_socket](modbus_set_socket.md).
 
 ## Return value
 
@@ -28,5 +28,5 @@ shall return -1 and set errno.
 
 ## See also
 
-- [modbus_set_socket](modbus_set_socket)
-- [modbus_reply](modbus_reply)
+- [modbus_set_socket](modbus_set_socket.md)
+- [modbus_reply](modbus_reply.md)

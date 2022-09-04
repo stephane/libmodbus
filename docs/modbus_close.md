@@ -37,4 +37,4 @@ modbus_free(ctx);
 
 ## See also
 
-- [modbus_connect](modbus_connect)
+- [modbus_connect](modbus_connect.md)

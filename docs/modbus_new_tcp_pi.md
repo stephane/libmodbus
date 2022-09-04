@@ -57,6 +57,6 @@ if (modbus_connect(ctx) == -1) {
 
 ## See also
 
-- [modbus_new_tcp](modbus_new_tcp)
-- [modbus_tcp_pi_listen](modbus_tcp_pi_listen)
-- [modbus_free](modbus_free)
+- [modbus_new_tcp](modbus_new_tcp.md)
+- [modbus_tcp_pi_listen](modbus_tcp_pi_listen.md)
+- [modbus_free](modbus_free.md)
