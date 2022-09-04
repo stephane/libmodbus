@@ -32,5 +32,5 @@ shall return -1 and set errno.
 
 ## See also
 
-- [modbus_write_bit](modbus_write_bit)
-- [modbus_write_bits](modbus_write_bits)
+- [modbus_write_bit](modbus_write_bit.md)
+- [modbus_write_bits](modbus_write_bits.md)

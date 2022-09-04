@@ -22,5 +22,5 @@ The function shall return a byte containing the bits read.
 
 ## See also
 
-- [modbus_set_bits_from_byte](modbus_set_bits_from_byte)
-- [modbus_set_bits_from_bytes](modbus_set_bits_from_bytes)
+- [modbus_set_bits_from_byte](modbus_set_bits_from_byte.md)
+- [modbus_set_bits_from_bytes](modbus_set_bits_from_bytes.md)

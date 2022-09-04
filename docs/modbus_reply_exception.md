@@ -42,4 +42,4 @@ successful. Otherwise it shall return -1 and set errno.
 
 ## See also
 
-- [modbus_reply](modbus_reply)
+- [modbus_reply](modbus_reply.md)

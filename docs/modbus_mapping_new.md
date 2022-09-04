@@ -17,7 +17,7 @@ input bits, registers and inputs registers. The pointers are stored in
 modbus_mapping_t structure. All values of the arrays are initialized to zero.
 
 This function is equivalent to a call of the
-[modbus_mapping_new_start_address](modbus_mapping_new_start_address) function
+[modbus_mapping_new_start_address](modbus_mapping_new_start_address.md) function
 with all start addresses to `0`.
 
 If it isn't necessary to allocate an array for a specific type of data, you can
@@ -56,5 +56,5 @@ if (mb_mapping == NULL) {
 
 ## See also
 
-- [modbus_mapping_free](modbus_mapping_free)
-- [modbus_mapping_new_start_address](modbus_mapping_new_start_address)
+- [modbus_mapping_free](modbus_mapping_free.md)
+- [modbus_mapping_new_start_address](modbus_mapping_new_start_address.md)

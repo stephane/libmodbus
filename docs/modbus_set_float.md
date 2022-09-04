@@ -25,5 +25,5 @@ There is no return values.
 
 ## See also
 
-- [modbus_get_float](modbus_get_float)
-- [modbus_set_float_dcba](modbus_set_float_dcba)
+- [modbus_get_float](modbus_get_float.md)
+- [modbus_set_float_dcba](modbus_set_float_dcba.md)

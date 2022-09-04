@@ -32,4 +32,4 @@ return -1 and set errno.
 
 ## See also
 
-- [modbus_rtu_set_rts](modbus_rtu_set_rts)
+- [modbus_rtu_set_rts](modbus_rtu_set_rts.md)

@@ -41,6 +41,6 @@ modbus_free(ctx);
 
 ## See also
 
-- [modbus_tcp_pi_accept](modbus_tcp_pi_accept)
-- [modbus_tcp_listen](modbus_tcp_listen)
-- [modbus_tcp_pi_listen](modbus_tcp_pi_listen)
+- [modbus_tcp_pi_accept](modbus_tcp_pi_accept.md)
+- [modbus_tcp_listen](modbus_tcp_listen.md)
+- [modbus_tcp_pi_listen](modbus_tcp_pi_listen.md)

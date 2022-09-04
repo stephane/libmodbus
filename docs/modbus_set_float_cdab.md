@@ -23,7 +23,7 @@ There is no return values.
 
 ## See also
 
-- [modbus_get_float_cdab](modbus_get_float_cdab)
-- [modbus_set_float_abcd](modbus_set_float_abcd)
-- [modbus_set_float_badc](modbus_set_float_badc)
-- [modbus_set_float_dcba](modbus_set_float_dcba)
+- [modbus_get_float_cdab](modbus_get_float_cdab.md)
+- [modbus_set_float_abcd](modbus_set_float_abcd.md)
+- [modbus_set_float_badc](modbus_set_float_badc.md)
+- [modbus_set_float_dcba](modbus_set_float_dcba.md)

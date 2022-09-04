@@ -42,4 +42,4 @@ if (FD_ISSET(master_socket, &rdset)) {
 
 ## See also
 
-- [modbus_get_socket](modbus_get_socket)
+- [modbus_get_socket](modbus_get_socket.md)

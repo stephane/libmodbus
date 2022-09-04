@@ -81,5 +81,5 @@ if (mb_mapping == NULL) {
 
 ## See also
 
-- [modbus_mapping_new](modbus_mapping_new)
-- [modbus_mapping_free](modbus_mapping_free)
+- [modbus_mapping_new](modbus_mapping_new.md)
+- [modbus_mapping_free](modbus_mapping_free.md)

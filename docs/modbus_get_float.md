@@ -26,6 +26,6 @@ The function shall return a float.
 
 ## See also
 
-- [modbus_set_float](modbus_set_float)
-- [modbus_set_float_dcba](modbus_set_float_dcba)
-- [modbus_get_float_dcba](modbus_get_float_dcba)
+- [modbus_set_float](modbus_set_float.md)
+- [modbus_set_float_dcba](modbus_set_float_dcba.md)
+- [modbus_get_float_dcba](modbus_get_float_dcba.md)

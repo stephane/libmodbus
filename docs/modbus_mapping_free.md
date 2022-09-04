@@ -21,4 +21,4 @@ There is no return values.
 
 ## See also
 
-- [modbus_mapping_new](modbus_mapping_new)
+- [modbus_mapping_new](modbus_mapping_new.md)

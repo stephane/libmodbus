@@ -37,4 +37,4 @@ if (modbus_connect(ctx) == -1) {
 
 ## See also
 
-- [modbus_close](modbus_close)
+- [modbus_close](modbus_close.md)

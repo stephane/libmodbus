@@ -32,4 +32,4 @@ successful. Otherwise it shall return -1 and set errno.
 
 ## See also
 
-- [modbus_read_input_registers](modbus_read_input_registers)
+- [modbus_read_input_registers](modbus_read_input_registers.md)

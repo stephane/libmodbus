@@ -26,4 +26,4 @@ return -1 and set errno to one of the values defined below.
 
 ## See also
 
-- [modbus_set_slave](modbus_set_slave)
+- [modbus_set_slave](modbus_set_slave.md)

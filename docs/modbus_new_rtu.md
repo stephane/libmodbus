@@ -36,8 +36,8 @@ The `stop_bits` argument specifies the bits of stop, the allowed values are 1
 and 2.
 
 Once the `modbus_t` structure is initialized, you must set the slave of your
-device with [modbus_set_slave](modbus_set_slave) and connect to the serial bus with
-[modbus_connect](modbus_connect).
+device with [modbus_set_slave](modbus_set_slave.md) and connect to the serial bus with
+[modbus_connect](modbus_connect.md).
 
 ## Return value
 
@@ -73,5 +73,5 @@ if (modbus_connect(ctx) == -1) {
 
 ## See also
 
-- [modbus_new_tcp](modbus_new_tcp)
-- [modbus_free](modbus_free)
+- [modbus_new_tcp](modbus_new_tcp.md)
+- [modbus_free](modbus_free.md)

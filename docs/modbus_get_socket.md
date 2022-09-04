@@ -22,4 +22,4 @@ successful. Otherwise it shall return -1 and set errno.
 
 ## See also
 
-- [modbus_set_socket](modbus_set_socket)
+- [modbus_set_socket](modbus_set_socket.md)

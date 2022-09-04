@@ -66,4 +66,4 @@ modbus_free(ctx);
 
 ## See also
 
-- [modbus_rtu_get_rts](modbus_rtu_get_rts)
+- [modbus_rtu_get_rts](modbus_rtu_get_rts.md)

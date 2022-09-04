@@ -35,6 +35,6 @@ modbus_set_response_timeout(ctx, 0, 0);
 
 ## See also
 
-- [modbus_set_response_timeout](modbus_set_response_timeout)
-- [modbus_get_byte_timeout](modbus_get_byte_timeout)
-- [modbus_set_byte_timeout](modbus_set_byte_timeout)
+- [modbus_set_response_timeout](modbus_set_response_timeout.md)
+- [modbus_get_byte_timeout](modbus_get_byte_timeout.md)
+- [modbus_set_byte_timeout](modbus_set_byte_timeout.md)

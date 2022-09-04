@@ -24,5 +24,5 @@ errno.
 
 ## See also
 
-- [modbus_read_bits](modbus_read_bits)
-- [modbus_write_bits](modbus_write_bits)
+- [modbus_read_bits](modbus_read_bits.md)
+- [modbus_write_bits](modbus_write_bits.md)
