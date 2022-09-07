@@ -73,7 +73,9 @@ esac
 AM_CONDITIONAL(OS_WIN32, test "$os_win32" = "true")
 AM_CONDITIONAL(OS_QNX, test "$os_qnx" = "true")
 
+m4_pattern_forbid([^LT_INIT])dnl
 LT_INIT([disable-static win32-dll pic-only])
+
 AC_CHECK_HEADERS([ \
     arpa/inet.h \
     byteswap.h \
