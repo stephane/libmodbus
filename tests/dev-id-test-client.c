@@ -117,6 +117,8 @@ int main(int argc, char* argv[])
     modbus_t* ctx;
 
     ctx = modbus_new_tcp("127.0.0.1", 1502);
+    //ctx = modbus_new_rtu("/dev/ttyUSB0", 9600, 'N', 8, 1);
+    //modbus_set_slave(ctx, 1);
     modbus_set_debug(ctx, TRUE);
 
     if (modbus_connect(ctx) == -1) {

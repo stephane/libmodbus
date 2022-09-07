@@ -375,7 +375,7 @@ static int compute_additional_data_length(modbus_t *ctx, uint8_t *msg,
             last_item_idx += this_entry_size
                 + ((found_objects < num_objects)? MODBUS_FC_2B0E_ENTRY_MIN_LEN : 0);
         }
-        length = last_item_idx + 1 - msg_length;
+        length = last_item_idx + 1 - msg_length + ctx->backend->checksum_length;;
     } else {
         length = 0;
     }
