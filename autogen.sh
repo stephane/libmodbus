@@ -6,9 +6,11 @@ if autoreconf --install --symlink --force; then
 	echo "------------------------------------------------------"
 	echo
 else
+	s="$?"
 	echo
 	echo "--------------------------"
 	echo "Running autoreconf failed."
 	echo "--------------------------"
 	echo
+	exit "$s"
 fi
