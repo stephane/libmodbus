@@ -289,6 +289,16 @@ MODBUS_API void modbus_set_float_dcba(float f, uint16_t *dest);
 MODBUS_API void modbus_set_float_badc(float f, uint16_t *dest);
 MODBUS_API void modbus_set_float_cdab(float f, uint16_t *dest);
 
+MODBUS_API double modbus_get_double_abcdefgh(const uint16_t *src);
+MODBUS_API double modbus_get_double_hgfedcba(const uint16_t *src);
+MODBUS_API double modbus_get_double_badcfehg(const uint16_t *src);
+MODBUS_API double modbus_get_double_ghefcdab(const uint16_t *src);
+
+MODBUS_API void modbus_set_double_abcdefgh(double val, const uint16_t *dest);
+MODBUS_API void modbus_set_double_hgfedcba(double val, const uint16_t *dest);
+MODBUS_API void modbus_set_double_badcfehg(double val, const uint16_t *dest);
+MODBUS_API void modbus_set_double_ghefcdab(double val, const uint16_t *dest);
+
 #include "modbus-tcp.h"
 #include "modbus-rtu.h"
 

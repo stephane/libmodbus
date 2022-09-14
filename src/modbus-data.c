@@ -301,3 +301,228 @@ void modbus_set_float(float f, uint16_t *dest)
     dest[0] = (uint16_t)i;
     dest[1] = (uint16_t)(i >> 16);
 }
+
+/* Get a double from 8 bytes (Modbus) without any conversion (ABCDEFGH) */
+double modbus_get_double_abcdefgh(const uint16_t *src)
+{
+    double val;
+    uint64_t i;
+    uint8_t a, b, c, d, e, f, g, h;
+
+    a = (src[0] >> 8) & 0xFF;
+    b = (src[0] >> 0) & 0xFF;
+    c = (src[1] >> 8) & 0xFF;
+    d = (src[1] >> 0) & 0xFF;
+    e = (src[2] >> 8) & 0xFF;
+    f = (src[2] >> 0) & 0xFF;
+    g = (src[3] >> 8) & 0xFF;
+    h = (src[3] >> 0) & 0xFF;
+
+    i = ((uint64_t)a << 56) |
+        ((uint64_t)b << 48) |
+        ((uint64_t)c << 40) |
+        ((uint64_t)d << 32) |
+        ((uint64_t)e << 24) |
+        ((uint64_t)f << 16) |
+        ((uint64_t)g << 8)  |
+        ((uint64_t)h << 0);
+    memcpy(&val, &i, 8);
+
+    return val;
+}
+
+/* Get a double from 8 bytes (Modbus) in inversed format (HGFEDCBA) */
+double modbus_get_double_hgfedcba(const uint16_t *src)
+{
+    double val;
+    uint64_t i;
+    uint8_t a, b, c, d, e, f, g, h;
+
+    a = (src[0] >> 8) & 0xFF;
+    b = (src[0] >> 0) & 0xFF;
+    c = (src[1] >> 8) & 0xFF;
+    d = (src[1] >> 0) & 0xFF;
+    e = (src[2] >> 8) & 0xFF;
+    f = (src[2] >> 0) & 0xFF;
+    g = (src[3] >> 8) & 0xFF;
+    h = (src[3] >> 0) & 0xFF;
+
+    i = ((uint64_t)h << 56) |
+        ((uint64_t)g << 48) |
+        ((uint64_t)f << 40) |
+        ((uint64_t)e << 32) |
+        ((uint64_t)d << 24) |
+        ((uint64_t)c << 16) |
+        ((uint64_t)b << 8)  |
+        ((uint64_t)a << 0);
+    memcpy(&val, &i, 8);
+
+    return val;
+}
+
+/* Get a double from 8 bytes (Modbus) in inversed format (BADCFEHG) */
+double modbus_get_double_badcfehg(const uint16_t *src)
+{
+    double val;
+    uint64_t i;
+    uint8_t a, b, c, d, e, f, g, h;
+
+    a = (src[0] >> 8) & 0xFF;
+    b = (src[0] >> 0) & 0xFF;
+    c = (src[1] >> 8) & 0xFF;
+    d = (src[1] >> 0) & 0xFF;
+    e = (src[2] >> 8) & 0xFF;
+    f = (src[2] >> 0) & 0xFF;
+    g = (src[3] >> 8) & 0xFF;
+    h = (src[3] >> 0) & 0xFF;
+
+    i = ((uint64_t)b << 56) |
+        ((uint64_t)a << 48) |
+        ((uint64_t)d << 40) |
+        ((uint64_t)c << 32) |
+        ((uint64_t)f << 24) |
+        ((uint64_t)e << 16) |
+        ((uint64_t)h << 8)  |
+        ((uint64_t)g << 0);
+    memcpy(&val, &i, 8);
+
+    return val;
+}
+
+/* Get a double from 8 bytes (Modbus) in inversed format (GHEFCDAB) */
+double modbus_get_double_ghefcdab(const uint16_t *src)
+{
+    double val;
+    uint64_t i;
+    uint8_t a, b, c, d, e, f, g, h;
+
+    a = (src[0] >> 8) & 0xFF;
+    b = (src[0] >> 0) & 0xFF;
+    c = (src[1] >> 8) & 0xFF;
+    d = (src[1] >> 0) & 0xFF;
+    e = (src[2] >> 8) & 0xFF;
+    f = (src[2] >> 0) & 0xFF;
+    g = (src[3] >> 8) & 0xFF;
+    h = (src[3] >> 0) & 0xFF;
+
+    i = ((uint64_t)g << 56) |
+        ((uint64_t)h << 48) |
+        ((uint64_t)e << 40) |
+        ((uint64_t)f << 32) |
+        ((uint64_t)c << 24) |
+        ((uint64_t)d << 16) |
+        ((uint64_t)a << 8)  |
+        ((uint64_t)b << 0);
+    memcpy(&val, &i, 8);
+
+    return val;
+}
+
+/* Set a double to 8 bytes for Modbus w/o any conversion (ABCDEFGH) */
+void modbus_set_double_abcdefgh(double val, const uint16_t *dest)
+{
+    uint64_t i;
+    uint8_t *out = (uint8_t*) dest;
+    uint8_t a, b, c, d, e, f, g, h;
+
+    memcpy(&i, &val, sizeof(uint64_t));
+    a = (i >> 56) & 0xFF;
+    b = (i >> 48) & 0xFF;
+    c = (i >> 40) & 0xFF;
+    d = (i >> 32) & 0xFF;
+    e = (i >> 24) & 0xFF;
+    f = (i >> 16) & 0xFF;
+    g = (i >> 8) & 0xFF;
+    h = (i >> 0) & 0xFF;
+
+    out[0] = a;
+    out[1] = b;
+    out[2] = c;
+    out[3] = d;
+    out[4] = e;
+    out[5] = f;
+    out[6] = g;
+    out[7] = h;
+}
+
+/* Set a double to 8 bytes for Modbus w/o any conversion (HGFEDCBA) */
+void modbus_set_double_hgfedcba(double val, const uint16_t *dest)
+{
+    uint64_t i;
+    uint8_t *out = (uint8_t*) dest;
+    uint8_t a, b, c, d, e, f, g, h;
+
+    memcpy(&i, &val, sizeof(uint64_t));
+    a = (i >> 56) & 0xFF;
+    b = (i >> 48) & 0xFF;
+    c = (i >> 40) & 0xFF;
+    d = (i >> 32) & 0xFF;
+    e = (i >> 24) & 0xFF;
+    f = (i >> 16) & 0xFF;
+    g = (i >> 8) & 0xFF;
+    h = (i >> 0) & 0xFF;
+
+    out[0] = h;
+    out[1] = g;
+    out[2] = f;
+    out[3] = e;
+    out[4] = d;
+    out[5] = c;
+    out[6] = b;
+    out[7] = a;
+}
+
+/* Set a double to 8 bytes for Modbus w/o any conversion (BADCFEHG) */
+void modbus_set_double_badcfehg(double val, const uint16_t *dest)
+{
+    uint64_t i;
+    uint8_t *out = (uint8_t*) dest;
+    uint8_t a, b, c, d, e, f, g, h;
+
+    memcpy(&i, &val, sizeof(uint64_t));
+    a = (i >> 56) & 0xFF;
+    b = (i >> 48) & 0xFF;
+    c = (i >> 40) & 0xFF;
+    d = (i >> 32) & 0xFF;
+    e = (i >> 24) & 0xFF;
+    f = (i >> 16) & 0xFF;
+    g = (i >> 8) & 0xFF;
+    h = (i >> 0) & 0xFF;
+
+    out[0] = b;
+    out[1] = a;
+    out[2] = d;
+    out[3] = c;
+    out[4] = f;
+    out[5] = e;
+    out[6] = h;
+    out[7] = g;
+}
+
+/* Set a double to 8 bytes for Modbus w/o any conversion (GHEFCDAB) */
+void modbus_set_double_ghefcdab(double val, const uint16_t *dest)
+{
+    uint64_t i;
+    uint8_t *out = (uint8_t*) dest;
+    uint8_t a, b, c, d, e, f, g, h;
+
+    memcpy(&i, &val, sizeof(uint64_t));
+    a = (i >> 56) & 0xFF;
+    b = (i >> 48) & 0xFF;
+    c = (i >> 40) & 0xFF;
+    d = (i >> 32) & 0xFF;
+    e = (i >> 24) & 0xFF;
+    f = (i >> 16) & 0xFF;
+    g = (i >> 8) & 0xFF;
+    h = (i >> 0) & 0xFF;
+
+    out[0] = g;
+    out[1] = h;
+    out[2] = e;
+    out[3] = f;
+    out[4] = c;
+    out[5] = d;
+    out[6] = a;
+    out[7] = b;
+}
+
