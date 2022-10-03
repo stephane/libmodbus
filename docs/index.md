@@ -251,6 +251,11 @@ error codes into error message strings; for details refer to
 
 ## Miscellaneous
 
+To deviate from the Modbus standard, you can enable or disable quirks with:
+
+- [modbus_disable_quirks](modbus_disable_quirks.md)
+- [modbus_enable_quirks](modbus_enable_quirks.md)
+
 The `_LIBMODBUS_VERSION_STRING_` constant indicates the libmodbus version the
 program has been compiled against. The variables 'libmodbus_version_major',
 'libmodbus_version_minor', 'libmodbus_version_micro' give the version the

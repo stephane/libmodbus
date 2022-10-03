@@ -176,6 +176,14 @@ typedef enum
     MODBUS_ERROR_RECOVERY_PROTOCOL      = (1<<2)
 } modbus_error_recovery_mode;
 
+typedef enum
+{
+    MODBUS_QUIRK_NONE                   = 0,
+    MODBUS_QUIRK_MAX_SLAVE              = (1<<1),
+    MODBUS_QUIRK_REPLY_TO_BROADCAST     = (1<<2),
+    MODBUS_QUIRK_ALL                    = 0xFF
+} modbus_quirks;
+
 MODBUS_API int modbus_set_slave(modbus_t* ctx, int slave);
 MODBUS_API int modbus_get_slave(modbus_t* ctx);
 MODBUS_API int modbus_set_error_recovery(modbus_t *ctx, modbus_error_recovery_mode error_recovery);
@@ -237,6 +245,8 @@ MODBUS_API int modbus_reply(modbus_t *ctx, const uint8_t *req,
                             int req_length, modbus_mapping_t *mb_mapping);
 MODBUS_API int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
                                       unsigned int exception_code);
+MODBUS_API int modbus_enable_quirks(modbus_t *ctx, unsigned int quirks_mask);
+MODBUS_API int modbus_disable_quirks(modbus_t *ctx, unsigned int quirks_mask);
 
 /**
  * UTILS FUNCTIONS

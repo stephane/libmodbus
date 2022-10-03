@@ -1063,9 +1063,13 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
         break;
     }
 
-    /* Suppress any responses when the request was a broadcast */
-    return (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU &&
-            slave == MODBUS_BROADCAST_ADDRESS) ? 0 : send_msg(ctx, rsp, rsp_length);
+    /* Suppress any responses in RTU when the request was a broadcast, excepted when quirk is enabled. */
+    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU &&
+        slave == MODBUS_BROADCAST_ADDRESS &&
+        !(ctx->quirks & MODBUS_QUIRK_REPLY_TO_BROADCAST)) {
+        return 0;
+    }
+    return send_msg(ctx, rsp, rsp_length);
 }
 
 int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
@@ -1635,6 +1639,7 @@ void _modbus_init_common(modbus_t *ctx)
 
     ctx->debug = FALSE;
     ctx->error_recovery = MODBUS_ERROR_RECOVERY_NONE;
+    ctx->quirks = MODBUS_QUIRK_NONE;
 
     ctx->response_timeout.tv_sec = 0;
     ctx->response_timeout.tv_usec = _RESPONSE_TIMEOUT;
@@ -1787,6 +1792,28 @@ int modbus_get_header_length(modbus_t *ctx)
     }
 
     return ctx->backend->header_length;
+}
+
+int modbus_enable_quirks(modbus_t *ctx, uint32_t quirks_mask) {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    /* Enable quirks that have a true value at their index in the mask */
+    ctx->quirks |= quirks_mask;
+    return 0;
+}
+
+int modbus_disable_quirks(modbus_t *ctx, uint32_t quirks_mask) {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    /* Disable quirks that have a true value at ther index in the mask */
+    ctx->quirks &= ~quirks_mask;
+    return 0;
 }
 
 int modbus_connect(modbus_t *ctx)
