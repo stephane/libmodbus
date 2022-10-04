@@ -23,7 +23,7 @@ offers the following flags:
 - `MODBUS_QUIRK_REPLY_TO_BROADCAST` force a reply to a broacast request when the
   device is a slave in RTU mode (should be enabled on the slave device).
 
-You can combine the flags by using the OR logical operator.
+You can combine the flags by using the bitwise OR operator.
 
 ## Return value
 
