@@ -147,6 +147,19 @@ my_CFLAGS="-Wall \
 AC_SUBST([my_CFLAGS])
 
 # Build options
+AC_ARG_WITH([sanitizer],
+  [AS_HELP_STRING([--with-sanitizer=flags],[Set Sanitizer Flags])],
+  [CFLAGS="$CFLAGS $withval"]
+  [LDFLAGS="$LDFLAGS $withval"]
+)
+
+AC_ARG_WITH([fuzzer-engine],
+  [AS_HELP_STRING([--with-fuzzer-engine=fuzzerlibrary],[Fuzzing Engine library])],
+  [FUZZENGINE="$withval"]
+  [AC_SUBST([FUZZENGINE])]
+  [AM_CONDITIONAL(BUILD_FUZZER, true)]
+)
+
 AC_ARG_ENABLE(tests,
 	AS_HELP_STRING([--disable-tests],
 	[Build tests (default: yes)]),,
@@ -160,6 +173,7 @@ AC_CONFIG_FILES([
         src/modbus-version.h
         src/win32/modbus.dll.manifest
         tests/Makefile
+        fuzzers/Makefile
         libmodbus.pc
 ])
 

@@ -14,3 +14,7 @@ SUBDIRS = src
 if BUILD_TESTS
 SUBDIRS += tests
 endif
+
+if BUILD_FUZZER
+SUBDIRS += fuzzers
+endif
