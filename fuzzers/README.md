@@ -1,6 +1,6 @@
 ### Test Compile
 ```
-./configure --disable-shared CC=clang --with-sanitizer="-fsanitize=address,fuzzer" --with-fuzzer-engine="-fsanitize=fuzzer"
+./configure --disable-shared CC=clang --with-sanitizer="-fsanitize=address,fuzzer-no-link" --with-fuzzer-engine="-fsanitize=fuzzer"
 ```
 
 ### local oss-fuzz test
