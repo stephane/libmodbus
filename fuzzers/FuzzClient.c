@@ -13,6 +13,7 @@ limitations under the License.
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <pthread.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
