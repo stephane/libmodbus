@@ -30,21 +30,20 @@ limitations under the License.
 #define kMaxInputLength MODBUS_RTU_MAX_ADU_LENGTH
 
 struct Fuzzer{
-    uint16_t    port;    
-    char*       file;
-
-    FILE*       inFile;
-    uint64_t    size;
+    uint16_t    port;
     uint8_t*    buffer;
-
+    uint64_t    size;
     pthread_t   thread;
-    int         socket;
 };
 typedef struct Fuzzer Fuzzer;
 
 int server(Fuzzer *fuzzer);
+void *client(void *args);
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size);
 
-void *client(void *args){ 
+
+void
+*client(void *args){ 
 
     Fuzzer *fuzzer = (Fuzzer*)args;
     int sockfd;
@@ -55,7 +54,7 @@ void *client(void *args){
     serv_addr.sin_port = htons(fuzzer->port);
     serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    while(1){/* Try until connect*/
+    while(1){/*Hack : Try until connect*/
         if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0){
             continue;
         }else{
@@ -65,21 +64,24 @@ void *client(void *args){
 
     send(sockfd,fuzzer->buffer,fuzzer->size,0);
 
+    shutdown(sockfd,SHUT_RDWR);
     close(sockfd);
+
     pthread_exit(NULL);
 }
 
-extern int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+extern int
+LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 
-    if (size < kMinInputLength || size > kMaxInputLength){
+    if (Size < kMinInputLength || Size > kMaxInputLength){
         return 0;
     }
 
     Fuzzer *fuzzer = (Fuzzer*)malloc(sizeof(Fuzzer));
     fuzzer->port = PORT;
 
-    fuzzer->size = size;
-    fuzzer->buffer = (uint8_t *)data;
+    fuzzer->size = Size;
+    fuzzer->buffer = (uint8_t *)Data;
 
     pthread_create(&fuzzer->thread, NULL,client,fuzzer);
     server(fuzzer);
@@ -89,13 +91,14 @@ extern int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     return 0;
 }
 
-int server(Fuzzer *fuzzer)
-{
+int
+server(Fuzzer *fuzzer){
+
     int s = -1;
+    int rc,i;
     modbus_t *ctx;
     modbus_mapping_t *mb_mapping;
-    int rc;
-    int i;
+
     uint8_t *query;
 
     ctx = modbus_new_tcp("127.0.0.1", fuzzer->port);
@@ -106,18 +109,12 @@ int server(Fuzzer *fuzzer)
         UT_INPUT_BITS_ADDRESS, UT_INPUT_BITS_NB,
         UT_REGISTERS_ADDRESS, UT_REGISTERS_NB_MAX,
         UT_INPUT_REGISTERS_ADDRESS, UT_INPUT_REGISTERS_NB);
-    if (mb_mapping == NULL) {
-        fprintf(stderr, "Failed to allocate the mapping: %s\n",
-                modbus_strerror(errno));
-        modbus_free(ctx);
-        return -1;
-    }
 
-    /* Initialize input values that's can be only done server side. */
+/* Initialize input values that's can be only done server side. */
     modbus_set_bits_from_bytes(mb_mapping->tab_input_bits, 0, UT_INPUT_BITS_NB,
                                UT_INPUT_BITS_TAB);
 
-    /* Initialize values of INPUT REGISTERS */
+/* Initialize values of INPUT REGISTERS */
     for (i=0; i < UT_INPUT_REGISTERS_NB; i++) {
         mb_mapping->tab_input_registers[i] = UT_INPUT_REGISTERS_TAB[i];
     }
@@ -126,10 +123,6 @@ int server(Fuzzer *fuzzer)
     modbus_tcp_accept(ctx, &s);
 
     rc = modbus_receive(ctx, query);
-
-    if (s != -1) {
-        close(s);
-    }
 
     modbus_mapping_free(mb_mapping);
     free(query);

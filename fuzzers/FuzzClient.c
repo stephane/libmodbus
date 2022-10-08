@@ -10,15 +10,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <unistd.h>
-#include <string.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <string.h>
 #include <pthread.h>
+#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 
 #include <modbus.h>
 #include "unit-test.h"
@@ -29,20 +27,22 @@ limitations under the License.
 
 struct Fuzzer{
     uint16_t    port;    
-    char*       file;
-
-    FILE*       inFile;
-    uint64_t    size;
-    uint8_t*    buffer;
-
-    pthread_t   thread;
     int         socket;
+    uint8_t*    buffer;
+    size_t      size;
+    pthread_t   thread;
 };
 typedef struct Fuzzer Fuzzer;
 
+void fuzzinit(Fuzzer *fuzzer);
 int client(Fuzzer *fuzzer);
+void *Server(void *args);
+void clean(Fuzzer *fuzzer);
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size);
 
-void fuzzinit(Fuzzer *fuzzer){
+
+void
+fuzzinit(Fuzzer *fuzzer){
     struct sockaddr_in server_addr;
     fuzzer->socket = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -56,47 +56,50 @@ void fuzzinit(Fuzzer *fuzzer){
     listen(fuzzer->socket,1);
 }
 
-void *Server(void *args){
+void
+*Server(void *args){
 
     Fuzzer *fuzzer = (Fuzzer*)args;
-    {
-        int client;
-        char clientData[10240];
-        struct sockaddr_in clientAddr;
-        uint32_t clientSZ = sizeof(clientAddr);
 
-        client = accept(fuzzer->socket, (struct sockaddr*)&clientAddr, &clientSZ);
+    int client;
+    char clientData[10240];
+    struct sockaddr_in clientAddr;
+    uint32_t clientSZ = sizeof(clientAddr);
 
-        send(client, fuzzer->buffer, fuzzer->size, 0);
-        recv(client, clientData, sizeof(clientData), 0);
+    client = accept(fuzzer->socket, (struct sockaddr*)&clientAddr, &clientSZ);
 
-        send(client, fuzzer->buffer, fuzzer->size, 0);
-        recv(client, clientData, sizeof(clientData), 0);
+    send(client, fuzzer->buffer, fuzzer->size, 0);
+    recv(client, clientData, sizeof(clientData), 0);
 
-        shutdown(client,SHUT_RDWR);
-        close(client);
-    }
+    send(client, fuzzer->buffer, fuzzer->size, 0);
+    recv(client, clientData, sizeof(clientData), 0);
+
+    shutdown(client,SHUT_RDWR);
+    close(client);
+
     pthread_exit(NULL);
 }
 
-void clean(Fuzzer *fuzzer){
-    {//Server
-        shutdown(fuzzer->socket,SHUT_RDWR);
-        close(fuzzer->socket);
-    }
+void
+clean(Fuzzer *fuzzer){
+
+    shutdown(fuzzer->socket,SHUT_RDWR);
+    close(fuzzer->socket);
+
     free(fuzzer);
 }
 
-extern int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+extern int
+LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 
-    if (size < kMinInputLength || size > kMaxInputLength){
+    if (Size < kMinInputLength || Size > kMaxInputLength){
         return 0;
     }
 
     Fuzzer *fuzzer = (Fuzzer*)malloc(sizeof(Fuzzer));
     fuzzer->port = PORT;
-    fuzzer->size = size;
-    fuzzer->buffer = data;
+    fuzzer->size = Size;
+    fuzzer->buffer = (uint8_t *)Data;
 
     fuzzinit(fuzzer);
 
@@ -117,40 +120,27 @@ int client(Fuzzer *fuzzer){
     int rc;
 
     ctx = modbus_new_tcp("127.0.0.1", fuzzer->port);
+    modbus_connect(ctx);
 
-    if (ctx == NULL) {
-        fprintf(stderr, "Unable to allocate libmodbus context\n");
-        return -1;
-    }
-
-    if (modbus_connect(ctx) == -1) {
-        fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
-        modbus_free(ctx);
-        return -1;
-    }
-
-    /* Allocate and initialize the memory to store the bits */
+/* Allocate and initialize the memory to store the bits */
     nb_points = (UT_BITS_NB > UT_INPUT_BITS_NB) ? UT_BITS_NB : UT_INPUT_BITS_NB;
     tab_rp_bits = (uint8_t *) malloc(nb_points * sizeof(uint8_t));
     memset(tab_rp_bits, 0, nb_points * sizeof(uint8_t));
 
-    /* Allocate and initialize the memory to store the registers */
+/* Allocate and initialize the memory to store the registers */
     nb_points = (UT_REGISTERS_NB > UT_INPUT_REGISTERS_NB) ?
         UT_REGISTERS_NB : UT_INPUT_REGISTERS_NB;
     tab_rp_registers = (uint16_t *) malloc(nb_points * sizeof(uint16_t));
     memset(tab_rp_registers, 0, nb_points * sizeof(uint16_t));
 
-//Read
     rc = modbus_read_bits(ctx, UT_BITS_ADDRESS, UT_BITS_NB, tab_rp_bits);
 
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS,
                                UT_REGISTERS_NB, tab_rp_registers);
 
-    /* Free the memory */
     free(tab_rp_bits);
     free(tab_rp_registers);
 
-    /* Close the connection */
     modbus_close(ctx);
     modbus_free(ctx);
 
