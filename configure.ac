@@ -153,6 +153,7 @@ AC_ARG_WITH([sanitizer],
   [LDFLAGS="$LDFLAGS $withval"]
 )
 
+AM_CONDITIONAL(BUILD_FUZZER, false)
 AC_ARG_WITH([fuzzer-engine],
   [AS_HELP_STRING([--with-fuzzer-engine=fuzzerlibrary],[Fuzzing Engine library])],
   [FUZZENGINE="$withval"]
