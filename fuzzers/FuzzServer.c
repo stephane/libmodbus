@@ -125,6 +125,7 @@ server(Fuzzer *fuzzer){
 
     rc = modbus_receive(ctx, query);
 
+    close(s);
     modbus_mapping_free(mb_mapping);
     free(query);
     /* For RTU */
