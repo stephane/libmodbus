@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
+#include <sys/select.h>
 #if defined(_WIN32)
 # define OS_WIN32
 /* ws2_32.dll has getaddrinfo and freeaddrinfo on Windows XP and later.
@@ -19,6 +20,7 @@
 #include <errno.h>
 #ifndef _MSC_VER
 #include <unistd.h>
+#include <poll.h>
 #endif
 #include <signal.h>
 #include <sys/types.h>
@@ -277,15 +279,13 @@ static int _connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen,
 #else
     if (rc == -1 && errno == EINPROGRESS) {
 #endif
-        fd_set wset;
         int optval;
         socklen_t optlen = sizeof(optval);
-        struct timeval tv = *ro_tv;
-
         /* Wait to be available in writing */
-        FD_ZERO(&wset);
-        FD_SET(sockfd, &wset);
-        rc = select(sockfd + 1, NULL, &wset, NULL, &tv);
+        struct pollfd fds[1];
+        fds[0].fd = sockfd;
+        fds[0].events = POLLOUT;
+        rc = poll(fds, 1, ro_tv->tv_sec * 1000 + ro_tv->tv_usec / 1000);
         if (rc <= 0) {
             /* Timeout or fail */
             return -1;
@@ -455,14 +455,10 @@ static int _modbus_tcp_flush(modbus_t *ctx)
         rc = recv(ctx->s, devnull, MODBUS_TCP_MAX_ADU_LENGTH, MSG_DONTWAIT);
 #else
         /* On Win32, it's a bit more complicated to not wait */
-        fd_set rset;
-        struct timeval tv;
-
-        tv.tv_sec = 0;
-        tv.tv_usec = 0;
-        FD_ZERO(&rset);
-        FD_SET(ctx->s, &rset);
-        rc = select(ctx->s+1, &rset, NULL, NULL, &tv);
+        struct pollfd fds[1];
+        fds[0].fd = ctx->s;
+        fds[0].events = POLLIN;
+        rc = poll(fds, 1, 0);
         if (rc == -1) {
             return -1;
         }
@@ -722,14 +718,20 @@ int modbus_tcp_pi_accept(modbus_t *ctx, int *s)
 static int _modbus_tcp_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int length_to_read)
 {
     int s_rc;
-    while ((s_rc = select(ctx->s+1, rset, NULL, NULL, tv)) == -1) {
+    struct pollfd fds[1];
+    fds[0].fd = ctx->s;
+    fds[0].events = POLLIN;
+    fds[0].revents = 0;
+    int timeout_ms = tv->tv_sec * 1000 + tv->tv_usec / 1000;
+    while ((s_rc = poll(fds, 1, timeout_ms)) == -1) {
         if (errno == EINTR) {
             if (ctx->debug) {
                 fprintf(stderr, "A non blocked signal was caught\n");
             }
             /* Necessary after an error */
-            FD_ZERO(rset);
-            FD_SET(ctx->s, rset);
+            fds[0].fd = ctx->s;
+            fds[0].events = POLLIN;
+            fds[0].revents = 0;
         } else {
             return -1;
         }

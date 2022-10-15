@@ -11,6 +11,7 @@
 #include <string.h>
 #ifndef _MSC_VER
 #include <unistd.h>
+#include <poll.h>
 #endif
 #include <assert.h>
 
@@ -1172,14 +1173,20 @@ static int _modbus_rtu_select(modbus_t *ctx, fd_set *rset,
         return -1;
     }
 #else
-    while ((s_rc = select(ctx->s+1, rset, NULL, NULL, tv)) == -1) {
+    struct pollfd fds[1];
+    fds[0].fd = ctx->s;
+    fds[0].events = POLLIN;
+    fds[0].revents = 0;
+    int timeout_ms = tv->tv_sec * 1000 + tv->tv_usec / 1000;
+    while ((s_rc = poll(fds, 1, timeout_ms)) == -1) {
         if (errno == EINTR) {
             if (ctx->debug) {
                 fprintf(stderr, "A non blocked signal was caught\n");
             }
             /* Necessary after an error */
-            FD_ZERO(rset);
-            FD_SET(ctx->s, rset);
+            fds[0].fd = ctx->s;
+            fds[0].events = POLLIN;
+            fds[0].revents = 0;
         } else {
             return -1;
         }

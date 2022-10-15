@@ -380,8 +380,9 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
 
     /* Add a file descriptor to the set */
     FD_ZERO(&rset);
-    FD_SET(ctx->s, &rset);
-
+    if (ctx->s < 1024) {
+        FD_SET(ctx->s, &rset);
+    }
     /* We need to analyse the message step by step.  At the first step, we want
      * to reach the function code because all packets contain this
      * information. */
