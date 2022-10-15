@@ -15,17 +15,22 @@ int modbus_set_slave(modbus_t *ctx, int slave);
 The *modbus_set_slave()* function shall set the slave number in the libmodbus
 context.
 
-The behavior depends of network and the role of the device:
+It is usually only required to set the slave ID in **RTU**. The meaning of this
+ID will be different if your program acts as client (master) or server (slave).
 
-*RTU*::
-Define the slave ID of the remote device to talk in master mode or set the
-internal slave ID in slave mode. According to the protocol, a Modbus device must
-only accept message holding its slave number or the special broadcast number.
+As **RTU client**, *modbus_set_slave()* sets the ID of the remote device you
+want to communicate. Be sure to set the slave ID before issuing any Modbus
+requests on the serial bus. If you communicate with several servers (slaves),
+you can set the slave ID of the remote device before each request.
 
-*TCP*::
-The slave number is only required in TCP if the message must reach a device on a
-serial network. Some not compliant devices or software (such as modpoll) uses
-the slave ID as unit identifier, that's incorrect (cf page 23 of Modbus
+As **RTU server**, the slave ID allows the various clients to reach your
+service. You should use a free ID, once set, this ID should be known by the
+clients of the network. According to the protocol, a Modbus device must only
+accept message holding its slave number or the special broadcast number.
+
+In **TCP**, the slave number is only required if the message must reach a device
+on a serial network. Some not compliant devices or software (such as modpoll)
+uses the slave ID as unit identifier, that's incorrect (cf page 23 of Modbus
 Messaging Implementation Guide v1.0b) but without the slave value, the faulty
 remote device or software drops the requests! The special value
 `MODBUS_TCP_SLAVE` (0xFF) can be used in TCP mode to restore the default value.

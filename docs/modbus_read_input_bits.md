@@ -17,7 +17,7 @@ bits to the address `addr` of the remote device.  The result of reading is store
 in `dest` array as unsigned bytes (8 bits) set to `TRUE` or `FALSE`.
 
 You must take care to allocate enough memory to store the results in `dest`
-(at least `nb` * sizeof(uint8_t)).
+(at least `nb * sizeof(uint8_t)`).
 
 The function uses the Modbus function code 0x02 (read input status).
 

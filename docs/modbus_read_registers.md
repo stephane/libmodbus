@@ -17,7 +17,7 @@ holding registers to the address `addr` of the remote device. The result of
 reading is stored in `dest` array as word values (16 bits).
 
 You must take care to allocate enough memory to store the results in `dest`
-(at least `nb` * sizeof(uint16_t)).
+(at least `nb * sizeof(uint16_t)`).
 
 The function uses the Modbus function code 0x03 (read holding registers).
 
