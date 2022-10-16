@@ -58,6 +58,8 @@
 #include "modbus-tcp.h"
 #include "modbus-tcp-private.h"
 
+static int _modbus_tcp_flush(modbus_t *ctx);
+
 #ifdef OS_WIN32
 static int _modbus_tcp_init_win32(void)
 {
@@ -171,6 +173,9 @@ static ssize_t _modbus_tcp_send(modbus_t *ctx, const uint8_t *req, int req_lengt
        Requests not to send SIGPIPE on errors on stream oriented
        sockets when the other end breaks the connection.  The EPIPE
        error is still returned. */
+    
+    _modbus_tcp_flush(ctx);
+    
     return send(ctx->s, (const char *)req, req_length, MSG_NOSIGNAL);
 }
 
