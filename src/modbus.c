@@ -34,6 +34,32 @@ const unsigned int libmodbus_version_micro = LIBMODBUS_VERSION_MICRO;
 /* Max between RTU and TCP max adu length (so TCP) */
 #define MAX_MESSAGE_LENGTH 260
 
+/* Max between RTU and TCP header lenght */
+#define MODBUS_PRESET_RSP_LENGTH 8
+
+/* offset of the "MEI Type / Subfunction" field in encapsulated interface transport*/
+#define MODBUS_FC_2B_SUBFUNC 1
+
+/* Offsets of the various fields in "Read Device ID Code" request and responses */
+enum MODBUS_FC_2B0E {
+    MODBUS_FC_2B0E_SUBFUNC = MODBUS_FC_2B_SUBFUNC,
+    MODBUS_FC_2B0E_READ_DEVID_CODE, /* "Read Device ID Code" */
+    MODBUS_FC_2B0E_OBJ_ID, /* "Object Id" (request only) */
+    MODBUS_FC_2B0E_CONFORMITY_LEVEL = MODBUS_FC_2B0E_OBJ_ID, /* "Conformity Level" (response only) */
+    MODBUS_FC_2B0E_REQ_SIZE, /* Size of a request (4). The remaining symbols are related to the response */
+    MODBUS_FC_2B0E_MORE_FOLLOWS = MODBUS_FC_2B0E_REQ_SIZE, /* "More Follows */
+    MODBUS_FC_2B0E_NEXT_OBJ_ID, /* "Next Object Id" */
+    MODBUS_FC_2B0E_NUMBER_OF_OBJECTS, /* "Number of objects" */
+    MODBUS_FC_2B0E_FIRST_OBJECT /* offset of the beginning of the first object */
+};
+
+enum MODBUS_FC_2B0E_ENTRY {
+    MODBUS_FC_2B0E_ENTRY_OID,
+    MODBUS_FC_2B0E_ENTRY_OBJLEN,
+    MODBUS_FC_2B0E_ENTRY_MIN_LEN, /* Minimum size of an object entry on "Read Device Id", excludes the obj data */
+    MODBUS_FC_2B0E_ENTRY_VALUE = MODBUS_FC_2B0E_ENTRY_MIN_LEN
+};
+
 /* 3 steps are used to parse the query */
 typedef enum {
     _STEP_FUNCTION,
@@ -149,6 +175,7 @@ static unsigned int compute_response_length_from_request(modbus_t *ctx, uint8_t 
         length = 3;
         break;
     case MODBUS_FC_REPORT_SLAVE_ID:
+    case MODBUS_FC_ENCAPSULATED_TRANSPORT:
         /* The response is device specific (the header provides the
            length) */
         return MSG_LENGTH_UNDEFINED;
@@ -323,7 +350,10 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
         }
     } else {
         /* MSG_CONFIRMATION */
-        if (function <= MODBUS_FC_READ_INPUT_REGISTERS ||
+        if (function == MODBUS_FC_ENCAPSULATED_TRANSPORT &&
+            msg[ctx->backend->header_length + MODBUS_FC_2B_SUBFUNC] == MODBUS_FC_READ_DEVICE_ID) {
+            length = MODBUS_FC_2B0E_NUMBER_OF_OBJECTS - MODBUS_FC_2B_SUBFUNC;
+        } else if (function <= MODBUS_FC_READ_INPUT_REGISTERS ||
             function == MODBUS_FC_REPORT_SLAVE_ID ||
             function == MODBUS_FC_WRITE_AND_READ_REGISTERS) {
             length = msg[ctx->backend->header_length + 1];
@@ -337,6 +367,35 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
     return length;
 }
 
+/* Computes the remaining data to be read. For some operations (eg "Read Device
+   Id"), the size is embedded in the data. */
+static int compute_additional_data_length(modbus_t *ctx, uint8_t *msg,
+                                          msg_type_t msg_type, int msg_length)
+{
+    int function = msg[ctx->backend->header_length];
+    int length;
+
+    if (msg_type == MSG_CONFIRMATION && function == MODBUS_FC_ENCAPSULATED_TRANSPORT
+        &&  msg[ctx->backend->header_length + MODBUS_FC_2B_SUBFUNC] == MODBUS_FC_READ_DEVICE_ID) {
+        int num_objects = msg[ctx->backend->header_length + MODBUS_FC_2B0E_NUMBER_OF_OBJECTS];
+        int found_objects = 0;
+        int last_item_idx = ctx->backend->header_length + MODBUS_FC_2B0E_NUMBER_OF_OBJECTS;
+        if (num_objects > 0) {
+            last_item_idx += MODBUS_FC_2B0E_ENTRY_MIN_LEN;
+        }
+        while (last_item_idx < msg_length && found_objects < num_objects) {
+            int this_entry_size = msg[last_item_idx];
+            found_objects++;
+            last_item_idx += this_entry_size
+                + ((found_objects < num_objects)? MODBUS_FC_2B0E_ENTRY_MIN_LEN : 0);
+        }
+        length = last_item_idx + 1 - msg_length + ctx->backend->checksum_length;;
+    } else {
+        length = 0;
+    }
+
+    return length;
+}
 
 /* Waits a response from a modbus server or a request from a modbus client.
    This function blocks if there is no replies (3 timeouts).
@@ -502,6 +561,12 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
                 step = _STEP_DATA;
                 break;
             default:
+                length_to_read = compute_additional_data_length(ctx, msg, msg_type, msg_length);
+                if ((msg_length + length_to_read) > (int)ctx->backend->max_adu_length) {
+                    errno = EMBBADDATA;
+                    _error_print(ctx, "too many data");
+                    return -1;
+                }
                 break;
             }
         }
@@ -664,6 +729,13 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req,
             }
             /* 1 Write functions & others */
             req_nb_value = rsp_nb_value = 1;
+            break;
+        case MODBUS_FC_ENCAPSULATED_TRANSPORT:
+            if (req[offset + MODBUS_FC_2B_SUBFUNC] == MODBUS_FC_READ_DEVICE_ID) {
+                rsp_nb_value = req_nb_value = rsp[offset + MODBUS_FC_2B0E_NUMBER_OF_OBJECTS];
+            } else {
+                rsp_nb_value = req_nb_value = 1;
+            }
             break;
         default:
             /* 1 Write functions & others */
@@ -1629,6 +1701,101 @@ int modbus_report_slave_id(modbus_t *ctx, int max_dest, uint8_t *dest)
     }
 
     return rc;
+}
+
+static int imin(int a, int b)
+{
+    return (a < b)? a : b;
+}
+
+static int imax(int a, int b)
+{
+    return (a > b)? a : b;
+}
+
+static int make_read_device_id_req(modbus_t *ctx, int read_code, int object_id,
+                                   uint8_t *req)
+{
+    sft_t sft = {.slave = ctx->slave, .function = MODBUS_FC_ENCAPSULATED_TRANSPORT,
+                .t_id = 0};
+
+    int offset = ctx->backend->build_response_basis(&sft, req) - 1;
+    req[offset + MODBUS_FC_2B_SUBFUNC] = MODBUS_FC_READ_DEVICE_ID;
+    req[offset + MODBUS_FC_2B0E_READ_DEVID_CODE] = read_code;
+    req[offset + MODBUS_FC_2B0E_OBJ_ID] = object_id;
+
+    return offset + MODBUS_FC_2B0E_REQ_SIZE;
+}
+
+/* Read Device Id objects */
+int modbus_read_device_id(modbus_t *ctx, int read_code, int object_id,
+                          int max_objects, uint8_t obj_ids[],
+                          uint8_t *obj_values[], int obj_lengths[],
+                          int *conformity, int *next_object_id)
+{
+    if (ctx == NULL || object_id < 0 || max_objects < 0
+        || object_id + max_objects > MODBUS_DEVID_MAX_OBJECTS) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    uint8_t req[MODBUS_PRESET_RSP_LENGTH + MODBUS_FC_2B0E_REQ_SIZE];
+    int req_length = make_read_device_id_req(ctx, read_code, object_id, req);
+
+    if (send_msg(ctx, req, req_length) == -1) {
+        return -1;
+    }
+
+    uint8_t rsp[MAX_MESSAGE_LENGTH];
+    int offset;
+
+    int resp_len = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+    if (resp_len == -1) {
+        return -1;
+    }
+
+    int n_objects = check_confirmation(ctx, req, rsp, resp_len);
+    if (n_objects == -1) {
+        return -1;
+    }
+
+    offset = ctx->backend->header_length;
+
+    int more_follows = rsp[offset + MODBUS_FC_2B0E_MORE_FOLLOWS];
+    int _next_object_id = rsp[offset + MODBUS_FC_2B0E_NEXT_OBJ_ID];
+    if (next_object_id != NULL) {
+        /* This makes it less likely that a buggy device will send the user program
+           into an infinite loop. */
+        *next_object_id = more_follows? imax(object_id + 1, _next_object_id): 0;
+    }
+    if (conformity != NULL) {
+        *conformity = rsp[offset + MODBUS_FC_2B0E_CONFORMITY_LEVEL];
+    }
+
+    int obj_offset = offset + MODBUS_FC_2B0E_FIRST_OBJECT;
+
+    for (int i = 0; i < n_objects && i < max_objects; i++) {
+        obj_ids[i] = rsp[obj_offset + MODBUS_FC_2B0E_ENTRY_OID];
+        int element_size = rsp[obj_offset + MODBUS_FC_2B0E_ENTRY_OBJLEN];
+        int min_size = imin(element_size, obj_lengths[i]);
+        memcpy(obj_values[i], rsp + obj_offset + MODBUS_FC_2B0E_ENTRY_VALUE, min_size);
+        obj_lengths[i] = element_size;
+        obj_offset += element_size + MODBUS_FC_2B0E_ENTRY_MIN_LEN;
+    }
+
+    return n_objects;
+}
+
+int modbus_read_device_id_single(modbus_t *ctx, int object_id, uint8_t *obj_id,
+                                 uint8_t *obj_value, int obj_length,
+                                 int *conformity)
+{
+    if (modbus_read_device_id(ctx, MODBUS_FC_READ_DEV_ID_INDIVIDUAL, object_id,
+                              1, obj_id, &obj_value, &obj_length, conformity,
+                              NULL)) {
+        return -1;
+    }
+    return obj_length;
 }
 
 void _modbus_init_common(modbus_t *ctx)

@@ -70,6 +70,8 @@ MODBUS_BEGIN_DECLS
 #define MODBUS_FC_REPORT_SLAVE_ID           0x11
 #define MODBUS_FC_MASK_WRITE_REGISTER       0x16
 #define MODBUS_FC_WRITE_AND_READ_REGISTERS  0x17
+#define MODBUS_FC_ENCAPSULATED_TRANSPORT    0x2B
+#define MODBUS_FC_READ_DEVICE_ID            0x0E
 
 #define MODBUS_BROADCAST_ADDRESS    0
 
@@ -109,6 +111,19 @@ MODBUS_BEGIN_DECLS
  * backends.
  */
 #define MODBUS_MAX_ADU_LENGTH              260
+
+/* Access types for (0x2B / 0x0E) Read Device Identification */
+#define MODBUS_FC_READ_DEV_ID_BASIC_STREAM  0x01
+#define MODBUS_FC_READ_DEV_ID_REGULAR_STREAM  0x02
+#define MODBUS_FC_READ_DEV_ID_EXT_STREAM  0x03
+#define MODBUS_FC_READ_DEV_ID_INDIVIDUAL  0x04
+
+/* Maximum valid object id for (0x2B / 0x0E) Read Device Identification.
+ * Modbus_Application_Protocol_V1_1b.pdf (chapter 6 section 21 page 44)
+ */
+#define MODBUS_DEVID_MAX_OBJ_ID 0xFF
+/* Maximum number of objects in the object address space */
+#define MODBUS_DEVID_MAX_OBJECTS (MODBUS_DEVID_MAX_OBJ_ID + 1)
 
 /* Random number to avoid errno conflicts */
 #define MODBUS_ENOBASE 112345678
@@ -224,6 +239,13 @@ MODBUS_API int modbus_write_and_read_registers(modbus_t *ctx, int write_addr, in
                                                const uint16_t *src, int read_addr, int read_nb,
                                                uint16_t *dest);
 MODBUS_API int modbus_report_slave_id(modbus_t *ctx, int max_dest, uint8_t *dest);
+MODBUS_API int modbus_read_device_id(modbus_t *ctx, int read_code, int object_id,
+                                     int max_objects, uint8_t obj_ids[],
+                                     uint8_t *obj_values[], int obj_lengths[],
+                                     int *conformity, int *next_object_id);
+MODBUS_API int modbus_read_device_id_single(modbus_t *ctx, int object_id, uint8_t *obj_id,
+                                            uint8_t *obj_value, int obj_length,
+                                            int *conformity);
 
 MODBUS_API modbus_mapping_t* modbus_mapping_new_start_address(
     unsigned int start_bits, unsigned int nb_bits,
@@ -251,6 +273,9 @@ MODBUS_API int modbus_disable_quirks(modbus_t *ctx, unsigned int quirks_mask);
 /**
  * UTILS FUNCTIONS
  **/
+
+#define MODBUS_READ_DEV_ID_CONFORMITY_CAT(conformity) ((conformity)&0xF)
+#define MODBUS_READ_DEV_ID_SUPPORTS_INDIVIDUAL(conformity) (!!((conformity)&0xF0))
 
 #define MODBUS_GET_HIGH_BYTE(data) (((data) >> 8) & 0xFF)
 #define MODBUS_GET_LOW_BYTE(data) ((data) & 0xFF)

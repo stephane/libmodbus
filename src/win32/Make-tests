@@ -17,7 +17,7 @@ INCLUDES:=-I../.. -I.. -I.
 ifeq ($(CC),cl)
 DEFS+=-D_CRT_SECURE_NO_DEPRECATE=1 -D_CRT_NONSTDC_NO_DEPRECATE=1
 CFLAGS=-Zi -W3 -MT -ID:/include/msvc_std
-LDOPTS=-link -incremental:NO 
+LDOPTS=-link -incremental:NO
 LDLIBS=-Fe$@ ws2_32.lib modbus.lib $(LDOPTS)
 RES:=res
 RCOUT=
@@ -43,9 +43,13 @@ CFLAGS+=-DHAVE_CONFIG_H $(DEFS) $(INCLUDES)
 vpath %.c ../../tests
 vpath %.h ../src
 
-all: random-test-client random-test-server bandwidth-client bandwidth-server-one
+all: random-test-client random-test-server bandwidth-client bandwidth-server-one \
+     dev-id-test-client
 
 random-test-client: random-test-client.c
+	$(LINK.c) $^ $(LDLIBS)
+
+dev-id-test-client: dev-id-test-client.c
 	$(LINK.c) $^ $(LDLIBS)
 
 random-test-server: random-test-server.c

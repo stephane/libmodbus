@@ -44,6 +44,7 @@ tests/bandwidth-client
 tests/bandwidth-server-many-up
 tests/bandwidth-server-one
 tests/random-test-client
+tests/dev-id-test-client
 tests/random-test-server
 tests/unit-test-client
 tests/unit-test-server
