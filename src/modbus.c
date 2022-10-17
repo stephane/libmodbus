@@ -325,6 +325,8 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
         /* MSG_CONFIRMATION */
         if (function <= MODBUS_FC_READ_INPUT_REGISTERS ||
             function == MODBUS_FC_REPORT_SLAVE_ID ||
+            function == MODBUS_FC_READ_FILE_RECORD ||
+            function == MODBUS_FC_WRITE_FILE_RECORD ||
             function == MODBUS_FC_WRITE_AND_READ_REGISTERS) {
             length = msg[ctx->backend->header_length + 1];
         } else {
