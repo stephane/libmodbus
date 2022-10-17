@@ -221,7 +221,8 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
     return rc;
 }
 
-int modbus_send_raw_request(modbus_t *ctx, const uint8_t *raw_req, int raw_req_length)
+int modbus_send_generic_request(modbus_t *ctx, 
+				const uint8_t *raw_req, int raw_req_length, int wanted_resp_data_length)
 {
     sft_t sft;
     uint8_t req[MAX_MESSAGE_LENGTH];
@@ -240,10 +241,14 @@ int modbus_send_raw_request(modbus_t *ctx, const uint8_t *raw_req, int raw_req_l
         return -1;
     }
 
-    sft.slave = raw_req[0];
+    ctx->wanted_resp_data_length = wanted_resp_data_length;
+
+    sft.slave    = raw_req[0];
     sft.function = raw_req[1];
+
     /* The t_id is left to zero */
     sft.t_id = 0;
+
     /* This response function only set the header so it's convenient here */
     req_length = ctx->backend->build_response_basis(&sft, req);
 
@@ -254,6 +259,18 @@ int modbus_send_raw_request(modbus_t *ctx, const uint8_t *raw_req, int raw_req_l
     }
 
     return send_msg(ctx, req, req_length);
+}
+
+int modbus_send_raw_request(modbus_t *ctx, const uint8_t *raw_req, int raw_req_length)
+{
+    /* The wanted_resp_data_length is set to zero (cause used only in user-defined functions)  */
+    return modbus_send_generic_request(ctx, raw_req, raw_req_length, 0);
+}
+
+static uint_fast8_t is_users_function(int function)
+{
+    return ((function >= MODBUS_FC_USERS_RANGE1_LO && function <= MODBUS_FC_USERS_RANGE1_HI) ||
+            (function >= MODBUS_FC_USERS_RANGE2_LO && function <= MODBUS_FC_USERS_RANGE2_HI));
 }
 
 /*
@@ -284,19 +301,17 @@ static uint8_t compute_meta_length_after_function(int function,
         }
     } else {
         /* MSG_CONFIRMATION */
-        switch (function) {
-        case MODBUS_FC_WRITE_SINGLE_COIL:
-        case MODBUS_FC_WRITE_SINGLE_REGISTER:
-        case MODBUS_FC_WRITE_MULTIPLE_COILS:
-        case MODBUS_FC_WRITE_MULTIPLE_REGISTERS:
+	if ((function == MODBUS_FC_WRITE_SINGLE_COIL) ||
+            (function == MODBUS_FC_WRITE_SINGLE_REGISTER) ||
+            (function == MODBUS_FC_WRITE_MULTIPLE_COILS) ||
+            (function == MODBUS_FC_WRITE_MULTIPLE_REGISTERS))
             length = 4;
-            break;
-        case MODBUS_FC_MASK_WRITE_REGISTER:
+        else if (function == MODBUS_FC_MASK_WRITE_REGISTER)
             length = 6;
-            break;
-        default:
+	else if (is_users_function(function))
+            length = 0;
+        else
             length = 1;
-        }
     }
 
     return length;
@@ -307,7 +322,7 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
                                           msg_type_t msg_type)
 {
     int function = msg[ctx->backend->header_length];
-    int length;
+    int length = 0;
 
     if (msg_type == MSG_INDICATION) {
         switch (function) {
@@ -318,18 +333,15 @@ static int compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg,
         case MODBUS_FC_WRITE_AND_READ_REGISTERS:
             length = msg[ctx->backend->header_length + 9];
             break;
-        default:
-            length = 0;
         }
     } else {
         /* MSG_CONFIRMATION */
-        if (function <= MODBUS_FC_READ_INPUT_REGISTERS ||
-            function == MODBUS_FC_REPORT_SLAVE_ID ||
-            function == MODBUS_FC_WRITE_AND_READ_REGISTERS) {
+        if ( function <= MODBUS_FC_READ_INPUT_REGISTERS ||
+             function == MODBUS_FC_REPORT_SLAVE_ID ||
+             function == MODBUS_FC_WRITE_AND_READ_REGISTERS )
             length = msg[ctx->backend->header_length + 1];
-        } else {
-            length = 0;
-        }
+	else if (is_users_function(function))
+            length = ctx->wanted_resp_data_length;
     }
 
     length += ctx->backend->checksum_length;
