@@ -272,18 +272,91 @@ static void _modbus_rtu_ioctl_rts(modbus_t *ctx, int on)
 }
 #endif
 
+/* One character time in microseconds */
+static int _modbus_rtu_character_time(int baud, uint8_t data_bit, uint8_t stop_bit, char parity)
+{
+    return 1000000 * (1 + data_bit + (parity == 'N' ? 0 : 1) + stop_bit) / baud;
+}
+
+/* Silent interval between modbus frames in microseconds.  For baud rates
+ * greater than 19200 Bps returns a fixed value of 1750 us, otherwise 3.5
+ * character times.
+ */
+static int _modbus_rtu_t35(int baud, uint8_t data_bit, uint8_t stop_bit, char parity)
+{
+    int t35;
+    if (baud > 19200) {
+        t35 = 1750;
+    } else {
+        t35 = 3.5 * _modbus_rtu_character_time(baud, data_bit, stop_bit, parity);
+    }
+    return t35;
+}
+
+/* If gettimeofday() fails, set the timeval to 0 to indicate invalid value. */
+static void _modbus_rtu_update_last_frame_at(struct timeval *tv)
+{
+    if (gettimeofday(tv, NULL) == -1) {
+        tv->tv_sec = 0;
+        tv->tv_usec = 0;
+    }
+}
+
+/* If the last_frame_at value is valid (>0) and gettimeofday() doesn't fail,
+ * compute the distance of the time points [now - last_frame_at] and apply
+ * usleep() if needed to obey the interframe delay.
+ */
+static void _modbus_rtu_apply_interframe_delay(int interframe_delay, struct timeval *last)
+{
+    struct timeval now;
+    suseconds_t us;
+
+    if (last->tv_sec == 0 && last->tv_usec == 0) {
+        return;
+    }
+    if (gettimeofday(&now, NULL) == -1) {
+        return;
+    }
+    /* ensure last <= now */
+    if (now.tv_sec < last->tv_sec ||
+        (now.tv_sec == last->tv_sec && now.tv_usec < last->tv_usec)) {
+        return;
+    }
+
+    /* us := now - last */
+    us = now.tv_usec - last->tv_usec;
+    if (us < 0) {
+        us += 1000000;
+        now.tv_sec--;
+    }
+    us += (now.tv_sec - last->tv_sec) * 1000000;
+
+    /* check suseconds_t overflow (timepoints too distant) */
+    if (us < 0) {
+        return;
+    }
+    if (us < interframe_delay) {
+        usleep(interframe_delay - us);
+    }
+}
+
 static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
 {
-#if defined(_WIN32)
+    ssize_t size;
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
+
+    if (ctx_rtu->interframe_delay > 0) {
+        _modbus_rtu_apply_interframe_delay(ctx_rtu->interframe_delay, &ctx_rtu->last_frame_at);
+    }
+#if defined(_WIN32)
     DWORD n_bytes = 0;
-    return (WriteFile(ctx_rtu->w_ser.fd, req, req_length, &n_bytes, NULL)) ? (ssize_t)n_bytes : -1;
+    if (!WriteFile(ctx_rtu->w_ser.fd, req, req_length, &n_bytes, NULL)) {
+        return -1;
+    }
+    size = (ssize_t)n_bytes;
 #else
 #if HAVE_DECL_TIOCM_RTS
-    modbus_rtu_t *ctx_rtu = ctx->backend_data;
     if (ctx_rtu->rts != MODBUS_RTU_RTS_NONE) {
-        ssize_t size;
-
         if (ctx->debug) {
             fprintf(stderr, "Sending request using RTS signal\n");
         }
@@ -295,15 +368,17 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
 
         usleep(ctx_rtu->onebyte_time * req_length + ctx_rtu->rts_delay);
         ctx_rtu->set_rts(ctx, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
-
-        return size;
     } else {
 #endif
-        return write(ctx->s, req, req_length);
+        size = write(ctx->s, req, req_length);
 #if HAVE_DECL_TIOCM_RTS
     }
 #endif
 #endif
+    if (size > 0 && ctx_rtu->interframe_delay > 0) {
+        _modbus_rtu_update_last_frame_at(&ctx_rtu->last_frame_at);
+    }
+    return size;
 }
 
 static int _modbus_rtu_receive(modbus_t *ctx, uint8_t *req)
@@ -331,11 +406,17 @@ static int _modbus_rtu_receive(modbus_t *ctx, uint8_t *req)
 
 static ssize_t _modbus_rtu_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length)
 {
+    ssize_t num_read;
+    modbus_rtu_t *ctx_rtu = ctx->backend_data;
 #if defined(_WIN32)
-    return win32_ser_read(&((modbus_rtu_t *)ctx->backend_data)->w_ser, rsp, rsp_length);
+    num_read = win32_ser_read(&((modbus_rtu_t *)ctx->backend_data)->w_ser, rsp, rsp_length);
 #else
-    return read(ctx->s, rsp, rsp_length);
+    num_read = read(ctx->s, rsp, rsp_length);
 #endif
+    if (num_read > 0 && ctx_rtu->interframe_delay > 0) {
+        _modbus_rtu_update_last_frame_at(&ctx_rtu->last_frame_at);
+    }
+    return num_read;
 }
 
 static int _modbus_rtu_flush(modbus_t *);
@@ -984,6 +1065,32 @@ int modbus_rtu_get_serial_mode(modbus_t *ctx)
     }
 }
 
+int modbus_rtu_set_interframe_delay(modbus_t *ctx, int us)
+{
+    if (ctx != NULL && ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
+        modbus_rtu_t *ctx_rtu = ctx->backend_data;
+        if (us == MODBUS_RTU_INTERFRAME_AUTO) {
+            ctx_rtu->interframe_delay = _modbus_rtu_t35(ctx_rtu->baud, ctx_rtu->data_bit, ctx_rtu->stop_bit, ctx_rtu->parity);
+            return 0;
+        } else if (0 <= us && us < 1000000) {
+            ctx_rtu->interframe_delay = us;
+            return 0;
+        }
+    }
+    errno = EINVAL;
+    return -1;
+}
+
+int modbus_rtu_get_interframe_delay(modbus_t *ctx)
+{
+    if (ctx != NULL && ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
+        modbus_rtu_t *ctx_rtu = ctx->backend_data;
+        return ctx_rtu->interframe_delay;
+    }
+    errno = EINVAL;
+    return -1;
+}
+
 int modbus_rtu_get_rts(modbus_t *ctx)
 {
     if (ctx == NULL) {
@@ -1241,8 +1348,28 @@ modbus_t* modbus_new_rtu(const char *device,
     }
 
     /* Check baud argument */
-    if (baud == 0) {
-        fprintf(stderr, "The baud rate value must not be zero\n");
+    if (baud <= 0) {
+        fprintf(stderr, "The baud rate value must be positive\n");
+        errno = EINVAL;
+        return NULL;
+    }
+
+    /* Check data_bit argument */
+    if (data_bit < 0) {
+        fprintf(stderr, "The data_bit value must be nonnegative\n");
+        errno = EINVAL;
+        return NULL;
+    }
+
+    /* Check stop_bit argument */
+    if (stop_bit < 0) {
+        fprintf(stderr, "The stop_bit value must be nonnegative\n");
+        errno = EINVAL;
+        return NULL;
+    }
+
+    if (parity != 'N' && parity != 'E' && parity != 'O') {
+        fprintf(stderr, "The parity must be one of: N, E, O\n");
         errno = EINVAL;
         return NULL;
     }
@@ -1272,13 +1399,7 @@ modbus_t* modbus_new_rtu(const char *device,
     strcpy(ctx_rtu->device, device);
 
     ctx_rtu->baud = baud;
-    if (parity == 'N' || parity == 'E' || parity == 'O') {
-        ctx_rtu->parity = parity;
-    } else {
-        modbus_free(ctx);
-        errno = EINVAL;
-        return NULL;
-    }
+    ctx_rtu->parity = parity;
     ctx_rtu->data_bit = data_bit;
     ctx_rtu->stop_bit = stop_bit;
 
@@ -1292,7 +1413,7 @@ modbus_t* modbus_new_rtu(const char *device,
     ctx_rtu->rts = MODBUS_RTU_RTS_NONE;
 
     /* Calculate estimated time in micro second to send one byte */
-    ctx_rtu->onebyte_time = 1000000 * (1 + data_bit + (parity == 'N' ? 0 : 1) + stop_bit) / baud;
+    ctx_rtu->onebyte_time = _modbus_rtu_character_time(baud, data_bit, stop_bit, parity);
 
     /* The internal function is used by default to set RTS */
     ctx_rtu->set_rts = _modbus_rtu_ioctl_rts;
@@ -1302,6 +1423,9 @@ modbus_t* modbus_new_rtu(const char *device,
 #endif
 
     ctx_rtu->confirmation_to_ignore = FALSE;
+    ctx_rtu->interframe_delay = _modbus_rtu_t35(baud, data_bit, stop_bit, parity);
+    ctx_rtu->last_frame_at.tv_sec = 0;
+    ctx_rtu->last_frame_at.tv_usec = 0;
 
     return ctx;
 }
