@@ -1,0 +1,56 @@
+---
+BasedOnStyle: LLVM
+AlignArrayOfStructures: Left
+AlignOperands: true
+AlignConsecutiveAssignments: false
+AlignConsecutiveMacros: true
+AlignEscapedNewlines: Left
+AlignTrailingComments: true
+AllowShortBlocksOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+BreakBeforeBraces: Custom
+BraceWrapping:
+    AfterClass: false
+    AfterControlStatement: false
+    AfterEnum: false
+    AfterFunction: true
+    AfterNamespace: true
+    AfterObjCDeclaration: true
+    AfterStruct: false
+    AfterUnion: false
+    AfterExternBlock: false
+    BeforeCatch: false
+    BeforeElse: false
+    IndentBraces: false
+    SplitEmptyFunction: true
+    SplitEmptyRecord: true
+    SplitEmptyNamespace: true
+BinPackArguments: false
+BinPackParameters: false
+ColumnLimit: 90
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+IncludeBlocks: Preserve
+IndentWidth: 4
+ObjCBlockIndentWidth: 4
+PointerAlignment: Right
+ReferenceAlignment: Right
+SpaceAfterCStyleCast: true
+SpaceAfterTemplateKeyword: true
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeParens: ControlStatementsExceptForEachMacros
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 1
+SpacesInAngles: false
+SpacesInContainerLiterals: false
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SeparateDefinitionBlocks: Always
+UseTab: Never
+PPIndentWidth: 2

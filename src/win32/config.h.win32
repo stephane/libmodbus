@@ -121,7 +121,7 @@
 /* #undef HAVE_WORKING_VFORK */
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
+ */
 /* #undef LT_OBJDIR */
 
 /* Name of package */

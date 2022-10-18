@@ -8,9 +8,9 @@
 #ifndef _MSC_VER
 #include <unistd.h>
 #endif
-#include <string.h>
-#include <stdlib.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <modbus.h>
 
@@ -31,14 +31,15 @@ int main(int argc, char *argv[])
     int rc;
     int use_backend;
 
-     /* TCP */
+    /* TCP */
     if (argc > 1) {
         if (strcmp(argv[1], "tcp") == 0) {
             use_backend = TCP;
         } else if (strcmp(argv[1], "rtu") == 0) {
             use_backend = RTU;
         } else {
-            printf("Usage:\n  %s [tcp|rtu] - Modbus client to measure data bandwidth\n\n", argv[0]);
+            printf("Usage:\n  %s [tcp|rtu] - Modbus client to measure data bandwidth\n\n",
+                   argv[0]);
             exit(1);
         }
     } else {
@@ -57,22 +58,21 @@ int main(int argc, char *argv[])
         modbus_connect(ctx);
     }
 
-    mb_mapping = modbus_mapping_new(MODBUS_MAX_READ_BITS, 0,
-                                    MODBUS_MAX_READ_REGISTERS, 0);
+    mb_mapping =
+        modbus_mapping_new(MODBUS_MAX_READ_BITS, 0, MODBUS_MAX_READ_REGISTERS, 0);
     if (mb_mapping == NULL) {
-        fprintf(stderr, "Failed to allocate the mapping: %s\n",
-                modbus_strerror(errno));
+        fprintf(stderr, "Failed to allocate the mapping: %s\n", modbus_strerror(errno));
         modbus_free(ctx);
         return -1;
     }
 
-    for(;;) {
+    for (;;) {
         uint8_t query[MODBUS_TCP_MAX_ADU_LENGTH];
 
         rc = modbus_receive(ctx, query);
         if (rc > 0) {
             modbus_reply(ctx, query, rc, mb_mapping);
-        } else if (rc  == -1) {
+        } else if (rc == -1) {
             /* Connection closed by the client or error */
             break;
         }

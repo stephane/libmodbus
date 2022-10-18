@@ -8,8 +8,8 @@
 #ifndef _MSC_VER
 #include <unistd.h>
 #endif
-#include <stdlib.h>
 #include <errno.h>
+#include <stdlib.h>
 
 #include <modbus.h>
 
@@ -24,8 +24,7 @@ int main(void)
 
     mb_mapping = modbus_mapping_new(500, 500, 500, 500);
     if (mb_mapping == NULL) {
-        fprintf(stderr, "Failed to allocate the mapping: %s\n",
-                modbus_strerror(errno));
+        fprintf(stderr, "Failed to allocate the mapping: %s\n", modbus_strerror(errno));
         modbus_free(ctx);
         return -1;
     }

@@ -6,6 +6,7 @@
 
 #include <stdlib.h>
 
+// clang-format off
 #ifndef _MSC_VER
 #  include <stdint.h>
 #else
@@ -69,6 +70,7 @@ static inline uint32_t bswap_32(uint32_t x)
     return (bswap_16(x & 0xffff) << 16) | (bswap_16(x >> 16));
 }
 #endif
+// clang-format on
 
 /* Sets many bits from a single byte value (all 8 bits of the byte value are
    set) */
@@ -76,14 +78,16 @@ void modbus_set_bits_from_byte(uint8_t *dest, int idx, const uint8_t value)
 {
     int i;
 
-    for (i=0; i < 8; i++) {
-        dest[idx+i] = (value & (1 << i)) ? 1 : 0;
+    for (i = 0; i < 8; i++) {
+        dest[idx + i] = (value & (1 << i)) ? 1 : 0;
     }
 }
 
 /* Sets many bits from a table of bytes (only the bits between idx and
    idx + nb_bits are set) */
-void modbus_set_bits_from_bytes(uint8_t *dest, int idx, unsigned int nb_bits,
+void modbus_set_bits_from_bytes(uint8_t *dest,
+                                int idx,
+                                unsigned int nb_bits,
                                 const uint8_t *tab_byte)
 {
     unsigned int i;
@@ -99,8 +103,7 @@ void modbus_set_bits_from_bytes(uint8_t *dest, int idx, unsigned int nb_bits,
 
 /* Gets the byte value from many bits.
    To obtain a full byte, set nb_bits to 8. */
-uint8_t modbus_get_byte_from_bits(const uint8_t *src, int idx,
-                                  unsigned int nb_bits)
+uint8_t modbus_get_byte_from_bits(const uint8_t *src, int idx, unsigned int nb_bits)
 {
     unsigned int i;
     uint8_t value = 0;
@@ -111,8 +114,8 @@ uint8_t modbus_get_byte_from_bits(const uint8_t *src, int idx,
         nb_bits = 8;
     }
 
-    for (i=0; i < nb_bits; i++) {
-        value |= (src[idx+i] << i);
+    for (i = 0; i < nb_bits; i++) {
+        value |= (src[idx + i] << i);
     }
 
     return value;
@@ -130,10 +133,7 @@ float modbus_get_float_abcd(const uint16_t *src)
     c = (src[1] >> 8) & 0xFF;
     d = (src[1] >> 0) & 0xFF;
 
-    i = (a << 24) |
-        (b << 16) |
-        (c << 8) |
-        (d << 0);
+    i = (a << 24) | (b << 16) | (c << 8) | (d << 0);
     memcpy(&f, &i, 4);
 
     return f;
@@ -151,10 +151,7 @@ float modbus_get_float_dcba(const uint16_t *src)
     c = (src[1] >> 8) & 0xFF;
     d = (src[1] >> 0) & 0xFF;
 
-    i = (d << 24) |
-        (c << 16) |
-        (b << 8) |
-        (a << 0);
+    i = (d << 24) | (c << 16) | (b << 8) | (a << 0);
     memcpy(&f, &i, 4);
 
     return f;
@@ -172,10 +169,7 @@ float modbus_get_float_badc(const uint16_t *src)
     c = (src[1] >> 8) & 0xFF;
     d = (src[1] >> 0) & 0xFF;
 
-    i = (b << 24) |
-        (a << 16) |
-        (d << 8) |
-        (c << 0);
+    i = (b << 24) | (a << 16) | (d << 8) | (c << 0);
     memcpy(&f, &i, 4);
 
     return f;
@@ -193,10 +187,7 @@ float modbus_get_float_cdab(const uint16_t *src)
     c = (src[1] >> 8) & 0xFF;
     d = (src[1] >> 0) & 0xFF;
 
-    i = (c << 24) |
-        (d << 16) |
-        (a << 8) |
-        (b << 0);
+    i = (c << 24) | (d << 16) | (a << 8) | (b << 0);
     memcpy(&f, &i, 4);
 
     return f;
@@ -208,18 +199,17 @@ float modbus_get_float(const uint16_t *src)
     float f;
     uint32_t i;
 
-    i = (((uint32_t)src[1]) << 16) + src[0];
+    i = (((uint32_t) src[1]) << 16) + src[0];
     memcpy(&f, &i, sizeof(float));
 
     return f;
-
 }
 
 /* Set a float to 4 bytes for Modbus w/o any conversion (ABCD) */
 void modbus_set_float_abcd(float f, uint16_t *dest)
 {
     uint32_t i;
-    uint8_t *out = (uint8_t*) dest;
+    uint8_t *out = (uint8_t *) dest;
     uint8_t a, b, c, d;
 
     memcpy(&i, &f, sizeof(uint32_t));
@@ -238,7 +228,7 @@ void modbus_set_float_abcd(float f, uint16_t *dest)
 void modbus_set_float_dcba(float f, uint16_t *dest)
 {
     uint32_t i;
-    uint8_t *out = (uint8_t*) dest;
+    uint8_t *out = (uint8_t *) dest;
     uint8_t a, b, c, d;
 
     memcpy(&i, &f, sizeof(uint32_t));
@@ -251,14 +241,13 @@ void modbus_set_float_dcba(float f, uint16_t *dest)
     out[1] = c;
     out[2] = b;
     out[3] = a;
-
 }
 
 /* Set a float to 4 bytes for Modbus with byte swap conversion (BADC) */
 void modbus_set_float_badc(float f, uint16_t *dest)
 {
     uint32_t i;
-    uint8_t *out = (uint8_t*) dest;
+    uint8_t *out = (uint8_t *) dest;
     uint8_t a, b, c, d;
 
     memcpy(&i, &f, sizeof(uint32_t));
@@ -277,7 +266,7 @@ void modbus_set_float_badc(float f, uint16_t *dest)
 void modbus_set_float_cdab(float f, uint16_t *dest)
 {
     uint32_t i;
-    uint8_t *out = (uint8_t*) dest;
+    uint8_t *out = (uint8_t *) dest;
     uint8_t a, b, c, d;
 
     memcpy(&i, &f, sizeof(uint32_t));
@@ -298,6 +287,6 @@ void modbus_set_float(float f, uint16_t *dest)
     uint32_t i;
 
     memcpy(&i, &f, sizeof(uint32_t));
-    dest[0] = (uint16_t)i;
-    dest[1] = (uint16_t)(i >> 16);
+    dest[0] = (uint16_t) i;
+    dest[1] = (uint16_t) (i >> 16);
 }

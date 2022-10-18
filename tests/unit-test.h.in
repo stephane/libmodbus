@@ -11,6 +11,7 @@
 #define HAVE_INTTYPES_H @HAVE_INTTYPES_H@
 #define HAVE_STDINT_H @HAVE_STDINT_H@
 
+// clang-format off
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
 #endif
@@ -21,6 +22,7 @@
 # include "stdint.h"
 # endif
 #endif
+// clang-format on
 
 #define SERVER_ID         17
 #define INVALID_SERVER_ID 18

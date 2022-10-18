@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #ifndef _MSC_VER
 #include <unistd.h>
@@ -16,8 +16,8 @@
 
 #include "modbus-private.h"
 
-#include "modbus-rtu.h"
 #include "modbus-rtu-private.h"
+#include "modbus-rtu.h"
 
 #if HAVE_DECL_TIOCSRS485 || HAVE_DECL_TIOCM_RTS
 #include <sys/ioctl.h>
@@ -29,63 +29,47 @@
 
 /* Table of CRC values for high-order byte */
 static const uint8_t table_crc_hi[] = {
-    0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0,
-    0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41,
-    0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0,
-    0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40,
-    0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1,
-    0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41,
-    0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1,
-    0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41,
-    0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0,
-    0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40,
-    0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1,
-    0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40,
-    0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0,
-    0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40,
-    0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0,
-    0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40,
-    0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0,
-    0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41,
-    0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0,
-    0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41,
-    0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0,
-    0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40,
-    0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1,
-    0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41,
-    0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0,
-    0x80, 0x41, 0x00, 0xC1, 0x81, 0x40
-};
+    0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1,
+    0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40,
+    0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1,
+    0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41,
+    0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1,
+    0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40,
+    0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1,
+    0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40,
+    0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0,
+    0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40,
+    0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0,
+    0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41,
+    0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1,
+    0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40,
+    0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0,
+    0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41,
+    0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0,
+    0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41,
+    0x00, 0xC1, 0x81, 0x40};
 
 /* Table of CRC values for low-order byte */
 static const uint8_t table_crc_lo[] = {
-    0x00, 0xC0, 0xC1, 0x01, 0xC3, 0x03, 0x02, 0xC2, 0xC6, 0x06,
-    0x07, 0xC7, 0x05, 0xC5, 0xC4, 0x04, 0xCC, 0x0C, 0x0D, 0xCD,
-    0x0F, 0xCF, 0xCE, 0x0E, 0x0A, 0xCA, 0xCB, 0x0B, 0xC9, 0x09,
-    0x08, 0xC8, 0xD8, 0x18, 0x19, 0xD9, 0x1B, 0xDB, 0xDA, 0x1A,
-    0x1E, 0xDE, 0xDF, 0x1F, 0xDD, 0x1D, 0x1C, 0xDC, 0x14, 0xD4,
-    0xD5, 0x15, 0xD7, 0x17, 0x16, 0xD6, 0xD2, 0x12, 0x13, 0xD3,
-    0x11, 0xD1, 0xD0, 0x10, 0xF0, 0x30, 0x31, 0xF1, 0x33, 0xF3,
-    0xF2, 0x32, 0x36, 0xF6, 0xF7, 0x37, 0xF5, 0x35, 0x34, 0xF4,
-    0x3C, 0xFC, 0xFD, 0x3D, 0xFF, 0x3F, 0x3E, 0xFE, 0xFA, 0x3A,
-    0x3B, 0xFB, 0x39, 0xF9, 0xF8, 0x38, 0x28, 0xE8, 0xE9, 0x29,
-    0xEB, 0x2B, 0x2A, 0xEA, 0xEE, 0x2E, 0x2F, 0xEF, 0x2D, 0xED,
-    0xEC, 0x2C, 0xE4, 0x24, 0x25, 0xE5, 0x27, 0xE7, 0xE6, 0x26,
-    0x22, 0xE2, 0xE3, 0x23, 0xE1, 0x21, 0x20, 0xE0, 0xA0, 0x60,
-    0x61, 0xA1, 0x63, 0xA3, 0xA2, 0x62, 0x66, 0xA6, 0xA7, 0x67,
-    0xA5, 0x65, 0x64, 0xA4, 0x6C, 0xAC, 0xAD, 0x6D, 0xAF, 0x6F,
-    0x6E, 0xAE, 0xAA, 0x6A, 0x6B, 0xAB, 0x69, 0xA9, 0xA8, 0x68,
-    0x78, 0xB8, 0xB9, 0x79, 0xBB, 0x7B, 0x7A, 0xBA, 0xBE, 0x7E,
-    0x7F, 0xBF, 0x7D, 0xBD, 0xBC, 0x7C, 0xB4, 0x74, 0x75, 0xB5,
-    0x77, 0xB7, 0xB6, 0x76, 0x72, 0xB2, 0xB3, 0x73, 0xB1, 0x71,
-    0x70, 0xB0, 0x50, 0x90, 0x91, 0x51, 0x93, 0x53, 0x52, 0x92,
-    0x96, 0x56, 0x57, 0x97, 0x55, 0x95, 0x94, 0x54, 0x9C, 0x5C,
-    0x5D, 0x9D, 0x5F, 0x9F, 0x9E, 0x5E, 0x5A, 0x9A, 0x9B, 0x5B,
-    0x99, 0x59, 0x58, 0x98, 0x88, 0x48, 0x49, 0x89, 0x4B, 0x8B,
-    0x8A, 0x4A, 0x4E, 0x8E, 0x8F, 0x4F, 0x8D, 0x4D, 0x4C, 0x8C,
-    0x44, 0x84, 0x85, 0x45, 0x87, 0x47, 0x46, 0x86, 0x82, 0x42,
-    0x43, 0x83, 0x41, 0x81, 0x80, 0x40
-};
+    0x00, 0xC0, 0xC1, 0x01, 0xC3, 0x03, 0x02, 0xC2, 0xC6, 0x06, 0x07, 0xC7, 0x05, 0xC5,
+    0xC4, 0x04, 0xCC, 0x0C, 0x0D, 0xCD, 0x0F, 0xCF, 0xCE, 0x0E, 0x0A, 0xCA, 0xCB, 0x0B,
+    0xC9, 0x09, 0x08, 0xC8, 0xD8, 0x18, 0x19, 0xD9, 0x1B, 0xDB, 0xDA, 0x1A, 0x1E, 0xDE,
+    0xDF, 0x1F, 0xDD, 0x1D, 0x1C, 0xDC, 0x14, 0xD4, 0xD5, 0x15, 0xD7, 0x17, 0x16, 0xD6,
+    0xD2, 0x12, 0x13, 0xD3, 0x11, 0xD1, 0xD0, 0x10, 0xF0, 0x30, 0x31, 0xF1, 0x33, 0xF3,
+    0xF2, 0x32, 0x36, 0xF6, 0xF7, 0x37, 0xF5, 0x35, 0x34, 0xF4, 0x3C, 0xFC, 0xFD, 0x3D,
+    0xFF, 0x3F, 0x3E, 0xFE, 0xFA, 0x3A, 0x3B, 0xFB, 0x39, 0xF9, 0xF8, 0x38, 0x28, 0xE8,
+    0xE9, 0x29, 0xEB, 0x2B, 0x2A, 0xEA, 0xEE, 0x2E, 0x2F, 0xEF, 0x2D, 0xED, 0xEC, 0x2C,
+    0xE4, 0x24, 0x25, 0xE5, 0x27, 0xE7, 0xE6, 0x26, 0x22, 0xE2, 0xE3, 0x23, 0xE1, 0x21,
+    0x20, 0xE0, 0xA0, 0x60, 0x61, 0xA1, 0x63, 0xA3, 0xA2, 0x62, 0x66, 0xA6, 0xA7, 0x67,
+    0xA5, 0x65, 0x64, 0xA4, 0x6C, 0xAC, 0xAD, 0x6D, 0xAF, 0x6F, 0x6E, 0xAE, 0xAA, 0x6A,
+    0x6B, 0xAB, 0x69, 0xA9, 0xA8, 0x68, 0x78, 0xB8, 0xB9, 0x79, 0xBB, 0x7B, 0x7A, 0xBA,
+    0xBE, 0x7E, 0x7F, 0xBF, 0x7D, 0xBD, 0xBC, 0x7C, 0xB4, 0x74, 0x75, 0xB5, 0x77, 0xB7,
+    0xB6, 0x76, 0x72, 0xB2, 0xB3, 0x73, 0xB1, 0x71, 0x70, 0xB0, 0x50, 0x90, 0x91, 0x51,
+    0x93, 0x53, 0x52, 0x92, 0x96, 0x56, 0x57, 0x97, 0x55, 0x95, 0x94, 0x54, 0x9C, 0x5C,
+    0x5D, 0x9D, 0x5F, 0x9F, 0x9E, 0x5E, 0x5A, 0x9A, 0x9B, 0x5B, 0x99, 0x59, 0x58, 0x98,
+    0x88, 0x48, 0x49, 0x89, 0x4B, 0x8B, 0x8A, 0x4A, 0x4E, 0x8E, 0x8F, 0x4F, 0x8D, 0x4D,
+    0x4C, 0x8C, 0x44, 0x84, 0x85, 0x45, 0x87, 0x47, 0x46, 0x86, 0x82, 0x42, 0x43, 0x83,
+    0x41, 0x81, 0x80, 0x40};
 
 /* Define the slave ID of the remote device to talk in master mode or set the
  * internal slave ID in slave mode */
@@ -105,9 +89,8 @@ static int _modbus_set_slave(modbus_t *ctx, int slave)
 }
 
 /* Builds a RTU request header */
-static int _modbus_rtu_build_request_basis(modbus_t *ctx, int function,
-                                           int addr, int nb,
-                                           uint8_t *req)
+static int _modbus_rtu_build_request_basis(
+    modbus_t *ctx, int function, int addr, int nb, uint8_t *req)
 {
     assert(ctx->slave != -1);
     req[0] = ctx->slave;
@@ -135,7 +118,7 @@ static uint16_t crc16(uint8_t *buffer, uint16_t buffer_length)
 {
     uint8_t crc_hi = 0xFF; /* high CRC byte initialized */
     uint8_t crc_lo = 0xFF; /* low CRC byte initialized */
-    unsigned int i; /* will index into CRC lookup */
+    unsigned int i;        /* will index into CRC lookup */
 
     /* pass through message buffer */
     while (buffer_length--) {
@@ -186,8 +169,7 @@ static void win32_ser_init(struct win32_ser *ws)
 }
 
 /* FIXME Try to remove length_to_read -> max_len argument, only used by win32 */
-static int win32_ser_select(struct win32_ser *ws, int max_len,
-                            const struct timeval *tv)
+static int win32_ser_select(struct win32_ser *ws, int max_len, const struct timeval *tv)
 {
     COMMTIMEOUTS comm_to;
     unsigned int msec = 0;
@@ -237,8 +219,7 @@ static int win32_ser_select(struct win32_ser *ws, int max_len,
     }
 }
 
-static int win32_ser_read(struct win32_ser *ws, uint8_t *p_msg,
-                          unsigned int max_len)
+static int win32_ser_read(struct win32_ser *ws, uint8_t *p_msg, unsigned int max_len)
 {
     unsigned int n = ws->n_bytes;
 
@@ -277,7 +258,9 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
 #if defined(_WIN32)
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
     DWORD n_bytes = 0;
-    return (WriteFile(ctx_rtu->w_ser.fd, req, req_length, &n_bytes, NULL)) ? (ssize_t)n_bytes : -1;
+    return (WriteFile(ctx_rtu->w_ser.fd, req, req_length, &n_bytes, NULL))
+               ? (ssize_t) n_bytes
+               : -1;
 #else
 #if HAVE_DECL_TIOCM_RTS
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
@@ -332,7 +315,7 @@ static int _modbus_rtu_receive(modbus_t *ctx, uint8_t *req)
 static ssize_t _modbus_rtu_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length)
 {
 #if defined(_WIN32)
-    return win32_ser_read(&((modbus_rtu_t *)ctx->backend_data)->w_ser, rsp, rsp_length);
+    return win32_ser_read(&((modbus_rtu_t *) ctx->backend_data)->w_ser, rsp, rsp_length);
 #else
     return read(ctx->s, rsp, rsp_length);
 #endif
@@ -340,8 +323,10 @@ static ssize_t _modbus_rtu_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length)
 
 static int _modbus_rtu_flush(modbus_t *);
 
-static int _modbus_rtu_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
-                                              const uint8_t *rsp, int rsp_length)
+static int _modbus_rtu_pre_check_confirmation(modbus_t *ctx,
+                                              const uint8_t *req,
+                                              const uint8_t *rsp,
+                                              int rsp_length)
 {
     /* Check responding slave is the slave we requested (except for broacast
      * request) */
@@ -349,7 +334,8 @@ static int _modbus_rtu_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
         if (ctx->debug) {
             fprintf(stderr,
                     "The responding slave %d isn't the requested slave %d\n",
-                    rsp[0], req[0]);
+                    rsp[0],
+                    req[0]);
         }
         errno = EMBBADSLAVE;
         return -1;
@@ -361,8 +347,7 @@ static int _modbus_rtu_pre_check_confirmation(modbus_t *ctx, const uint8_t *req,
 /* The check_crc16 function shall return 0 if the message is ignored and the
    message length if the CRC is valid. Otherwise it shall return -1 and set
    errno to EMBBADCRC. */
-static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
-                                       const int msg_length)
+static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg, const int msg_length)
 {
     uint16_t crc_calculated;
     uint16_t crc_received;
@@ -386,8 +371,10 @@ static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
         return msg_length;
     } else {
         if (ctx->debug) {
-            fprintf(stderr, "ERROR CRC received 0x%0X != CRC calculated 0x%0X\n",
-                    crc_received, crc_calculated);
+            fprintf(stderr,
+                    "ERROR CRC received 0x%0X != CRC calculated 0x%0X\n",
+                    crc_received,
+                    crc_calculated);
         }
 
         if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_PROTOCOL) {
@@ -412,8 +399,11 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 
     if (ctx->debug) {
         printf("Opening %s at %d bauds (%c, %d, %d)\n",
-               ctx_rtu->device, ctx_rtu->baud, ctx_rtu->parity,
-               ctx_rtu->data_bit, ctx_rtu->stop_bit);
+               ctx_rtu->device,
+               ctx_rtu->baud,
+               ctx_rtu->parity,
+               ctx_rtu->data_bit,
+               ctx_rtu->stop_bit);
     }
 
 #if defined(_WIN32)
@@ -424,19 +414,16 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 
     /* ctx_rtu->device should contain a string like "COMxx:" xx being a decimal
      * number */
-    ctx_rtu->w_ser.fd = CreateFileA(ctx_rtu->device,
-                                    GENERIC_READ | GENERIC_WRITE,
-                                    0,
-                                    NULL,
-                                    OPEN_EXISTING,
-                                    0,
-                                    NULL);
+    ctx_rtu->w_ser.fd = CreateFileA(
+        ctx_rtu->device, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 
     /* Error checking */
     if (ctx_rtu->w_ser.fd == INVALID_HANDLE_VALUE) {
         if (ctx->debug) {
-            fprintf(stderr, "ERROR Can't open the device %s (LastError %d)\n",
-                    ctx_rtu->device, (int)GetLastError());
+            fprintf(stderr,
+                    "ERROR Can't open the device %s (LastError %d)\n",
+                    ctx_rtu->device,
+                    (int) GetLastError());
         }
         return -1;
     }
@@ -445,8 +432,9 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     ctx_rtu->old_dcb.DCBlength = sizeof(DCB);
     if (!GetCommState(ctx_rtu->w_ser.fd, &ctx_rtu->old_dcb)) {
         if (ctx->debug) {
-            fprintf(stderr, "ERROR Error getting configuration (LastError %d)\n",
-                    (int)GetLastError());
+            fprintf(stderr,
+                    "ERROR Error getting configuration (LastError %d)\n",
+                    (int) GetLastError());
         }
         CloseHandle(ctx_rtu->w_ser.fd);
         ctx_rtu->w_ser.fd = INVALID_HANDLE_VALUE;
@@ -519,8 +507,10 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     default:
         dcb.BaudRate = CBR_9600;
         if (ctx->debug) {
-            fprintf(stderr, "WARNING Unknown baud rate %d for %s (B9600 used)\n",
-                    ctx_rtu->baud, ctx_rtu->device);
+            fprintf(stderr,
+                    "WARNING Unknown baud rate %d for %s (B9600 used)\n",
+                    ctx_rtu->baud,
+                    ctx_rtu->device);
         }
     }
 
@@ -576,8 +566,9 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     /* Setup port */
     if (!SetCommState(ctx_rtu->w_ser.fd, &dcb)) {
         if (ctx->debug) {
-            fprintf(stderr, "ERROR Error setting new configuration (LastError %d)\n",
-                    (int)GetLastError());
+            fprintf(stderr,
+                    "ERROR Error setting new configuration (LastError %d)\n",
+                    (int) GetLastError());
         }
         CloseHandle(ctx_rtu->w_ser.fd);
         ctx_rtu->w_ser.fd = INVALID_HANDLE_VALUE;
@@ -599,8 +590,10 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     ctx->s = open(ctx_rtu->device, flags);
     if (ctx->s < 0) {
         if (ctx->debug) {
-            fprintf(stderr, "ERROR Can't open the device %s (%s)\n",
-                    ctx_rtu->device, strerror(errno));
+            fprintf(stderr,
+                    "ERROR Can't open the device %s (%s)\n",
+                    ctx_rtu->device,
+                    strerror(errno));
         }
         return -1;
     }
@@ -682,7 +675,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
         break;
 #endif
 #ifdef B1152000
-   case 1152000:
+    case 1152000:
         speed = B1152000;
         break;
 #endif
@@ -716,13 +709,13 @@ static int _modbus_rtu_connect(modbus_t *ctx)
         if (ctx->debug) {
             fprintf(stderr,
                     "WARNING Unknown baud rate %d for %s (B9600 used)\n",
-                    ctx_rtu->baud, ctx_rtu->device);
+                    ctx_rtu->baud,
+                    ctx_rtu->device);
         }
     }
 
     /* Set the baud rate */
-    if ((cfsetispeed(&tios, speed) < 0) ||
-        (cfsetospeed(&tios, speed) < 0)) {
+    if ((cfsetispeed(&tios, speed) < 0) || (cfsetospeed(&tios, speed) < 0)) {
         close(ctx->s);
         ctx->s = -1;
         return -1;
@@ -757,7 +750,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 
     /* Stop bit (1 or 2) */
     if (ctx_rtu->stop_bit == 1)
-        tios.c_cflag &=~ CSTOPB;
+        tios.c_cflag &= ~CSTOPB;
     else /* 2 */
         tios.c_cflag |= CSTOPB;
 
@@ -765,11 +758,11 @@ static int _modbus_rtu_connect(modbus_t *ctx)
        PARODD       Use odd parity instead of even */
     if (ctx_rtu->parity == 'N') {
         /* None */
-        tios.c_cflag &=~ PARENB;
+        tios.c_cflag &= ~PARENB;
     } else if (ctx_rtu->parity == 'E') {
         /* Even */
         tios.c_cflag |= PARENB;
-        tios.c_cflag &=~ PARODD;
+        tios.c_cflag &= ~PARODD;
     } else {
         /* Odd */
         tios.c_cflag |= PARENB;
@@ -851,7 +844,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     */
 
     /* Raw output */
-    tios.c_oflag &=~ OPOST;
+    tios.c_oflag &= ~OPOST;
 
     /* C_CC         Control characters
        VMIN         Minimum number of characters to read
@@ -1044,7 +1037,7 @@ int modbus_rtu_set_rts(modbus_t *ctx, int mode)
     return -1;
 }
 
-int modbus_rtu_set_custom_rts(modbus_t *ctx, void (*set_rts) (modbus_t *ctx, int on))
+int modbus_rtu_set_custom_rts(modbus_t *ctx, void (*set_rts)(modbus_t *ctx, int on))
 {
     if (ctx == NULL) {
         errno = EINVAL;
@@ -1079,7 +1072,7 @@ int modbus_rtu_get_rts_delay(modbus_t *ctx)
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
 #if HAVE_DECL_TIOCM_RTS
         modbus_rtu_t *ctx_rtu;
-        ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
+        ctx_rtu = (modbus_rtu_t *) ctx->backend_data;
         return ctx_rtu->rts_delay;
 #else
         if (ctx->debug) {
@@ -1104,7 +1097,7 @@ int modbus_rtu_set_rts_delay(modbus_t *ctx, int us)
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
 #if HAVE_DECL_TIOCM_RTS
         modbus_rtu_t *ctx_rtu;
-        ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
+        ctx_rtu = (modbus_rtu_t *) ctx->backend_data;
         ctx_rtu->rts_delay = us;
         return 0;
 #else
@@ -1128,13 +1121,15 @@ static void _modbus_rtu_close(modbus_t *ctx)
 #if defined(_WIN32)
     /* Revert settings */
     if (!SetCommState(ctx_rtu->w_ser.fd, &ctx_rtu->old_dcb) && ctx->debug) {
-        fprintf(stderr, "ERROR Couldn't revert to configuration (LastError %d)\n",
-                (int)GetLastError());
+        fprintf(stderr,
+                "ERROR Couldn't revert to configuration (LastError %d)\n",
+                (int) GetLastError());
     }
 
     if (!CloseHandle(ctx_rtu->w_ser.fd) && ctx->debug) {
-        fprintf(stderr, "ERROR Error while closing handle (LastError %d)\n",
-                (int)GetLastError());
+        fprintf(stderr,
+                "ERROR Error while closing handle (LastError %d)\n",
+                (int) GetLastError());
     }
 #else
     if (ctx->s >= 0) {
@@ -1156,13 +1151,13 @@ static int _modbus_rtu_flush(modbus_t *ctx)
 #endif
 }
 
-static int _modbus_rtu_select(modbus_t *ctx, fd_set *rset,
-                              struct timeval *tv, int length_to_read)
+static int
+_modbus_rtu_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int length_to_read)
 {
     int s_rc;
 #if defined(_WIN32)
-    s_rc = win32_ser_select(&((modbus_rtu_t *)ctx->backend_data)->w_ser,
-                            length_to_read, tv);
+    s_rc = win32_ser_select(
+        &((modbus_rtu_t *) ctx->backend_data)->w_ser, length_to_read, tv);
     if (s_rc == 0) {
         errno = ETIMEDOUT;
         return -1;
@@ -1172,7 +1167,7 @@ static int _modbus_rtu_select(modbus_t *ctx, fd_set *rset,
         return -1;
     }
 #else
-    while ((s_rc = select(ctx->s+1, rset, NULL, NULL, tv)) == -1) {
+    while ((s_rc = select(ctx->s + 1, rset, NULL, NULL, tv)) == -1) {
         if (errno == EINTR) {
             if (ctx->debug) {
                 fprintf(stderr, "A non blocked signal was caught\n");
@@ -1195,15 +1190,17 @@ static int _modbus_rtu_select(modbus_t *ctx, fd_set *rset,
     return s_rc;
 }
 
-static void _modbus_rtu_free(modbus_t *ctx) {
+static void _modbus_rtu_free(modbus_t *ctx)
+{
     if (ctx->backend_data) {
-        free(((modbus_rtu_t *)ctx->backend_data)->device);
+        free(((modbus_rtu_t *) ctx->backend_data)->device);
         free(ctx->backend_data);
     }
 
     free(ctx);
 }
 
+// clang-format off
 const modbus_backend_t _modbus_rtu_backend = {
     _MODBUS_BACKEND_TYPE_RTU,
     _MODBUS_RTU_HEADER_LENGTH,
@@ -1226,9 +1223,10 @@ const modbus_backend_t _modbus_rtu_backend = {
     _modbus_rtu_free
 };
 
-modbus_t* modbus_new_rtu(const char *device,
-                         int baud, char parity, int data_bit,
-                         int stop_bit)
+// clang-format on
+
+modbus_t *
+modbus_new_rtu(const char *device, int baud, char parity, int data_bit, int stop_bit)
 {
     modbus_t *ctx;
     modbus_rtu_t *ctx_rtu;
@@ -1247,23 +1245,23 @@ modbus_t* modbus_new_rtu(const char *device,
         return NULL;
     }
 
-    ctx = (modbus_t *)malloc(sizeof(modbus_t));
+    ctx = (modbus_t *) malloc(sizeof(modbus_t));
     if (ctx == NULL) {
         return NULL;
     }
 
     _modbus_init_common(ctx);
     ctx->backend = &_modbus_rtu_backend;
-    ctx->backend_data = (modbus_rtu_t *)malloc(sizeof(modbus_rtu_t));
+    ctx->backend_data = (modbus_rtu_t *) malloc(sizeof(modbus_rtu_t));
     if (ctx->backend_data == NULL) {
         modbus_free(ctx);
         errno = ENOMEM;
         return NULL;
     }
-    ctx_rtu = (modbus_rtu_t *)ctx->backend_data;
+    ctx_rtu = (modbus_rtu_t *) ctx->backend_data;
 
     /* Device name and \0 */
-    ctx_rtu->device = (char *)malloc((strlen(device) + 1) * sizeof(char));
+    ctx_rtu->device = (char *) malloc((strlen(device) + 1) * sizeof(char));
     if (ctx_rtu->device == NULL) {
         modbus_free(ctx);
         errno = ENOMEM;
@@ -1292,7 +1290,8 @@ modbus_t* modbus_new_rtu(const char *device,
     ctx_rtu->rts = MODBUS_RTU_RTS_NONE;
 
     /* Calculate estimated time in micro second to send one byte */
-    ctx_rtu->onebyte_time = 1000000 * (1 + data_bit + (parity == 'N' ? 0 : 1) + stop_bit) / baud;
+    ctx_rtu->onebyte_time =
+        1000000 * (1 + data_bit + (parity == 'N' ? 0 : 1) + stop_bit) / baud;
 
     /* The internal function is used by default to set RTS */
     ctx_rtu->set_rts = _modbus_rtu_ioctl_rts;
