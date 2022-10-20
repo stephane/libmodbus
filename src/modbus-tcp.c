@@ -309,7 +309,15 @@ static int _connect(int sockfd,
     return rc;
 }
 
-/* Establishes a modbus TCP connection with a Modbus server. */
+static int _modbus_tcp_is_connected(modbus_t *ctx)
+{
+    if (ctx->s < 0)
+        return -1;
+
+    return 0;
+}
+
+    /* Establishes a modbus TCP connection with a Modbus server. */
 static int _modbus_tcp_connect(modbus_t *ctx)
 {
     int rc;
@@ -786,6 +794,7 @@ const modbus_backend_t _modbus_tcp_backend = {
     _modbus_tcp_check_integrity,
     _modbus_tcp_pre_check_confirmation,
     _modbus_tcp_connect,
+    _modbus_tcp_is_connected,
     _modbus_tcp_close,
     _modbus_tcp_flush,
     _modbus_tcp_select,
@@ -808,6 +817,7 @@ const modbus_backend_t _modbus_tcp_pi_backend = {
     _modbus_tcp_check_integrity,
     _modbus_tcp_pre_check_confirmation,
     _modbus_tcp_pi_connect,
+    _modbus_tcp_is_connected,
     _modbus_tcp_close,
     _modbus_tcp_flush,
     _modbus_tcp_select,

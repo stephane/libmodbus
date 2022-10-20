@@ -385,6 +385,23 @@ static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg, const int ms
     }
 }
 
+static int _modbus_rtu_is_connected(modbus_t *ctx)
+{
+#if defined(_WIN32)
+    modbus_rtu_t *ctx_rtu = ctx->backend_data;
+
+    /* Check if file handle is invalid */
+    if (ctx_rtu->w_ser.fd == INVALID_HANDLE_VALUE)
+        return -1;
+
+#else
+    if (ctx->s < 0)
+        return -1;
+
+#endif
+    return 0;
+}
+
 /* Sets up a serial port for RTU communications */
 static int _modbus_rtu_connect(modbus_t *ctx)
 {
@@ -1217,6 +1234,7 @@ const modbus_backend_t _modbus_rtu_backend = {
     _modbus_rtu_check_integrity,
     _modbus_rtu_pre_check_confirmation,
     _modbus_rtu_connect,
+    _modbus_rtu_is_connected,
     _modbus_rtu_close,
     _modbus_rtu_flush,
     _modbus_rtu_select,

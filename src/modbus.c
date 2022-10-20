@@ -368,7 +368,7 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
         }
     }
 
-    if (ctx->s < 0) {
+    if (ctx->backend->is_connected(ctx)==-1) {
         if (ctx->debug) {
             fprintf(stderr, "ERROR The connection is not established.\n");
         }
