@@ -1856,6 +1856,16 @@ int modbus_get_header_length(modbus_t *ctx)
     return ctx->backend->header_length;
 }
 
+int modbus_get_query_function(modbus_t *ctx, const uint8_t * req)
+{
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    return req[ctx->backend->header_length];
+}
+
 int modbus_enable_quirks(modbus_t *ctx, uint32_t quirks_mask)
 {
     if (ctx == NULL) {
