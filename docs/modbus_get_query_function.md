@@ -1,4 +1,4 @@
-# modbus_get_header_length
+# modbus_get_query_function
 
 ## Name
 
@@ -7,7 +7,7 @@ modbus_get_query_function- retrieve the function code of a query
 ## Synopsis
 
 ```c
-int modbus_get_header_length(modbus_t *ctx, const uint8_t * query);
+int modbus_get_query_function(modbus_t *ctx, const uint8_t * query);
 ```
 
 ## Description
@@ -17,4 +17,4 @@ of a query. It can be useful for modbus server development.
 
 ## Return value
 
-The function code a the query.
+The function code of the query.
