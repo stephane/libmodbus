@@ -709,7 +709,12 @@ int modbus_tcp_accept(modbus_t *ctx, int *s)
     }
 
     if (ctx->debug) {
-        printf("The client connection from %s is accepted\n", inet_ntoa(addr.sin_addr));
+        char buf[INET_ADDRSTRLEN];
+        if (inet_ntop(AF_INET, &(addr.sin_addr), buf, INET_ADDRSTRLEN) == NULL) {
+            fprintf(stderr, "Client connection accepted from unparsable IP.\n");
+        } else {
+            printf("Client connection accepted from %s.\n", buf);
+        }
     }
 
     return ctx->s;
@@ -717,7 +722,7 @@ int modbus_tcp_accept(modbus_t *ctx, int *s)
 
 int modbus_tcp_pi_accept(modbus_t *ctx, int *s)
 {
-    struct sockaddr_storage addr;
+    struct sockaddr_in6 addr;
     socklen_t addrlen;
 
     if (ctx == NULL) {
@@ -738,7 +743,12 @@ int modbus_tcp_pi_accept(modbus_t *ctx, int *s)
     }
 
     if (ctx->debug) {
-        printf("The client connection is accepted.\n");
+        char buf[INET6_ADDRSTRLEN];
+        if (inet_ntop(AF_INET6, &(addr.sin6_addr), buf, INET6_ADDRSTRLEN) == NULL) {
+            fprintf(stderr, "Client connection accepted from unparsable IP.\n");
+        } else {
+            printf("Client connection accepted from %s.\n", buf);
+        }
     }
 
     return ctx->s;
