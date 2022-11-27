@@ -392,7 +392,6 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     DCB dcb;
 #else
     struct termios tios;
-    speed_t speed;
     int flags;
 #endif
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
@@ -445,74 +444,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     dcb = ctx_rtu->old_dcb;
 
     /* Speed setting */
-    switch (ctx_rtu->baud) {
-    case 110:
-        dcb.BaudRate = CBR_110;
-        break;
-    case 300:
-        dcb.BaudRate = CBR_300;
-        break;
-    case 600:
-        dcb.BaudRate = CBR_600;
-        break;
-    case 1200:
-        dcb.BaudRate = CBR_1200;
-        break;
-    case 2400:
-        dcb.BaudRate = CBR_2400;
-        break;
-    case 4800:
-        dcb.BaudRate = CBR_4800;
-        break;
-    case 9600:
-        dcb.BaudRate = CBR_9600;
-        break;
-    case 14400:
-        dcb.BaudRate = CBR_14400;
-        break;
-    case 19200:
-        dcb.BaudRate = CBR_19200;
-        break;
-    case 38400:
-        dcb.BaudRate = CBR_38400;
-        break;
-    case 57600:
-        dcb.BaudRate = CBR_57600;
-        break;
-    case 115200:
-        dcb.BaudRate = CBR_115200;
-        break;
-    case 230400:
-        /* CBR_230400 - not defined */
-        dcb.BaudRate = 230400;
-        break;
-    case 250000:
-        dcb.BaudRate = 250000;
-        break;
-    case 256000:
-        dcb.BaudRate = 256000;
-        break;
-    case 460800:
-        dcb.BaudRate = 460800;
-        break;
-    case 500000:
-        dcb.BaudRate = 500000;
-        break;
-    case 921600:
-        dcb.BaudRate = 921600;
-        break;
-    case 1000000:
-        dcb.BaudRate = 1000000;
-        break;
-    default:
-        dcb.BaudRate = CBR_9600;
-        if (ctx->debug) {
-            fprintf(stderr,
-                    "WARNING Unknown baud rate %d for %s (B9600 used)\n",
-                    ctx_rtu->baud,
-                    ctx_rtu->device);
-        }
-    }
+    dcb.BaudRate = ctx_rtu->baud;
 
     /* Data bits */
     switch (ctx_rtu->data_bit) {
@@ -606,116 +538,10 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     /* C_ISPEED     Input baud (new interface)
        C_OSPEED     Output baud (new interface)
     */
-    switch (ctx_rtu->baud) {
-    case 110:
-        speed = B110;
-        break;
-    case 300:
-        speed = B300;
-        break;
-    case 600:
-        speed = B600;
-        break;
-    case 1200:
-        speed = B1200;
-        break;
-    case 2400:
-        speed = B2400;
-        break;
-    case 4800:
-        speed = B4800;
-        break;
-    case 9600:
-        speed = B9600;
-        break;
-    case 19200:
-        speed = B19200;
-        break;
-    case 38400:
-        speed = B38400;
-        break;
-#ifdef B57600
-    case 57600:
-        speed = B57600;
-        break;
-#endif
-#ifdef B115200
-    case 115200:
-        speed = B115200;
-        break;
-#endif
-#ifdef B230400
-    case 230400:
-        speed = B230400;
-        break;
-#endif
-#ifdef B460800
-    case 460800:
-        speed = B460800;
-        break;
-#endif
-#ifdef B500000
-    case 500000:
-        speed = B500000;
-        break;
-#endif
-#ifdef B576000
-    case 576000:
-        speed = B576000;
-        break;
-#endif
-#ifdef B921600
-    case 921600:
-        speed = B921600;
-        break;
-#endif
-#ifdef B1000000
-    case 1000000:
-        speed = B1000000;
-        break;
-#endif
-#ifdef B1152000
-    case 1152000:
-        speed = B1152000;
-        break;
-#endif
-#ifdef B1500000
-    case 1500000:
-        speed = B1500000;
-        break;
-#endif
-#ifdef B2500000
-    case 2500000:
-        speed = B2500000;
-        break;
-#endif
-#ifdef B3000000
-    case 3000000:
-        speed = B3000000;
-        break;
-#endif
-#ifdef B3500000
-    case 3500000:
-        speed = B3500000;
-        break;
-#endif
-#ifdef B4000000
-    case 4000000:
-        speed = B4000000;
-        break;
-#endif
-    default:
-        speed = B9600;
-        if (ctx->debug) {
-            fprintf(stderr,
-                    "WARNING Unknown baud rate %d for %s (B9600 used)\n",
-                    ctx_rtu->baud,
-                    ctx_rtu->device);
-        }
-    }
 
     /* Set the baud rate */
-    if ((cfsetispeed(&tios, speed) < 0) || (cfsetospeed(&tios, speed) < 0)) {
+    if ((cfsetispeed(&tios, ctx_rtu->baud) < 0) ||
+        (cfsetospeed(&tios, ctx_rtu->baud) < 0)) {
         close(ctx->s);
         ctx->s = -1;
         return -1;
