@@ -1093,7 +1093,12 @@ modbus_new_rtu(const char *device, int baud, char parity, int data_bit, int stop
         errno = ENOMEM;
         return NULL;
     }
+
+#if defined(_WIN32)
+    strcpy_s(ctx_rtu->device, strlen(device) + 1, device);
+#else
     strcpy(ctx_rtu->device, device);
+#endif
 
     ctx_rtu->baud = baud;
     if (parity == 'N' || parity == 'E' || parity == 'O') {
