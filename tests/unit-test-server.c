@@ -42,6 +42,7 @@ int main(int argc, char *argv[])
     int use_backend;
     uint8_t *query;
     int header_length;
+    char *ip_or_device;
 
     if (argc > 1) {
         if (strcmp(argv[1], "tcp") == 0) {
@@ -51,8 +52,9 @@ int main(int argc, char *argv[])
         } else if (strcmp(argv[1], "rtu") == 0) {
             use_backend = RTU;
         } else {
-            printf("Usage:\n  %s [tcp|tcppi|rtu] - Modbus server for unit testing\n\n",
-                   argv[0]);
+            printf("Modbus server for unit testing.\n");
+            printf("Usage:\n  %s [tcp|tcppi|rtu] [<ip or device>]\n", argv[0]);
+            printf("Eg. tcp 127.0.0.1 or rtu /dev/ttyUSB0\n\n");
             return -1;
         }
     } else {
@@ -60,17 +62,36 @@ int main(int argc, char *argv[])
         use_backend = TCP;
     }
 
+    if (argc > 2) {
+        ip_or_device = argv[2];
+    } else {
+        switch (use_backend) {
+        case TCP:
+            ip_or_device = "127.0.0.1";
+            break;
+        case TCP_PI:
+            ip_or_device = "::1";
+            break;
+        case RTU:
+            ip_or_device = "/dev/ttyUSB0";
+            break;
+        default:
+            break;
+        }
+    }
+
     if (use_backend == TCP) {
-        ctx = modbus_new_tcp("127.0.0.1", 1502);
+        ctx = modbus_new_tcp(ip_or_device, 1502);
         query = malloc(MODBUS_TCP_MAX_ADU_LENGTH);
     } else if (use_backend == TCP_PI) {
-        ctx = modbus_new_tcp_pi("::0", "1502");
+        ctx = modbus_new_tcp_pi(ip_or_device, "1502");
         query = malloc(MODBUS_TCP_MAX_ADU_LENGTH);
     } else {
-        ctx = modbus_new_rtu("/dev/ttyUSB0", 115200, 'N', 8, 1);
+        ctx = modbus_new_rtu(ip_or_device, 115200, 'N', 8, 1);
         modbus_set_slave(ctx, SERVER_ID);
         query = malloc(MODBUS_RTU_MAX_ADU_LENGTH);
     }
+
     header_length = modbus_get_header_length(ctx);
 
     modbus_set_debug(ctx, TRUE);
