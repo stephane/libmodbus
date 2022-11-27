@@ -30,6 +30,7 @@
 # include <ws2tcpip.h>
 # define SHUT_RDWR 2
 # define close closesocket
+# define strdup _strdup
 #else
 # include <sys/socket.h>
 # include <sys/ioctl.h>
