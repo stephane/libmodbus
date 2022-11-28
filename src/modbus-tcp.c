@@ -556,8 +556,7 @@ int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
             if (ctx->debug) {
                 fprintf(stderr, "Invalid IP address: %s\n", ctx_tcp->ip);
             }
-            close(ctx->s);
-            ctx->s = -1;
+            close(new_s);
             return -1;
         }
     }
