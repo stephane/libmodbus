@@ -86,6 +86,7 @@ typedef struct _modbus_backend {
                                   const uint8_t *rsp,
                                   int rsp_length);
     int (*connect)(modbus_t *ctx);
+    unsigned int (*is_connected)(modbus_t *ctx);
     void (*close)(modbus_t *ctx);
     int (*flush)(modbus_t *ctx);
     int (*select)(modbus_t *ctx, fd_set *rset, struct timeval *tv, int msg_length);

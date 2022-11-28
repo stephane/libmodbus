@@ -368,7 +368,7 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
         }
     }
 
-    if (ctx->s < 0) {
+    if (!ctx->backend->is_connected(ctx)) {
         if (ctx->debug) {
             fprintf(stderr, "ERROR The connection is not established.\n");
         }
@@ -1748,6 +1748,7 @@ int modbus_set_error_recovery(modbus_t *ctx, modbus_error_recovery_mode error_re
     return 0;
 }
 
+// FIXME Doesn't work under Windows RTU
 int modbus_set_socket(modbus_t *ctx, int s)
 {
     if (ctx == NULL) {

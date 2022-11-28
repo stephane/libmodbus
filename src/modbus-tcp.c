@@ -449,6 +449,11 @@ static int _modbus_tcp_pi_connect(modbus_t *ctx)
     return 0;
 }
 
+static unsigned int _modbus_tcp_is_connected(modbus_t *ctx)
+{
+    return ctx->s >= 0;
+}
+
 /* Closes the network connection and socket in TCP mode */
 static void _modbus_tcp_close(modbus_t *ctx)
 {
@@ -816,6 +821,7 @@ const modbus_backend_t _modbus_tcp_backend = {
     _modbus_tcp_check_integrity,
     _modbus_tcp_pre_check_confirmation,
     _modbus_tcp_connect,
+    _modbus_tcp_is_connected,
     _modbus_tcp_close,
     _modbus_tcp_flush,
     _modbus_tcp_select,
@@ -838,6 +844,7 @@ const modbus_backend_t _modbus_tcp_pi_backend = {
     _modbus_tcp_check_integrity,
     _modbus_tcp_pre_check_confirmation,
     _modbus_tcp_pi_connect,
+    _modbus_tcp_is_connected,
     _modbus_tcp_close,
     _modbus_tcp_flush,
     _modbus_tcp_select,
