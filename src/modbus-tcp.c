@@ -30,6 +30,7 @@
 # include <ws2tcpip.h>
 # define SHUT_RDWR 2
 # define close closesocket
+# define strdup _strdup
 #else
 # include <sys/socket.h>
 # include <sys/ioctl.h>
@@ -350,7 +351,16 @@ static int _modbus_tcp_connect(modbus_t *ctx)
 
     addr.sin_family = AF_INET;
     addr.sin_port = htons(ctx_tcp->port);
-    addr.sin_addr.s_addr = inet_addr(ctx_tcp->ip);
+    rc = inet_pton(addr.sin_family, ctx_tcp->ip, &(addr.sin_addr));
+    if (rc <= 0) {
+        if (ctx->debug) {
+            fprintf(stderr, "Invalid IP address: %s\n", ctx_tcp->ip);
+        }
+        close(ctx->s);
+        ctx->s = -1;
+        return -1;
+    }
+
     rc =
         _connect(ctx->s, (struct sockaddr *) &addr, sizeof(addr), &ctx->response_timeout);
     if (rc == -1) {
@@ -439,6 +449,11 @@ static int _modbus_tcp_pi_connect(modbus_t *ctx)
     return 0;
 }
 
+static unsigned int _modbus_tcp_is_connected(modbus_t *ctx)
+{
+    return ctx->s >= 0;
+}
+
 /* Closes the network connection and socket in TCP mode */
 static void _modbus_tcp_close(modbus_t *ctx)
 {
@@ -494,6 +509,7 @@ int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
     int flags;
     struct sockaddr_in addr;
     modbus_tcp_t *ctx_tcp;
+    int rc;
 
     if (ctx == NULL) {
         errno = EINVAL;
@@ -535,8 +551,16 @@ int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
         addr.sin_addr.s_addr = htonl(INADDR_ANY);
     } else {
         /* Listen only specified IP address */
-        addr.sin_addr.s_addr = inet_addr(ctx_tcp->ip);
+        rc = inet_pton(addr.sin_family, ctx_tcp->ip, &(addr.sin_addr));
+        if (rc <= 0) {
+            if (ctx->debug) {
+                fprintf(stderr, "Invalid IP address: %s\n", ctx_tcp->ip);
+            }
+            close(new_s);
+            return -1;
+        }
     }
+
     if (bind(new_s, (struct sockaddr *) &addr, sizeof(addr)) == -1) {
         close(new_s);
         return -1;
@@ -689,7 +713,12 @@ int modbus_tcp_accept(modbus_t *ctx, int *s)
     }
 
     if (ctx->debug) {
-        printf("The client connection from %s is accepted\n", inet_ntoa(addr.sin_addr));
+        char buf[INET_ADDRSTRLEN];
+        if (inet_ntop(AF_INET, &(addr.sin_addr), buf, INET_ADDRSTRLEN) == NULL) {
+            fprintf(stderr, "Client connection accepted from unparsable IP.\n");
+        } else {
+            printf("Client connection accepted from %s.\n", buf);
+        }
     }
 
     return ctx->s;
@@ -697,7 +726,7 @@ int modbus_tcp_accept(modbus_t *ctx, int *s)
 
 int modbus_tcp_pi_accept(modbus_t *ctx, int *s)
 {
-    struct sockaddr_storage addr;
+    struct sockaddr_in6 addr;
     socklen_t addrlen;
 
     if (ctx == NULL) {
@@ -718,7 +747,12 @@ int modbus_tcp_pi_accept(modbus_t *ctx, int *s)
     }
 
     if (ctx->debug) {
-        printf("The client connection is accepted.\n");
+        char buf[INET6_ADDRSTRLEN];
+        if (inet_ntop(AF_INET6, &(addr.sin6_addr), buf, INET6_ADDRSTRLEN) == NULL) {
+            fprintf(stderr, "Client connection accepted from unparsable IP.\n");
+        } else {
+            printf("Client connection accepted from %s.\n", buf);
+        }
     }
 
     return ctx->s;
@@ -786,6 +820,7 @@ const modbus_backend_t _modbus_tcp_backend = {
     _modbus_tcp_check_integrity,
     _modbus_tcp_pre_check_confirmation,
     _modbus_tcp_connect,
+    _modbus_tcp_is_connected,
     _modbus_tcp_close,
     _modbus_tcp_flush,
     _modbus_tcp_select,
@@ -808,6 +843,7 @@ const modbus_backend_t _modbus_tcp_pi_backend = {
     _modbus_tcp_check_integrity,
     _modbus_tcp_pre_check_confirmation,
     _modbus_tcp_pi_connect,
+    _modbus_tcp_is_connected,
     _modbus_tcp_close,
     _modbus_tcp_flush,
     _modbus_tcp_select,
