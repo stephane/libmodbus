@@ -1867,19 +1867,19 @@ int modbus_get_query_function(modbus_t *ctx, const uint8_t * query)
     return query[ctx->backend->header_length];
 }
 
-int modbus_enable_quirks(modbus_t *ctx, uint32_t quirks_mask)
+int modbus_enable_quirks(modbus_t *ctx, unsigned int quirks_mask)
 {
     if (ctx == NULL) {
         errno = EINVAL;
         return -1;
     }
 
-    /* Enable quirks that have a true value at their index in the mask */
+    /* Enable quirks that have a true value at their index in the mask */
     ctx->quirks |= quirks_mask;
     return 0;
 }
 
-int modbus_disable_quirks(modbus_t *ctx, uint32_t quirks_mask)
+int modbus_disable_quirks(modbus_t *ctx, unsigned int quirks_mask)
 {
     if (ctx == NULL) {
         errno = EINVAL;
