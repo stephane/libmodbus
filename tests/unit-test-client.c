@@ -58,7 +58,8 @@ int equal_dword(uint16_t *tab_reg, const uint32_t value)
 
 int main(int argc, char *argv[])
 {
-    const int NB_REPORT_SLAVE_ID = 10;
+    /* Length of report slave ID response slave ID + ON/OFF + 'LMB' + version */
+    const int NB_REPORT_SLAVE_ID = 2 + 3 + strlen(LIBMODBUS_VERSION_STRING);
     uint8_t *tab_rp_bits = NULL;
     uint16_t *tab_rp_registers = NULL;
     uint16_t *tab_rp_registers_bad = NULL;

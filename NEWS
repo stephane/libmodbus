@@ -1,5 +1,12 @@
 # NEWS
 
+## libmodbus 3.1.10 (2022-12-07)
+
+Urgent release to fix a regression.
+
+- Fix baud rate handling with RTU under Linux
+- Fix modbus_disable_quirks signature
+
 ## libmodbus 3.1.9 (2022-12-03)
 
 - Remove Travis CI
