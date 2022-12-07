@@ -354,7 +354,8 @@ static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg, const int ms
 
     /* Filter on the Modbus unit identifier (slave) in RTU mode to avoid useless
      * CRC computing. */
-    if (slave != ctx->slave && slave != MODBUS_BROADCAST_ADDRESS) {
+    if (slave != ctx->slave && slave != MODBUS_BROADCAST_ADDRESS &&
+        !(ctx->quirks & MODBUS_QUIRK_IGNORE_RTU_SLAVE_CHECK)) {
         if (ctx->debug) {
             printf("Request for slave %d ignored (not %d)\n", slave, ctx->slave);
         }
