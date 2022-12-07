@@ -12,9 +12,8 @@
 #ifndef _MSC_VER
 #include <unistd.h>
 #endif
-#include <assert.h>
-
 #include "modbus-private.h"
+#include <assert.h>
 
 #include "modbus-rtu-private.h"
 #include "modbus-rtu.h"
@@ -505,11 +504,125 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     return 0;
 }
 #else
+
+static speed_t _get_termios_speed(int baud, int debug)
+{
+    speed_t speed;
+
+    switch (baud) {
+    case 110:
+        speed = B110;
+        break;
+    case 300:
+        speed = B300;
+        break;
+    case 600:
+        speed = B600;
+        break;
+    case 1200:
+        speed = B1200;
+        break;
+    case 2400:
+        speed = B2400;
+        break;
+    case 4800:
+        speed = B4800;
+        break;
+    case 9600:
+        speed = B9600;
+        break;
+    case 19200:
+        speed = B19200;
+        break;
+    case 38400:
+        speed = B38400;
+        break;
+#ifdef B57600
+    case 57600:
+        speed = B57600;
+        break;
+#endif
+#ifdef B115200
+    case 115200:
+        speed = B115200;
+        break;
+#endif
+#ifdef B230400
+    case 230400:
+        speed = B230400;
+        break;
+#endif
+#ifdef B460800
+    case 460800:
+        speed = B460800;
+        break;
+#endif
+#ifdef B500000
+    case 500000:
+        speed = B500000;
+        break;
+#endif
+#ifdef B576000
+    case 576000:
+        speed = B576000;
+        break;
+#endif
+#ifdef B921600
+    case 921600:
+        speed = B921600;
+        break;
+#endif
+#ifdef B1000000
+    case 1000000:
+        speed = B1000000;
+        break;
+#endif
+#ifdef B1152000
+    case 1152000:
+        speed = B1152000;
+        break;
+#endif
+#ifdef B1500000
+    case 1500000:
+        speed = B1500000;
+        break;
+#endif
+#ifdef B2500000
+    case 2500000:
+        speed = B2500000;
+        break;
+#endif
+#ifdef B3000000
+    case 3000000:
+        speed = B3000000;
+        break;
+#endif
+#ifdef B3500000
+    case 3500000:
+        speed = B3500000;
+        break;
+#endif
+#ifdef B4000000
+    case 4000000:
+        speed = B4000000;
+        break;
+#endif
+    default:
+        speed = B9600;
+        if (debug) {
+            fprintf(stderr, "WARNING Unknown baud rate %d (B9600 used)\n", baud);
+        }
+    }
+
+    return speed;
+}
+
 /* POSIX */
 static int _modbus_rtu_connect(modbus_t *ctx)
 {
     struct termios tios;
     int flags;
+    speed_t speed;
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
 
     if (ctx->debug) {
@@ -554,8 +667,20 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     */
 
     /* Set the baud rate */
-    if ((cfsetispeed(&tios, ctx_rtu->baud) < 0) ||
-        (cfsetospeed(&tios, ctx_rtu->baud) < 0)) {
+
+    /*
+    On MacOS, constants of baud rates are equal to the integer in argument but
+    that's not the case under Linux so we have to find the corresponding
+    constant. Until the code is upgraded to termios2, the list of possible
+    values is limited (no 14400 for example).
+    */
+    if (9600 == B9600) {
+        speed = ctx_rtu->baud;
+    } else {
+        speed = _get_termios_speed(ctx_rtu->baud, ctx->debug);
+    }
+
+    if ((cfsetispeed(&tios, speed) < 0) || (cfsetospeed(&tios, speed) < 0)) {
         close(ctx->s);
         ctx->s = -1;
         return -1;
