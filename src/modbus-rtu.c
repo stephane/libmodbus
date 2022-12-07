@@ -386,14 +386,10 @@ static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg, const int ms
 }
 
 /* Sets up a serial port for RTU communications */
+#if defined(_WIN32)
 static int _modbus_rtu_connect(modbus_t *ctx)
 {
-#if defined(_WIN32)
     DCB dcb;
-#else
-    struct termios tios;
-    int flags;
-#endif
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
 
     if (ctx->debug) {
@@ -405,7 +401,6 @@ static int _modbus_rtu_connect(modbus_t *ctx)
                ctx_rtu->stop_bit);
     }
 
-#if defined(_WIN32)
     /* Some references here:
      * http://msdn.microsoft.com/en-us/library/aa450602.aspx
      */
@@ -506,7 +501,26 @@ static int _modbus_rtu_connect(modbus_t *ctx)
         ctx_rtu->w_ser.fd = INVALID_HANDLE_VALUE;
         return -1;
     }
+
+    return 0;
+}
 #else
+/* POSIX */
+static int _modbus_rtu_connect(modbus_t *ctx)
+{
+    struct termios tios;
+    int flags;
+    modbus_rtu_t *ctx_rtu = ctx->backend_data;
+
+    if (ctx->debug) {
+        printf("Opening %s at %d bauds (%c, %d, %d)\n",
+               ctx_rtu->device,
+               ctx_rtu->baud,
+               ctx_rtu->parity,
+               ctx_rtu->data_bit,
+               ctx_rtu->stop_bit);
+    }
+
     /* The O_NOCTTY flag tells UNIX that this program doesn't want
        to be the "controlling terminal" for that port. If you
        don't specify this then any input (such as keyboard abort
@@ -720,10 +734,10 @@ static int _modbus_rtu_connect(modbus_t *ctx)
         ctx->s = -1;
         return -1;
     }
-#endif
 
     return 0;
 }
+#endif
 
 // FIXME Temporary solution before rewriting Windows RTU backend
 static unsigned int _modbus_rtu_is_connected(modbus_t *ctx)
