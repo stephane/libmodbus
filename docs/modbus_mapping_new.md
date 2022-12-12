@@ -14,7 +14,7 @@ modbus_mapping_t* modbus_mapping_new(int nb_bits, int nb_input_bits, int nb_regi
 
 The *modbus_mapping_new()* function shall allocate four arrays to store bits,
 input bits, registers and inputs registers. The pointers are stored in
-modbus_mapping_t structure. All values of the arrays are initialized to zero.
+*modbus_mapping_t* structure. All values of the arrays are initialized to zero.
 
 This function is equivalent to a call of the
 [modbus_mapping_new_start_address](modbus_mapping_new_start_address.md) function

@@ -13,7 +13,7 @@ int modbus_read_input_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest);
 ## Description
 
 The *modbus_read_input_bits()* function shall read the content of the `nb` input
-bits to the address `addr` of the remote device.  The result of reading is stored
+bits to the address `addr` of the remote device. The result of reading is stored
 in `dest` array as unsigned bytes (8 bits) set to `TRUE` or `FALSE`.
 
 You must take care to allocate enough memory to store the results in `dest`

@@ -12,7 +12,7 @@ modbus_new_tcp_pi - create a libmodbus context for TCP Protocol Independent
 
 ## Description
 
-The *modbus_new_tcp_pi()* function shall allocate and initialize a modbus_t
+The *modbus_new_tcp_pi()* function shall allocate and initialize a *modbus_t*
 structure to communicate with a Modbus TCP IPv4 or IPv6 server.
 
 The `node` argument specifies the host name or IP address of the host to connect
@@ -21,8 +21,8 @@ listen any addresses in server mode.
 
 The `service` argument is the service name/port number to connect to. To use the
 default Modbus port, you can provide an NULL value or the string "502". On many
-Unix systems, it’s convenient to use a port number greater than or equal to 1024
-because it’s not necessary to have administrator privileges.
+Unix systems, it's convenient to use a port number greater than or equal to 1024
+because it's not necessary to have administrator privileges.
 
 :octicons-tag-24: v3.1.8 handles NULL value for `service` (no *EINVAL* error).
 
