@@ -13,7 +13,7 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection);
 ## Description
 
 The *modbus_tcp_pi_listen()* function shall create a socket and listen to
-maximum `nb_connection` incoming connections on the specified nodes.  The
+maximum `nb_connection` incoming connections on the specified nodes. The
 context *ctx* must be allocated and initialized with [modbus_new_tcp_pi](modbus_new_tcp_pi.md)
 before to set the node to listen, if node is set to NULL or '0.0.0.0', any addresses will be
 listen.

@@ -12,8 +12,8 @@ void modbus_mapping_free(modbus_mapping_t *mb_mapping);
 
 ## Description
 
-The function shall free the four arrays of mb_mapping_t structure and finally
-the mb_mapping_t referenced by `mb_mapping`.
+The function shall free the four arrays of *modbus_mapping_t* structure and finally
+the *modbus_mapping_t* itself referenced by `mb_mapping`.
 
 ## Return value
 

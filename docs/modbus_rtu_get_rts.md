@@ -23,8 +23,8 @@ This function can only be used with a context using a RTU backend.
 
 ## Return value
 
-The function shall return the current RTS mode if successful. Otherwise it shall
-return -1 and set errno.
+The function shall return the current RTS mode if successful. Otherwise it
+shall return -1 and set errno to one of the values defined below.
 
 ## Errors
 

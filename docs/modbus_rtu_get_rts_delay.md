@@ -19,8 +19,8 @@ This function can only be used with a context using a RTU backend.
 
 ## Return value
 
-The `modbus_rtu_get_rts_delay()` function shall return the current RTS delay in
-microseconds if successful. Otherwise it shall return -1 and set errno.
+The function shall return the current RTS delay in microseconds if successful.
+Otherwise it shall return -1 and set errno to one of the values defined below.
 
 ## Errors
 

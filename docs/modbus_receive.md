@@ -13,7 +13,7 @@ int modbus_receive(modbus_t *'ctx', uint8_t *'req');
 ## Description
 
 The *modbus_receive()* function shall receive an indication request from the
-socket of the context `ctx`. This function is used by Modbus slave/server to
+socket of the context `ctx`. This function is used by a Modbus slave/server to
 receive and analyze indication request sent by the masters/clients.
 
 If you need to use another socket or file descriptor than the one defined in the

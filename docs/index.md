@@ -77,7 +77,7 @@ Modbus specification, instead all bytes are sent as fast as possible and a
 response or an indication is considered complete when all expected characters
 have been received. This implementation offers very fast communication but you
 must take care to set a response timeout of slaves less than response timeout of
-master (ortherwise other slaves may ignore master requests when one of the slave
+master (otherwise other slaves may ignore master requests when one of the slaves
 is not responding).
 
 To create a Modbus RTU context, you should use [modbus_new_rtu](modbus_new_rtu.md).
@@ -107,7 +107,7 @@ communications over TCP IPv4 and IPv6 networks. It does not require a checksum
 calculation as lower layer takes care of the same.
 
 Contrary to the TCP IPv4 only backend, the TCP PI backend offers hostname
-resolution but it consumes about 1Kb of additional memory.
+resolution but it consumes about 1 kB of additional memory.
 
 Create a Modbus TCP PI context, you should use [modbus_new_tcp_pi](modbus_new_tcp_pi.md).
 

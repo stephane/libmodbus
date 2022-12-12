@@ -18,12 +18,12 @@ modbus_mapping_t* modbus_mapping_new_start_address(
 
 The `modbus_mapping_new_start_address()` function shall allocate four arrays to
 store bits, input bits, registers and inputs registers. The pointers are stored
-in modbus_mapping_t structure. All values of the arrays are initialized to zero.
+in *modbus_mapping_t* structure. All values of the arrays are initialized to zero.
 
 The different starting addresses make it possible to place the mapping at any
-address in each address space. This way, you can give access to the clients at
+address in each address space. This way, you can give access to clients to
 values stored at high addresses without allocating memory from the address zero,
-for eg. to make available registers from 340 to 349, you can use:
+for example to make available registers from 340 to 349, you can use:
 
 ```c
 mb_mapping = modbus_mapping_new_start_address(0, 0, 0, 0, 340, 10, 0, 0);
