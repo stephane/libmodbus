@@ -12,7 +12,7 @@ modbus_t *modbus_new_tcp(const char *ip, int port);
 
 ## Description
 
-The *modbus_new_tcp()* function shall allocate and initialize a modbus_t
+The *modbus_new_tcp()* function shall allocate and initialize a *modbus_t*
 structure to communicate with a Modbus TCP IPv4 server.
 
 The `ip` argument specifies the IP address of the server to which the client
@@ -20,8 +20,8 @@ wants to establish a connection. A NULL value can be used to listen any addresse
 server mode.
 
 The `port` argument is the TCP port to use. Set the port to
-`MODBUS_TCP_DEFAULT_PORT` to use the default one (502). It’s convenient to use a
-port number greater than or equal to 1024 because it’s not necessary to have
+`MODBUS_TCP_DEFAULT_PORT` to use the default one (502). It's convenient to use a
+port number greater than or equal to 1024 because it's not necessary to have
 administrator privileges.
 
 ## Return value

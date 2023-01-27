@@ -13,7 +13,7 @@ int modbus_rtu_set_rts(modbus_t *ctx, int mode)
 ## Description
 
 The *modbus_rtu_set_rts()* function shall set the Request To Send mode to
-communicate on a RS485 serial bus. By default, the mode is set to
+communicate on a RS-485 serial bus. By default, the mode is set to
 `MODBUS_RTU_RTS_NONE` and no signal is issued before writing data on the wire.
 
 To enable the RTS mode, the values `MODBUS_RTU_RTS_UP` or `MODBUS_RTU_RTS_DOWN`

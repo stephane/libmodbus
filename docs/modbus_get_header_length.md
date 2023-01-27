@@ -14,7 +14,7 @@ int modbus_get_header_length(modbus_t *ctx);
 
 The *modbus_get_header_length()* function shall retrieve the current header
 length from the backend. This function is convenient to manipulate a message and
-so its limited to low-level operations.
+so it's limited to low-level operations.
 
 ## Return value
 

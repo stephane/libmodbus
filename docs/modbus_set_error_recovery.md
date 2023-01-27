@@ -38,7 +38,7 @@ expected one. The response timeout delay will be used to sleep.
 
 The modes are mask values and so they are complementary.
 
-It's not recommended to enable error recovery for slave/server.
+It's not recommended to enable error recovery for a Modbus slave/server.
 
 ## Return value
 

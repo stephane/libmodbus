@@ -12,7 +12,7 @@ void modbus_free(modbus_t *ctx);
 
 ## Description
 
-The *modbus_free()* function shall free an allocated modbus_t structure.
+The *modbus_free()* function shall free an allocated *modbus_t* structure.
 
 ## Return value
 
