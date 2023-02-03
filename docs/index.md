@@ -157,6 +157,7 @@ To write and read data in a single operation:
 To send and receive low-level requests:
 
 - [modbus_send_raw_request](modbus_send_raw_request.md)
+- [modbus_send_raw_request_tid](modbus_send_raw_request_tid.md)
 - [modbus_receive_confirmation](modbus_receive_confirmation.md)
 
 To reply to an exception:
