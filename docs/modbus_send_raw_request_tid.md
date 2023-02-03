@@ -19,6 +19,8 @@ message, the header or CRC of the selected backend, so `raw_req` must start and
 contain at least a slave/unit identifier and a function code. This function can
 be used to send request not handled by the library.
 
+The tid paramter enables one to specify a transaction identifier.
+
 The public header of libmodbus provides a list of supported Modbus functions
 codes, prefixed by `MODBUS_FC_` (eg. `MODBUS_FC_READ_HOLDING_REGISTERS`), to help
 build of raw requests.
