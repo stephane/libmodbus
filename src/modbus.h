@@ -283,22 +283,25 @@ MODBUS_API int modbus_disable_quirks(modbus_t *ctx, unsigned int quirks_mask);
   (((int32_t) tab_int16[(index)] << 16) | (int32_t) tab_int16[(index) + 1])
 #define MODBUS_GET_INT16_FROM_INT8(tab_int8, index) \
   (((int16_t) tab_int8[(index)] << 8) | (int16_t) tab_int8[(index) + 1])
-#define MODBUS_SET_INT16_TO_INT8(tab_int8, index, value)        \
-  do {                                                          \
-    ((int8_t *) (tab_int8))[(index)] = (int8_t) ((value) >> 8); \
-    ((int8_t *) (tab_int8))[(index) + 1] = (int8_t) (value);    \
+#define MODBUS_SET_INT16_TO_INT8(tab_int8, index, value)     \
+  do {                                                       \
+    uint16_t _val = (value);                                 \
+    ((int8_t *) (tab_int8))[(index)] = (int8_t) (_val >> 8); \
+    ((int8_t *) (tab_int8))[(index) + 1] = (int8_t) _val;    \
   } while (0)
-#define MODBUS_SET_INT32_TO_INT16(tab_int16, index, value)          \
-  do {                                                              \
-    ((int16_t *) (tab_int16))[(index)] = (int16_t) ((value) >> 16); \
-    ((int16_t *) (tab_int16))[(index) + 1] = (int16_t) (value);     \
+#define MODBUS_SET_INT32_TO_INT16(tab_int16, index, value)       \
+  do {                                                           \
+    uint32_t _val = (value);                                     \
+    ((int16_t *) (tab_int16))[(index)] = (int16_t) (_val >> 16); \
+    ((int16_t *) (tab_int16))[(index) + 1] = (int16_t) _val;     \
   } while (0)
-#define MODBUS_SET_INT64_TO_INT16(tab_int16, index, value)              \
-  do {                                                                  \
-    ((int16_t *) (tab_int16))[(index)] = (int16_t) ((value) >> 48);     \
-    ((int16_t *) (tab_int16))[(index) + 1] = (int16_t) ((value) >> 32); \
-    ((int16_t *) (tab_int16))[(index) + 2] = (int16_t) ((value) >> 16); \
-    ((int16_t *) (tab_int16))[(index) + 3] = (int16_t) (value);         \
+#define MODBUS_SET_INT64_TO_INT16(tab_int16, index, value)           \
+  do {                                                               \
+    uint64_t _val = (value);                                         \
+    ((int16_t *) (tab_int16))[(index)] = (int16_t) (_val >> 48);     \
+    ((int16_t *) (tab_int16))[(index) + 1] = (int16_t) (_val >> 32); \
+    ((int16_t *) (tab_int16))[(index) + 2] = (int16_t) (_val >> 16); \
+    ((int16_t *) (tab_int16))[(index) + 3] = (int16_t) _val;         \
   } while (0)
 
 MODBUS_API void modbus_set_bits_from_byte(uint8_t *dest, int idx, const uint8_t value);
