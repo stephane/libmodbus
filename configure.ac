@@ -13,7 +13,7 @@
 #
 m4_define([libmodbus_version_major], [3])
 m4_define([libmodbus_version_minor], [1])
-m4_define([libmodbus_version_micro], [5])
+m4_define([libmodbus_version_micro], [10])
 
 m4_define([libmodbus_release_status],
     [m4_if(m4_eval(libmodbus_version_minor % 2), [1], [snapshot], [release])])
@@ -30,7 +30,7 @@ AC_INIT([libmodbus],
 AC_CONFIG_SRCDIR([src/modbus.c])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([check-news foreign 1.11 -Wall -Wno-portability silent-rules tar-pax subdir-objects])
-AC_PROG_CC_STDC
+AC_PROG_CC
 AC_USE_SYSTEM_EXTENSIONS
 AC_SYS_LARGEFILE
 AC_CONFIG_MACRO_DIR([m4])
@@ -73,7 +73,9 @@ esac
 AM_CONDITIONAL(OS_WIN32, test "$os_win32" = "true")
 AM_CONDITIONAL(OS_QNX, test "$os_qnx" = "true")
 
+m4_pattern_forbid([^LT_INIT])dnl
 LT_INIT([disable-static win32-dll pic-only])
+
 AC_CHECK_HEADERS([ \
     arpa/inet.h \
     byteswap.h \
@@ -94,17 +96,15 @@ AC_CHECK_HEADERS([ \
     unistd.h \
 ])
 
-# Check whether to build docs / install man pages
-AC_LIBMODBUS_CHECK_BUILD_DOC
-
 # Cygwin defines IPTOS_LOWDELAY but can't handle that flag so it's necessary to
 # workaround that problem and Cygwin doesn't define MSG_DONTWAIT.
 AC_CHECK_DECLS([__CYGWIN__])
 
+# Check for network function in libnetwork for Haiku
+AC_SEARCH_LIBS(accept, network socket)
+
 # Checks for library functions.
-AC_FUNC_FORK
-AC_FUNC_MALLOC
-AC_CHECK_FUNCS([accept4 getaddrinfo gettimeofday inet_ntoa memset select socket strerror strlcpy])
+AC_CHECK_FUNCS([accept4 getaddrinfo gettimeofday inet_pton inet_ntop select socket strerror strlcpy])
 
 # Required for MinGW with GCC v4.8.1 on Win7
 AC_DEFINE(WINVER, 0x0501, _)
@@ -160,7 +160,6 @@ AC_CONFIG_FILES([
         src/modbus-version.h
         src/win32/modbus.dll.manifest
         tests/Makefile
-        doc/Makefile
         libmodbus.pc
 ])
 
@@ -178,6 +177,5 @@ AC_MSG_RESULT([
         cflags:                 ${CFLAGS}
         ldflags:                ${LDFLAGS}
 
-        documentation:          ${ac_libmodbus_build_doc}
         tests:                  ${enable_tests}
 ])
