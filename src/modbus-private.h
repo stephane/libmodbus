@@ -106,6 +106,10 @@ struct _modbus {
     struct timeval indication_timeout;
     const modbus_backend_t *backend;
     void *backend_data;
+    /* redirect for logging */
+    void* out_user_data;
+    void* error_user_data;
+    modbus_stream_handler_t stream_handler;
 };
 
 void _modbus_init_common(modbus_t *ctx);
