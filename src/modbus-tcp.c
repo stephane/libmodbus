@@ -644,7 +644,7 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
         s = socket(ai_ptr->ai_family, flags, ai_ptr->ai_protocol);
         if (s < 0) {
             if (ctx->debug) {
-                perror("socket");
+                modbus_trace_error(ctx, "socket: %s\n", strerror(errno));
             }
             continue;
         } else {
@@ -654,7 +654,7 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
             if (rc != 0) {
                 close(s);
                 if (ctx->debug) {
-                    perror("setsockopt");
+                    modbus_trace_error(ctx, "setsockopt: %s\n", strerror(errno));
                 }
                 continue;
             }
@@ -664,7 +664,7 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
         if (rc != 0) {
             close(s);
             if (ctx->debug) {
-                perror("bind");
+                modbus_trace_error(ctx, "bind: %s\n", strerror(errno));
             }
             continue;
         }
@@ -673,7 +673,7 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
         if (rc != 0) {
             close(s);
             if (ctx->debug) {
-                perror("listen");
+                modbus_trace_error(ctx, "listen: %s\n", strerror(errno));
             }
             continue;
         }
