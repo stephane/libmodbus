@@ -80,15 +80,26 @@ uint8_t modbus_get_byte_from_bits(const uint8_t *src, int idx, unsigned int nb_b
 /* Get a float from 4 bytes (Modbus) without any conversion (ABCD) */
 float modbus_get_float_abcd(const uint16_t *src)
 {
+    /* Suppose the modbus byte stream contained the 32-bit float 0x10203040  - abcd.
+       On big endian systems, the memory starting at src contains two 16-bit registers 0x1020  and 0x3040
+       On little endian system, the 16-bit registers memory holds 0x2010 and 0x4030
+
+       To convert the data to float32 on big-endian we only need to cast the pointer and we are done.
+       On little endian systems, we need to swap the bytes in each word again and then assemble
+       an integer via shift operations and finally cast to float32.
+
+       A portable way is to retrieve low and high bytes of both words using shift operations, then assemble
+       the 32-bit integer.
+    */
+
     float f;
     uint8_t a, b, c, d;
 
-    uint8_t * in = (uint8_t *)src;
     // access buffer memory byte-wise ABCD
-    a = in[0];
-    b = in[1];
-    c = in[2];
-    d = in[3];
+    a = src[0] >> 8;     // high byte if first word
+    b = src[0] & 0xFF;   // low byte if first word
+    c = src[1] >> 8;     // high byte if second word
+    d = src[1] & 0xFF;   // low byte if second word
 
     // assemble in memory location of float
     // from right to left: get address of float, interpret as address to uint32, dereference and write uint32
@@ -103,12 +114,11 @@ float modbus_get_float_dcba(const uint16_t *src)
     float f;
     uint8_t a, b, c, d;
 
-    uint8_t * in = (uint8_t *)src;
     // access buffer memory byte-wise DCBA
-    a = in[3];
-    b = in[2];
-    c = in[1];
-    d = in[0];
+    d = src[0] >> 8;     // high byte if first word
+    c = src[0] & 0xFF;   // low byte if first word
+    b = src[1] >> 8;     // high byte if second word
+    a = src[1] & 0xFF;   // low byte if second word
 
     // assemble in memory location of float
     // from right to left: get address of float, interpret as address to uint32, dereference and write uint32
@@ -123,12 +133,11 @@ float modbus_get_float_badc(const uint16_t *src)
     float f;
     uint8_t a, b, c, d;
 
-    uint8_t * in = (uint8_t *)src;
     // access buffer memory byte-wise BADC
-    a = in[1];
-    b = in[0];
-    c = in[3];
-    d = in[2];
+    b = src[0] >> 8;     // high byte if first word
+    a = src[0] & 0xFF;   // low byte if first word
+    d = src[1] >> 8;     // high byte if second word
+    c = src[1] & 0xFF;   // low byte if second word
 
     // assemble in memory location of float
     // from right to left: get address of float, interpret as address to uint32, dereference and write uint32
@@ -143,12 +152,11 @@ float modbus_get_float_cdab(const uint16_t *src)
     float f;
     uint8_t a, b, c, d;
 
-    uint8_t * in = (uint8_t *)src;
     // access buffer memory byte-wise CDAB
-    a = in[2];
-    b = in[3];
-    c = in[0];
-    d = in[1];
+    c = src[0] >> 8;     // high byte if first word
+    d = src[0] & 0xFF;   // low byte if first word
+    a = src[1] >> 8;     // high byte if second word
+    b = src[1] & 0xFF;   // low byte if second word
 
     // assemble in memory location of float
     // from right to left: get address of float, interpret as address to uint32, dereference and write uint32
@@ -167,7 +175,6 @@ float modbus_get_float(const uint16_t *src)
 void modbus_set_float_abcd(float f, uint16_t *dest)
 {
     uint32_t i = *(uint32_t*)(&f);
-    uint8_t *out = (uint8_t *) dest;
     uint8_t a, b, c, d;
 
     a = (i >> 24) & 0xFF;
@@ -175,17 +182,14 @@ void modbus_set_float_abcd(float f, uint16_t *dest)
     c = (i >> 8) & 0xFF;
     d = (i >> 0) & 0xFF;
 
-    out[0] = a;
-    out[1] = b;
-    out[2] = c;
-    out[3] = d;
+    dest[0] = (a << 8) | b;
+    dest[1] = (c << 8) | d;
 }
 
 /* Set a float to 4 bytes for Modbus with byte and word swap conversion (DCBA) */
 void modbus_set_float_dcba(float f, uint16_t *dest)
 {
     uint32_t i = *(uint32_t*)(&f);
-    uint8_t *out = (uint8_t *) dest;
     uint8_t a, b, c, d;
 
     a = (i >> 24) & 0xFF;
@@ -193,17 +197,14 @@ void modbus_set_float_dcba(float f, uint16_t *dest)
     c = (i >> 8) & 0xFF;
     d = (i >> 0) & 0xFF;
 
-    out[0] = d;
-    out[1] = c;
-    out[2] = b;
-    out[3] = a;
+    dest[0] = (d << 8) | c;
+    dest[1] = (b << 8) | a;
 }
 
 /* Set a float to 4 bytes for Modbus with byte swap conversion (BADC) */
 void modbus_set_float_badc(float f, uint16_t *dest)
 {
     uint32_t i = *(uint32_t*)(&f);
-    uint8_t *out = (uint8_t *) dest;
     uint8_t a, b, c, d;
 
     a = (i >> 24) & 0xFF;
@@ -211,17 +212,14 @@ void modbus_set_float_badc(float f, uint16_t *dest)
     c = (i >> 8) & 0xFF;
     d = (i >> 0) & 0xFF;
 
-    out[0] = b;
-    out[1] = a;
-    out[2] = d;
-    out[3] = c;
+    dest[0] = (b << 8) | a;
+    dest[1] = (d << 8) | c;
 }
 
 /* Set a float to 4 bytes for Modbus with word swap conversion (CDAB) */
 void modbus_set_float_cdab(float f, uint16_t *dest)
 {
     uint32_t i = *(uint32_t*)(&f);
-    uint8_t *out = (uint8_t *) dest;
     uint8_t a, b, c, d;
 
     a = (i >> 24) & 0xFF;
@@ -229,10 +227,8 @@ void modbus_set_float_cdab(float f, uint16_t *dest)
     c = (i >> 8) & 0xFF;
     d = (i >> 0) & 0xFF;
 
-    out[0] = c;
-    out[1] = d;
-    out[2] = a;
-    out[3] = b;
+    dest[0] = (c << 8) | d;
+    dest[1] = (a << 8) | b;
 }
 
 /* DEPRECATED - Set a float to 4 bytes in a sort of Modbus format! */
