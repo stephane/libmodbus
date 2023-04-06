@@ -95,11 +95,10 @@ float modbus_get_float_abcd(const uint16_t *src)
     float f;
     uint8_t a, b, c, d;
 
-    // access buffer memory byte-wise ABCD
-    a = src[0] >> 8;     // high byte if first word
-    b = src[0] & 0xFF;   // low byte if first word
-    c = src[1] >> 8;     // high byte if second word
-    d = src[1] & 0xFF;   // low byte if second word
+    a = (src[0] >> 8) & 0xFF; // high byte if first word
+    b = (src[0] >> 0) & 0xFF; // low byte if first word
+    c = (src[1] >> 8) & 0xFF; // high byte if second word
+    d = (src[1] >> 0) & 0xFF; // low byte if second word
 
     // assemble in memory location of float
     // from right to left: get address of float, interpret as address to uint32, dereference and write uint32
@@ -114,11 +113,10 @@ float modbus_get_float_dcba(const uint16_t *src)
     float f;
     uint8_t a, b, c, d;
 
-    // access buffer memory byte-wise DCBA
-    d = src[0] >> 8;     // high byte if first word
-    c = src[0] & 0xFF;   // low byte if first word
-    b = src[1] >> 8;     // high byte if second word
-    a = src[1] & 0xFF;   // low byte if second word
+    d = (src[0] >> 8) & 0xFF;
+    c = (src[0] >> 0) & 0xFF;
+    b = (src[1] >> 8) & 0xFF;
+    a = (src[1] >> 0) & 0xFF;
 
     // assemble in memory location of float
     // from right to left: get address of float, interpret as address to uint32, dereference and write uint32
@@ -133,11 +131,10 @@ float modbus_get_float_badc(const uint16_t *src)
     float f;
     uint8_t a, b, c, d;
 
-    // access buffer memory byte-wise BADC
-    b = src[0] >> 8;     // high byte if first word
-    a = src[0] & 0xFF;   // low byte if first word
-    d = src[1] >> 8;     // high byte if second word
-    c = src[1] & 0xFF;   // low byte if second word
+    b = (src[0] >> 8) & 0xFF;
+    a = (src[0] >> 0) & 0xFF;
+    d = (src[1] >> 8) & 0xFF;
+    c = (src[1] >> 0) & 0xFF;
 
     // assemble in memory location of float
     // from right to left: get address of float, interpret as address to uint32, dereference and write uint32
@@ -152,11 +149,10 @@ float modbus_get_float_cdab(const uint16_t *src)
     float f;
     uint8_t a, b, c, d;
 
-    // access buffer memory byte-wise CDAB
-    c = src[0] >> 8;     // high byte if first word
-    d = src[0] & 0xFF;   // low byte if first word
-    a = src[1] >> 8;     // high byte if second word
-    b = src[1] & 0xFF;   // low byte if second word
+    c = (src[0] >> 8) & 0xFF;
+    d = (src[0] >> 0) & 0xFF;
+    a = (src[1] >> 8) & 0xFF;
+    b = (src[1] >> 0) & 0xFF;
 
     // assemble in memory location of float
     // from right to left: get address of float, interpret as address to uint32, dereference and write uint32
