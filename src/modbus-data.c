@@ -164,7 +164,7 @@ float modbus_get_float_cdab(const uint16_t *src)
 /* DEPRECATED - Get a float from 4 bytes in sort of Modbus format */
 float modbus_get_float(const uint16_t *src)
 {
-    return modbus_get_float_dcba(src);
+    return modbus_get_float_cdab(src);
 }
 
 /* Set a float to 4 bytes for Modbus w/o any conversion (ABCD) */
@@ -230,5 +230,5 @@ void modbus_set_float_cdab(float f, uint16_t *dest)
 /* DEPRECATED - Set a float to 4 bytes in a sort of Modbus format! */
 void modbus_set_float(float f, uint16_t *dest)
 {
-    return modbus_set_float_dcba(f, dest);
+    return modbus_set_float_cdab(f, dest);
 }
