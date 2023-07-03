@@ -12,6 +12,9 @@
 #ifndef _MSC_VER
 #include <unistd.h>
 #endif
+#if HAVE_POLL_H
+#include <poll.h>
+#endif
 #include "modbus-private.h"
 #include <assert.h>
 
@@ -1130,7 +1133,7 @@ static int _modbus_rtu_flush(modbus_t *ctx)
 }
 
 static int
-_modbus_rtu_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int length_to_read)
+_modbus_rtu_select(modbus_t *ctx, struct timeval *tv, int length_to_read)
 {
     int s_rc;
 #if defined(_WIN32)
@@ -1144,19 +1147,48 @@ _modbus_rtu_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int length_t
     if (s_rc < 0) {
         return -1;
     }
+
 #else
-    while ((s_rc = select(ctx->s + 1, rset, NULL, NULL, tv)) == -1) {
+#if HAVE_POLL
+    struct pollfd fds;
+    fds.fd = ctx->s;
+    fds.events = POLLIN;
+    fds.revents = 0;
+    while ((s_rc = poll(&fds, 1, tv->tv_sec * 1000 + tv->tv_usec / 1000)) == -1) {
+        if (errno == EINTR) {
+            if (ctx->debug) {
+                fprintf(stderr, "A non blocked signal was caught\n");
+            }
+        } else if (errno != EAGAIN) {
+            return -1;
+        }
+    }
+#else
+    fd_set rset;
+
+    if (ctx->s >= FD_SETSIZE) {
+        if (ctx->debug) {
+            fprintf(stderr, "File descriptor greater than FD_SETSIZE passed to select() call\n");
+        }
+    	errno = EBADF;
+        return -1;
+    }
+
+    FD_ZERO(&rset);
+    FD_SET(ctx->s, &rset);
+    while ((s_rc = select(ctx->s + 1, &rset, NULL, NULL, tv)) == -1) {
         if (errno == EINTR) {
             if (ctx->debug) {
                 fprintf(stderr, "A non blocked signal was caught\n");
             }
             /* Necessary after an error */
-            FD_ZERO(rset);
-            FD_SET(ctx->s, rset);
+            FD_ZERO(&rset);
+            FD_SET(ctx->s, &rset);
         } else {
             return -1;
         }
     }
+#endif
 
     if (s_rc == 0) {
         /* Timeout */

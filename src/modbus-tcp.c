@@ -24,6 +24,10 @@
 #include <signal.h>
 #include <sys/types.h>
 
+#if HAVE_POLL_H
+#include <poll.h>
+#endif
+
 #if defined(_WIN32)
 /* Already set in modbus-tcp.h but it seems order matters in VS2005 */
 # include <winsock2.h>
@@ -284,15 +288,30 @@ static int _connect(int sockfd,
 #else
     if (rc == -1 && errno == EINPROGRESS) {
 #endif
-        fd_set wset;
         int optval;
         socklen_t optlen = sizeof(optval);
+#if HAVE_POLL
+        struct pollfd fds;
+
+        /* Wait to be available in writing */
+        fds.fd = sockfd;
+        fds.events = POLLOUT;
+        fds.revents = 0;
+        rc = poll(&fds, 1, ro_tv->tv_sec * 1000 + ro_tv->tv_usec / 1000);
+#else
+        fd_set wset;
         struct timeval tv = *ro_tv;
+
+        if (sockfd >= FD_SETSIZE) {
+        	errno = EBADF;
+            return -1;
+        }
 
         /* Wait to be available in writing */
         FD_ZERO(&wset);
         FD_SET(sockfd, &wset);
         rc = select(sockfd + 1, NULL, &wset, NULL, &tv);
+#endif
         if (rc <= 0) {
             /* Timeout or fail */
             return -1;
@@ -759,21 +778,49 @@ int modbus_tcp_pi_accept(modbus_t *ctx, int *s)
 }
 
 static int
-_modbus_tcp_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int length_to_read)
+_modbus_tcp_select(modbus_t *ctx, struct timeval *tv, int length_to_read)
 {
     int s_rc;
-    while ((s_rc = select(ctx->s + 1, rset, NULL, NULL, tv)) == -1) {
+#if HAVE_POLL
+    struct pollfd fds;
+    fds.fd = ctx->s;
+    fds.events = POLLIN;
+    fds.revents = 0;
+    while ((s_rc = poll(&fds, 1, tv->tv_sec * 1000 + tv->tv_usec / 1000)) == -1) {
+        if (errno == EINTR) {
+            if (ctx->debug) {
+                fprintf(stderr, "A non blocked signal was caught\n");
+            }
+        } else if (errno != EAGAIN) {
+            return -1;
+        }
+    }
+#else
+    fd_set rset;
+
+    if (ctx->s >= FD_SETSIZE) {
+        if (ctx->debug) {
+            fprintf(stderr, "File descriptor greater than FD_SETSIZE passed to select() call\n");
+        }
+    	errno = EBADF;
+        return -1;
+    }
+
+    FD_ZERO(&rset);
+    FD_SET(ctx->s, &rset);
+    while ((s_rc = select(ctx->s + 1, &rset, NULL, NULL, tv)) == -1) {
         if (errno == EINTR) {
             if (ctx->debug) {
                 fprintf(stderr, "A non blocked signal was caught\n");
             }
             /* Necessary after an error */
-            FD_ZERO(rset);
-            FD_SET(ctx->s, rset);
+            FD_ZERO(&rset);
+            FD_SET(ctx->s, &rset);
         } else {
             return -1;
         }
     }
+#endif
 
     if (s_rc == 0) {
         errno = ETIMEDOUT;
