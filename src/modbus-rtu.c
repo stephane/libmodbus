@@ -1154,7 +1154,7 @@ _modbus_rtu_select(modbus_t *ctx, struct timeval *tv, int length_to_read)
     fds.fd = ctx->s;
     fds.events = POLLIN;
     fds.revents = 0;
-    while ((s_rc = poll(&fds, 1, tv->tv_sec * 1000 + tv->tv_usec / 1000)) == -1) {
+    while ((s_rc = poll(&fds, 1, (tv != NULL) ? tv->tv_sec * 1000 + tv->tv_usec / 1000 : -1)) == -1) {
         if (errno == EINTR) {
             if (ctx->debug) {
                 fprintf(stderr, "A non blocked signal was caught\n");

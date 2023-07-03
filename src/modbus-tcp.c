@@ -297,7 +297,7 @@ static int _connect(int sockfd,
         fds.fd = sockfd;
         fds.events = POLLOUT;
         fds.revents = 0;
-        rc = poll(&fds, 1, ro_tv->tv_sec * 1000 + ro_tv->tv_usec / 1000);
+        rc = poll(&fds, 1, (ro_tv != NULL) ? ro_tv->tv_sec * 1000 + ro_tv->tv_usec / 1000 : -1);
 #else
         fd_set wset;
         struct timeval tv = *ro_tv;
@@ -786,7 +786,7 @@ _modbus_tcp_select(modbus_t *ctx, struct timeval *tv, int length_to_read)
     fds.fd = ctx->s;
     fds.events = POLLIN;
     fds.revents = 0;
-    while ((s_rc = poll(&fds, 1, tv->tv_sec * 1000 + tv->tv_usec / 1000)) == -1) {
+    while ((s_rc = poll(&fds, 1, (tv != NULL) ? tv->tv_sec * 1000 + tv->tv_usec / 1000 : -1)) == -1) {
         if (errno == EINTR) {
             if (ctx->debug) {
                 fprintf(stderr, "A non blocked signal was caught\n");
