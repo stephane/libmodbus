@@ -90,7 +90,8 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <PreBuildEvent>
-      <Command />
+      <Command>cscript configure.js</Command>
+      <Message>Setup config.h and modbus-version.h</Message>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message />
@@ -123,8 +124,8 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>cscript configure.js</Command>
+      <Message>Setup config.h and modbus-version.h</Message>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -157,7 +158,8 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <PreBuildEvent>
-      <Command />
+      <Command>cscript configure.js</Command>
+      <Message>Setup config.h and modbus-version.h</Message>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message />
@@ -193,8 +195,8 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>cscript configure.js</Command>
+      <Message>Setup config.h and modbus-version.h</Message>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -241,9 +243,9 @@
     <ClInclude Include="..\modbus-rtu.h" />
     <ClInclude Include="..\modbus-tcp-private.h" />
     <ClInclude Include="..\modbus-tcp.h" />
+    <ClInclude Include="..\modbus-version.h" />
     <ClInclude Include="..\modbus.h" />
     <ClInclude Include="config.h" />
-    <ClInclude Include="modbus-version.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="modbus.rc" />
