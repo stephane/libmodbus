@@ -10,8 +10,19 @@ noinst_PROGRAMS = \
 	unit-test-client \
 	version
 
+if WITH_LIBUSB
+noinst_PROGRAMS += \
+	apc-test-client
+endif
+
 common_ldflags = \
-	$(top_builddir)/src/libmodbus.la
+	$(top_builddir)/src/libmodbus.la \
+	-lusb-1.0
+
+if WITH_LIBUSB
+apc_test_client_SOURCES = apc-test-client.c
+apc_test_client_LDADD = $(common_ldflags)
+endif
 
 bandwidth_server_one_SOURCES = bandwidth-server-one.c
 bandwidth_server_one_LDADD = $(common_ldflags)
