@@ -19,6 +19,7 @@
 # include "stdint.h"
 #endif
 
+#include "modbus-config.h"
 #include "modbus-version.h"
 
 #if defined(_MSC_VER)

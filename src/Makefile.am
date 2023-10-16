@@ -12,6 +12,7 @@ AM_CFLAGS = ${my_CFLAGS}
 libmodbus_la_SOURCES = \
         modbus.c \
         modbus.h \
+        modbus-config.h \
         modbus-data.c \
         modbus-private.h \
         modbus-rtu.c \
@@ -48,12 +49,12 @@ endif
 
 # Header files to install
 libmodbusincludedir = $(includedir)/modbus
-libmodbusinclude_HEADERS = modbus.h modbus-version.h modbus-rtu.h modbus-tcp.h
+libmodbusinclude_HEADERS = modbus.h modbus-config.h modbus-version.h modbus-rtu.h modbus-tcp.h
 
 if WITH_LIBUSB
 libmodbusinclude_HEADERS += modbus-rtu-usb.h
 endif
 
-DISTCLEANFILES = modbus-version.h
-EXTRA_DIST += modbus-version.h.in
+DISTCLEANFILES = modbus-config.h modbus-version.h
+EXTRA_DIST += modbus-config.h.in modbus-version.h.in
 CLEANFILES = *~

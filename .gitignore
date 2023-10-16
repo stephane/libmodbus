@@ -32,6 +32,7 @@ Makefile.in
 /ltmain.sh
 /missing
 /stamp-h1
+src/modbus-config.h
 src/modbus-version.h
 src/win32/modbus.dll.manifest
 tests/unit-test.h

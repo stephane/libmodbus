@@ -1,0 +1,13 @@
+/*
+ * Copyright © Stéphane Raimbault <stephane.raimbault@gmail.com>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ */
+
+#ifndef MODBUS_CONFIG_H
+#define MODBUS_CONFIG_H
+
+/* Constants defined by configure.ac */
+#define HAVE_LIBUSB @HAVE_LIBUSB@
+
+#endif /* MODBUS_CONFIG_H */
