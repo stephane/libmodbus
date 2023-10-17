@@ -160,6 +160,7 @@ if test "x$with_libusb" != "xno"; then
         AC_MSG_ERROR(["libusb-1.0 not found. Please install libusb-1.0."])
     ])
 fi
+AC_SUBST(LIBUSB_LIBS)
 AM_CONDITIONAL(WITH_LIBUSB, [test x"${have_libusb}" = x"yes"])
 
 # Build options
