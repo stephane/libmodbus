@@ -33,8 +33,8 @@ The newly created `mb_mapping` will have the following arrays:
 
 - `tab_bits` set to NULL
 - `tab_input_bits` set to NULL
-- `tab_input_registers` allocated to store 10 registers (`uint16_t`)
-- `tab_registers` set to NULL.
+- `tab_registers` allocated to store 10 registers (`uint16_t`)
+- `tab_input_registers` set to NULL
 
 The clients can read the first register by using the address 340 in its request.
 On the server side, you should use the first index of the array to set the value
