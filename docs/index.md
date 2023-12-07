@@ -245,9 +245,11 @@ shall return either a NULL value (if returning a pointer) or a negative value
 (if returning an integer), and the actual error code shall be stored in the
 `errno` variable.
 
-The *modbus_strerror()* function is provided to translate libmodbus-specific
-error codes into error message strings; for details refer to
-[modbus_strerror](modbus_strerror.md).
+The *modbus_strerror_r()* function is provided to translate libmodbus-specific
+error codes into error message strings; for details refer to:
+
+- [modbus_strerror_r](modbus_strerror_r.md)
+- [modbus_strerror](modbus_strerror.md) **deprecated**
 
 ## Miscellaneous
 

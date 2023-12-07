@@ -104,7 +104,10 @@ AC_CHECK_DECLS([__CYGWIN__])
 AC_SEARCH_LIBS(accept, network socket)
 
 # Checks for library functions.
-AC_CHECK_FUNCS([accept4 getaddrinfo gettimeofday inet_pton inet_ntop select socket strerror strlcpy])
+AC_CHECK_FUNCS([accept4 getaddrinfo gettimeofday inet_pton inet_ntop select socket strerror_r strlcpy])
+
+# Check which flavour of strerror_r is available on the target
+AC_FUNC_STRERROR_R
 
 # Required for MinGW with GCC v4.8.1 on Win7
 AC_DEFINE(WINVER, 0x0501, _)

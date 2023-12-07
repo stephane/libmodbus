@@ -76,7 +76,9 @@ int main(int argc, char *argv[])
         modbus_set_slave(ctx, 1);
     }
     if (modbus_connect(ctx) == -1) {
-        fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
+        char buf[128];
+        fprintf(stderr, "Connection failed: %s\n",
+            modbus_strerror_r(errno, buf, sizeof(buf)));
         modbus_free(ctx);
         return -1;
     }
@@ -96,7 +98,9 @@ int main(int argc, char *argv[])
     for (i = 0; i < n_loop; i++) {
         rc = modbus_read_bits(ctx, 0, nb_points, tab_bit);
         if (rc == -1) {
-            fprintf(stderr, "%s\n", modbus_strerror(errno));
+            char buf[128];
+            fprintf(stderr, "%s\n",
+                modbus_strerror_r(errno, buf, sizeof(buf)));
             return -1;
         }
     }
@@ -133,7 +137,8 @@ int main(int argc, char *argv[])
     for (i = 0; i < n_loop; i++) {
         rc = modbus_read_registers(ctx, 0, nb_points, tab_reg);
         if (rc == -1) {
-            fprintf(stderr, "%s\n", modbus_strerror(errno));
+            char buf[128];
+            fprintf(stderr, "%s\n", modbus_strerror_r(errno, buf, sizeof(buf)));
             return -1;
         }
     }
@@ -171,7 +176,8 @@ int main(int argc, char *argv[])
         rc = modbus_write_and_read_registers(
             ctx, 0, nb_points, tab_reg, 0, nb_points, tab_reg);
         if (rc == -1) {
-            fprintf(stderr, "%s\n", modbus_strerror(errno));
+            char buf[128];
+            fprintf(stderr, "%s\n", modbus_strerror_r(errno, buf, sizeof(buf)));
             return -1;
         }
     }

@@ -60,7 +60,9 @@ int main(void)
     modbus_set_debug(ctx, TRUE);
 
     if (modbus_connect(ctx) == -1) {
-        fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
+        char buf[128];
+        fprintf(stderr, "Connection failed: %s\n",
+            modbus_strerror_r(errno, buf, sizeof(buf)));
         modbus_free(ctx);
         return -1;
     }

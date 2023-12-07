@@ -138,7 +138,9 @@ int main(int argc, char *argv[])
 
     modbus_get_response_timeout(ctx, &old_response_to_sec, &old_response_to_usec);
     if (modbus_connect(ctx) == -1) {
-        fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
+        char buf[128];
+        fprintf(stderr, "Connection failed: %s\n",
+            modbus_strerror_r(errno, buf, sizeof(buf)));
         modbus_free(ctx);
         return -1;
     }

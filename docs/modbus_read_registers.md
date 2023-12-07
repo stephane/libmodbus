@@ -40,14 +40,17 @@ int i;
 
 ctx = modbus_new_tcp("127.0.0.1", 1502);
 if (modbus_connect(ctx) == -1) {
-    fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
+    char buf[128];
+    fprintf(stderr, "Connection failed: %s\n",
+        modbus_strerror_r(errno, buf, sizeof(buf)));
     modbus_free(ctx);
     return -1;
 }
 
 rc = modbus_read_registers(ctx, 0, 10, tab_reg);
 if (rc == -1) {
-    fprintf(stderr, "%s\n", modbus_strerror(errno));
+    char buf[128];
+    fprintf(stderr, "%s\n", modbus_strerror_r(errno, buf, sizeof(buf));
     return -1;
 }
 

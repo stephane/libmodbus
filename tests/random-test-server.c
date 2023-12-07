@@ -18,13 +18,15 @@ int main(void)
     int s = -1;
     modbus_t *ctx;
     modbus_mapping_t *mb_mapping;
+    char errbuf[128];
 
     ctx = modbus_new_tcp("127.0.0.1", 1502);
     /* modbus_set_debug(ctx, TRUE); */
 
     mb_mapping = modbus_mapping_new(500, 500, 500, 500);
     if (mb_mapping == NULL) {
-        fprintf(stderr, "Failed to allocate the mapping: %s\n", modbus_strerror(errno));
+        fprintf(stderr, "Failed to allocate the mapping: %s\n",
+            modbus_strerror_r(errno, errbuf, sizeof(errbuf)));
         modbus_free(ctx);
         return -1;
     }
@@ -46,7 +48,8 @@ int main(void)
         }
     }
 
-    printf("Quit the loop: %s\n", modbus_strerror(errno));
+    printf("Quit the loop: %s\n",
+        modbus_strerror_r(errno, errbuf, sizeof(errbuf)));
 
     if (s != -1) {
         close(s);

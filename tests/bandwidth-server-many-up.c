@@ -55,7 +55,9 @@ int main(void)
     mb_mapping =
         modbus_mapping_new(MODBUS_MAX_READ_BITS, 0, MODBUS_MAX_READ_REGISTERS, 0);
     if (mb_mapping == NULL) {
-        fprintf(stderr, "Failed to allocate the mapping: %s\n", modbus_strerror(errno));
+        char buf[128];
+        fprintf(stderr, "Failed to allocate the mapping: %s\n",
+            modbus_strerror_r(errno, buf, sizeof(buf)));
         modbus_free(ctx);
         return -1;
     }
