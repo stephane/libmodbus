@@ -5,8 +5,8 @@
 ## Overview
 
 libmodbus is a free software library to send/receive data with a device which
-respects the Modbus protocol. This library can use a serial port or an Ethernet
-connection.
+respects the Modbus protocol. This library can use a serial or USB port, or an
+Ethernet connection.
 
 The functions included in the library have been derived from the Modicon Modbus
 Protocol Reference Guide which can be obtained from [www.modbus.org](http://www.modbus.org).
