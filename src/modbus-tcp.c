@@ -403,6 +403,7 @@ static int _modbus_tcp_pi_connect(modbus_t *ctx)
         if (ctx->debug) {
             fprintf(stderr, "Error returned by getaddrinfo: %s\n", gai_strerror(rc));
         }
+        freeaddrinfo(ai_list);
         errno = ECONNREFUSED;
         return -1;
     }
@@ -628,6 +629,7 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
         if (ctx->debug) {
             fprintf(stderr, "Error returned by getaddrinfo: %s\n", gai_strerror(rc));
         }
+        freeaddrinfo(ai_list);
         errno = ECONNREFUSED;
         return -1;
     }
