@@ -4,7 +4,6 @@
 
 modbus_tcp_listen - create and listen a TCP Modbus socket (IPv4)
 
-
 ## Synopsis
 
 ```c
