@@ -1280,17 +1280,6 @@ static int read_registers(modbus_t *ctx, int function, int addr, int nb, uint16_
     uint8_t req[_MIN_REQ_LENGTH];
     uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-    if (nb > MODBUS_MAX_READ_REGISTERS) {
-        if (ctx->debug) {
-            fprintf(stderr,
-                    "ERROR Too many registers requested (%d > %d)\n",
-                    nb,
-                    MODBUS_MAX_READ_REGISTERS);
-        }
-        errno = EMBMDATA;
-        return -1;
-    }
-
     req_length = ctx->backend->build_request_basis(ctx, function, addr, nb, req);
 
     rc = send_msg(ctx, req, req_length);
@@ -1354,10 +1343,12 @@ int modbus_read_input_registers(modbus_t *ctx, int addr, int nb, uint16_t *dest)
     }
 
     if (nb > MODBUS_MAX_READ_REGISTERS) {
-        fprintf(stderr,
-                "ERROR Too many input registers requested (%d > %d)\n",
-                nb,
-                MODBUS_MAX_READ_REGISTERS);
+        if (ctx->debug) {
+            fprintf(stderr,
+                    "ERROR Too many input registers requested (%d > %d)\n",
+                    nb,
+                    MODBUS_MAX_READ_REGISTERS);
+        }
         errno = EMBMDATA;
         return -1;
     }
