@@ -249,6 +249,16 @@ The *modbus_strerror()* function is provided to translate libmodbus-specific
 error codes into error message strings; for details refer to
 [modbus_strerror](modbus_strerror.md).
 
+## Extended debug
+
+By default, the debug output created by enabling [modbus_set_debug](modbus_set_debug.md)
+is written to stdout/stderr. With the following functions those can be redirected
+to files or a callback.
+
+- [modbus_set_out_user_data](modbus_set_out_user_data.md)
+- [modbus_set_error_user_data](modbus_set_error_user_data.md)
+- [modbus_set_trace_handler](modbus_set_trace_handler.md)
+
 ## Miscellaneous
 
 To deviate from the Modbus standard, you can enable or disable quirks with:
