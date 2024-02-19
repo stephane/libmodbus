@@ -293,8 +293,10 @@ static int _connect(int sockfd,
         FD_ZERO(&wset);
         FD_SET(sockfd, &wset);
         rc = select(sockfd + 1, NULL, &wset, NULL, &tv);
-        if (rc <= 0) {
-            /* Timeout or fail */
+        if (rc == 0) {
+            errno = ETIMEDOUT;
+            return -1;
+        } else if (rc < 0) {
             return -1;
         }
 
