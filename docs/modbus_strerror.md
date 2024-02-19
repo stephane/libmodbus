@@ -10,6 +10,9 @@ modbus_strerror - return the error message
 const char *modbus_strerror(int errnum);
 ```
 
+Warning, this function is *deprecated* since libmodbus **tbd** and has been
+replaced by *modbus_strerror_r()*.
+
 ## Description
 
 The *modbus_strerror()* function shall return a pointer to an error message

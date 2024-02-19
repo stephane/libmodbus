@@ -45,9 +45,10 @@ mb_mapping = modbus_mapping_new(
     INPUT_REGISTERS_ADDRESS + INPUT_REGISTERS_NB
 );
 if (mb_mapping == NULL) {
+    char buf[128];
     fprintf(
         stderr, "Failed to allocate the mapping: %s\n",
-        modbus_strerror(errno)
+        modbus_strerror_r(errno, buf, sizeof(buf))
     );
     modbus_free(ctx);
     return -1;

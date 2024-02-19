@@ -12,6 +12,7 @@
 #ifndef _MSC_VER
 #include <unistd.h>
 #endif
+#include "modbus.h"
 #include "modbus-private.h"
 #include <assert.h>
 
@@ -649,10 +650,11 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     ctx->s = open(ctx_rtu->device, flags);
     if (ctx->s < 0) {
         if (ctx->debug) {
+            char buf[128];
             fprintf(stderr,
                     "ERROR Can't open the device %s (%s)\n",
                     ctx_rtu->device,
-                    strerror(errno));
+                    modbus_strerror_r(errno, buf, sizeof(buf)));
         }
         return -1;
     }

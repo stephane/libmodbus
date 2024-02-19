@@ -43,6 +43,7 @@ int main(int argc, char *argv[])
     uint8_t *query;
     int header_length;
     char *ip_or_device;
+    char errbuf[128];
 
     if (argc > 1) {
         if (strcmp(argv[1], "tcp") == 0) {
@@ -105,7 +106,8 @@ int main(int argc, char *argv[])
                                                   UT_INPUT_REGISTERS_ADDRESS,
                                                   UT_INPUT_REGISTERS_NB);
     if (mb_mapping == NULL) {
-        fprintf(stderr, "Failed to allocate the mapping: %s\n", modbus_strerror(errno));
+        fprintf(stderr, "Failed to allocate the mapping: %s\n",
+            modbus_strerror_r(errno, errbuf, sizeof(errbuf)));
         modbus_free(ctx);
         return -1;
     }
@@ -131,7 +133,8 @@ int main(int argc, char *argv[])
     } else {
         rc = modbus_connect(ctx);
         if (rc == -1) {
-            fprintf(stderr, "Unable to connect %s\n", modbus_strerror(errno));
+            fprintf(stderr, "Unable to connect %s\n",
+                modbus_strerror_r(errno, errbuf, sizeof(errbuf)));
             modbus_free(ctx);
             return -1;
         }
@@ -212,7 +215,8 @@ int main(int argc, char *argv[])
         }
     }
 
-    printf("Quit the loop: %s\n", modbus_strerror(errno));
+    printf("Quit the loop: %s\n",
+        modbus_strerror_r(errno, errbuf, sizeof(errbuf)));
 
     if (use_backend == TCP) {
         if (s != -1) {

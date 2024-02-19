@@ -41,7 +41,9 @@ typedef enum {
     _STEP_DATA
 } _step_t;
 
-const char *modbus_strerror(int errnum)
+// returns NULL if the error belongs to the operating system, otherwise a
+// pointer to the error message.
+static const char *libmodbus_specific_error_text(int errnum)
 {
     switch (errnum) {
     case EMBXILFUN:
@@ -75,14 +77,82 @@ const char *modbus_strerror(int errnum)
     case EMBBADSLAVE:
         return "Response not from requested slave";
     default:
-        return strerror(errnum);
+        return NULL;
     }
+}
+
+const char *modbus_strerror(int errnum)
+{
+    const char *s = libmodbus_specific_error_text(errnum);
+
+    if (s) {
+        return s;
+    }
+    return strerror(errnum);
+}
+
+const char *modbus_strerror_r(int errnum, char *buf, size_t buflen)
+{
+    const char *s = libmodbus_specific_error_text(errnum);
+
+    if (s) {
+        return s;
+    }
+
+#if HAVE_STRERROR_R
+ /*
+  * The glibc provides 2 different versions of strerror_r.
+  *
+  * XSI-compliant version:
+  *     int strerror_r(int errnum, char *buf, size_t buflen);
+  *
+  * GNU-specific version:
+  *     char *strerror_r(int errnum, char *buf, size_t buflen);
+  *
+  * See "man 3 strerror_r" for details.
+  */
+#if STRERROR_R_CHAR_P
+    /* GNU-specific strerror_r() */
+    /*
+     * The statement below will hopefully result in a compiler warning if
+     * the XSI-compliant implementation is provided instead of the GNU-specific
+     * version (although detected by configure).
+     */
+    return strerror_r(errnum, buf, buflen);
+#else
+    /* XSI-complaint strerror_r() */
+    /*
+     * Neither POSIX nor the Linux man page specify the buffer content when
+     * strerror_r() completes unsuccessfully. Therefore, we initialize the
+     * buffer with '\0' before we call strerror_r(), and manually terminate
+     * the string in case strerror_r() signals an error.
+     */
+    memset(buf, 0, buflen);
+
+    /*
+     * The statement below will hopefully result in a compiler warning if
+     * the GNU-specific version is provided instead of the XSI-compliant
+     * implementation.
+     */
+    int res = strerror_r(errnum, buf, buflen);
+    if (res != 0)
+        buf[buflen - 1] = 0;
+
+    return buf;
+
+#endif /* STRERROR_R_CHAR_P */
+#else
+    /* fallback in case strerror_r() is not available */
+    snprintf(buf, buflen, "error %d", errnum);
+    return buf;
+#endif /* HAVE_STRERROR_R */
 }
 
 void _error_print(modbus_t *ctx, const char *context)
 {
     if (ctx->debug) {
-        fprintf(stderr, "ERROR %s", modbus_strerror(errno));
+        char buf[128];
+        fprintf(stderr, "ERROR %s", modbus_strerror_r(errno, buf, sizeof(buf)));
         if (context != NULL) {
             fprintf(stderr, ": %s\n", context);
         } else {

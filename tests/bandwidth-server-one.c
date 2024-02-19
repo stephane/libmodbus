@@ -30,6 +30,7 @@ int main(int argc, char *argv[])
     modbus_mapping_t *mb_mapping = NULL;
     int rc;
     int use_backend;
+    char errbuf[128];
 
     /* TCP */
     if (argc > 1) {
@@ -61,7 +62,8 @@ int main(int argc, char *argv[])
     mb_mapping =
         modbus_mapping_new(MODBUS_MAX_READ_BITS, 0, MODBUS_MAX_READ_REGISTERS, 0);
     if (mb_mapping == NULL) {
-        fprintf(stderr, "Failed to allocate the mapping: %s\n", modbus_strerror(errno));
+        fprintf(stderr, "Failed to allocate the mapping: %s\n",
+            modbus_strerror_r(errno, errbuf, sizeof(errbuf)));
         modbus_free(ctx);
         return -1;
     }
@@ -78,7 +80,8 @@ int main(int argc, char *argv[])
         }
     }
 
-    printf("Quit the loop: %s\n", modbus_strerror(errno));
+    printf("Quit the loop: %s\n",
+        modbus_strerror_r(errno, errbuf, sizeof(errbuf)));
 
     modbus_mapping_free(mb_mapping);
     if (s != -1) {
