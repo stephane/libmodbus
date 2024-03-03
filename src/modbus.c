@@ -255,6 +255,42 @@ int modbus_send_raw_request(modbus_t *ctx, const uint8_t *raw_req, int raw_req_l
     return send_msg(ctx, req, req_length);
 }
 
+int modbus_send_raw_response(modbus_t *ctx, uint8_t *req, const uint8_t *raw_resp, int raw_resp_length)
+{
+    sft_t sft;
+    uint8_t resp[MAX_MESSAGE_LENGTH];
+    int resp_length;
+    int req_length;
+
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (raw_resp_length < 2 || raw_resp_length > (MODBUS_MAX_PDU_LENGTH + 1)) {
+        /* The raw request must contain function and slave at least and
+           must not be longer than the maximum pdu length plus the slave
+           address. */
+        errno = EINVAL;
+        return -1;
+    }
+
+    sft.t_id = ctx->backend->prepare_response_tid(req, &req_length);
+    sft.slave = raw_resp[0];
+    sft.function = raw_resp[1];
+
+    /* This response function only set the header so it's convenient here */
+    resp_length = ctx->backend->build_response_basis(&sft, resp);
+
+    if (raw_resp_length > 2) {
+        /* Copy data after function code */
+        memcpy(resp + resp_length, raw_resp + 2, raw_resp_length - 2);
+        resp_length += raw_resp_length - 2;
+    }
+
+    return send_msg(ctx, resp, resp_length);
+}
+
 /*
  *  ---------- Request     Indication ----------
  *  | Client | ---------------------->| Server |
