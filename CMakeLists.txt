@@ -1,9 +1,7 @@
 cmake_minimum_required(VERSION 3.23)
-
 project(modbus)
 
 if(NOT TARGET ${PROJECT_NAME})
-
   message(STATUS "Running ./autogen.sh")
   execute_process(COMMAND ./autogen.sh 
                 WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
@@ -16,7 +14,7 @@ if(NOT TARGET ${PROJECT_NAME})
   message(STATUS "Running ./configure")
   execute_process(COMMAND ./configure
                 WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-                RESULT_VARIABLE CONFIGURE_RESULT) #cd ${CMAKE_CURRENT_LIST_DIR} && ./autogen.sh && ./configure)
+                RESULT_VARIABLE CONFIGURE_RESULT)
 
   if(NOT CONFIGURE_RESULT EQUAL "0")
     message(FATAL_ERROR "configure failed")
