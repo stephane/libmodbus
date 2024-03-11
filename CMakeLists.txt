@@ -11,8 +11,8 @@ if(NOT TARGET ${PROJECT_NAME})
     message(FATAL_ERROR "autogen.sh failed")
   endif()
 
-  message(STATUS "Running ./configure")
-  execute_process(COMMAND ./configure
+  message(STATUS "Running ./configure --host=${CMAKE_SYSTEM_PROCESSOR}")
+  execute_process(COMMAND ./configure --host=${CMAKE_SYSTEM_PROCESSOR}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
                 RESULT_VARIABLE CONFIGURE_RESULT)
 
