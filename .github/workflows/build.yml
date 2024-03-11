@@ -18,3 +18,13 @@ jobs:
               run: make
             - name: make distcheck
               run: make distcheck
+
+    build_cmake:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v3
+            - name: Configure CMake
+              run:  cmake -B ${{github.workspace}}/build
+            - name: Build
+              run: cmake --build ${{github.workspace}}/build
