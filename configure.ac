@@ -85,6 +85,7 @@ AC_CHECK_HEADERS([ \
     linux/serial.h \
     netdb.h \
     netinet/in.h \
+    netinet/ip.h \
     netinet/tcp.h \
     sys/ioctl.h \
     sys/params.h \
