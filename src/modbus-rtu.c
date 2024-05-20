@@ -26,6 +26,13 @@
 #include <linux/serial.h>
 #endif
 
+
+#if ESP_PLATFORM
+#include "driver/uart.h"
+#include "driver/uart_vfs.h"
+#include "esp_log.h"
+#endif
+
 /* Table of CRC values for high-order byte */
 static const uint8_t table_crc_hi[] = {
     0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1,
@@ -501,6 +508,90 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 
     return 0;
 }
+#elif ESP_PLATFORM
+// EspressIf SDK
+static int _modbus_rtu_connect(modbus_t *ctx)
+{
+    modbus_rtu_t *ctx_rtu = ctx->backend_data;
+    char serial_name[16];
+    uart_word_length_t data_bits;
+    uart_parity_t parity;
+    uart_stop_bits_t stop_bits;
+
+    const uart_port_t uart_num = atoi(ctx_rtu->device);
+
+    switch (ctx_rtu->data_bit) {
+    case 5:
+        data_bits = UART_DATA_5_BITS;
+        break;
+    case 6:
+        data_bits = UART_DATA_6_BITS;
+        break;
+    case 7:
+        data_bits = UART_DATA_7_BITS;
+        break;
+    case 8:
+        data_bits = UART_DATA_8_BITS;
+        break;
+    default:
+        ESP_LOGI("libmodbus", "Invalid data bits value");
+        return -1;
+    }
+
+    switch (ctx_rtu->parity) {
+    case 'N':
+        parity = UART_PARITY_DISABLE;
+        break;
+    case 'E':
+        parity = UART_PARITY_EVEN;
+        break;
+    case 'O':
+        parity = UART_PARITY_ODD;
+        break;
+    default:
+        ESP_LOGI("libmodbus", "Invalid parity value");
+        return -1;
+    }
+
+    switch (ctx_rtu->stop_bit) {
+    case 1:
+        stop_bits = UART_STOP_BITS_1;
+        break;
+    case 2:
+        stop_bits = UART_STOP_BITS_2;
+        break;
+    default:
+        ESP_LOGI("libmodbus", "Invalid stop-bits value");
+        return -1;
+    }
+
+
+    uart_config_t uart_config = {
+        .baud_rate = ctx_rtu->baud,
+        .data_bits = data_bits,
+        .parity = parity,
+        .stop_bits = stop_bits,
+        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE, // UART_HW_FLOWCTRL_CTS_RTS,
+        .rx_flow_ctrl_thresh = 2,
+        .source_clk = UART_SCLK_DEFAULT,
+    };
+
+    // Configure UART parameters
+    ESP_ERROR_CHECK(uart_param_config(uart_num, &uart_config));
+
+    // Handle to access serial
+    snprintf(serial_name, 16, "/dev/uart/%s", ctx_rtu->device);
+
+    if ((ctx->s = open(serial_name, O_RDWR)) == -1) {
+            ctx->s = -1;
+            return -1;
+    }
+
+    uart_vfs_dev_use_driver(uart_num);
+
+    return 0;
+}
+
 #else
 
 static speed_t _get_termios_speed(int baud, int debug)
