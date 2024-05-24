@@ -23,6 +23,8 @@
 #include "modbus-private.h"
 #include "modbus.h"
 
+static debuglog g_debuglog = NULL;
+
 /* Internal use */
 #define MSG_LENGTH_UNDEFINED -1
 
@@ -169,6 +171,15 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
 
     msg_length = ctx->backend->send_msg_pre(msg, msg_length);
 
+	if (g_debuglog) {
+		char buf[2048];
+		memset(buf, 0, sizeof(buf));
+		snprintf(buf, sizeof(buf) - 1, "send:");
+		for (int i = 0; i < msg_length; i++) {
+			snprintf(buf + 5 + i * 3, sizeof(buf) - 1, "%.2X ", msg[i]);
+		}
+		g_debuglog(buf);
+	}
     if (ctx->debug) {
         for (i = 0; i < msg_length; i++)
             printf("[%.2X]", msg[i]);
@@ -517,6 +528,15 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
 
     if (ctx->debug)
         printf("\n");
+	if (g_debuglog) {
+		char buf[2048];
+		memset(buf, 0, sizeof(buf));
+		snprintf(buf, sizeof(buf) - 1, "recv:");
+		for (int i = 0; i < msg_length; i++) {
+			snprintf(buf + 5 + i * 3, sizeof(buf) - 1, "%.2X ", msg[i]);
+		}
+		g_debuglog(buf);
+	}
 
     return ctx->backend->check_integrity(ctx, msg, msg_length);
 }
@@ -2066,5 +2086,8 @@ size_t strlcpy(char *dest, const char *src, size_t dest_size)
     }
 
     return (s - src - 1); /* count does not include NUL */
+}
+void register_debuglog(debuglog pf) {
+	g_debuglog = pf;
 }
 #endif
