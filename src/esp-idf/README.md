@@ -24,6 +24,15 @@ namely:
   If you already have other components you may just add the reference to the newly
   added component.
 
+- As the ESP-IDF does not provide a `nanosleep` function in its SDK, you should add
+  this in your project so you will be able to find it at linking time, for example:
+
+```
+int nanosleep(const struct timespec *req, struct timespec *_Nullable rem) {
+    return usleep(req->tv_sec*1000 + req->tv_nsec / 1000);
+}
+```
+
 Now you are almost ready to use libmodbus in your project!
 
 If you desire to use the library for serial communication, you will need to do a few
