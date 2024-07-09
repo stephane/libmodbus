@@ -1354,10 +1354,12 @@ int modbus_read_input_registers(modbus_t *ctx, int addr, int nb, uint16_t *dest)
     }
 
     if (nb > MODBUS_MAX_READ_REGISTERS) {
-        fprintf(stderr,
-                "ERROR Too many input registers requested (%d > %d)\n",
-                nb,
-                MODBUS_MAX_READ_REGISTERS);
+        if (ctx->debug) {
+            fprintf(stderr,
+                    "ERROR Too many input registers requested (%d > %d)\n",
+                    nb,
+                    MODBUS_MAX_READ_REGISTERS);
+        }
         errno = EMBMDATA;
         return -1;
     }
