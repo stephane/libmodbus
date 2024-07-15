@@ -34,17 +34,18 @@ int equal_dword(uint16_t *tab_reg, const uint32_t value);
 int is_memory_equal(const void *s1, const void *s2, size_t size);
 
 #define BUG_REPORT(_cond, _format, _args...) \
-  printf("\nLine %d: assertion error for '%s': " _format "\n", __LINE__, #_cond, ##_args)
+    printf(                                  \
+        "\nLine %d: assertion error for '%s': " _format "\n", __LINE__, #_cond, ##_args)
 
-#define ASSERT_TRUE(_cond, _format, __args...) \
-  {                                            \
-    if (_cond) {                               \
-      printf("OK\n");                          \
-    } else {                                   \
-      BUG_REPORT(_cond, _format, ##__args);    \
-      goto close;                              \
-    }                                          \
-  };
+#define ASSERT_TRUE(_cond, _format, __args...)    \
+    {                                             \
+        if (_cond) {                              \
+            printf("OK\n");                       \
+        } else {                                  \
+            BUG_REPORT(_cond, _format, ##__args); \
+            goto close;                           \
+        }                                         \
+    };
 
 int is_memory_equal(const void *s1, const void *s2, size_t size)
 {
@@ -607,21 +608,21 @@ int main(int argc, char *argv[])
     modbus_get_byte_timeout(ctx, &old_byte_to_sec, &old_byte_to_usec);
 
     rc = modbus_set_response_timeout(ctx, 0, 0);
-    printf("1/6 Invalid response timeout (zero): ");
+    printf("1/8 Invalid response timeout (zero): ");
     ASSERT_TRUE(rc == -1 && errno == EINVAL, "");
 
     rc = modbus_set_response_timeout(ctx, 0, 1000000);
-    printf("2/6 Invalid response timeout (too large us): ");
+    printf("2/8 Invalid response timeout (too large us): ");
     ASSERT_TRUE(rc == -1 && errno == EINVAL, "");
 
     rc = modbus_set_byte_timeout(ctx, 0, 1000000);
-    printf("3/6 Invalid byte timeout (too large us): ");
+    printf("3/8 Invalid byte timeout (too large us): ");
     ASSERT_TRUE(rc == -1 && errno == EINVAL, "");
 
     modbus_set_response_timeout(ctx, 0, 1);
     rc = modbus_read_registers(
         ctx, UT_REGISTERS_ADDRESS, UT_REGISTERS_NB, tab_rp_registers);
-    printf("4/6 1us response timeout: ");
+    printf("4/8 1us response timeout: ");
     if (rc == -1 && errno == ETIMEDOUT) {
         printf("OK\n");
     } else {
@@ -640,7 +641,7 @@ int main(int argc, char *argv[])
     modbus_set_response_timeout(ctx, 0, 200000);
     rc = modbus_read_registers(
         ctx, UT_REGISTERS_ADDRESS_SLEEP_500_MS, 1, tab_rp_registers);
-    printf("5/6 Too short response timeout (0.2s < 0.5s): ");
+    printf("5/8 Too short response timeout (0.2s < 0.5s): ");
     ASSERT_TRUE(rc == -1 && errno == ETIMEDOUT, "");
 
     /* Wait for reply (0.2 + 0.4 > 0.5 s) and flush before continue */
@@ -650,7 +651,7 @@ int main(int argc, char *argv[])
     modbus_set_response_timeout(ctx, 0, 600000);
     rc = modbus_read_registers(
         ctx, UT_REGISTERS_ADDRESS_SLEEP_500_MS, 1, tab_rp_registers);
-    printf("6/6 Adequate response timeout (0.6s > 0.5s): ");
+    printf("6/8 Adequate response timeout (0.6s > 0.5s): ");
     ASSERT_TRUE(rc == 1, "");
 
     /* Disable the byte timeout.
@@ -658,8 +659,16 @@ int main(int argc, char *argv[])
     modbus_set_byte_timeout(ctx, 0, 0);
     rc = modbus_read_registers(
         ctx, UT_REGISTERS_ADDRESS_SLEEP_500_MS, 1, tab_rp_registers);
-    printf("7/7 Disable byte timeout: ");
+    printf("7/8 Disable byte timeout: ");
     ASSERT_TRUE(rc == 1, "");
+
+    // Invalid in TCP or RTU mode...
+    modbus_t *invalid_ctx = modbus_new_tcp("1.2.3.4", 1502);
+    modbus_set_response_timeout(ctx, 0, 1);
+    rc = modbus_connect(invalid_ctx);
+    printf("8/8 Connection timeout: ");
+    ASSERT_TRUE(rc == -1 && errno == ETIMEDOUT, "");
+    modbus_free(invalid_ctx);
 
     /* Restore original response timeout */
     modbus_set_response_timeout(ctx, old_response_to_sec, old_response_to_usec);
