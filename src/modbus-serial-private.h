@@ -80,7 +80,7 @@ int _modbus_serial_flush(modbus_t *ctx);
 int _modbus_serial_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int length_to_read);
 
 int _modbus_serial_set_slave(modbus_t *ctx, int slave);
-void _modbus_serial_free(modbus_serial_t *serial_ctx);
+void _modbus_serial_free(modbus_t *ctx);
 modbus_t* _modbus_serial_new(const modbus_backend_t *modbus_backend,
                              const char *device, int baud, char parity, int data_bit, int stop_bit);
 

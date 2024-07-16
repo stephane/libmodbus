@@ -180,11 +180,6 @@ static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
     }
 }
 
-static void _modbus_rtu_free(modbus_t *ctx) {
-  _modbus_serial_free(ctx->backend_data);
-  free(ctx);
-}
-
 const modbus_backend_t _modbus_rtu_backend = {
     _MODBUS_BACKEND_TYPE_SERIAL,
     _MODBUS_RTU_HEADER_LENGTH,
@@ -204,7 +199,7 @@ const modbus_backend_t _modbus_rtu_backend = {
     _modbus_serial_close,
     _modbus_serial_flush,
     _modbus_serial_select,
-    _modbus_rtu_free
+    _modbus_serial_free
 };
 
 modbus_t* modbus_new_rtu(const char *device,

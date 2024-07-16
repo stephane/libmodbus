@@ -229,11 +229,6 @@ static ssize_t _modbus_ascii_send(modbus_t *ctx, const uint8_t *req, int req_len
     return ((size - 3) / 2) + 3;
 }
 
-static void _modbus_ascii_free(modbus_t *ctx) {
-    _modbus_serial_free(ctx->backend_data);
-    free(ctx);
-}
-
 const modbus_backend_t _modbus_ascii_backend = {
     _MODBUS_BACKEND_TYPE_SERIAL,
     _MODBUS_ASCII_HEADER_LENGTH,
@@ -253,7 +248,7 @@ const modbus_backend_t _modbus_ascii_backend = {
     _modbus_serial_close,
     _modbus_serial_flush,
     _modbus_serial_select,
-    _modbus_ascii_free
+    _modbus_serial_free
 };
 
 modbus_t* modbus_new_ascii(const char *device,

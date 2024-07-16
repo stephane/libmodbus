@@ -1000,12 +1000,18 @@ int _modbus_serial_set_slave(modbus_t *ctx, int slave)
     return 0;
 }
 
-void _modbus_serial_free(modbus_serial_t *ctx_serial)
+void _modbus_serial_free(modbus_t *ctx)
 {
-    if (ctx_serial) {
+    modbus_serial_t *ctx_serial = ctx->backend_data;
+    if (ctx_serial->device) {
         free(ctx_serial->device);
     }
-    free(ctx_serial);
+
+    if (ctx_serial) {
+	free(ctx_serial);
+    }
+
+    free(ctx);
 }
 
 #if HAVE_DECL_TIOCM_RTS
