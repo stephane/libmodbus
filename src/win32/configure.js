@@ -48,22 +48,26 @@ function usage() {
     WScript.Echo(txt);
 }
 
+const majorPattern = /libmodbus_version_major\], \[(\d+)\]/;
+const minorPattern = /libmodbus_version_minor\], \[(\d+)\]/;
+const microPattern = /libmodbus_version_micro\], \[(\d+)\]/;
+
 /* read the version from the configuration file */
 function readVersion() {
-    var fso, cf, ln, s;
+    var fso, cf;
     fso = new ActiveXObject("Scripting.FileSystemObject");
     cf = fso.OpenTextFile(configFile, 1);
     while (cf.AtEndOfStream !== true) {
-        ln = cf.ReadLine();
-        s = new String(ln);
-        if (s.search(/^m4_define\(\[libmodbus_version_major/) != -1) {
-            verMajor = s.substr(s.indexOf(",") + 3, 1);
-        } else if (s.search(/^m4_define\(\[libmodbus_version_minor/) != -1) {
-            verMinor = s.substr(s.indexOf(",") + 3, 1);
-        } else if (s.search(/^m4_define\(\[libmodbus_version_micro/) != -1) {
-			str_start_idx = s.indexOf(",") + 3;
-			num_str_length = s.length - str_start_idx - 2;
-            verMicro = s.substr(str_start_idx, num_str_length);
+        var line = cf.ReadLine();
+        var s = new String(ln);
+        if (majorPattern.test(line)) {
+            verMajor = line.match(majorPattern)[1];
+        }
+        if (minorPattern.test(line)) {
+            verMinor = line.match(minorPattern)[1];
+        }
+        if (microPattern.test(line)) {
+            verMicro = line.match(microPattern)[1];
         }
     }
     cf.Close();
