@@ -107,7 +107,7 @@ communications over TCP IPv4 and IPv6 networks. It does not require a checksum
 calculation as lower layer takes care of the same.
 
 Contrary to the TCP IPv4 only backend, the TCP PI backend offers hostname
-resolution but it consumes about 1 kB of additional memory.
+resolution.
 
 Create a Modbus TCP PI context, you should use [modbus_new_tcp_pi](modbus_new_tcp_pi.md).
 
