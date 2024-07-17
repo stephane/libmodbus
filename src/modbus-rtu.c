@@ -1219,7 +1219,7 @@ modbus_new_rtu(const char *device, int baud, char parity, int data_bit, int stop
     /* Check device argument */
     if (device == NULL || *device == 0) {
         modbus_trace_error(ctx, "The device string is empty\n");
-        modbus_free(ctx);
+        free(ctx);
         errno = EINVAL;
         return NULL;
     }
@@ -1227,7 +1227,7 @@ modbus_new_rtu(const char *device, int baud, char parity, int data_bit, int stop
     /* Check baud argument */
     if (baud == 0) {
         modbus_trace_error(ctx, "The baud rate value must not be zero\n");
-        modbus_free(ctx);
+        free(ctx);
         errno = EINVAL;
         return NULL;
     }

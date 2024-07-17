@@ -874,7 +874,7 @@ modbus_t *modbus_new_tcp(const char *ip, int port)
     if (sigaction(SIGPIPE, &sa, NULL) < 0) {
         /* The debug flag can't be set here... */
         modbus_trace_error(ctx, "Could not install SIGPIPE handler.\n");
-        modbus_free(ctx);
+        free(ctx);
         return NULL;
     }
 #endif
