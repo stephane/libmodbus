@@ -220,7 +220,10 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
     return rc;
 }
 
-int modbus_send_raw_request_tid(modbus_t *ctx, const uint8_t *raw_req, int raw_req_length, int tid)
+int modbus_send_raw_request_tid(modbus_t *ctx,
+                                const uint8_t *raw_req,
+                                int raw_req_length,
+                                int tid)
 {
     sft_t sft;
     uint8_t req[MAX_MESSAGE_LENGTH];
