@@ -1193,6 +1193,7 @@ static int read_io_status(modbus_t *ctx, int function, int addr, int nb, uint8_t
         int pos = 0;
         unsigned int offset;
         unsigned int offset_end;
+        unsigned int i;
 
         rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
         if (rc == -1)
@@ -1204,7 +1205,7 @@ static int read_io_status(modbus_t *ctx, int function, int addr, int nb, uint8_t
 
         offset = ctx->backend->header_length + 2;
         offset_end = offset + rc;
-        for (unsigned int i = offset; i < offset_end; i++) {
+        for (i = offset; i < offset_end; i++) {
             /* Shift reg hi_byte to temp */
             temp = rsp[i];
 
