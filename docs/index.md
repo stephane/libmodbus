@@ -246,6 +246,21 @@ shall return either a NULL value (if returning a pointer) or a negative value
 (if returning an integer), and the actual error code shall be stored in the
 `errno` variable.
 
+This includes cases where a Modbus server returns an exception response as a
+result of a failed read or write operation. The following macros expand to
+integer error codes that correspond to Modbus exception responses:
+
+- `EMBXILFUN`: illegal function
+- `EMBXILADD`: illegal data address
+- `EMBXILVAL`: illegal data value
+- `EMBXSFAIL`: server device failure
+- `EMBXACK`: acknowledge
+- `EMBXSBUSY`: server device busy
+- `EMBXNACK`: negative acknowledge
+- `EMBXMEMPAR`: memory parity error
+- `EMBXGPATH`: gateway path unavailable
+- `EMBXGTAR`: gateway target device failed to respond
+
 The *modbus_strerror()* function is provided to translate libmodbus-specific
 error codes into error message strings; for details refer to
 [modbus_strerror](modbus_strerror.md).
