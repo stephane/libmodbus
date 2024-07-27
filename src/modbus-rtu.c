@@ -641,7 +641,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 
        Timeouts are ignored in canonical input mode or when the
        NDELAY option is set on the file via open or fcntl */
-    flags = O_RDWR | O_NOCTTY | O_NDELAY | O_EXCL;
+    flags = O_RDWR | O_NOCTTY | O_NDELAY;
 #ifdef O_CLOEXEC
     flags |= O_CLOEXEC;
 #endif
