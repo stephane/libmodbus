@@ -146,6 +146,8 @@ fi
 AC_CHECK_DECLS([TIOCSRS485], [], [], [[#include <sys/ioctl.h>]])
 # Check for RTS flags
 AC_CHECK_DECLS([TIOCM_RTS], [], [], [[#include <sys/ioctl.h>]])
+# Check for termios2 support
+AC_CHECK_TYPES([struct termios2], [], [], [[#include <asm/termbits.h>]])
 
 # Wtype-limits is not supported by gcc 4.2 (default on recent Mac OS X)
 my_CFLAGS="-Wall \
