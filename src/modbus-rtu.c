@@ -26,6 +26,12 @@
 #include <linux/serial.h>
 #endif
 
+#if defined(ESP_PLATFORM)    
+#include "driver/uart_vfs.h"
+#include "driver/uart.h"
+#endif    
+
+
 /* Table of CRC values for high-order byte */
 static const uint8_t table_crc_hi[] = {
     0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1,
@@ -641,7 +647,11 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 
        Timeouts are ignored in canonical input mode or when the
        NDELAY option is set on the file via open or fcntl */
+#if defined(ESP_PLATFORM)       
+    flags = O_RDWR;
+#else
     flags = O_RDWR | O_NOCTTY | O_NDELAY | O_EXCL;
+#endif
 #ifdef O_CLOEXEC
     flags |= O_CLOEXEC;
 #endif
@@ -656,6 +666,25 @@ static int _modbus_rtu_connect(modbus_t *ctx)
         }
         return -1;
     }
+#if defined(ESP_PLATFORM)    
+    // We have a driver now installed so set up the read/write functions to use driver also.
+    switch(ctx_rtu->device[10]) { //extract from /dev/uart/1
+    case '0':
+    	uart_vfs_dev_use_driver(UART_NUM_0);
+    break;
+    case '1':
+    	uart_vfs_dev_use_driver(UART_NUM_1);
+    break;
+#if SOC_UART_HP_NUM > 2
+    case '2':
+    	uart_vfs_dev_use_driver(UART_NUM_2);
+    break;
+#endif // SOC_UART_HP_NUM > 2
+	default:
+		return -1;
+	break;
+    }
+#endif    
 
     /* Save */
     tcgetattr(ctx->s, &ctx_rtu->old_tios);
