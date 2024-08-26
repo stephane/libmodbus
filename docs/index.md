@@ -250,16 +250,16 @@ This includes cases where a Modbus server returns an exception response as a
 result of a failed read or write operation. The following macros expand to
 integer error codes that correspond to Modbus exception responses:
 
-- `EMBXILFUN`: illegal function
-- `EMBXILADD`: illegal data address
-- `EMBXILVAL`: illegal data value
-- `EMBXSFAIL`: server device failure
-- `EMBXACK`: acknowledge
-- `EMBXSBUSY`: server device busy
-- `EMBXNACK`: negative acknowledge
-- `EMBXMEMPAR`: memory parity error
-- `EMBXGPATH`: gateway path unavailable
-- `EMBXGTAR`: gateway target device failed to respond
+- `EMBXILFUN`: illegal function (0x01)
+- `EMBXILADD`: illegal data address (0x02)
+- `EMBXILVAL`: illegal data value (0x03)
+- `EMBXSFAIL`: server device failure (0x04)
+- `EMBXACK`: acknowledge (0x05)
+- `EMBXSBUSY`: server device busy (0x06)
+- `EMBXNACK`: negative acknowledge (0x07)
+- `EMBXMEMPAR`: memory parity error (0x08)
+- `EMBXGPATH`: gateway path unavailable (0x0A)
+- `EMBXGTAR`: gateway target device failed to respond (0x0B)
 
 The *modbus_strerror()* function is provided to translate libmodbus-specific
 error codes into error message strings; for details refer to
