@@ -16,6 +16,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <limits.h>
 #include <string.h>
 #include <errno.h>
 #ifndef _MSC_VER
@@ -478,7 +480,9 @@ static void _modbus_tcp_close(modbus_t *ctx)
 static int _modbus_tcp_flush(modbus_t *ctx)
 {
     int rc;
-    int rc_sum = 0;
+    // Use an unsigned 16-bit integer to reduce overflow risk. The flush function
+    // is not expected to handle huge amounts of data (> 2GB).
+    uint16_t rc_sum = 0;
 
     do {
         /* Extract the garbage from the socket */
@@ -505,7 +509,15 @@ static int _modbus_tcp_flush(modbus_t *ctx)
         }
 #endif
         if (rc > 0) {
-            rc_sum += rc;
+            // Check for overflow before adding
+            if (rc_sum <= UINT16_MAX - rc) {
+                rc_sum += rc;
+            } else {
+                // Handle overflow
+                ctx->error_recovery = MODBUS_ERROR_RECOVERY_PROTOCOL;
+                errno = EOVERFLOW;
+                return -1;
+            }
         }
     } while (rc == MODBUS_TCP_MAX_ADU_LENGTH);
 
