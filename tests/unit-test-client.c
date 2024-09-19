@@ -323,30 +323,30 @@ int main(int argc, char *argv[])
     /** FLOAT **/
     printf("1/4 Set/get float ABCD: ");
     modbus_set_float_abcd(UT_REAL, tab_rp_registers);
-    ASSERT_TRUE(is_memory_equal(tab_rp_registers, UT_IREAL_ABCD_SET, 4),
+    ASSERT_TRUE(is_memory_equal(tab_rp_registers, UT_IREAL_ABCD, 4),
                 "FAILED Set float ABCD");
-    real = modbus_get_float_abcd(UT_IREAL_ABCD_GET);
+    real = modbus_get_float_abcd(UT_IREAL_ABCD);
     ASSERT_TRUE(real == UT_REAL, "FAILED (%f != %f)\n", real, UT_REAL);
 
     printf("2/4 Set/get float DCBA: ");
     modbus_set_float_dcba(UT_REAL, tab_rp_registers);
-    ASSERT_TRUE(is_memory_equal(tab_rp_registers, UT_IREAL_DCBA_SET, 4),
+    ASSERT_TRUE(is_memory_equal(tab_rp_registers, UT_IREAL_DCBA, 4),
                 "FAILED Set float DCBA");
-    real = modbus_get_float_dcba(UT_IREAL_DCBA_GET);
+    real = modbus_get_float_dcba(UT_IREAL_DCBA);
     ASSERT_TRUE(real == UT_REAL, "FAILED (%f != %f)\n", real, UT_REAL);
 
     printf("3/4 Set/get float BADC: ");
     modbus_set_float_badc(UT_REAL, tab_rp_registers);
-    ASSERT_TRUE(is_memory_equal(tab_rp_registers, UT_IREAL_BADC_SET, 4),
+    ASSERT_TRUE(is_memory_equal(tab_rp_registers, UT_IREAL_BADC, 4),
                 "FAILED Set float BADC");
-    real = modbus_get_float_badc(UT_IREAL_BADC_GET);
+    real = modbus_get_float_badc(UT_IREAL_BADC);
     ASSERT_TRUE(real == UT_REAL, "FAILED (%f != %f)\n", real, UT_REAL);
 
     printf("4/4 Set/get float CDAB: ");
     modbus_set_float_cdab(UT_REAL, tab_rp_registers);
-    ASSERT_TRUE(is_memory_equal(tab_rp_registers, UT_IREAL_CDAB_SET, 4),
+    ASSERT_TRUE(is_memory_equal(tab_rp_registers, UT_IREAL_CDAB, 4),
                 "FAILED Set float CDAB");
-    real = modbus_get_float_cdab(UT_IREAL_CDAB_GET);
+    real = modbus_get_float_cdab(UT_IREAL_CDAB);
     ASSERT_TRUE(real == UT_REAL, "FAILED (%f != %f)\n", real, UT_REAL);
 
     printf("\nAt this point, error messages doesn't mean the test has failed\n");
