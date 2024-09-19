@@ -156,6 +156,10 @@ extern const unsigned int libmodbus_version_micro;
 
 typedef struct _modbus modbus_t;
 
+/*! Memory layout in tab_xxx arrays is processor-endianness.
+    When receiving modbus data, it is converted to processor-endianness,
+    see read_registers().
+*/
 typedef struct _modbus_mapping_t {
     int nb_bits;
     int start_bits;
