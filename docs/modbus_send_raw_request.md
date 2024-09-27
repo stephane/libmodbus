@@ -38,7 +38,7 @@ uint8_t raw_req[] = { 0xFF, MODBUS_FC_READ_HOLDING_REGISTERS, 0x00, 0x01, 0x0, 0
 int req_length;
 uint8_t rsp[MODBUS_TCP_MAX_ADU_LENGTH];
 
-ctx = modbus_new_tcp("127.0.0.1", 1502);
+ctx = modbus_new_tcp("127.0.0.1", 502);
 if (modbus_connect(ctx) == -1) {
     fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
     modbus_free(ctx);

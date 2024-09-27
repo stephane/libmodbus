@@ -14,7 +14,7 @@ For example, to compile random-test-server run:
 
 - `random-test-server` is necessary to launch a server before running
 random-test-client. By default, it receives and replies to Modbus query on the
-localhost and port 1502.
+localhost and port 502.
 
 - `random-test-client` sends many different queries to a large range of
 addresses and values to test the communication between the client and the

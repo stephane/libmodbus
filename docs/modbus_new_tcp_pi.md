@@ -42,7 +42,7 @@ defined below.
 ```c
 modbus_t *ctx;
 
-ctx = modbus_new_tcp_pi("::1", "1502");
+ctx = modbus_new_tcp_pi("::1", "502");
 if (ctx == NULL) {
     fprintf(stderr, "Unable to allocate libmodbus context\n");
     return -1;

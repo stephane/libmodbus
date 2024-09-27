@@ -118,9 +118,9 @@ int main(int argc, char *argv[])
     }
 
     if (use_backend == TCP) {
-        ctx = modbus_new_tcp(ip_or_device, 1502);
+        ctx = modbus_new_tcp(ip_or_device, 502);
     } else if (use_backend == TCP_PI) {
-        ctx = modbus_new_tcp_pi(ip_or_device, "1502");
+        ctx = modbus_new_tcp_pi(ip_or_device, "502");
     } else {
         ctx = modbus_new_rtu(ip_or_device, 115200, 'N', 8, 1);
     }
@@ -663,7 +663,7 @@ int main(int argc, char *argv[])
     ASSERT_TRUE(rc == 1, "");
 
     // Invalid in TCP or RTU mode...
-    modbus_t *invalid_ctx = modbus_new_tcp("1.2.3.4", 1502);
+    modbus_t *invalid_ctx = modbus_new_tcp("1.2.3.4", 502);
     modbus_set_response_timeout(ctx, 0, 1);
     rc = modbus_connect(invalid_ctx);
     printf("8/8 Connection timeout: ");

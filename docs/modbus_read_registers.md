@@ -38,7 +38,7 @@ uint16_t tab_reg[64];
 int rc;
 int i;
 
-ctx = modbus_new_tcp("127.0.0.1", 1502);
+ctx = modbus_new_tcp("127.0.0.1", 502);
 if (modbus_connect(ctx) == -1) {
     fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
     modbus_free(ctx);

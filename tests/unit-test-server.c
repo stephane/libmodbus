@@ -81,10 +81,10 @@ int main(int argc, char *argv[])
     }
 
     if (use_backend == TCP) {
-        ctx = modbus_new_tcp(ip_or_device, 1502);
+        ctx = modbus_new_tcp(ip_or_device, 502);
         query = malloc(MODBUS_TCP_MAX_ADU_LENGTH);
     } else if (use_backend == TCP_PI) {
-        ctx = modbus_new_tcp_pi(ip_or_device, "1502");
+        ctx = modbus_new_tcp_pi(ip_or_device, "502");
         query = malloc(MODBUS_TCP_MAX_ADU_LENGTH);
     } else {
         ctx = modbus_new_rtu(ip_or_device, 115200, 'N', 8, 1);

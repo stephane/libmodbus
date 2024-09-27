@@ -56,7 +56,7 @@ int main(void)
     */
 
     /* TCP */
-    ctx = modbus_new_tcp("127.0.0.1", 1502);
+    ctx = modbus_new_tcp("127.0.0.1", 502);
     modbus_set_debug(ctx, TRUE);
 
     if (modbus_connect(ctx) == -1) {
