@@ -8,8 +8,8 @@
 #include <stdlib.h>
 #include <unistd.h>  // sleep
 
-#define PV_SERVER_IP "127.0.0.1"  // Update with the actual IP of PV Inverter
-#define SERVER_PORT 1502          // Update with the actual port if needed
+#define PV_SERVER_IP "10.10.1.50"  // Update with the actual IP of PV Inverter
+#define SERVER_PORT 1503          // Update with the actual port if needed
 #define HOLDING_REGISTERS_NB 10
 #define HOLDING_REGISTERS_ADDRESS 0
 

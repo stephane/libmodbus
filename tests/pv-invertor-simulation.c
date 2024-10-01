@@ -17,10 +17,13 @@ modbus_t* initialize_modbus_context_simulation(int use_backend, char* ip_or_devi
 modbus_mapping_t* initialize_modbus_mapping_simulation(void);
 void initialize_register_values_simulation(modbus_mapping_t* mb_mapping);
 int setup_server_simulation(int use_backend, modbus_t* ctx);
+int send_to_substation(modbus_t* substation_ctx, int address, uint16_t value);
 
 #define SERVER_ID_PV 1
 #define HOLDING_REGISTERS_NB 10
 #define HOLDING_REGISTERS_ADDRESS 0
+#define SUBSTATION_IP "127.0.0.1"  // Substation's IP address (Update if necessary)
+#define SUBSTATION_PORT 1503       // Substation port (for TCP)
 
 enum {
     TCP,
@@ -32,8 +35,6 @@ enum {
 int set_backend_simulation(int argc, char* argv[]) {
     if (argc > 1) {
         if (strcmp(argv[1], "tcp") == 0) {
-
-            printf("%s\n", argv[1]);
             return TCP;
         } else if (strcmp(argv[1], "tcppi") == 0) {
             return TCP_PI;
@@ -111,6 +112,10 @@ int setup_server_simulation(int use_backend, modbus_t* ctx) {
     int rc;
     if (use_backend == TCP) {
         socket_file_descriptor = modbus_tcp_listen(ctx, 1);
+        if (socket_file_descriptor == -1) {
+            fprintf(stderr, "Failed to listen: %s\n", modbus_strerror(errno));
+            return -1;
+        }
         int tmp = modbus_tcp_accept(ctx, &socket_file_descriptor);
         if (tmp == -1) {
             fprintf(stderr, "Error in modbus_tcp_accept: %s\n", modbus_strerror(errno));
@@ -130,11 +135,22 @@ int setup_server_simulation(int use_backend, modbus_t* ctx) {
     return socket_file_descriptor;
 }
 
+// Function to send data to the substation
+int send_to_substation(modbus_t* substation_ctx, int address, uint16_t value) {  //modify
+    int rc = modbus_write_register(substation_ctx, address, value); //modify
+    if (rc == -1) {
+        fprintf(stderr, "Failed to send data to substation: %s\n", modbus_strerror(errno));
+        return -1;
+    }
+    printf("Sent to substation: register %d updated with value %d\n", address, value); //modify
+    return 0;
+}
+
 int main(int argc, char* argv[]) {
     int socket_file_descriptor = -1;
     int use_backend = set_backend_simulation(argc, argv);
     char* ip_or_device = set_ip_or_device_simulation(use_backend, argc, argv);
-    modbus_t* ctx;
+    modbus_t* ctx, *substation_ctx;
     modbus_mapping_t* mb_mapping;
     uint8_t query[MODBUS_TCP_MAX_ADU_LENGTH] = {0};  // Query buffer initialization
     int rc, header_length;
@@ -172,6 +188,17 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
+    // Connect to substation
+    substation_ctx = modbus_new_tcp(SUBSTATION_IP, SUBSTATION_PORT); //modify
+    if (modbus_connect(substation_ctx) == -1) { //modify
+        fprintf(stderr, "Failed to connect to substation: %s\n", modbus_strerror(errno)); //modify
+        modbus_free(substation_ctx); //modify
+        modbus_mapping_free(mb_mapping);
+        modbus_free(ctx);
+        return -1;
+    }
+    printf("Connected to substation.\n"); 
+
     header_length = modbus_get_header_length(ctx);  // Set header length
 
     // Main loop for handling Modbus requests
@@ -192,6 +219,10 @@ int main(int argc, char* argv[]) {
             printf("Current register value at %d: %d\n", address, mb_mapping->tab_registers[address]);
             mb_mapping->tab_registers[address] = value;
             printf("Updated register %d with value: %d\n", address, value);
+
+            // Send the same update to the substation
+            send_to_substation(substation_ctx, address, value);
+
         } else if (query[header_length] == 0x05) {  // MODBUS_FC_WRITE_SINGLE_COIL
             int address = MODBUS_GET_INT16_FROM_INT8(query, header_length + 1);
             uint8_t value = query[header_length + 4];
@@ -226,5 +257,7 @@ int main(int argc, char* argv[]) {
     modbus_mapping_free(mb_mapping);
     modbus_close(ctx);
     modbus_free(ctx);
+    modbus_close(substation_ctx);
+    modbus_free(substation_ctx); 
     return 0;
 }
