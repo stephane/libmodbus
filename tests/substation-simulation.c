@@ -11,7 +11,7 @@
 #define FILE_NAME "modbus_registers.txt"
 #define NUM_REGISTERS 11
 
-#define MODBUS_IP "10.10.2.100"
+#define MODBUS_IP "10.10.1.50"
 #define MODBUS_PORT 1502
 
 void initialize_registers(int *registers);
@@ -27,24 +27,28 @@ void initialize_registers(int *registers) {
 void check_file(int *prev_values, modbus_t *ctx) {
     FILE *file = fopen(FILE_NAME, "r");
     if (file == NULL) {
-        fprintf(stderr, "Failed to open file for reading\n");
+        fprintf(stderr, "Failed to open the file: %s\n", strerror(errno));
         return;
     }
 
-    int address, value;
-    while (fscanf(file, "%d %d", &address, &value) != EOF) {
-        if (address >= 0 && address < NUM_REGISTERS) {
-            if (prev_values[address] != value) {
-                printf("Register %d changed from %d to %d\n", address, prev_values[address], value);
-                prev_values[address] = value;
+    char line[256];
+    while (fgets(line, sizeof(line), file)) {
+        int address, value;
+        // Read the entire line and parse it with sscanf
+        if (sscanf(line, "%d %d", &address, &value) == 2) {
+            if (address >= 0 && address < NUM_REGISTERS) {
+                if (prev_values[address] != value) {
+                    printf("Register %d changed from %d to %d\n", address, prev_values[address], value);
+                    prev_values[address] = value;  // Update previous value
 
-                // Let Garibaldi changing value via Modbus
-                if (ctx != NULL) {
-                    int rc = modbus_write_register(ctx, address, value);
-                    if (rc == -1) {
-                        fprintf(stderr, "Failed to notify Modbus device: %s\n", modbus_strerror(errno));
-                    } else {
-                        printf("Notified Modbus device: Register %d updated to %d\n", address, value);
+                    // Notify Modbus to change the value
+                    if (ctx != NULL) {
+                        int rc = modbus_write_register(ctx, address, value);
+                        if (rc == -1) {
+                            fprintf(stderr, "Failed to notify Modbus device: %s\n", modbus_strerror(errno));
+                        } else {
+                            printf("Notified Modbus device: Register %d updated to %d\n", address, value);
+                        }
                     }
                 }
             }
@@ -52,6 +56,7 @@ void check_file(int *prev_values, modbus_t *ctx) {
     }
     fclose(file);
 }
+
 
 modbus_t* initialize_modbus(void) {
     modbus_t *ctx = modbus_new_tcp(MODBUS_IP, MODBUS_PORT);
@@ -71,7 +76,8 @@ int main(int argc, char* argv[]) {
     printf("Watching the file for changes...\n");
 
     // Modbus Connection Setting
-    modbus_t *ctx = initialize_modbus();
+    // modbus_t *ctx = initialize_modbus();
+    modbus_t *ctx = NULL;
 
     while (1) {
         check_file(prev_values, ctx);

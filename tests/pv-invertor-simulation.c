@@ -10,7 +10,7 @@
 
 #define SERVER_ID 1
 #define FILE_NAME "modbus_registers.txt"
-#define NUM_REGISTERS 10  // Total number of registers
+#define NUM_REGISTERS 30
 
 // Prototypes
 int set_backend_simulation(int argc, char* argv[]);
@@ -19,6 +19,7 @@ modbus_t* initialize_modbus_context_simulation(int use_backend, char* ip_or_devi
 modbus_mapping_t* initialize_modbus_mapping_simulation(void);
 int setup_server_simulation(int use_backend, modbus_t* ctx);
 void update_file(int address, int value);
+void initialize_file(void);
 
 enum {
     TCP,
@@ -100,52 +101,33 @@ modbus_mapping_t* initialize_modbus_mapping_simulation() {
 // }
 // Update the value of a specific register in the file
 void update_file(int address, int value) {
-    FILE *file = fopen(FILE_NAME, "r+");  // Open file for reading and writing
+    FILE *file = fopen(FILE_NAME, "r+");  // read & write
     if (file == NULL) {
-        fprintf(stderr, "Failed to open file for reading/writing\n");
+        fprintf(stderr, "Can't open file\n");
         return;
     }
 
-    char buffer[256];  // Buffer for reading lines
-    char temp_file[] = "temp_modbus_registers.txt";  // Temporary file for updates
-    FILE *temp = fopen(temp_file, "w");  // Temporary file to write updates
-    if (temp == NULL) {
-        fprintf(stderr, "Failed to create temporary file\n");
-        fclose(file);
-        return;
-    }
-
+    char buffer[256];
     int current_address, current_value;
-    int line_number = 0;
+    int found = 0; // check whether they have the address or not => Think about the maximum registers number
+
     while (fgets(buffer, sizeof(buffer), file)) {
-        if (sscanf(buffer, "%d %d", &current_address, &current_value) == 2) {
-            printf("current address = %d, address = %d, value = %d\n",current_address, address, value);
-            if (current_address == address) {
-                // If the current line matches the address, update the value
-                fprintf(temp, "%d %d\n", address, value);
-            } else {
-                // Otherwise, write the same content to the temp file
-                fputs(buffer, temp);
+        if (sscanf(buffer, "%6d    %d", &current_address, &current_value) == 2) {
+            if (current_address == address) { // TODO : need to support hexdecimal as well
+                fseek(file, -strlen(buffer), SEEK_CUR);  // Move to first place of this line
+                fprintf(file, "%6d    %d\n", address, value);  // Update
+                found = 1;
+                break;
             }
         }
-        line_number++;
     }
 
-    // If the file was shorter than expected, append any missing registers
-    for (int i = line_number; i < NUM_REGISTERS; i++) {
-        if (i == address) {
-            fprintf(temp, "%d %d\n", address, value);  // Append the updated register
-        } else {
-            fprintf(temp, "%d 10\n", i);  // Initialize missing registers with default value 10
-        }
+    if (!found) {
+        fseek(file, 0, SEEK_END);  // end of the file
+        fprintf(file, "%6d    %d\n", address, value);
     }
 
     fclose(file);
-    fclose(temp);
-
-    // Replace the original file with the updated temporary file
-    remove(FILE_NAME);
-    rename(temp_file, FILE_NAME);
 }
 
 // Set up the Modbus server for communication
@@ -176,6 +158,30 @@ int setup_server_simulation(int use_backend, modbus_t* ctx) {
     return socket_file_descriptor;
 }
 
+void initialize_file(void) {
+    // Try to open the file in read mode
+    FILE *file_read = fopen(FILE_NAME, "r");
+    if (file_read != NULL) {
+        // File exists, so we close it and do nothing
+        fclose(file_read);
+        return;
+    }
+
+    FILE *file = fopen(FILE_NAME, "w");
+    if (file == NULL) {
+        fprintf(stderr, "Failed to create file\n");
+        return;
+    }
+    fprintf(file, "Address Value\n");
+    for (int i = 0; i < NUM_REGISTERS / 2; i++) {
+        fprintf(file, "%6d    10\n", i);  // Initialize with default value 10
+    }
+    for (int i = NUM_REGISTERS / 2; i < NUM_REGISTERS; i++) {
+        fprintf(file, "0x%04x    10\n", i);  // Initialize with default value 10
+    }
+    fclose(file);
+}
+
 int main(int argc, char* argv[]) {
     int socket_file_descriptor = -1;
     int use_backend = set_backend_simulation(argc, argv);
@@ -188,6 +194,8 @@ int main(int argc, char* argv[]) {
     if (use_backend == -1 || ip_or_device == NULL) {
         return -1;
     }
+
+    initialize_file();
 
     // Initialize Modbus context
     ctx = initialize_modbus_context_simulation(use_backend, ip_or_device);
@@ -240,9 +248,23 @@ int main(int argc, char* argv[]) {
             printf("Current register value at %d: %d\n", address, mb_mapping->tab_registers[address]);
             mb_mapping->tab_registers[address] = value;  // Update the register value
             printf("Updated register %d with value: %d\n", address, value);
-
             // Update the file with the new register value
             update_file(address, value);
+        } else if (query[header_length] == 0x05) {  // MODBUS_FC_WRITE_SINGLE_COIL
+            int address = MODBUS_GET_INT16_FROM_INT8(query, header_length + 1);
+            uint8_t value = query[header_length + 4];
+            printf("Current coil value at %d: %d\n", address, mb_mapping->tab_bits[address]);
+            mb_mapping->tab_bits[address] = value ? 1 : 0;
+            printf("Updated coil %d with value: %d\n", address, value);
+        } else if (query[header_length] == 0x10) {  // MODBUS_FC_WRITE_MULTIPLE_REGISTERS
+            int address = MODBUS_GET_INT16_FROM_INT8(query, header_length + 1);
+            int reg_count = MODBUS_GET_INT16_FROM_INT8(query, header_length + 3);
+            for (int i = 0; i < reg_count; i++) {
+                uint16_t value = MODBUS_GET_INT16_FROM_INT8(query, header_length + 7 + i * 2);
+                printf("Current register value at %d: %d\n", address + i, mb_mapping->tab_registers[address + i]);
+                mb_mapping->tab_registers[address + i] = value;
+                printf("Updated register %d with value: %d\n", address + i, value);
+            }
         }
 
         // Send response to the Modbus client
@@ -457,12 +479,12 @@ int main(int argc, char* argv[]) {
     int tmp = modbus_connect(substation_ctx);
     if (tmp == -1) {
         fprintf(stderr, "Failed to connect to substation: %s\n", modbus_strerror(errno));
-        // 연결 실패 시 재시도 처리
+        // Retry if the connection fail
         int retries = 0;
         while (retries < 20 && tmp == -1) {
             printf("Failed to connect to substation, retrying... to %s, port =%d\n",SUBSTATION_IP, SUBSTATION_PORT);
             tmp = modbus_connect(substation_ctx);
-            sleep(2);  // 재시도 간 대기 시간
+            sleep(2);
             retries++;
         }
         modbus_free(substation_ctx);
