@@ -903,24 +903,37 @@ int modbus_reply(modbus_t *ctx,
                                             FALSE,
                                             "Illegal data address 0x%0X in write_bit\n",
                                             address);
-        } else {
-            int data = (req[offset + 3] << 8) + req[offset + 4];
+            break;
+        }
 
-            if (data == 0xFF00 || data == 0x0) {
-                mb_mapping->tab_bits[mapping_address] = data ? ON : OFF;
-                memcpy(rsp, req, req_length);
-                rsp_length = req_length;
-            } else {
-                rsp_length = response_exception(
-                    ctx,
-                    &sft,
-                    MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE,
-                    rsp,
-                    FALSE,
-                    "Illegal data value 0x%0X in write_bit request at address %0X\n",
-                    data,
-                    address);
-            }
+        /* This check is only done here to ensure using memcpy is safe. */
+        rsp_length = compute_response_length_from_request(ctx, (uint8_t *) req);
+        if (rsp_length != req_length) {
+            /* Bad use of modbus_reply */
+            rsp_length = response_exception(ctx,
+                                            &sft,
+                                            MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE,
+                                            rsp,
+                                            FALSE,
+                                            "Invalid request length (%d)\n",
+                                            req_length);
+            break;
+        }
+
+        int data = (req[offset + 3] << 8) + req[offset + 4];
+        if (data == 0xFF00 || data == 0x0) {
+            mb_mapping->tab_bits[mapping_address] = data ? ON : OFF;
+            memcpy(rsp, req, rsp_length);
+        } else {
+            rsp_length = response_exception(
+                ctx,
+                &sft,
+                MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE,
+                rsp,
+                FALSE,
+                "Illegal data value 0x%0X in write_bit request at address %0X\n",
+                data,
+                address);
         }
     } break;
     case MODBUS_FC_WRITE_SINGLE_REGISTER: {
@@ -1133,8 +1146,8 @@ int modbus_reply(modbus_t *ctx,
         break;
     }
 
-    /* Suppress any responses in RTU when the request was a broadcast, excepted when quirk
-     * is enabled. */
+    /* Suppress any responses in RTU when the request was a broadcast, excepted when
+     * quirk is enabled. */
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU &&
         slave == MODBUS_BROADCAST_ADDRESS &&
         !(ctx->quirks & MODBUS_QUIRK_REPLY_TO_BROADCAST)) {
@@ -1830,7 +1843,8 @@ int modbus_set_byte_timeout(modbus_t *ctx, uint32_t to_sec, uint32_t to_usec)
     return 0;
 }
 
-/* Get the timeout interval used by the server to wait for an indication from a client */
+/* Get the timeout interval used by the server to wait for an indication from a client
+ */
 int modbus_get_indication_timeout(modbus_t *ctx, uint32_t *to_sec, uint32_t *to_usec)
 {
     if (ctx == NULL) {

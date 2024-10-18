@@ -150,9 +150,8 @@ int main(int argc, char *argv[])
             break;
         }
 
-        /* Special server behavior to test client */
-        if (query[header_length] == 0x03) {
-            /* Read holding registers */
+        /** Special server behavior to test client **/
+        if (query[header_length] == MODBUS_FC_READ_HOLDING_REGISTERS) {
 
             if (MODBUS_GET_INT16_FROM_INT8(query, header_length + 3) ==
                 UT_REGISTERS_NB_SPECIAL) {
@@ -203,6 +202,17 @@ int main(int argc, char *argv[])
                     }
                 }
                 continue;
+            }
+
+        } else if (query[header_length] == MODBUS_FC_WRITE_SINGLE_COIL) {
+            if (MODBUS_GET_INT16_FROM_INT8(query, header_length + 1) ==
+                UT_BITS_ADDRESS_INVALID_REQUEST_LENGTH) {
+                // The valid length is lengths of header + checkum + FC + address + value
+                // (max 12)
+                rc = 34;
+                printf("Special modbus_write_bit detected. Inject a wrong rc value (%d) "
+                       "in modbus_reply\n",
+                       rc);
             }
         }
 
