@@ -148,13 +148,13 @@ AC_CHECK_DECLS([TIOCSRS485], [], [], [[#include <sys/ioctl.h>]])
 AC_CHECK_DECLS([TIOCM_RTS], [], [], [[#include <sys/ioctl.h>]])
 
 # Wtype-limits is not supported by gcc 4.2 (default on recent Mac OS X)
-my_CFLAGS="-Wall \
+WARNING_CFLAGS="-Wall \
 -Wmissing-declarations -Wmissing-prototypes \
 -Wnested-externs -Wpointer-arith \
 -Wsign-compare -Wchar-subscripts \
 -Wstrict-prototypes -Wshadow \
 -Wformat-security"
-AC_SUBST([my_CFLAGS])
+AC_SUBST([WARNING_CFLAGS])
 
 # Build options
 AC_ARG_ENABLE(tests,
@@ -184,7 +184,7 @@ AC_MSG_RESULT([
         includedir:             ${includedir}
 
         compiler:               ${CC}
-        cflags:                 ${CFLAGS}
+        cflags:                 ${CFLAGS} ${WARNING_CFLAGS}
         ldflags:                ${LDFLAGS}
 
         tests:                  ${enable_tests}
