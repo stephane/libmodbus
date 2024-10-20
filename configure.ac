@@ -173,6 +173,20 @@ AC_CONFIG_FILES([
         libmodbus.pc
 ])
 
+AC_ARG_ENABLE([debug],
+  [AS_HELP_STRING([--enable-debug],
+    [Enable debug symbols (default is no)])],
+  [enable_debug=$enableval],
+  [enable_debug=no])
+
+AS_IF([test "x$enable_debug" = "xyes"], [
+  CFLAGS="-g -O0"
+  CXXFLAGS="-g -O0"
+], [
+  CFLAGS="-O2"
+  CXXFLAGS="-O2"
+])
+
 AC_OUTPUT
 AC_MSG_RESULT([
         $PACKAGE $VERSION
