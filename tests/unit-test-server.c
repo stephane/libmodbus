@@ -150,21 +150,21 @@ int main(int argc, char *argv[])
             break;
         }
 
-        /** Special server behavior to test client **/
-        if (query[header_length] == MODBUS_FC_READ_HOLDING_REGISTERS) {
+        uint8_t function = query[header_length];
+        uint16_t address = MODBUS_GET_INT16_FROM_INT8(query, header_length + 1);
 
+        /** Special server behavior to test client **/
+        if (function == MODBUS_FC_READ_HOLDING_REGISTERS) {
             if (MODBUS_GET_INT16_FROM_INT8(query, header_length + 3) ==
                 UT_REGISTERS_NB_SPECIAL) {
                 printf("Set an incorrect number of values\n");
                 MODBUS_SET_INT16_TO_INT8(
                     query, header_length + 3, UT_REGISTERS_NB_SPECIAL - 1);
-            } else if (MODBUS_GET_INT16_FROM_INT8(query, header_length + 1) ==
-                       UT_REGISTERS_ADDRESS_SPECIAL) {
+            } else if (address == UT_REGISTERS_ADDRESS_SPECIAL) {
                 printf("Reply to this special register address by an exception\n");
                 modbus_reply_exception(ctx, query, MODBUS_EXCEPTION_SLAVE_OR_SERVER_BUSY);
                 continue;
-            } else if (MODBUS_GET_INT16_FROM_INT8(query, header_length + 1) ==
-                       UT_REGISTERS_ADDRESS_INVALID_TID_OR_SLAVE) {
+            } else if (address == UT_REGISTERS_ADDRESS_INVALID_TID_OR_SLAVE) {
                 const int RAW_REQ_LENGTH = 5;
                 uint8_t raw_req[] = {(use_backend == RTU) ? INVALID_SERVER_ID : 0xFF,
                                      0x03,
@@ -175,12 +175,10 @@ int main(int argc, char *argv[])
                 printf("Reply with an invalid TID or slave\n");
                 modbus_send_raw_request(ctx, raw_req, RAW_REQ_LENGTH * sizeof(uint8_t));
                 continue;
-            } else if (MODBUS_GET_INT16_FROM_INT8(query, header_length + 1) ==
-                       UT_REGISTERS_ADDRESS_SLEEP_500_MS) {
+            } else if (address == UT_REGISTERS_ADDRESS_SLEEP_500_MS) {
                 printf("Sleep 0.5 s before replying\n");
                 usleep(500000);
-            } else if (MODBUS_GET_INT16_FROM_INT8(query, header_length + 1) ==
-                       UT_REGISTERS_ADDRESS_BYTE_SLEEP_5_MS) {
+            } else if (address == UT_REGISTERS_ADDRESS_BYTE_SLEEP_5_MS) {
                 /* Test low level only available in TCP mode */
                 /* Catch the reply and send reply byte a byte */
                 uint8_t req[] = "\x00\x1C\x00\x00\x00\x05\xFF\x03\x02\x00\x00";
@@ -203,10 +201,8 @@ int main(int argc, char *argv[])
                 }
                 continue;
             }
-
-        } else if (query[header_length] == MODBUS_FC_WRITE_SINGLE_COIL) {
-            if (MODBUS_GET_INT16_FROM_INT8(query, header_length + 1) ==
-                UT_BITS_ADDRESS_INVALID_REQUEST_LENGTH) {
+        } else if (function == MODBUS_FC_WRITE_SINGLE_COIL) {
+            if (address == UT_BITS_ADDRESS_INVALID_REQUEST_LENGTH) {
                 // The valid length is lengths of header + checkum + FC + address + value
                 // (max 12)
                 rc = 34;
@@ -215,9 +211,8 @@ int main(int argc, char *argv[])
                     "in modbus_reply\n",
                     rc);
             }
-        } else if (query[header_length] == MODBUS_FC_WRITE_SINGLE_REGISTER) {
-            if (MODBUS_GET_INT16_FROM_INT8(query, header_length + 1) ==
-                UT_REGISTERS_ADDRESS_SPECIAL) {
+        } else if (function == MODBUS_FC_WRITE_SINGLE_REGISTER) {
+            if (address == UT_REGISTERS_ADDRESS_SPECIAL) {
                 rc = 45;
                 printf("Special modbus_write_register detected. Inject a wrong length "
                        "value (%d) in modbus_reply\n",
