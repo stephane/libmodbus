@@ -499,11 +499,15 @@ int main(int argc, char *argv[])
 
     modbus_disable_quirks(ctx, MODBUS_QUIRK_MAX_SLAVE);
     rc = modbus_set_slave(ctx, old_slave);
-    ASSERT_TRUE(rc == 0, "Uanble to restore slave value")
+    ASSERT_TRUE(rc == 0, "Unable to restore slave value")
 
     /** BAD USE OF REPLY FUNCTION **/
     rc = modbus_write_bit(ctx, UT_BITS_ADDRESS_INVALID_REQUEST_LENGTH, ON);
     printf("* modbus_write_bit (triggers invalid reply): ");
+    ASSERT_TRUE(rc == -1 && errno == EMBXILVAL, "");
+
+    rc = modbus_write_register(ctx, UT_REGISTERS_ADDRESS_SPECIAL, 0x42);
+    printf("* modbus_write_register (triggers invalid reply): ");
     ASSERT_TRUE(rc == -1 && errno == EMBXILVAL, "");
 
     /** SLAVE REPLY **/

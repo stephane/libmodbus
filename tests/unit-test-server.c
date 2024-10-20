@@ -210,8 +210,17 @@ int main(int argc, char *argv[])
                 // The valid length is lengths of header + checkum + FC + address + value
                 // (max 12)
                 rc = 34;
-                printf("Special modbus_write_bit detected. Inject a wrong rc value (%d) "
-                       "in modbus_reply\n",
+                printf(
+                    "Special modbus_write_bit detected. Inject a wrong length value (%d) "
+                    "in modbus_reply\n",
+                    rc);
+            }
+        } else if (query[header_length] == MODBUS_FC_WRITE_SINGLE_REGISTER) {
+            if (MODBUS_GET_INT16_FROM_INT8(query, header_length + 1) ==
+                UT_REGISTERS_ADDRESS_SPECIAL) {
+                rc = 45;
+                printf("Special modbus_write_register detected. Inject a wrong length "
+                       "value (%d) in modbus_reply\n",
                        rc);
             }
         }

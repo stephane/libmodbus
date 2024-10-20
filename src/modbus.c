@@ -910,13 +910,14 @@ int modbus_reply(modbus_t *ctx,
         rsp_length = compute_response_length_from_request(ctx, (uint8_t *) req);
         if (rsp_length != req_length) {
             /* Bad use of modbus_reply */
-            rsp_length = response_exception(ctx,
-                                            &sft,
-                                            MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE,
-                                            rsp,
-                                            FALSE,
-                                            "Invalid request length (%d)\n",
-                                            req_length);
+            rsp_length =
+                response_exception(ctx,
+                                   &sft,
+                                   MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE,
+                                   rsp,
+                                   FALSE,
+                                   "Invalid request length used in modbus_reply (%d)\n",
+                                   req_length);
             break;
         }
 
@@ -948,13 +949,26 @@ int modbus_reply(modbus_t *ctx,
                                    FALSE,
                                    "Illegal data address 0x%0X in write_register\n",
                                    address);
-        } else {
-            int data = (req[offset + 3] << 8) + req[offset + 4];
-
-            mb_mapping->tab_registers[mapping_address] = data;
-            memcpy(rsp, req, req_length);
-            rsp_length = req_length;
+            break;
         }
+
+        rsp_length = compute_response_length_from_request(ctx, (uint8_t *) req);
+        if (rsp_length != req_length) {
+            /* Bad use of modbus_reply */
+            rsp_length =
+                response_exception(ctx,
+                                   &sft,
+                                   MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE,
+                                   rsp,
+                                   FALSE,
+                                   "Invalid request length used in modbus_reply (%d)\n",
+                                   req_length);
+            break;
+        }
+        int data = (req[offset + 3] << 8) + req[offset + 4];
+
+        mb_mapping->tab_registers[mapping_address] = data;
+        memcpy(rsp, req, rsp_length);
     } break;
     case MODBUS_FC_WRITE_MULTIPLE_COILS: {
         int nb = (req[offset + 3] << 8) + req[offset + 4];
