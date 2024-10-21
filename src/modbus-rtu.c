@@ -129,9 +129,8 @@ static uint16_t crc16(uint8_t *buffer, uint16_t buffer_length)
     return (crc_hi << 8 | crc_lo);
 }
 
-static int _modbus_rtu_prepare_response_tid(const uint8_t *req, int *req_length)
+static int _modbus_rtu_get_response_tid(const uint8_t *req)
 {
-    (*req_length) -= _MODBUS_RTU_CHECKSUM_LENGTH;
     /* No TID */
     return 0;
 }
@@ -1187,7 +1186,7 @@ const modbus_backend_t _modbus_rtu_backend = {
     _modbus_set_slave,
     _modbus_rtu_build_request_basis,
     _modbus_rtu_build_response_basis,
-    _modbus_rtu_prepare_response_tid,
+    _modbus_rtu_get_response_tid,
     _modbus_rtu_send_msg_pre,
     _modbus_rtu_send,
     _modbus_rtu_receive,

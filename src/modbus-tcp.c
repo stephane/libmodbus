@@ -153,7 +153,7 @@ static int _modbus_tcp_build_response_basis(sft_t *sft, uint8_t *rsp)
     return _MODBUS_TCP_PRESET_RSP_LENGTH;
 }
 
-static int _modbus_tcp_prepare_response_tid(const uint8_t *req, int *req_length)
+static int _modbus_tcp_get_response_tid(const uint8_t *req)
 {
     return (req[0] << 8) + req[1];
 }
@@ -838,7 +838,7 @@ const modbus_backend_t _modbus_tcp_backend = {
     _modbus_set_slave,
     _modbus_tcp_build_request_basis,
     _modbus_tcp_build_response_basis,
-    _modbus_tcp_prepare_response_tid,
+    _modbus_tcp_get_response_tid,
     _modbus_tcp_send_msg_pre,
     _modbus_tcp_send,
     _modbus_tcp_receive,
@@ -861,7 +861,7 @@ const modbus_backend_t _modbus_tcp_pi_backend = {
     _modbus_set_slave,
     _modbus_tcp_build_request_basis,
     _modbus_tcp_build_response_basis,
-    _modbus_tcp_prepare_response_tid,
+    _modbus_tcp_get_response_tid,
     _modbus_tcp_send_msg_pre,
     _modbus_tcp_send,
     _modbus_tcp_receive,

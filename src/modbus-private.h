@@ -75,7 +75,7 @@ typedef struct _modbus_backend {
     int (*build_request_basis)(
         modbus_t *ctx, int function, int addr, int nb, uint8_t *req);
     int (*build_response_basis)(sft_t *sft, uint8_t *rsp);
-    int (*prepare_response_tid)(const uint8_t *req, int *req_length);
+    int (*get_response_tid)(const uint8_t *req);
     int (*send_msg_pre)(uint8_t *req, int req_length);
     ssize_t (*send)(modbus_t *ctx, const uint8_t *req, int req_length);
     int (*receive)(modbus_t *ctx, uint8_t *req);
