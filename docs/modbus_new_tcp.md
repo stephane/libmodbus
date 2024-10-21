@@ -41,7 +41,7 @@ defined below.
 ```c
 modbus_t *ctx;
 
-ctx = modbus_new_tcp("127.0.0.1", 1502);
+ctx = modbus_new_tcp("127.0.0.1", 502);
 if (ctx == NULL) {
     fprintf(stderr, "Unable to allocate libmodbus context\n");
     return -1;
