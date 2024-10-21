@@ -42,8 +42,12 @@
 # include <netinet/in_systm.h>
 #endif
 
-# include <netinet/in.h>
-# include <netinet/ip.h>
+#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif /* HAVE_NETINET_IN_H */
+#ifdef HAVE_NETINET_IP_H
+#include <netinet/ip.h>
+#endif /* HAVE_NETINET_IP_H */
 # include <netinet/tcp.h>
 # include <arpa/inet.h>
 # include <netdb.h>
