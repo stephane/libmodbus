@@ -43,7 +43,9 @@
 #endif
 
 # include <netinet/in.h>
+#ifdef HAVE_NETINET_IP_H
 # include <netinet/ip.h>
+#endif
 # include <netinet/tcp.h>
 # include <arpa/inet.h>
 # include <netdb.h>
