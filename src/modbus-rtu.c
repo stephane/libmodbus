@@ -351,23 +351,11 @@ static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg, const int ms
     uint16_t crc_received;
     int slave = msg[0];
 
-    /* Filter on the Modbus unit identifier (slave) in RTU mode to avoid useless
-     * CRC computing. */
-    if (slave != ctx->slave && slave != MODBUS_BROADCAST_ADDRESS) {
-        if (ctx->debug) {
-            printf("Request for slave %d ignored (not %d)\n", slave, ctx->slave);
-        }
-        /* Following call to check_confirmation handles this error */
-        return 0;
-    }
-
     crc_calculated = crc16(msg, msg_length - 2);
     crc_received = (msg[msg_length - 1] << 8) | msg[msg_length - 2];
 
     /* Check CRC of msg */
-    if (crc_calculated == crc_received) {
-        return msg_length;
-    } else {
+    if (crc_calculated != crc_received) {
         if (ctx->debug) {
             fprintf(stderr,
                     "ERROR CRC received 0x%0X != CRC calculated 0x%0X\n",
@@ -381,6 +369,18 @@ static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg, const int ms
         errno = EMBBADCRC;
         return -1;
     }
+
+    /* Filter on the Modbus unit identifier (slave) in RTU mode to avoid useless
+     * CRC computing. */
+    if (slave != ctx->slave && slave != MODBUS_BROADCAST_ADDRESS) {
+        if (ctx->debug) {
+            printf("Request for slave %d ignored (not %d)\n", slave, ctx->slave);
+        }
+        /* Following call to check_confirmation handles this error */
+        return 0;
+    }
+
+    return msg_length;
 }
 
 /* Sets up a serial port for RTU communications */
