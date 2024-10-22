@@ -1,10 +1,14 @@
 # NEWS
 
-## libmodbus x.x.x
+## libmodbus 3.1.11 (2024-10-22)
 
+- RTU - Check CRC before filtering on slave ID
+- HAVE_NETINET_IN_H as guard around header (closes #765)
+- Use default port 502 in documentation.
 - Fix float endianness issue introduced in v3.1.8 (49af73d).
   Thank you @ghorwin for your excellent work on the subject.
   Closes #665, #694, #757, #770.
+- Proper display of used CFLAGS.
 - Don't build with debug flag by default anymore.
 - Check request length in `modbus_reply` when used in `memcpy`.
   Thank you Nozomi Networks Labs Advisory for the report.
@@ -19,11 +23,11 @@
 - Don't use loop initial declaration (closes #752).
 - Fix wrong generated version for double number in win32 (closes #675).
 - Don't use gai_strerror if not available.
-- Add checks for netinet/ip.h and gai_strerror
+- Add checks for netinet/ip.h and gai_strerror (#745)
 - Log error in read input registers if debug (closes #755).
 - Fix errno value on timeout with TCP connect (closes #736, #756).
   Thank you @kyllingstad for the issue and @psychon for the fix.
-- Free addrinfo struct on getaddrinfo() errors.
+- Free addrinfo struct on getaddrinfo() gerrors.
 - Fix doc of modbus_mapping_new_start_address (#615).
 
 ## libmodbus 3.1.10 (2022-12-07)
