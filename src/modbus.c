@@ -97,6 +97,8 @@ static void _sleep_response_timeout(modbus_t *ctx)
 #ifdef _WIN32
     /* usleep doesn't exist on Windows */
     Sleep((ctx->response_timeout.tv_sec * 1000) + (ctx->response_timeout.tv_usec / 1000));
+#elif (ESP_PLATFORM)
+	usleep((ctx->response_timeout.tv_sec * 1000) + (ctx->response_timeout.tv_usec / 1000));
 #else
     /* usleep source code */
     struct timespec request, remaining;
@@ -493,6 +495,7 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
                     step = _STEP_META;
                     break;
                 } /* else switches straight to the next step */
+                // ... falls through ...
             case _STEP_META:
                 length_to_read = compute_data_length_after_meta(ctx, msg, msg_type);
                 if ((msg_length + length_to_read) > ctx->backend->max_adu_length) {
