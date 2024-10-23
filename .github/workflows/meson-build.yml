@@ -1,0 +1,18 @@
+name: Meson build libmodbus
+
+on:
+    push:
+        branches: ["master"]
+    pull_request:
+        branches: ["master"]
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v3
+            - uses: actions/setup-python@v4
+            - uses: BSFishy/meson-build@v1.0.3
+              with:
+                action: test
