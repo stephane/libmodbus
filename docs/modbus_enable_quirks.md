@@ -22,6 +22,8 @@ offers the following flags:
 - `MODBUS_QUIRK_MAX_SLAVE` allows slave adresses between 247 and 255.
 - `MODBUS_QUIRK_REPLY_TO_BROADCAST` force a reply to a broacast request when the
   device is a slave in RTU mode (should be enabled on the slave device).
+- `MODBUS_QUIRK_IGNORE_RTU_SLAVE_CHECK` allows no filtering on the Modbus unit
+  identifier (slave) in RTU mode while checking integrity.
 
 You can combine the flags by using the bitwise OR operator.
 
