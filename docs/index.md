@@ -206,6 +206,10 @@ Information about header:
 
 - [modbus_get_header_length](modbus_get_header_length.md)
 
+Information about query:
+
+- [modbus_get_query_function](modbus_get_query_function.md)
+
 ## Data handling
 
 Macros for data manipulation:
