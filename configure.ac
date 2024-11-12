@@ -195,6 +195,9 @@ AC_MSG_RESULT([
         cflags:                 ${CFLAGS}
         ldflags:                ${LDFLAGS}
 
+        build shared lib:       ${enable_shared}
+        build static lib:       ${enable_static}
+
         tests:                  ${enable_tests}
         RTU USB:                ${have_libusb}
 ])
