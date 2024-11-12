@@ -200,5 +200,8 @@ AC_MSG_RESULT([
         cflags:                 ${CFLAGS} ${WARNING_CFLAGS}
         ldflags:                ${LDFLAGS}
 
+        build shared lib:       ${enable_shared}
+        build static lib:       ${enable_static}
+
         tests:                  ${enable_tests}
 ])
