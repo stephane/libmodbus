@@ -151,6 +151,7 @@ AC_ARG_WITH([libusb],
     AS_HELP_STRING([--with-libusb],[Use libusb-1.0 for USB support (default is no)]),,
     [with_libusb=no])
 
+have_libusb=no
 if test "x$with_libusb" != "xno"; then
     AC_CHECK_LIB(usb-1.0, libusb_init, [
         LIBUSB_LIBS="-lusb-1.0"
@@ -195,4 +196,5 @@ AC_MSG_RESULT([
         ldflags:                ${LDFLAGS}
 
         tests:                  ${enable_tests}
+        RTU USB:                ${have_libusb}
 ])
