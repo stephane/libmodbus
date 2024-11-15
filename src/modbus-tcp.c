@@ -187,7 +187,9 @@ static int _modbus_tcp_receive(modbus_t *ctx, uint8_t *req)
     return _modbus_receive_msg(ctx, req, MSG_INDICATION);
 }
 
-static ssize_t _modbus_tcp_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length)
+ssize_t _modbus_tcp_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length);
+
+ssize_t _modbus_tcp_recv(modbus_t *ctx, uint8_t *rsp, int rsp_length)
 {
     return recv(ctx->s, (char *) rsp, rsp_length, 0);
 }
@@ -322,8 +324,10 @@ static int _connect(int sockfd,
     return rc;
 }
 
+int _modbus_tcp_connect(modbus_t *ctx);
+
 /* Establishes a modbus TCP connection with a Modbus server. */
-static int _modbus_tcp_connect(modbus_t *ctx)
+int _modbus_tcp_connect(modbus_t *ctx)
 {
     int rc;
     /* Specialized version of sockaddr for Internet socket address (same size) */
@@ -471,8 +475,10 @@ static unsigned int _modbus_tcp_is_connected(modbus_t *ctx)
     return ctx->s >= 0;
 }
 
+void _modbus_tcp_close(modbus_t *ctx);
+
 /* Closes the network connection and socket in TCP mode */
-static void _modbus_tcp_close(modbus_t *ctx)
+void _modbus_tcp_close(modbus_t *ctx)
 {
     if (ctx->s >= 0) {
         shutdown(ctx->s, SHUT_RDWR);
@@ -481,7 +487,9 @@ static void _modbus_tcp_close(modbus_t *ctx)
     }
 }
 
-static int _modbus_tcp_flush(modbus_t *ctx)
+int _modbus_tcp_flush(modbus_t *ctx);
+
+int _modbus_tcp_flush(modbus_t *ctx)
 {
     int rc;
     // Use an unsigned 16-bit integer to reduce overflow risk. The flush function
@@ -882,6 +890,89 @@ const modbus_backend_t _modbus_tcp_pi_backend = {
 
 // clang-format on
 
+int _modbus_rtu_build_request_basis(
+    modbus_t *ctx, int function, int addr, int nb, uint8_t *req);
+int _modbus_rtu_build_response_basis(sft_t *sft, uint8_t *rsp);
+int _modbus_rtu_get_response_tid(const uint8_t *req);
+int _modbus_rtu_send_msg_pre(uint8_t *req, int req_length);
+int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg, const int msg_length);
+int _modbus_rtu_filter_request(modbus_t *ctx, int slave);
+uint16_t crc16(uint8_t *buffer, uint16_t buffer_length);
+int _modbus_rtutcp_check_integrity(modbus_t *ctx, uint8_t *msg, const int msg_length);
+
+/* The check_crc16 function shall return the message length if the CRC is
+   valid. Otherwise it shall return -1 and set errno to EMBADCRC. */
+int _modbus_rtutcp_check_integrity(modbus_t *ctx, uint8_t *msg, const int msg_length)
+{
+    uint16_t crc_calculated;
+    uint16_t crc_received;
+    crc_calculated = crc16(msg, msg_length - 2);
+    crc_received = (msg[msg_length - 2] << 8) | msg[msg_length - 1];
+    /* Check CRC of msg */
+    if (crc_calculated == crc_received) {
+        return msg_length;
+    } else {
+        if (ctx->debug) {
+            fprintf(stderr,
+                    "ERROR CRC received %0X != CRC calculated %0X\n",
+                    crc_received,
+                    crc_calculated);
+        }
+        if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_PROTOCOL) {
+            _modbus_tcp_flush(ctx);
+        }
+        errno = EMBBADCRC;
+        return -1;
+    }
+}
+
+#define MODBUS_RTU_MAX_ADU_LENGTH   256
+#define _MODBUS_RTU_CHECKSUM_LENGTH 2
+#define _MODBUS_RTU_HEADER_LENGTH   1
+const modbus_backend_t _modbus_rtutcp_backend = {_MODBUS_BACKEND_TYPE_TCP,
+                                                 _MODBUS_RTU_HEADER_LENGTH,
+                                                 _MODBUS_RTU_CHECKSUM_LENGTH,
+                                                 MODBUS_RTU_MAX_ADU_LENGTH,
+                                                 _modbus_set_slave,
+                                                 _modbus_rtu_build_request_basis,
+                                                 _modbus_rtu_build_response_basis,
+                                                 _modbus_rtu_get_response_tid,
+                                                 _modbus_rtu_send_msg_pre,
+                                                 _modbus_tcp_send,
+                                                 _modbus_tcp_receive,
+                                                 _modbus_tcp_recv,
+                                                 _modbus_rtu_check_integrity,
+                                                 NULL,
+                                                 _modbus_tcp_connect,
+                                                 _modbus_tcp_is_connected,
+                                                 _modbus_tcp_close,
+                                                 _modbus_tcp_flush,
+                                                 _modbus_tcp_select,
+                                                 _modbus_tcp_free};
+
+// const modbus_backend_t _modbus_rtu_backend = {
+//     _MODBUS_BACKEND_TYPE_RTU,
+//     _MODBUS_RTU_HEADER_LENGTH,
+//     _MODBUS_RTU_CHECKSUM_LENGTH,
+//     MODBUS_RTU_MAX_ADU_LENGTH,
+//     _modbus_set_slave,
+//     _modbus_rtu_build_request_basis,
+//     _modbus_rtu_build_response_basis,
+//     _modbus_rtu_get_response_tid,
+//     _modbus_rtu_send_msg_pre,
+//     _modbus_rtu_send,
+//     _modbus_rtu_receive,
+//     _modbus_rtu_recv,
+//     _modbus_rtu_check_integrity,
+//     _modbus_rtu_pre_check_confirmation,
+//     _modbus_rtu_connect,
+//     _modbus_rtu_is_connected,
+//     _modbus_rtu_close,
+//     _modbus_rtu_flush,
+//     _modbus_rtu_select,
+//     _modbus_rtu_free
+// };
+
 modbus_t *modbus_new_tcp(const char *ip, int port)
 {
     modbus_t *ctx;
@@ -1000,5 +1091,48 @@ modbus_t *modbus_new_tcp_pi(const char *node, const char *service)
 
     ctx_tcp_pi->t_id = 0;
 
+    return ctx;
+}
+
+modbus_t *modbus_new_rtutcp(const char *ip, int port)
+{
+    modbus_t *ctx;
+    modbus_tcp_t *ctx_tcp;
+    size_t dest_size;
+    size_t ret_size;
+
+#if defined(OS_BSD)
+    /* MSG_NOSIGNAL is unsupported on *BSD so we install an ignore
+       handler for SIGPIPE. */
+    struct sigaction sa;
+    sa.sa_handler = SIG_IGN;
+    if (sigaction(SIGPIPE, &sa, NULL) < 0) {
+        /* The debug flag can't be set here... */
+        fprintf(stderr, "Coud not install SIGPIPE handler.\n");
+        return NULL;
+    }
+#endif
+    ctx = (modbus_t *) malloc(sizeof(modbus_t));
+    _modbus_init_common(ctx);
+    /* Could be changed after to reach a remote serial Modbus device */
+    ctx->slave = MODBUS_TCP_SLAVE;
+    ctx->backend = &(_modbus_rtutcp_backend);
+    ctx->backend_data = (modbus_tcp_t *) malloc(sizeof(modbus_tcp_t));
+    ctx_tcp = (modbus_tcp_t *) ctx->backend_data;
+    dest_size = sizeof(char) * 16;
+    ret_size = strlcpy(ctx_tcp->ip, ip, dest_size);
+    if (ret_size == 0) {
+        fprintf(stderr, "The IP string is empty\n");
+        modbus_free(ctx);
+        errno = EINVAL;
+        return NULL;
+    }
+    if (ret_size >= dest_size) {
+        fprintf(stderr, "The IP string has been truncated\n");
+        modbus_free(ctx);
+        errno = EINVAL;
+        return NULL;
+    }
+    ctx_tcp->port = port;
     return ctx;
 }

@@ -86,9 +86,12 @@ static int _modbus_set_slave(modbus_t *ctx, int slave)
 
     return 0;
 }
+int _modbus_rtu_build_request_basis(modbus_t *ctx, int function,
+                                           int addr, int nb,
+                                           uint8_t *req);
 
 /* Builds a RTU request header */
-static int _modbus_rtu_build_request_basis(
+int _modbus_rtu_build_request_basis(
     modbus_t *ctx, int function, int addr, int nb, uint8_t *req)
 {
     assert(ctx->slave != -1);
@@ -102,8 +105,10 @@ static int _modbus_rtu_build_request_basis(
     return _MODBUS_RTU_PRESET_REQ_LENGTH;
 }
 
+int _modbus_rtu_build_response_basis(sft_t *sft, uint8_t *rsp);
+
 /* Builds a RTU response header */
-static int _modbus_rtu_build_response_basis(sft_t *sft, uint8_t *rsp)
+int _modbus_rtu_build_response_basis(sft_t *sft, uint8_t *rsp)
 {
     /* In this case, the slave is certainly valid because a check is already
      * done in _modbus_rtu_listen */
@@ -113,7 +118,9 @@ static int _modbus_rtu_build_response_basis(sft_t *sft, uint8_t *rsp)
     return _MODBUS_RTU_PRESET_RSP_LENGTH;
 }
 
-static uint16_t crc16(uint8_t *buffer, uint16_t buffer_length)
+uint16_t crc16(uint8_t *buffer, uint16_t buffer_length);
+
+uint16_t crc16(uint8_t *buffer, uint16_t buffer_length)
 {
     uint8_t crc_hi = 0xFF; /* high CRC byte initialized */
     uint8_t crc_lo = 0xFF; /* low CRC byte initialized */
@@ -129,13 +136,17 @@ static uint16_t crc16(uint8_t *buffer, uint16_t buffer_length)
     return (crc_hi << 8 | crc_lo);
 }
 
-static int _modbus_rtu_get_response_tid(const uint8_t *req)
+int _modbus_rtu_get_response_tid(const uint8_t *req);
+
+int _modbus_rtu_get_response_tid(const uint8_t *req)
 {
     /* No TID */
     return 0;
 }
 
-static int _modbus_rtu_send_msg_pre(uint8_t *req, int req_length)
+int _modbus_rtu_send_msg_pre(uint8_t *req, int req_length);
+
+int _modbus_rtu_send_msg_pre(uint8_t *req, int req_length)
 {
     uint16_t crc = crc16(req, req_length);
 
@@ -342,10 +353,12 @@ static int _modbus_rtu_pre_check_confirmation(modbus_t *ctx,
     }
 }
 
+int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg, const int msg_length);
+
 /* The check_crc16 function shall return 0 if the message is ignored and the
    message length if the CRC is valid. Otherwise it shall return -1 and set
    errno to EMBBADCRC. */
-static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg, const int msg_length)
+int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg, const int msg_length)
 {
     uint16_t crc_calculated;
     uint16_t crc_received;
