@@ -588,6 +588,8 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     }
 
     uart_vfs_dev_use_driver(uart_num);
+    uart_vfs_dev_port_set_rx_line_endings(uart_num, ESP_LINE_ENDINGS_LF);
+    uart_vfs_dev_port_set_tx_line_endings(uart_num, ESP_LINE_ENDINGS_LF);
 
     return 0;
 }

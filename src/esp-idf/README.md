@@ -64,3 +64,7 @@ and would require a heavy change in the library interface.
   a standard configuration. Please check the `LWIP_MAX_SOCKETS` configuration
   variable.
 
+- Older versions (<=5.3.1) of ESP-IDF contain a buglet in the serial read code that
+  may cause some packet loss under certain circumstances (when line ending
+  chars are present), see also: https://github.com/espressif/esp-idf/issues/14155
+  Please use a newer version of ESP-IDF if you see this behavior.
