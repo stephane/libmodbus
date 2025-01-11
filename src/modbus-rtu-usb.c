@@ -546,7 +546,29 @@ static int _modbus_rtu_usb_connect(modbus_t *ctx)
             }
 
             ctx_rtu_usb->device_handle = dev_handle;
-
+#if defined HAVE_LIBUSB_POLLFD && HAVE_LIBUSB_POLLFD
+            if (usb_ctx) {
+                const struct libusb_pollfd** pollfds = libusb_get_pollfds(usb_ctx);
+                if (pollfds) {
+                    unsigned	j;
+                    for (j=0; pollfds[j] != NULL; j++) {}
+                    if (ctx->debug) {
+                        printf("Got a list of %u libusb file descriptors to poll", j);
+                    }
+                    if (j == 1) {
+                        ctx->s = pollfds[0]->fd;
+                    }
+                } else if (ctx->debug) {
+                    printf("Got no list of libusb file descriptors to poll");
+                }
+            } else if (ctx->debug) {
+                printf("Got no libusb context to query for file descriptors to poll");
+            }
+#else
+            if (ctx->debug) {
+                printf("Can not get a list of libusb file descriptors to poll from this libusb version");
+            }
+#endif	/* HAVE_LIBUSB_POLLFD */
             break;
         }
 
