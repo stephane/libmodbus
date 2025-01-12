@@ -437,7 +437,12 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
                 errno = saved_errno;
 #endif
             }
-            return -1;
+            if (ctx->s >= 0) {
+                return -1;
+            }
+            // else: We have at most tried some default FD's but not
+            // the (lacking) one for the backend, so fall through for
+            // its recv method anyway (e.g. query libusb directly).
         }
 
         rc = ctx->backend->recv(ctx, msg + msg_length, length_to_read);
