@@ -553,20 +553,20 @@ static int _modbus_rtu_usb_connect(modbus_t *ctx)
                     unsigned	j;
                     for (j=0; pollfds[j] != NULL; j++) {}
                     if (ctx->debug) {
-                        printf("Got a list of %u libusb file descriptors to poll", j);
+                        printf("Got a list of %u libusb file descriptors to poll\n", j);
                     }
                     if (j == 1) {
                         ctx->s = pollfds[0]->fd;
                     }
                 } else if (ctx->debug) {
-                    printf("Got no list of libusb file descriptors to poll");
+                    printf("Got no list of libusb file descriptors to poll\n");
                 }
             } else if (ctx->debug) {
-                printf("Got no libusb context to query for file descriptors to poll");
+                printf("Got no libusb context to query for file descriptors to poll\n");
             }
 #else
             if (ctx->debug) {
-                printf("Can not get a list of libusb file descriptors to poll from this libusb version");
+                printf("Can not get a list of libusb file descriptors to poll from this libusb version\n");
             }
 #endif	/* HAVE_LIBUSB_POLLFD */
             break;
