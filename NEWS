@@ -1,5 +1,35 @@
 # NEWS
 
+## libmodbus 3.1.11 (2024-10-22)
+
+- RTU - Check CRC before filtering on slave ID
+- HAVE_NETINET_IN_H as guard around header (closes #765)
+- Use default port 502 in documentation.
+- Fix float endianness issue introduced in v3.1.8 (49af73d).
+  Thank you @ghorwin for your excellent work on the subject.
+  Closes #665, #694, #757, #770.
+- Proper display of used CFLAGS.
+- Don't build with debug flag by default anymore.
+- Check request length in `modbus_reply` when used in `memcpy`.
+  Thank you Nozomi Networks Labs Advisory for the report.
+- Fix insecure data handling. CID 416366: INTEGER_OVERFLOW found with Coverity
+  Scan.
+- Remove useless cast in setsockopt call (closes #721)
+- Link against socket and nsl libs when building on SunOS. Thank you @lanurmi.
+- Update documentation about tcp-pi requiring 1 KiB of extra memory (closes #715).
+  Thank you @psychon.
+- Documentation improvements by @cedricboudinet and @mhei.
+- Revert TCP checks for recovery (closes #711).
+- Don't use loop initial declaration (closes #752).
+- Fix wrong generated version for double number in win32 (closes #675).
+- Don't use gai_strerror if not available.
+- Add checks for netinet/ip.h and gai_strerror (#745)
+- Log error in read input registers if debug (closes #755).
+- Fix errno value on timeout with TCP connect (closes #736, #756).
+  Thank you @kyllingstad for the issue and @psychon for the fix.
+- Free addrinfo struct on getaddrinfo() gerrors.
+- Fix doc of modbus_mapping_new_start_address (#615).
+
 ## libmodbus 3.1.10 (2022-12-07)
 
 Urgent release to fix a regression.
@@ -388,7 +418,7 @@ RTS flow control.
 - Enable RS485 support only when available
 - Export modbus_set/get_serial_mode functions on all platforms
 - API change for read/write multiple registers function:
-  - modbus_read_and_write_registers -> modbus_write_and_read_registers
+    - modbus_read_and_write_registers -> modbus_write_and_read_registers
         The function name was confusing because the write operation is performed
         before the read. Take care to swap the arguments in the migration process.
 - Documentation of modbus*write_and_read_registers, modbus_mapping_new/free,
@@ -411,13 +441,13 @@ RTS flow control.
     modbus_receive_confirmation)
 - Fix flush function of TCP backend on Windows
 - API changes for server/slave:
-  - modbus_receive doesn't take socket/fd argument anymore
-  - new function modbus_set_socket to set socket/fd
+    - modbus_receive doesn't take socket/fd argument anymore
+    - new function modbus_set_socket to set socket/fd
 - API changes for timeout functions:
-  - modbus_get_timeout_begin -> modbus_get_response_timeout
-  - modbus_set_timeout_begin -> modbus_set_response_timeout
-  - modbus_get_timeout_end -> modbus_get_byte_timeout
-  - modbus_set_timeout_end -> modbus_set_byte_timeout
+    - modbus_get_timeout_begin -> modbus_get_response_timeout
+    - modbus_set_timeout_begin -> modbus_set_response_timeout
+    - modbus_get_timeout_end -> modbus_get_byte_timeout
+    - modbus_set_timeout_end -> modbus_set_byte_timeout
 - Fix longstanding limitation of server to wait forever
 - New functions modbus_set/get_serial_mode by Manfred Gruber and Stéphane
     Raimbault for RS485 communications
@@ -434,9 +464,9 @@ RTS flow control.
     modbus_reply_exception()
 - New function modbus_get_header_length(modbus_t \*ctx)
 - New functions to manipulate data:
-  - MODBUS_GET_INT32_FROM_INT16
-  - MODBUS_GET_INT16_FROM_INT8
-  - MODBUS_SET_INT16_TO_INT8
+    - MODBUS_GET_INT32_FROM_INT16
+    - MODBUS_GET_INT16_FROM_INT8
+    - MODBUS_SET_INT16_TO_INT8
 - Fix GH-2. Read/write were swapped in \_FC_READ_AND_WRITE_REGISTERS
 - Install an ignore handler for SIGPIPE on \*BSD
     Original patch by Jason Oster.
@@ -506,8 +536,7 @@ RTS flow control.
 
 Other changes:
 
-- The code is now published and developed on
-    <http://github.com/stephane/libmodbus>
+- The code is now published and developed on <http://github.com/stephane/libmodbus>
 - Waf support has been removed
 
 ## libmodbus 2.0.3 (2009-03-22)

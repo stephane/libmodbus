@@ -1,23 +1,25 @@
-# modbus_send_raw_request
+# modbus_send_raw_request_tid
 
 ## Name
 
-modbus_send_raw_request - send a raw request
+modbus_send_raw_request_tid - send a raw request with a specific transaction id
 
 ## Synopsis
 
 ```c
-int modbus_send_raw_request(modbus_t *ctx, const uint8_t *raw_req, int raw_req_length);
+int modbus_send_raw_request_tid(modbus_t *ctx, const uint8_t *raw_req, int raw_req_length, int tid);
 ```
 
 ## Description
 
-The *modbus_send_raw_request()* function shall send a request via the socket of
+The *modbus_send_raw_request_tid()* function shall send a request via the socket of
 the context `ctx`. This function must be used for debugging purposes because you
 have to take care to make a valid request by hand. The function only adds to the
 message, the header or CRC of the selected backend, so `raw_req` must start and
 contain at least a slave/unit identifier and a function code. This function can
 be used to send request not handled by the library.
+
+The tid paramter enables one to specify a transaction identifier.
 
 The public header of libmodbus provides a list of supported Modbus functions
 codes, prefixed by `MODBUS_FC_` (eg. `MODBUS_FC_READ_HOLDING_REGISTERS`), to help
@@ -45,7 +47,7 @@ if (modbus_connect(ctx) == -1) {
     return -1;
 }
 
-req_length = modbus_send_raw_request(ctx, raw_req, 6 * sizeof(uint8_t));
+req_length = modbus_send_raw_request(ctx, raw_req, 6 * sizeof(uint8_t), 0);
 modbus_receive_confirmation(ctx, rsp);
 
 modbus_close(ctx);
