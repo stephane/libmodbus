@@ -555,6 +555,12 @@ static int _modbus_rtu_usb_connect(modbus_t *ctx)
                     if (ctx->debug) {
                         printf("Got a list of %u libusb file descriptors to poll\n", j);
                     }
+                    /* FIXME: We might get more than one FD here.
+                     *  Some research is needed to check if they
+                     *  all should be polled. In that case maybe
+                     *  libmodbus should move from single ctx->s
+                     *  to an array of file descriptors/sockets.
+                     */
                     if (j == 1) {
                         ctx->s = pollfds[0]->fd;
                     }
