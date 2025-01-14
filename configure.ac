@@ -157,6 +157,23 @@ if test "x$with_libusb" != "xno"; then
         LIBUSB_LIBS="-lusb-1.0"
         AC_DEFINE(HAVE_LIBUSB, 1, [defined if libusb is available])
         have_libusb=yes
+
+        AC_MSG_CHECKING([for libusb pollfd accessibility])
+        AC_LANG_PUSH([C])
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
+#include <libusb-1.0/libusb.h>
+],[
+libusb_context *ctx = NULL;
+const struct libusb_pollfd** list = libusb_get_pollfds(ctx);
+/* Do not care about actual return value in this test,
+ * normally check for non-zero meaning to look in errno */
+]
+            )],
+            [AC_DEFINE(HAVE_LIBUSB_POLLFD, 1, [defined if libusb pollfd is available])
+             AC_MSG_RESULT([ok])
+            ],
+            [AC_MSG_RESULT([no])]
+        )
     ], [
         AC_MSG_ERROR(["libusb-1.0 not found. Please install libusb-1.0."])
     ])

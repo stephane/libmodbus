@@ -377,7 +377,14 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
 
     /* Add a file descriptor to the set */
     FD_ZERO(&rset);
-    FD_SET(ctx->s, &rset);
+    if (ctx->s < 0) {
+        if (ctx->debug) {
+            /* we may not have an FD with e.g. libusb usage */
+            fprintf(stderr, "Using a backend without a file descriptor, will not select() on it.\n");
+        }
+    } else {
+        FD_SET(ctx->s, &rset);
+    }
 
     /* We need to analyse the message step by step.  At the first step, we want
      * to reach the function code because all packets contain this
@@ -430,7 +437,12 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
                 errno = saved_errno;
 #endif
             }
-            return -1;
+            if (ctx->s >= 0) {
+                return -1;
+            }
+            // else: We have at most tried some default FD's but not
+            // the (lacking) one for the backend, so fall through for
+            // its recv method anyway (e.g. query libusb directly).
         }
 
         rc = ctx->backend->recv(ctx, msg + msg_length, length_to_read);
