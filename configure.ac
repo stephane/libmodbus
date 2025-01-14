@@ -189,7 +189,7 @@ AS_IF([test "x$enable_debug" = "xyes"], [
 AC_OUTPUT
 AC_MSG_RESULT([
         $PACKAGE $VERSION
-        ===============
+        ================
 
         prefix:                 ${prefix}
         sysconfdir:             ${sysconfdir}
