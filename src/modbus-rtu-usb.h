@@ -8,6 +8,8 @@
 #define MODBUS_RTU_USB_H
 
 #include "modbus.h"
+#include <stddef.h>
+#include <stdint.h>
 
 MODBUS_BEGIN_DECLS
 
