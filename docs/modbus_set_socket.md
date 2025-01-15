@@ -23,7 +23,7 @@ The function shall return 0 if successful. Otherwise it shall return -1 and set 
 ## Example
 
 ```c
-ctx = modbus_new_tcp("127.0.0.1", 1502);
+ctx = modbus_new_tcp("127.0.0.1", 502);
 server_socket = modbus_tcp_listen(ctx, NB_CONNECTION);
 
 FD_ZERO(&rdset);

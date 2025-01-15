@@ -135,7 +135,7 @@ static int _modbus_rtu_usb_build_response_basis(sft_t *sft, uint8_t *rsp)
     return _MODBUS_RTU_USB_PRESET_RSP_LENGTH;
 }
 
-static int _modbus_rtu_usb_prepare_response_tid(const uint8_t *req, int *req_length)
+static int _modbus_rtu_usb_get_response_tid(const uint8_t *req)
 {
     /* No TID */
     return 0;
@@ -680,7 +680,7 @@ const modbus_backend_t _modbus_rtu_usb_backend = {
     _modbus_rtu_usb_set_slave,
     _modbus_rtu_usb_build_request_basis,
     _modbus_rtu_usb_build_response_basis,
-    _modbus_rtu_usb_prepare_response_tid,
+    _modbus_rtu_usb_get_response_tid,
     _modbus_rtu_usb_send_msg_pre,
     _modbus_rtu_usb_send,
     _modbus_rtu_usb_receive,

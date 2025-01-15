@@ -17,7 +17,9 @@
 #include <ws2tcpip.h>
 #else
 #include <arpa/inet.h>
+#ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif /* HAVE_NETINET_IN_H */
 #include <sys/select.h>
 #include <sys/socket.h>
 #endif

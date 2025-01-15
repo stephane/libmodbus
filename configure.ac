@@ -13,7 +13,7 @@
 #
 m4_define([libmodbus_version_major], [3])
 m4_define([libmodbus_version_minor], [1])
-m4_define([libmodbus_version_micro], [10])
+m4_define([libmodbus_version_micro], [11])
 
 m4_define([libmodbus_release_status],
     [m4_if(m4_eval(libmodbus_version_minor % 2), [1], [snapshot], [release])])
@@ -29,7 +29,7 @@ AC_INIT([libmodbus],
         [http://libmodbus.org/])
 AC_CONFIG_SRCDIR([src/modbus.c])
 AC_CONFIG_AUX_DIR([build-aux])
-AM_INIT_AUTOMAKE([check-news foreign 1.11 -Wall -Wno-portability silent-rules tar-pax subdir-objects])
+AM_INIT_AUTOMAKE([check-news foreign 1.11 silent-rules tar-pax subdir-objects])
 AC_PROG_CC
 AC_USE_SYSTEM_EXTENSIONS
 AC_SYS_LARGEFILE
@@ -59,6 +59,7 @@ AC_CANONICAL_HOST
 os_win32="false"
 os_cygwin="false"
 os_qnx="false"
+os_sunos="false"
 case "${host_os}" in
       *mingw32*)
     os_win32="true"
@@ -68,6 +69,9 @@ case "${host_os}" in
   ;;
       *cygwin*)
     os_cygwin="true"
+  ;;
+      *solaris*)
+    os_sunos="true"
   ;;
 esac
 AM_CONDITIONAL(OS_WIN32, test "$os_win32" = "true")
@@ -85,6 +89,7 @@ AC_CHECK_HEADERS([ \
     linux/serial.h \
     netdb.h \
     netinet/in.h \
+    netinet/ip.h \
     netinet/tcp.h \
     sys/ioctl.h \
     sys/params.h \
@@ -104,7 +109,7 @@ AC_CHECK_DECLS([__CYGWIN__])
 AC_SEARCH_LIBS(accept, network socket)
 
 # Checks for library functions.
-AC_CHECK_FUNCS([accept4 getaddrinfo gettimeofday inet_pton inet_ntop select socket strerror strlcpy])
+AC_CHECK_FUNCS([accept4 gai_strerror getaddrinfo gettimeofday inet_pton inet_ntop select socket strerror strlcpy])
 
 # Required for MinGW with GCC v4.8.1 on Win7
 AC_DEFINE(WINVER, 0x0501, _)
@@ -132,19 +137,23 @@ if test "$os_cygwin" = "false"; then
     fi
 fi
 
+if test "$os_sunos" = "true"; then
+    LIBS="$LIBS -lnsl -lsocket"
+    AC_SUBST(LIBS)
+fi
+
 # Check for RS485 support (Linux kernel version 2.6.28+)
 AC_CHECK_DECLS([TIOCSRS485], [], [], [[#include <sys/ioctl.h>]])
 # Check for RTS flags
 AC_CHECK_DECLS([TIOCM_RTS], [], [], [[#include <sys/ioctl.h>]])
 
-# Wtype-limits is not supported by gcc 4.2 (default on recent Mac OS X)
-my_CFLAGS="-Wall \
+WARNING_CFLAGS="-Wall \
 -Wmissing-declarations -Wmissing-prototypes \
 -Wnested-externs -Wpointer-arith \
--Wpointer-arith -Wsign-compare -Wchar-subscripts \
+-Wsign-compare -Wchar-subscripts \
 -Wstrict-prototypes -Wshadow \
 -Wformat-security"
-AC_SUBST([my_CFLAGS])
+AC_SUBST([WARNING_CFLAGS])
 
 # Check for libusb-1.0
 AC_ARG_WITH([libusb],
@@ -198,10 +207,24 @@ AC_CONFIG_FILES([
         libmodbus.pc
 ])
 
+AC_ARG_ENABLE([debug],
+  [AS_HELP_STRING([--enable-debug],
+    [Enable debug symbols (default is no)])],
+  [enable_debug=$enableval],
+  [enable_debug=no])
+
+AS_IF([test "x$enable_debug" = "xyes"], [
+  CFLAGS="-g -O0"
+  CXXFLAGS="-g -O0"
+], [
+  CFLAGS="-O2"
+  CXXFLAGS="-O2"
+])
+
 AC_OUTPUT
 AC_MSG_RESULT([
         $PACKAGE $VERSION
-        ===============
+        ================
 
         prefix:                 ${prefix}
         sysconfdir:             ${sysconfdir}
@@ -209,7 +232,7 @@ AC_MSG_RESULT([
         includedir:             ${includedir}
 
         compiler:               ${CC}
-        cflags:                 ${CFLAGS}
+        cflags:                 ${CFLAGS} ${WARNING_CFLAGS}
         ldflags:                ${LDFLAGS}
 
         build shared lib:       ${enable_shared}

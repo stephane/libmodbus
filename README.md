@@ -1,6 +1,7 @@
 # A groovy modbus library
 
 ![Build Status](https://github.com/stephane/libmodbus/actions/workflows/build.yml/badge.svg)
+[![Coverity Scan Build Status](https://scan.coverity.com/projects/8058/badge.svg)](https://scan.coverity.com/projects/libmodbus)
 
 ## Overview
 
