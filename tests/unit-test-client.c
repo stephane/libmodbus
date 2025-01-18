@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
 
     rc = modbus_read_bits(ctx, UT_BITS_ADDRESS, 1, tab_rp_bits);
     printf("2/2 modbus_read_bits: ");
-    ASSERT_TRUE(rc == 1, "FAILED (nb points %d)\n", rc);
+    ASSERT_TRUE(rc == 1, "FAILED (nb points: %d)\n", rc);
     ASSERT_TRUE(tab_rp_bits[0] == ON, "FAILED (%0X != %0X)\n", tab_rp_bits[0], ON);
 
     /* End single */
@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
 
     rc = modbus_read_bits(ctx, UT_BITS_ADDRESS, UT_BITS_NB, tab_rp_bits);
     printf("2/2 modbus_read_bits: ");
-    ASSERT_TRUE(rc == UT_BITS_NB, "FAILED (nb points %d)\n", rc);
+    ASSERT_TRUE(rc == UT_BITS_NB, "FAILED (nb points: %d)\n", rc);
 
     i = 0;
     nb_points = UT_BITS_NB;
@@ -212,7 +212,7 @@ int main(int argc, char *argv[])
     rc =
         modbus_read_input_bits(ctx, UT_INPUT_BITS_ADDRESS, UT_INPUT_BITS_NB, tab_rp_bits);
     printf("1/1 modbus_read_input_bits: ");
-    ASSERT_TRUE(rc == UT_INPUT_BITS_NB, "FAILED (nb points %d)\n", rc);
+    ASSERT_TRUE(rc == UT_INPUT_BITS_NB, "FAILED (nb points: %d)\n", rc);
 
     i = 0;
     nb_points = UT_INPUT_BITS_NB;
@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
 
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS, 1, tab_rp_registers);
     printf("2/2 modbus_read_registers: ");
-    ASSERT_TRUE(rc == 1, "FAILED (nb points %d)\n", rc);
+    ASSERT_TRUE(rc == 1, "FAILED (nb points: %d)\n", rc);
     ASSERT_TRUE(tab_rp_registers[0] == 0x1234,
                 "FAILED (%0X != %0X)\n",
                 tab_rp_registers[0],
@@ -254,7 +254,7 @@ int main(int argc, char *argv[])
     rc = modbus_read_registers(
         ctx, UT_REGISTERS_ADDRESS, UT_REGISTERS_NB, tab_rp_registers);
     printf("2/5 modbus_read_registers: ");
-    ASSERT_TRUE(rc == UT_REGISTERS_NB, "FAILED (nb points %d)\n", rc);
+    ASSERT_TRUE(rc == UT_REGISTERS_NB, "FAILED (nb points: %d)\n", rc);
 
     for (i = 0; i < UT_REGISTERS_NB; i++) {
         ASSERT_TRUE(tab_rp_registers[i] == UT_REGISTERS_TAB[i],
@@ -265,7 +265,7 @@ int main(int argc, char *argv[])
 
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS, 0, tab_rp_registers);
     printf("3/5 modbus_read_registers (0): ");
-    ASSERT_TRUE(rc == -1, "FAILED (nb_points %d)\n", rc);
+    ASSERT_TRUE(rc == -1, "FAILED (nb_points: %d)\n", rc);
 
     nb_points = (UT_REGISTERS_NB > UT_INPUT_REGISTERS_NB) ? UT_REGISTERS_NB
                                                           : UT_INPUT_REGISTERS_NB;
@@ -283,7 +283,7 @@ int main(int argc, char *argv[])
                                          tab_rp_registers);
     printf("4/5 modbus_write_and_read_registers: ");
     ASSERT_TRUE(
-        rc == UT_REGISTERS_NB, "FAILED (nb points %d != %d)\n", rc, UT_REGISTERS_NB);
+        rc == UT_REGISTERS_NB, "FAILED (nb points: %d != %d)\n", rc, UT_REGISTERS_NB);
 
     ASSERT_TRUE(tab_rp_registers[0] == UT_REGISTERS_TAB[0],
                 "FAILED (%0X != %0X)\n",
@@ -301,7 +301,7 @@ int main(int argc, char *argv[])
     rc = modbus_read_input_registers(
         ctx, UT_INPUT_REGISTERS_ADDRESS, UT_INPUT_REGISTERS_NB, tab_rp_registers);
     printf("1/1 modbus_read_input_registers: ");
-    ASSERT_TRUE(rc == UT_INPUT_REGISTERS_NB, "FAILED (nb points %d)\n", rc);
+    ASSERT_TRUE(rc == UT_INPUT_REGISTERS_NB, "FAILED (nb points: %d)\n", rc);
 
     for (i = 0; i < UT_INPUT_REGISTERS_NB; i++) {
         ASSERT_TRUE(tab_rp_registers[i] == UT_INPUT_REGISTERS_TAB[i],
@@ -314,7 +314,7 @@ int main(int argc, char *argv[])
     printf("1/1 Write mask: ");
     rc = modbus_write_register(ctx, UT_REGISTERS_ADDRESS, 0x12);
     rc = modbus_mask_write_register(ctx, UT_REGISTERS_ADDRESS, 0xF2, 0x25);
-    ASSERT_TRUE(rc != -1, "FAILED (%x == -1)\n", rc);
+    ASSERT_TRUE(rc != -1, "FAILED (rc: %x == -1)\n", rc);
     rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS, 1, tab_rp_registers);
     ASSERT_TRUE(
         tab_rp_registers[0] == 0x17, "FAILED (%0X != %0X)\n", tab_rp_registers[0], 0x17);
@@ -702,7 +702,7 @@ int main(int argc, char *argv[])
         rc = modbus_read_registers(
             ctx, UT_REGISTERS_ADDRESS_BYTE_SLEEP_5_MS, 1, tab_rp_registers);
         printf("2/2 Adapted byte timeout (7ms > 5ms): ");
-        ASSERT_TRUE(rc == 1, "");
+        ASSERT_TRUE(rc == 1, "FAILED (rc: %d != 1)", rc);
     }
 
     /* Restore original byte timeout */
@@ -858,7 +858,7 @@ int test_server(modbus_t *ctx, int use_backend)
     rc = modbus_receive(ctx, rsp);
     modbus_set_socket(ctx, old_s);
     printf("* modbus_receive with invalid socket: ");
-    ASSERT_TRUE(rc == -1, "FAILED (%d)\n", rc);
+    ASSERT_TRUE(rc == -1, "FAILED (rc: %d != -1)\n", rc);
 
     req_length = modbus_send_raw_request(ctx, read_raw_req, READ_RAW_REQ_LEN);
     printf("* modbus_send_raw_request: ");
