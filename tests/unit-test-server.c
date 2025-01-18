@@ -82,12 +82,24 @@ int main(int argc, char *argv[])
 
     if (use_backend == TCP) {
         ctx = modbus_new_tcp(ip_or_device, 1502);
+        if (ctx == NULL) {
+            fprintf(stderr, "Failed to allocate the context for TCP: %s\n", modbus_strerror(errno));
+            return -1;
+        }
         query = malloc(MODBUS_TCP_MAX_ADU_LENGTH);
     } else if (use_backend == TCP_PI) {
         ctx = modbus_new_tcp_pi(ip_or_device, "1502");
+        if (ctx == NULL) {
+            fprintf(stderr, "Failed to allocate the context for TCP PI: %s\n", modbus_strerror(errno));
+            return -1;
+        }
         query = malloc(MODBUS_TCP_MAX_ADU_LENGTH);
     } else {
         ctx = modbus_new_rtu(ip_or_device, 115200, 'N', 8, 1);
+        if (ctx == NULL) {
+            fprintf(stderr, "Failed to allocate the context for Serial: %s\n", modbus_strerror(errno));
+            return -1;
+        }
         modbus_set_slave(ctx, SERVER_ID);
         query = malloc(MODBUS_RTU_MAX_ADU_LENGTH);
     }
@@ -124,10 +136,28 @@ int main(int argc, char *argv[])
 
     if (use_backend == TCP) {
         s = modbus_tcp_listen(ctx, 1);
-        modbus_tcp_accept(ctx, &s);
+        if (s == -1) {
+            fprintf(stderr, "Unable to modbus_tcp_listen(), got invalid socket: %s\n", modbus_strerror(errno));
+            modbus_free(ctx);
+            return -1;
+        }
+        if (modbus_tcp_accept(ctx, &s) == -1) {
+            fprintf(stderr, "Unable to modbus_tcp_accept(): %s\n", modbus_strerror(errno));
+            modbus_free(ctx);
+            return -1;
+        }
     } else if (use_backend == TCP_PI) {
         s = modbus_tcp_pi_listen(ctx, 1);
-        modbus_tcp_pi_accept(ctx, &s);
+        if (s == -1) {
+            fprintf(stderr, "Unable to modbus_tcp_pi_listen(), got invalid socket: %s\n", modbus_strerror(errno));
+            modbus_free(ctx);
+            return -1;
+        }
+        if (modbus_tcp_pi_accept(ctx, &s) == -1) {
+            fprintf(stderr, "Unable to modbus_tcp_pi_accept(): %s\n", modbus_strerror(errno));
+            modbus_free(ctx);
+            return -1;
+        }
     } else {
         rc = modbus_connect(ctx);
         if (rc == -1) {
