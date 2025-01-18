@@ -91,7 +91,6 @@ AC_CHECK_HEADERS([ \
     linux/serial.h \
     netdb.h \
     netinet/in.h \
-    netinet/ip.h \
     netinet/tcp.h \
     sys/ioctl.h \
     sys/params.h \
@@ -101,6 +100,17 @@ AC_CHECK_HEADERS([ \
     termios.h \
     time.h \
     unistd.h \
+])
+
+dnl On some platforms like FreeBSD and OpenIndiana (illumos) the
+dnl netinet/ip.h requires netinet/in.h explicitly included first:
+AC_CHECK_HEADERS([ \
+    netinet/ip.h \
+], [], [], [
+    AC_INCLUDES_DEFAULT
+#if HAVE_NETINET_IN_H
+# include <netinet/in.h>
+#endif
 ])
 
 # Cygwin defines IPTOS_LOWDELAY but can't handle that flag so it's necessary to
