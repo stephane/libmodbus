@@ -27,10 +27,17 @@
 #define SERVER_ID         17
 #define INVALID_SERVER_ID 18
 
-const uint16_t UT_BITS_ADDRESS = 0x130;
+/* https://stackoverflow.com/a/3025142/4715872
+ *   ...in section 6.6, the spec defines what must considered
+ *   a constant expression. No where does it state that a
+ *   const variable must be considered a constant expression.
+ *   It is legal for a compiler to extend this...
+ */
+#define UT_BITS_ADDRESS_VAL	0x130
+const uint16_t UT_BITS_ADDRESS = UT_BITS_ADDRESS_VAL;
 const uint16_t UT_BITS_NB = 0x25;
 const uint8_t UT_BITS_TAB[] = { 0xCD, 0x6B, 0xB2, 0x0E, 0x1B };
-const uint16_t UT_BITS_ADDRESS_INVALID_REQUEST_LENGTH = UT_BITS_ADDRESS + 2;
+const uint16_t UT_BITS_ADDRESS_INVALID_REQUEST_LENGTH = UT_BITS_ADDRESS_VAL + 2;
 
 const uint16_t UT_INPUT_BITS_ADDRESS = 0x1C4;
 const uint16_t UT_INPUT_BITS_NB = 0x16;
