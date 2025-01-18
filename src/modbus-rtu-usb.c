@@ -418,7 +418,9 @@ static int _modbus_rtu_usb_connect(modbus_t *ctx)
     }
 
     if (ctx->debug) {
-        printf("Number of USB devices: %ld\n", devs_len);
+        // Here and below: cast from ssize_t to a portable type big enough for expected
+        // values
+        printf("Number of USB devices: %lld\n", (long long int) devs_len);
     }
 
     for (i = 0; i < devs_len; i++) {
@@ -433,16 +435,16 @@ static int _modbus_rtu_usb_connect(modbus_t *ctx)
         if (r != LIBUSB_SUCCESS) {
             if (ctx->debug) {
                 fprintf(stderr,
-                        "libusb_get_device_descriptor for device #%ld failed: %s\n",
-                        i,
+                        "libusb_get_device_descriptor for device #%lld failed: %s\n",
+                        (long long int) i,
                         libusb_strerror(r));
             }
             continue;
         }
 
         if (ctx->debug) {
-            printf("Considering device #%ld (%04x:%04x)\n",
-                   i,
+            printf("Considering device #%lld (%04x:%04x)\n",
+                   (long long int) i,
                    dev_desc.idVendor,
                    dev_desc.idProduct);
         }
@@ -461,7 +463,9 @@ static int _modbus_rtu_usb_connect(modbus_t *ctx)
         r = libusb_get_port_numbers(d, ud.port_path, sizeof(ud.port_path));
         if (r < 1) {
             if (ctx->debug) {
-                fprintf(stderr, "libusb_get_port_numbers for device #%ld failed\n", i);
+                fprintf(stderr,
+                        "libusb_get_port_numbers for device #%lld failed\n",
+                        (long long int) i);
             }
             continue;
         }
@@ -477,8 +481,8 @@ static int _modbus_rtu_usb_connect(modbus_t *ctx)
         if ((r = libusb_open(d, &dev_handle)) != LIBUSB_SUCCESS) {
             if (ctx->debug) {
                 fprintf(stderr,
-                        "libusb_open for device #%ld failed: %s\n",
-                        i,
+                        "libusb_open for device #%lld failed: %s\n",
+                        (long long int) i,
                         libusb_strerror(r));
             }
             continue;
@@ -540,7 +544,7 @@ static int _modbus_rtu_usb_connect(modbus_t *ctx)
 
         if (is_match) {
             if (ctx->debug) {
-                printf("Found Device %ld (Path %s):\n", i, path_buffer);
+                printf("Found Device %lld (Path %s):\n", (long long int) i, path_buffer);
                 printf("  Vendor ID: 0x%04x\n", ud.vid);
                 printf("  Product ID: 0x%04x\n", ud.pid);
             }
