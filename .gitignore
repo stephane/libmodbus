@@ -35,6 +35,7 @@ Makefile.in
 src/modbus-config.h
 src/modbus-version.h
 src/win32/modbus.dll.manifest
+src/stamp-h3
 tests/unit-test.h
 
 # mkdocs
