@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
     int use_backend;
     int success = FALSE;
     int old_slave;
-    char *ip_or_device;
+    char *ip_or_device = NULL;
 
     if (argc > 1) {
         if (strcmp(argv[1], "tcp") == 0) {
