@@ -758,6 +758,8 @@ int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
 
 #ifdef OS_WIN32
     if (_modbus_tcp_init_win32() == -1) {
+        if (ctx->debug)
+            perror("_modbus_tcp_init_win32");
         return -1;
     }
 #endif
@@ -770,11 +772,15 @@ int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
 
     new_s = socket(PF_INET, flags, IPPROTO_TCP);
     if (new_s == -1) {
+        if (ctx->debug)
+            perror("socket");
         return -1;
     }
 
     enable = 1;
     if (setsockopt(new_s, SOL_SOCKET, SO_REUSEADDR, (const void *)&enable, sizeof(enable)) == -1) {
+        if (ctx->debug)
+            perror("setsockopt");
         close(new_s);
         return -1;
     }
@@ -799,11 +805,15 @@ int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
     }
 
     if (bind(new_s, (struct sockaddr *) &addr, sizeof(addr)) == -1) {
+        if (ctx->debug)
+            perror("bind");
         close(new_s);
         return -1;
     }
 
     if (listen(new_s, nb_connection) == -1) {
+        if (ctx->debug)
+            perror("listen");
         close(new_s);
         return -1;
     }
