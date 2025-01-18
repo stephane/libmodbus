@@ -153,7 +153,9 @@ WARNING_CFLAGS="-Wall \
 -Wsign-compare -Wchar-subscripts \
 -Wstrict-prototypes -Wshadow \
 -Wformat-security"
-AC_SUBST([WARNING_CFLAGS])
+
+dnl FIXME: define more thoroughly if C++ code ever appears here
+WARNING_CXXFLAGS="$WARNING_CFLAGS"
 
 # Build options
 AC_ARG_ENABLE(tests,
@@ -185,6 +187,22 @@ AS_IF([test "x$enable_debug" = "xyes"], [
   CFLAGS="-O2"
   CXXFLAGS="-O2"
 ])
+
+dnl NOTE: Do not pass these among C(XX)FLAGS to the configure script itself,
+dnl they can break common tests unexpectedly. Variants below should work for
+dnl GCC and CLANG, and other compilers that emulate them in terms of CLI API.
+AC_ARG_ENABLE([Werror],
+  [AS_HELP_STRING([--enable-Werror],
+    [Enable compilation failure on warnings (default is no)])],
+  [enable_Werror=$enableval],
+  [enable_Werror=no])
+AS_IF([test "x$enable_Werror" = "xyes"], [
+  WARNING_CFLAGS="$WARNING_CFLAGS -Werror"
+  WARNING_CXXFLAGS="$WARNING_CXXFLAGS -Werror"
+])
+
+AC_SUBST([WARNING_CFLAGS])
+AC_SUBST([WARNING_CXXFLAGS])
 
 AC_OUTPUT
 AC_MSG_RESULT([
