@@ -768,7 +768,9 @@ static int response_exception(modbus_t *ctx,
         va_list ap;
 
         va_start(ap, template);
+        fflush(stderr);
         vfprintf(stderr, template, ap);
+        fflush(stderr);
         va_end(ap);
     }
 
