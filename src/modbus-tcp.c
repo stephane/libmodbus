@@ -236,7 +236,7 @@ static int _modbus_tcp_set_ipv4_options(int s)
     /* Set the TCP no delay flag */
     /* SOL_TCP = IPPROTO_TCP */
     option = 1;
-    rc = setsockopt(s, IPPROTO_TCP, TCP_NODELAY, &option, sizeof(int));
+    rc = setsockopt(s, IPPROTO_TCP, TCP_NODELAY, (const void *)&option, sizeof(option));
     if (rc == -1) {
         return -1;
     }
@@ -264,7 +264,7 @@ static int _modbus_tcp_set_ipv4_options(int s)
      **/
     /* Set the IP low delay option */
     option = IPTOS_LOWDELAY;
-    rc = setsockopt(s, IPPROTO_IP, IP_TOS, &option, sizeof(int));
+    rc = setsockopt(s, IPPROTO_IP, IP_TOS, (const void *)&option, sizeof(option));
     if (rc == -1) {
         return -1;
     }
@@ -563,7 +563,7 @@ int modbus_tcp_listen(modbus_t *ctx, int nb_connection)
     }
 
     enable = 1;
-    if (setsockopt(new_s, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable)) == -1) {
+    if (setsockopt(new_s, SOL_SOCKET, SO_REUSEADDR, (const void *)&enable, sizeof(enable)) == -1) {
         close(new_s);
         return -1;
     }
@@ -680,7 +680,7 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
             continue;
         } else {
             int enable = 1;
-            rc = setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable));
+            rc = setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (const void *)&enable, sizeof(enable));
             if (rc != 0) {
                 close(s);
                 if (ctx->debug) {
