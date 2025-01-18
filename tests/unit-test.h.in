@@ -88,4 +88,13 @@ const uint16_t UT_IREAL_DCBA[] = {0x0020, 0xF147};
 const uint16_t UT_IREAL_BADC[] = {0xF147, 0x0020};
 const uint16_t UT_IREAL_CDAB[] = {0x2000, 0x47F1};
 
+#ifdef _WIN32
+// It may also help to view console logs of the client+server
+// on WIN32 builds without intermixing, by piping to "cat":
+//   make -j 8 && ( ./tests/unit-test-server|cat & sleep 1 ; ./tests/unit-test-client|cat )
+# define	FLUSHOUT	do { fflush(stdout); } while(0)
+#else
+# define	FLUSHOUT	(void)0
+#endif
+
 #endif /* _UNIT_TEST_H_ */

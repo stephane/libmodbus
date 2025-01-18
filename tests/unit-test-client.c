@@ -41,8 +41,10 @@ static char last_test_title[256];
 
 #define ASSERT_TRUE(_cond, _format, __args...)          \
     {                                                   \
+        FLUSHOUT;                                       \
         if (_cond) {                                    \
             printf("%s: OK\n", last_test_title);        \
+            FLUSHOUT;                                   \
         } else {                                        \
             printf("%s: FAILED\n", last_test_title);    \
             BUG_REPORT(_cond, _format, ##__args);       \
@@ -52,10 +54,12 @@ static char last_test_title[256];
 
 #define TEST_TITLE(_format, _args...)                   \
     {                                                   \
+        FLUSHOUT;                                       \
         snprintf(last_test_title, sizeof(last_test_title), \
             _format, ##_args);                          \
         printf("\n=== Test at line %4d: %s :\n",        \
             __LINE__, last_test_title);                 \
+        FLUSHOUT;                                       \
     };
 
 int is_memory_equal(const void *s1, const void *s2, size_t size)
