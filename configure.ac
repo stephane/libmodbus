@@ -30,9 +30,9 @@ AC_INIT([libmodbus],
 AC_CONFIG_SRCDIR([src/modbus.c])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([check-news foreign 1.11 silent-rules tar-pax subdir-objects])
-AM_PROG_CC_C_O
 AC_PROG_CPP
 AC_PROG_CC
+AM_PROG_CC_C_O
 AC_USE_SYSTEM_EXTENSIONS
 AC_SYS_LARGEFILE
 AC_CONFIG_MACRO_DIR([m4])
