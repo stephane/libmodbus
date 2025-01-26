@@ -388,7 +388,7 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     if (ctx->s < 0) {
         if (ctx->debug) {
             /* we may not have an FD with e.g. libusb usage */
-            fprintf(stderr, "Using a backend without a file descriptor, will not select() on it.\n");
+            fprintf(stderr, "Using a backend without a file descriptor, will not natively select() on it.\n");
         }
     } else {
         FD_SET(ctx->s, &rset);
@@ -444,12 +444,7 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
                 errno = saved_errno;
 #endif
             }
-            if (ctx->s >= 0) {
-                return -1;
-            }
-            // else: We have at most tried some default FD's but not
-            // the (lacking) one for the backend, so fall through for
-            // its recv method anyway (e.g. query libusb directly).
+            return -1;
         }
 
         rc = ctx->backend->recv(ctx, msg + msg_length, length_to_read);

@@ -16,10 +16,12 @@ noinst_PROGRAMS += \
 endif
 
 common_ldflags = \
-	$(top_builddir)/src/libmodbus.la \
-	-lusb-1.0
+	$(top_builddir)/src/libmodbus.la
 
 if WITH_LIBUSB
+common_ldflags += \
+	-lusb-1.0
+
 apc_test_client_SOURCES = apc-test-client.c
 apc_test_client_LDADD = $(common_ldflags)
 endif
