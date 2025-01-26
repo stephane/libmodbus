@@ -348,10 +348,12 @@ AS_IF([test "x$enable_Werror" = "xyes"], [
 AC_SUBST([WARNING_CFLAGS])
 AC_SUBST([WARNING_CXXFLAGS])
 
+_PKG_VER_TITLE="$PACKAGE $VERSION"
+_PKG_VER_SEPARATOR="`echo "${_PKG_VER_TITLE}" | sed 's,.,=,g'`"
 AC_OUTPUT
 AC_MSG_RESULT([
-        $PACKAGE $VERSION
-        ================
+        ${_PKG_VER_TITLE}
+        ${_PKG_VER_SEPARATOR}
 
         prefix:                 ${prefix}
         sysconfdir:             ${sysconfdir}
