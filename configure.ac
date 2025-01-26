@@ -36,6 +36,11 @@ AM_PROG_CC_C_O
 AC_USE_SYSTEM_EXTENSIONS
 AC_SYS_LARGEFILE
 AC_CONFIG_MACRO_DIR([m4])
+dnl This feature seems to require automake-1.13 or newer (1.11+ by other info)
+dnl On very old systems can comment it away with little loss (then automake-1.10
+dnl is known to suffice):
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])],
+        [AC_MSG_NOTICE([Silent Rules feature not defined in this automake version, skipped])])
 AM_SILENT_RULES([yes])
 
 LIBMODBUS_VERSION_MAJOR=libmodbus_version_major
