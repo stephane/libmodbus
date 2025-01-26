@@ -96,6 +96,8 @@ int main(int argc, char *argv[])
     int old_slave;
     char *ip_or_device = NULL;
 
+    memset(last_test_title, 0, sizeof(last_test_title));
+
     if (argc > 1) {
         if (strcmp(argv[1], "tcp") == 0) {
             use_backend = TCP;
