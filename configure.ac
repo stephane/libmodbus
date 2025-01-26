@@ -30,6 +30,8 @@ AC_INIT([libmodbus],
 AC_CONFIG_SRCDIR([src/modbus.c])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([check-news foreign 1.11 silent-rules tar-pax subdir-objects])
+AM_PROG_CC_C_O
+AC_PROG_CPP
 AC_PROG_CC
 AC_USE_SYSTEM_EXTENSIONS
 AC_SYS_LARGEFILE
@@ -89,7 +91,6 @@ AC_CHECK_HEADERS([ \
     linux/serial.h \
     netdb.h \
     netinet/in.h \
-    netinet/ip.h \
     netinet/tcp.h \
     sys/ioctl.h \
     sys/params.h \
@@ -101,6 +102,17 @@ AC_CHECK_HEADERS([ \
     unistd.h \
 ])
 
+dnl On some platforms like FreeBSD and OpenIndiana (illumos) the
+dnl netinet/ip.h requires netinet/in.h explicitly included first:
+AC_CHECK_HEADERS([ \
+    netinet/ip.h \
+], [], [], [
+    AC_INCLUDES_DEFAULT
+#if HAVE_NETINET_IN_H
+# include <netinet/in.h>
+#endif
+])
+
 # Cygwin defines IPTOS_LOWDELAY but can't handle that flag so it's necessary to
 # workaround that problem and Cygwin doesn't define MSG_DONTWAIT.
 AC_CHECK_DECLS([__CYGWIN__])
@@ -109,7 +121,7 @@ AC_CHECK_DECLS([__CYGWIN__])
 AC_SEARCH_LIBS(accept, network socket)
 
 # Checks for library functions.
-AC_CHECK_FUNCS([accept4 gai_strerror getaddrinfo gettimeofday inet_pton inet_ntop select socket strerror strlcpy])
+AC_CHECK_FUNCS([accept4 gai_strerror getaddrinfo gettimeofday select socket strerror strlcpy])
 
 # Required for MinGW with GCC v4.8.1 on Win7
 AC_DEFINE(WINVER, 0x0501, _)
@@ -129,12 +141,19 @@ AC_TYPE_UINT32_T
 AC_TYPE_UINT8_T
 
 if test "$os_cygwin" = "false"; then
+    AC_CHECK_HEADERS([windows.h], HAVE_WINDOWS_H=yes)
+
     # Required for getaddrinfo (TCP IP - IPv6)
     AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)
     if test "x$HAVE_WINSOCK2_H" = "xyes"; then
         LIBS="$LIBS -lws2_32"
-    AC_SUBST(LIBS)
+        AC_SUBST(LIBS)
     fi
+
+    dnl Can bring inet_ntop()/inet_pton()... or not, depending on distro
+    dnl (e.g. mingw "native" with MSYS2 or cross-built from Linux); that
+    dnl is further checked below:
+    AC_CHECK_HEADERS([ws2tcpip.h], HAVE_WS2TCPIP_H=yes)
 fi
 
 if test "$os_sunos" = "true"; then
@@ -153,7 +172,99 @@ WARNING_CFLAGS="-Wall \
 -Wsign-compare -Wchar-subscripts \
 -Wstrict-prototypes -Wshadow \
 -Wformat-security"
-AC_SUBST([WARNING_CFLAGS])
+
+dnl FIXME: define more thoroughly if C++ code ever appears here
+WARNING_CXXFLAGS="$WARNING_CFLAGS"
+
+dnl Adapted from NUT v2.8.2 configure.ac :
+myCFLAGS="$CFLAGS"
+AS_IF([test "${GCC}" = "yes"],
+    [CFLAGS="$myCFLAGS -Werror -Werror=implicit-function-declaration"],
+    [dnl # Don't know what to complain about for unknown compilers
+     dnl # FIXME: We presume here they have at least a "-Werror" option
+     CFLAGS="$myCFLAGS -Werror"
+    ])
+
+AC_CACHE_CHECK([for inet_ntop() with IPv4 and IPv6 support],
+    [ac_cv_func_inet_ntop],
+    [AC_LANG_PUSH([C])
+     AC_LINK_IFELSE(
+        [AC_LANG_PROGRAM([[
+#if HAVE_WINDOWS_H
+# undef inline
+# ifndef WIN32_LEAN_AND_MEAN
+#  define WIN32_LEAN_AND_MEAN
+# endif
+# include <windows.h>
+# if HAVE_WINSOCK2_H
+#  include <winsock2.h>
+# endif
+# if HAVE_WS2TCPIP_H
+#  include <ws2tcpip.h>
+# endif
+#else
+# include <arpa/inet.h>
+#endif
+#include <stdio.h>
+]],
+            [[/* const char* inet_ntop(int af, const void* src, char* dst, size_t cnt); */
+char buf[128];
+printf("%s", inet_ntop(AF_INET, "1.2.3.4", buf, 10));
+printf("%s", inet_ntop(AF_INET6, "::1", buf, 10))
+/* autoconf adds ";return 0;" */
+]])],
+        [ac_cv_func_inet_ntop=yes], [ac_cv_func_inet_ntop=no]
+    )
+    AC_LANG_POP([C])
+])
+AS_IF([test x"${ac_cv_func_inet_ntop}" = xyes],
+    [AC_DEFINE([HAVE_INET_NTOP], 1, [defined if system has the inet_ntop() method])],
+    [AC_MSG_WARN([Required C library routine inet_ntop() not found])
+     AS_IF([test "${os_win32}" = "true"], [AC_MSG_WARN([Windows antivirus might block this test])])
+    ]
+)
+
+AC_CACHE_CHECK([for inet_pton() with IPv4 and IPv6 support],
+    [ac_cv_func_inet_pton],
+    [AC_LANG_PUSH([C])
+     AC_LINK_IFELSE(
+        [AC_LANG_PROGRAM([[
+#if HAVE_WINDOWS_H
+# undef inline
+# ifndef WIN32_LEAN_AND_MEAN
+#  define WIN32_LEAN_AND_MEAN
+# endif
+# include <windows.h>
+# if HAVE_WINSOCK2_H
+#  include <winsock2.h>
+# endif
+# if HAVE_WS2TCPIP_H
+#  include <ws2tcpip.h>
+# endif
+#else
+# include <arpa/inet.h>
+#endif
+#include <stdio.h>
+]],
+            [[/* int inet_pton(int af, const char *src, char *dst); */
+struct in_addr  ipv4;
+struct in6_addr ipv6;
+printf("%i ", inet_pton(AF_INET, "1.2.3.4", &ipv4));
+printf("%i ", inet_pton(AF_INET6, "::1", &ipv6))
+/* autoconf adds ";return 0;" */
+]])],
+        [ac_cv_func_inet_pton=yes], [ac_cv_func_inet_pton=no]
+    )
+    AC_LANG_POP([C])
+])
+AS_IF([test x"${ac_cv_func_inet_pton}" = xyes],
+    [AC_DEFINE([HAVE_INET_PTON], 1, [defined if system has the inet_pton() method])],
+    [AC_MSG_WARN([Required C library routine inet_pton() not found])
+     AS_IF([test "${os_win32}" = "true"], [AC_MSG_WARN([Windows antivirus might block this test])])
+    ]
+)
+CFLAGS="$myCFLAGS"
+
 
 # Check for libusb-1.0
 AC_ARG_WITH([libusb],
@@ -220,6 +331,22 @@ AS_IF([test "x$enable_debug" = "xyes"], [
   CFLAGS="-O2"
   CXXFLAGS="-O2"
 ])
+
+dnl NOTE: Do not pass these among C(XX)FLAGS to the configure script itself,
+dnl they can break common tests unexpectedly. Variants below should work for
+dnl GCC and CLANG, and other compilers that emulate them in terms of CLI API.
+AC_ARG_ENABLE([Werror],
+  [AS_HELP_STRING([--enable-Werror],
+    [Enable compilation failure on warnings (default is no)])],
+  [enable_Werror=$enableval],
+  [enable_Werror=no])
+AS_IF([test "x$enable_Werror" = "xyes"], [
+  WARNING_CFLAGS="$WARNING_CFLAGS -Werror"
+  WARNING_CXXFLAGS="$WARNING_CXXFLAGS -Werror"
+])
+
+AC_SUBST([WARNING_CFLAGS])
+AC_SUBST([WARNING_CXXFLAGS])
 
 AC_OUTPUT
 AC_MSG_RESULT([
