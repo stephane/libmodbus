@@ -16,7 +16,8 @@
 #include <modbus.h>
 
 static void _swap_bytes(uint16_t* array, size_t length) {
-    for (size_t i = 0; i < length; i++) {
+    size_t i;
+    for (i = 0; i < length; i++) {
         array[i] = (array[i] >> 8) | (array[i] << 8);
     }
 }
