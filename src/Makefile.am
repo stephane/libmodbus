@@ -36,6 +36,7 @@ libmodbus_la_LDFLAGS = -no-undefined \
 libmodbus_la_LIBADD =
 
 if WITH_LIBUSB
+libmodbus_la_CFLAGS  = $(AM_CFLAGS) $(LIBUSB_CFLAGS)
 libmodbus_la_LIBADD += $(LIBUSB_LIBS)
 endif
 

@@ -278,19 +278,42 @@ AC_ARG_WITH([libusb],
 
 have_libusb=no
 LIBUSB_LIBS=""
+LIBUSB_CFLAGS=""
 
 dnl FIXME: Pass paths and flags on command line or find via pkg-config
 AS_IF([test "x$with_libusb" != "xno"], [
-    LIBUSB_LIB_TRYNAME="usb-1.0"
-    AC_CHECK_LIB(${LIBUSB_LIB_TRYNAME}, libusb_init, [
-        LIBUSB_LIBS="-l${LIBUSB_LIB_TRYNAME}"
-    ], [
-        LIBUSB_LIB_TRYNAME="usb"
+    SAVED_CFLAGS="${CFLAGS}"
+    SAVED_LIBS="${LIBS}"
+
+    AC_MSG_CHECKING([whether pkg-config knows about libusb-1.0 in its PKG_CONFIG_PATH])
+    LIBUSB_LIBS="`pkg-config --libs libusb-1.0`" \
+    && LIBUSB_CFLAGS="`pkg-config --cflags libusb-1.0`"
+
+    AS_IF([test x"${LIBUSB_LIBS}" != x], [
+        AC_MSG_RESULT([yes])
+
+        dnl # FIXME: Extract the name from pkg-config data?
+        LIBUSB_LIB_TRYNAME="usb-1.0"
+
+        CFLAGS="${SAVED_CFLAGS} ${LIBUSB_CFLAGS}"
+        LIBS="${SAVED_LIBS} ${LIBUSB_LIBS}"
+
+        AC_CHECK_LIB(${LIBUSB_LIB_TRYNAME}, libusb_init, [:], [LIBUSB_LIBS=""])
+    ],[
+        AC_MSG_RESULT([no, try fallback search])
+
+        LIBUSB_LIB_TRYNAME="usb-1.0"
         AC_CHECK_LIB(${LIBUSB_LIB_TRYNAME}, libusb_init, [
             LIBUSB_LIBS="-l${LIBUSB_LIB_TRYNAME}"
         ], [
-            LIBUSB_LIB_TRYNAME="none"
+            LIBUSB_LIB_TRYNAME="usb"
+            AC_CHECK_LIB(${LIBUSB_LIB_TRYNAME}, libusb_init, [
+                LIBUSB_LIBS="-l${LIBUSB_LIB_TRYNAME}"
+            ], [
+                LIBUSB_LIB_TRYNAME="none"
+            ])
         ])
+        LIBS="${SAVED_LIBS} ${LIBUSB_LIBS}"
     ])
 
     AS_IF([test x"${LIBUSB_LIBS}" != x], [
@@ -298,8 +321,11 @@ AS_IF([test "x$with_libusb" != "xno"], [
     ])
 
     AS_IF([test x"${LIBUSB_LIBS}" != x], [
-        AC_CHECK_HEADERS([libusb-1.0/libusb.h], HAVE_LIBUSB_1_0_LIBUSB_H=yes)
-        AC_CHECK_HEADERS([libusb.h], HAVE_LIBUSB_H=yes)
+        CFLAGS="${SAVED_CFLAGS} ${LIBUSB_CFLAGS}"
+        LIBS="${SAVED_LIBS} ${LIBUSB_LIBS}"
+
+        AC_CHECK_HEADERS([libusb-1.0/libusb.h], [HAVE_LIBUSB_1_0_LIBUSB_H=yes])
+        AC_CHECK_HEADERS([libusb.h], [HAVE_LIBUSB_H=yes])
     ])
 
     AS_IF([test x"${LIBUSB_LIBS}" != x && test x"${HAVE_LIBUSB_1_0_LIBUSB_H}" = xyes -o x"${HAVE_LIBUSB_H}" = xyes], [
@@ -335,8 +361,12 @@ const struct libusb_pollfd** list = libusb_get_pollfds(ctx);
             AC_MSG_WARN(["libusb-1.0 not found. Please install libusb-1.0 if you want to use it."])
         ])
     ])
+
+    CFLAGS="${SAVED_CFLAGS}"
+    LIBS="${SAVED_LIBS}"
 ])
 AC_SUBST(LIBUSB_LIBS)
+AC_SUBST(LIBUSB_CFLAGS)
 AM_CONDITIONAL(WITH_LIBUSB, [test x"${have_libusb}" = x"yes"])
 
 # Build options
