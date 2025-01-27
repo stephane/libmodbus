@@ -302,7 +302,7 @@ AS_IF([test "x$with_libusb" != "xno"], [
         AC_CHECK_HEADERS([libusb.h], HAVE_LIBUSB_H=yes)
     ])
 
-    AS_IF([test x"${LIBUSB_LIBS}" != x && test x"${HAVE_LIBUSB_1_0_LIBUSB_H}" = xyes -o test x"${HAVE_LIBUSB_H}" = xyes], [
+    AS_IF([test x"${LIBUSB_LIBS}" != x && test x"${HAVE_LIBUSB_1_0_LIBUSB_H}" = xyes -o x"${HAVE_LIBUSB_H}" = xyes], [
         AC_DEFINE(HAVE_LIBUSB, 1, [defined if libusb is available])
         have_libusb=yes
 
