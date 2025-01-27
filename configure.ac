@@ -277,9 +277,12 @@ AC_ARG_WITH([libusb],
     [with_libusb=no])
 
 have_libusb=no
-if test "x$with_libusb" != "xno"; then
-    AC_CHECK_LIB(usb-1.0, libusb_init, [
-        LIBUSB_LIBS="-lusb-1.0"
+LIBUSB_LIBS=""
+AS_IF([test "x$with_libusb" != "xno"], [
+    AC_CHECK_LIB(usb-1.0, libusb_init, [LIBUSB_LIBS="-lusb-1.0"],
+        [AC_CHECK_LIB(usb, libusb_init, [LIBUSB_LIBS="-lusb"])])
+
+    AS_IF([test x"${LIBUSB_LIBS}" != x], [
         AC_DEFINE(HAVE_LIBUSB, 1, [defined if libusb is available])
         have_libusb=yes
 
@@ -300,9 +303,13 @@ const struct libusb_pollfd** list = libusb_get_pollfds(ctx);
             [AC_MSG_RESULT([no])]
         )
     ], [
-        AC_MSG_ERROR(["libusb-1.0 not found. Please install libusb-1.0."])
+        AS_IF([test "x$with_libusb" = "xyes"], [
+            AC_MSG_ERROR(["libusb-1.0 not found. Please install libusb-1.0."])
+        ], [
+            AC_MSG_WARN(["libusb-1.0 not found. Please install libusb-1.0 if you want to use it."])
+        ])
     ])
-fi
+])
 AC_SUBST(LIBUSB_LIBS)
 AM_CONDITIONAL(WITH_LIBUSB, [test x"${have_libusb}" = x"yes"])
 
