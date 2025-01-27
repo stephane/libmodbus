@@ -20,7 +20,7 @@ common_ldflags = \
 
 if WITH_LIBUSB
 common_ldflags += \
-	-lusb-1.0
+	@LIBUSB_LIBS@
 
 apc_test_client_SOURCES = apc-test-client.c
 apc_test_client_LDADD = $(common_ldflags)
