@@ -318,7 +318,8 @@ AC_SUBST([WARNING_CFLAGS])
 AC_SUBST([WARNING_CXXFLAGS])
 
 _PKG_VER_TITLE="$PACKAGE $VERSION"
-_PKG_VER_SEPARATOR="`echo "${_PKG_VER_TITLE}" | sed 's,.,=,g'`"
+_PKG_VER_SEPARATOR="`echo "${_PKG_VER_TITLE}" | sed 's,.,=,g'`" \
+&& test x"${_PKG_VER_SEPARATOR}" != x || _PKG_VER_SEPARATOR="================"
 AC_OUTPUT
 AC_MSG_RESULT([
         ${_PKG_VER_TITLE}
