@@ -273,8 +273,8 @@ CFLAGS="$myCFLAGS"
 
 # Check for libusb-1.0
 AC_ARG_WITH([libusb],
-    AS_HELP_STRING([--with-libusb],[Use libusb-1.0 for USB support (default is no)]),,
-    [with_libusb=no])
+    AS_HELP_STRING([--with-libusb],[Use libusb-1.0 for RTU USB support (default is auto)]),,
+    [with_libusb=auto])
 
 have_libusb=no
 LIBUSB_LIBS=""
