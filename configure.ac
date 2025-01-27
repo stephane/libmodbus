@@ -41,7 +41,6 @@ dnl On very old systems can comment it away with little loss (then automake-1.10
 dnl is known to suffice):
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])],
         [AC_MSG_NOTICE([Silent Rules feature not defined in this automake version, skipped])])
-AM_SILENT_RULES([yes])
 
 LIBMODBUS_VERSION_MAJOR=libmodbus_version_major
 LIBMODBUS_VERSION_MINOR=libmodbus_version_minor
