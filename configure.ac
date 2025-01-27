@@ -298,13 +298,24 @@ AS_IF([test "x$with_libusb" != "xno"], [
     ])
 
     AS_IF([test x"${LIBUSB_LIBS}" != x], [
+        AC_CHECK_HEADERS([libusb-1.0/libusb.h], HAVE_LIBUSB_1_0_LIBUSB_H=yes)
+        AC_CHECK_HEADERS([libusb.h], HAVE_LIBUSB_H=yes)
+    ])
+
+    AS_IF([test x"${LIBUSB_LIBS}" != x && test x"${HAVE_LIBUSB_1_0_LIBUSB_H}" = xyes -o test x"${HAVE_LIBUSB_H}" = xyes], [
         AC_DEFINE(HAVE_LIBUSB, 1, [defined if libusb is available])
         have_libusb=yes
 
         AC_MSG_CHECKING([for libusb pollfd accessibility])
         AC_LANG_PUSH([C])
         AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
-#include <libusb-1.0/libusb.h>
+#if HAVE_LIBUSB_1_0_LIBUSB_H
+# include <libusb-1.0/libusb.h>
+#else
+# if HAVE_LIBUSB_H
+#  include <libusb.h>
+# endif
+#endif
 ],[
 libusb_context *ctx = NULL;
 const struct libusb_pollfd** list = libusb_get_pollfds(ctx);

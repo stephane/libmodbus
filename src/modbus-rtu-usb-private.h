@@ -13,7 +13,13 @@
 #include "stdint.h"
 #endif
 
+#if HAVE_LIBUSB_1_0_LIBUSB_H
 #include <libusb-1.0/libusb.h>
+#else
+#if HAVE_LIBUSB_H
+#include <libusb.h>
+#endif
+#endif
 
 #define _MODBUS_RTU_USB_HEADER_LENGTH     1
 #define _MODBUS_RTU_USB_PRESET_REQ_LENGTH 6
