@@ -278,9 +278,24 @@ AC_ARG_WITH([libusb],
 
 have_libusb=no
 LIBUSB_LIBS=""
+
+dnl FIXME: Pass paths and flags on command line or find via pkg-config
 AS_IF([test "x$with_libusb" != "xno"], [
-    AC_CHECK_LIB(usb-1.0, libusb_init, [LIBUSB_LIBS="-lusb-1.0"],
-        [AC_CHECK_LIB(usb, libusb_init, [LIBUSB_LIBS="-lusb"])])
+    LIBUSB_LIB_TRYNAME="usb-1.0"
+    AC_CHECK_LIB(${LIBUSB_LIB_TRYNAME}, libusb_init, [
+        LIBUSB_LIBS="-l${LIBUSB_LIB_TRYNAME}"
+    ], [
+        LIBUSB_LIB_TRYNAME="usb"
+        AC_CHECK_LIB(${LIBUSB_LIB_TRYNAME}, libusb_init, [
+            LIBUSB_LIBS="-l${LIBUSB_LIB_TRYNAME}"
+        ], [
+            LIBUSB_LIB_TRYNAME="none"
+        ])
+    ])
+
+    AS_IF([test x"${LIBUSB_LIBS}" != x], [
+        AC_CHECK_LIB(${LIBUSB_LIB_TRYNAME}, libusb_get_parent, [:], [LIBUSB_LIBS=""])
+    ])
 
     AS_IF([test x"${LIBUSB_LIBS}" != x], [
         AC_DEFINE(HAVE_LIBUSB, 1, [defined if libusb is available])
