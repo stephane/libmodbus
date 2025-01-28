@@ -31,7 +31,10 @@ documentation (optional).
 To install, just run the usual dance, `./configure && make install`.
 Run `./autogen.sh` first to generate the `configure` script if required.
 You may be required to use `gmake` on platforms where default `make` is
-different (BSD make, Sun make, etc.)
+different (BSD make, Sun make, etc.) You may also require GNU `tar`
+impementation (or some other archivation tool, possibly `cpio`, that
+would be recognized by your installed version of `automake` as supporting
+the "pax" archive format) to pass the optional `make distcheck` routine.
 
 You can change installation directory with prefix option, eg. `./configure
 --prefix=/usr/local/`. You have to check that the installation library path is
