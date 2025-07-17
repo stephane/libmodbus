@@ -45,14 +45,15 @@ uint16_t tab_reg[10];
 
 ctx = modbus_new_rtu("/dev/ttyS0", 115200, 'N', 8, 1);
 modbus_set_slave(ctx, 1);
-modbus_rtu_set_serial_mode(ctx, MODBUS_RTU_RS485);
-modbus_rtu_set_rts(ctx, MODBUS_RTU_RTS_UP);
 
 if (modbus_connect(ctx) == -1) {
     fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
     modbus_free(ctx);
     return -1;
 }
+
+modbus_rtu_set_serial_mode(ctx, MODBUS_RTU_RS485);
+modbus_rtu_set_rts(ctx, MODBUS_RTU_RTS_UP);
 
 rc = modbus_read_registers(ctx, 0, 7, tab_reg);
 if (rc == -1) {
