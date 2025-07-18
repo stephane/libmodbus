@@ -1,5 +1,5 @@
 /*
- * Copyright © 2008-2014 Stéphane Raimbault <stephane.raimbault@gmail.com>
+ * Copyright © Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -11,6 +11,7 @@
 #define HAVE_INTTYPES_H @HAVE_INTTYPES_H@
 #define HAVE_STDINT_H @HAVE_STDINT_H@
 
+// clang-format off
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
 #endif
@@ -21,6 +22,7 @@
 # include "stdint.h"
 # endif
 #endif
+// clang-format on
 
 #define SERVER_ID         17
 #define INVALID_SERVER_ID 18
@@ -28,6 +30,7 @@
 const uint16_t UT_BITS_ADDRESS = 0x130;
 const uint16_t UT_BITS_NB = 0x25;
 const uint8_t UT_BITS_TAB[] = { 0xCD, 0x6B, 0xB2, 0x0E, 0x1B };
+const uint16_t UT_BITS_ADDRESS_INVALID_REQUEST_LENGTH = UT_BITS_ADDRESS + 2;
 
 const uint16_t UT_INPUT_BITS_ADDRESS = 0x1C4;
 const uint16_t UT_INPUT_BITS_NB = 0x16;
@@ -64,16 +67,33 @@ const uint16_t UT_FILE_NB = 0x2;        /* How many files available on server */
 const uint16_t UT_RECORDS_NB = 0xF;     /* How many records per file */
 const uint16_t UT_RECORD_ADDRESS = 0x2;
 
+/*
+ * This float value is 0x47F12000 (in big-endian format).
+ * In Little-endian(intel) format, it will be stored in memory as follows:
+ * 0x00 0x20 0xF1 0x47
+ *
+ * You can check this with the following code:
+
+   float fl = UT_REAL;
+   uint8_t *inmem = (uint8_t*)&fl;
+   int x;
+   for(x = 0; x < 4; x++){
+       printf("0x%02X ", inmem[ x ]);
+   }
+   printf("\n");
+ */
 const float UT_REAL = 123456.00;
 
-const uint32_t UT_IREAL_ABCD = 0x0020F147;
-const uint32_t UT_IREAL_DCBA = 0x47F12000;
-const uint32_t UT_IREAL_BADC = 0x200047F1;
-const uint32_t UT_IREAL_CDAB = 0xF1470020;
-
-/* const uint32_t UT_IREAL_ABCD = 0x47F12000);
-const uint32_t UT_IREAL_DCBA = 0x0020F147;
-const uint32_t UT_IREAL_BADC = 0xF1470020;
-const uint32_t UT_IREAL_CDAB = 0x200047F1;*/
+/*
+ * libmodbus will convert all words to processor-endianness as they come in and also converts them
+ * back to big endian as they are sent out.
+ * The memory layout in modbus_mapping_t.tab_registers is thus processor-endianess.
+ * Hence we define the comparison constants to check against the content of modbus_mapping_t.tab_registers
+ * in terms of 16 bit integer values, that are likewise stored in memory in processor-endianess.
+ */
+const uint16_t UT_IREAL_ABCD[] = {0x47F1, 0x2000};
+const uint16_t UT_IREAL_DCBA[] = {0x0020, 0xF147};
+const uint16_t UT_IREAL_BADC[] = {0xF147, 0x0020};
+const uint16_t UT_IREAL_CDAB[] = {0x2000, 0x47F1};
 
 #endif /* _UNIT_TEST_H_ */

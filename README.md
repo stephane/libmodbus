@@ -1,10 +1,9 @@
-A groovy modbus library
-=======================
+# A groovy modbus library
 
-[![Build Status](https://travis-ci.org/stephane/libmodbus.svg?branch=master)](https://travis-ci.org/stephane/libmodbus)
+![Build Status](https://github.com/stephane/libmodbus/actions/workflows/build.yml/badge.svg)
+[![Coverity Scan Build Status](https://scan.coverity.com/projects/8058/badge.svg)](https://scan.coverity.com/projects/libmodbus)
 
-Overview
---------
+## Overview
 
 libmodbus is a free software library to send/receive data with a device which
 respects the Modbus protocol. This library can use a serial port or an Ethernet
@@ -15,19 +14,15 @@ Protocol Reference Guide which can be obtained from [www.modbus.org](http://www.
 
 The license of libmodbus is *LGPL v2.1 or later*.
 
-The documentation is available as manual pages (`man libmodbus` to read general
-description and list of available functions) or Web pages
-[www.libmodbus.org/documentation/](http://libmodbus.org/documentation/). The
-documentation is licensed under the Creative Commons Attribution-ShareAlike
-License 3.0 (Unported) (<http://creativecommons.org/licenses/by-sa/3.0/>).
+The official website is [www.libmodbus.org](http://www.libmodbus.org). The
+website contains the latest version of the documentation.
 
-The official website is [www.libmodbus.org](http://www.libmodbus.org).
-
-The library is written in C and designed to run on Linux, Mac OS X, FreeBSD and
+The library is written in C and designed to run on Linux, Mac OS X, FreeBSD, Embox,
 QNX and Windows.
 
-Installation
-------------
+You can use the library on MCUs with Embox RTOS.
+
+## Installation
 
 You will only need to install automake, autoconf, libtool and a C compiler (gcc
 or clang) to compile the library and asciidoc and xmlto to generate the
@@ -44,8 +39,8 @@ date (run `ldconfig` as root if required).
 The library provides a *libmodbus.pc* file to use with `pkg-config` to ease your
 program compilation and linking.
 
-If you want to compile with Microsoft Visual Studio, you need to install
-<https://github.com/chemeris/msinttypes> to fill the absence of stdint.h.
+If you want to compile with Microsoft Visual Studio, you should follow the
+instructions in `./src/win32/README.md`.
 
 To compile under Windows, install [MinGW](http://www.mingw.org/) and MSYS then
 select the common packages (gcc, automake, libtool, etc). The directory
@@ -55,19 +50,9 @@ To compile under OS X with [homebrew](http://mxcl.github.com/homebrew/), you
 will need to install the following dependencies first: `brew install autoconf
 automake libtool`.
 
-Documentation
--------------
+To build under Embox, you have to use its build system.
 
-The documentation is available [online](http://libmodbus.org/documentation) or
-as manual pages after installation.
-
-The documentation is based on
-[AsciiDoc](http://www.methods.co.nz/asciidoc/).  Only man pages are built
-by default with `make` command, you can run `make htmldoc` in *doc* directory
-to generate HTML files.
-
-Testing
--------
+## Testing
 
 Some tests are provided in *tests* directory, you can freely edit the source
 code to fit your needs (it's Free Software :).
@@ -83,7 +68,15 @@ By default, all TCP unit tests will be executed (see --help for options).
 
 It's also possible to run the unit tests with `make check`.
 
-To report a bug or to contribute
---------------------------------
+## To report a bug or to contribute
 
 See [CONTRIBUTING](CONTRIBUTING.md) document.
+
+## Documentation
+
+You can serve the local documentation with:
+
+```shell
+pip install mkdocs-material
+mkdocs serve
+```

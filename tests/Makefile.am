@@ -1,4 +1,4 @@
-EXTRA_DIST = README.md unit-tests.sh
+EXTRA_DIST = README.md unit-tests.sh LICENSE
 
 noinst_PROGRAMS = \
 	bandwidth-server-one \
@@ -44,7 +44,7 @@ AM_CPPFLAGS = \
     -I${top_srcdir}/src \
     -I${top_builddir}/src
 
-AM_CFLAGS = ${my_CFLAGS}
+AM_CFLAGS = ${WARNING_CFLAGS}
 
 CLEANFILES = *~ *.log
 
