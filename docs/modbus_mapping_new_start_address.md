@@ -18,7 +18,7 @@ modbus_mapping_t* modbus_mapping_new_start_address(
 
 ## Description
 
-The `modbus_mapping_new_start_address()` function shall allocate six arrays to
+The `modbus_mapping_new_start_address()` function shall allocate five arrays to
 store bits, input bits, registers, inputs registers, files and file records. The
 pointers are stored in *modbus_mapping_t* structure. All values of the arrays
 are initialized to zero.
