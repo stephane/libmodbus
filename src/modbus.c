@@ -685,6 +685,7 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req, uint8_t *rsp, int rsp
         case MODBUS_FC_WRITE_FILE_RECORD:
             req_nb_value = (req[offset + 7] << 8) + req[offset + 8];
             rsp_nb_value = (rsp[offset + 7] << 8) + rsp[offset + 8];
+            break;
         case MODBUS_FC_WRITE_SINGLE_COIL:
         case MODBUS_FC_WRITE_SINGLE_REGISTER:
             /* address in request and response must be equal */

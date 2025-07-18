@@ -335,14 +335,14 @@ int main(int argc, char *argv[])
     rc = modbus_write_file_record(ctx, UT_FILE, UT_RECORD_ADDRESS,
                                   UT_REGISTERS_NB, UT_REGISTERS_TAB);
     printf("3/6 modbus_write_file_record: ");
-    ASSERT_TRUE(rc == UT_REGISTERS_NB, "FAILED (nb points %d)\n", rc);
+    ASSERT_TRUE(rc == UT_REGISTERS_NB, "FAILED (nb records written %d)\n", rc);
     /* Write four more records to file 1 on server, starting at record 5,
      * i.e. after previous records */
     nb_points = UT_RECORD_ADDRESS + UT_REGISTERS_NB;
     rc = modbus_write_file_record(ctx, UT_FILE, nb_points,
                                   UT_FILE_RECORD_NB, UT_FILE_TAB);
     printf("4/6 modbus_write_file_record: ");
-    ASSERT_TRUE(rc == UT_FILE_RECORD_NB, "FAILED (nb points %d)\n", rc);
+    ASSERT_TRUE(rc == UT_FILE_RECORD_NB, "FAILED (nb records written %d)\n", rc);
 
     /* Read back all 7 records and make sure the values are correct.
      * Allocate and initialize the memory to store the registers as we need more.
