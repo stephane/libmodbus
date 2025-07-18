@@ -142,6 +142,7 @@ To read data:
 - [modbus_read_registers](modbus_read_registers.md)
 - [modbus_read_input_registers](modbus_read_input_registers.md)
 - [modbus_report_slave_id](modbus_report_slave_id.md)
+- [modbus_read_file_record](modbus_read_file_record.md)
 
 To write data:
 
@@ -149,6 +150,7 @@ To write data:
 - [modbus_write_register](modbus_write_register.md)
 - [modbus_write_bits](modbus_write_bits.md)
 - [modbus_write_registers](modbus_write_registers.md)
+- [modbus_write_file_record](modbus_write_file_record.md)
 
 To write and read data in a single operation:
 
