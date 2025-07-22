@@ -7,7 +7,6 @@
 #ifndef MODBUS_RTU_H
 #define MODBUS_RTU_H
 
-#include <stdbool.h>
 #include "modbus.h"
 
 MODBUS_BEGIN_DECLS
@@ -41,7 +40,7 @@ MODBUS_API int modbus_rtu_get_rts_delay(modbus_t *ctx);
 
 MODBUS_END_DECLS
 
-int modbus_rtu_set_suppress_echo(modbus_t *ctx, bool on);
+int modbus_rtu_set_suppress_echo(modbus_t *ctx, int on);
 int modbus_rtu_get_suppress_echo(modbus_t *ctx);
 
 #endif /* MODBUS_RTU_H */

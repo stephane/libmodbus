@@ -74,7 +74,7 @@ typedef struct _modbus_rtu {
     int confirmation_to_ignore;
     /* software-side local echo suppression of sent bytes since hardware
      * does not support it or is configured to not do it */
-    bool is_echo_suppressing;
+    int is_echo_suppressing;
 } modbus_rtu_t;
 
 #endif /* MODBUS_RTU_PRIVATE_H */

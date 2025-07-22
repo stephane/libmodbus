@@ -252,12 +252,12 @@ static void _modbus_rtu_ioctl_rts(modbus_t *ctx, int on)
 }
 #endif
 
-static ssize_t _modbus_rtu_suppress_echo_write(modbus_t *ctx, const uint8_t *req, int req_length) {
+static ssize_t _modbus_rtu_suppress_echo_write(int fd, int debug, const uint8_t *req, int req_length) {
   ssize_t write_size, read_size, count;
   uint8_t req_echo[MODBUS_RTU_MAX_ADU_LENGTH];
   time_t start_time;
 
-  write_size = write(ctx->s, req, req_length);
+  write_size = write(fd, req, req_length);
 
   read_size = 0;
   count = 0;
@@ -265,7 +265,7 @@ static ssize_t _modbus_rtu_suppress_echo_write(modbus_t *ctx, const uint8_t *req
   // Time limit the loop to 3 seconds in case the read continuously returns 0 bytes read
   while (read_size < write_size && difftime(time(NULL), start_time) < 3)
   {
-    count += read(ctx->s, &req_echo[read_size], write_size - read_size);
+    count += read(fd, &req_echo[read_size], write_size - read_size);
 
     // return immediately on error
     if (count < 0) {
@@ -275,7 +275,7 @@ static ssize_t _modbus_rtu_suppress_echo_write(modbus_t *ctx, const uint8_t *req
     read_size += count;
   }
 
-  if (ctx->debug)
+  if (debug)
   {
     printf("Read back %d bytes echoed from the socket\n", read_size);
     for (int i = 0; i < read_size; i++)
@@ -283,6 +283,15 @@ static ssize_t _modbus_rtu_suppress_echo_write(modbus_t *ctx, const uint8_t *req
       fprintf(stderr, "|%02X|", req_echo[i]);
     }
     fprintf(stderr, "\n");
+  }
+
+  if (read_size != write_size)
+  {
+    fprintf(stderr,
+            "ERROR: during echo suppression, sent %d bytes, read back %d bytes\n",
+            write_size,
+            read_size);
+    return -1;
   }
 
   for (int i = 0; i < read_size; i++)
@@ -326,7 +335,7 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
         if (!ctx_rtu->is_echo_suppressing) {
             size = write(ctx->s, req, req_length);
         } else {
-            size = _modbus_rtu_suppress_echo_write(ctx, req, req_length);
+            size = _modbus_rtu_suppress_echo_write(ctx->s, ctx->debug, req, req_length);
         }
 
         usleep(ctx_rtu->onebyte_time * req_length + ctx_rtu->rts_delay);
@@ -338,7 +347,7 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
         if (!ctx_rtu->is_echo_suppressing) {
             return write(ctx->s, req, req_length);
         } else {
-            return _modbus_rtu_suppress_echo_write(ctx, req, req_length);
+            return _modbus_rtu_suppress_echo_write(ctx->s, ctx->debug, req, req_length);
         }
 #if HAVE_DECL_TIOCM_RTS
     }
@@ -1148,7 +1157,7 @@ int modbus_rtu_set_rts_delay(modbus_t *ctx, int us)
     }
 }
 
-int modbus_rtu_set_suppress_echo(modbus_t* ctx, bool on) {
+int modbus_rtu_set_suppress_echo(modbus_t* ctx, int on) {
     if (ctx == NULL) {
         errno = EINVAL;
         return -1;
@@ -1158,6 +1167,9 @@ int modbus_rtu_set_suppress_echo(modbus_t* ctx, bool on) {
         modbus_rtu_t* rtu = (modbus_rtu_t*) ctx->backend_data;
         rtu->is_echo_suppressing = on;
         return 0;
+    } else {
+        errno = EINVAL;
+        return -1;
     }
 
     errno = EINVAL;
@@ -1173,6 +1185,9 @@ int modbus_rtu_get_suppress_echo(modbus_t* ctx) {
     if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
         modbus_rtu_t* rtu = (modbus_rtu_t*) ctx->backend_data;
         return rtu->is_echo_suppressing;
+    } else {
+        errno = EINVAL;
+        return -1;
     }
 
     errno = EINVAL;
