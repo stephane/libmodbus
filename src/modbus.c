@@ -1915,6 +1915,11 @@ int modbus_get_header_length(modbus_t *ctx)
     return ctx->backend->header_length;
 }
 
+int modbus_get_errno()
+{
+    return errno;
+}
+
 int modbus_enable_quirks(modbus_t *ctx, unsigned int quirks_mask)
 {
     if (ctx == NULL) {
