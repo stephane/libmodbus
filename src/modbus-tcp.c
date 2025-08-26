@@ -45,6 +45,7 @@
 # include <netinet/tcp.h>
 # include <arpa/inet.h>
 # include <netdb.h>
+#include <poll.h>
 #endif
 
 #if !defined(MSG_NOSIGNAL)
@@ -290,6 +291,7 @@ static int _connect(int sockfd,
         struct timeval tv = *ro_tv;
 
         /* Wait to be available in writing */
+#ifdef _WIN32
         FD_ZERO(&wset);
         FD_SET(sockfd, &wset);
         rc = select(sockfd + 1, NULL, &wset, NULL, &tv);
@@ -297,7 +299,17 @@ static int _connect(int sockfd,
             /* Timeout or fail */
             return -1;
         }
+ #else
+        struct pollfd fds;
 
+        int i32TimeOutMic = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+        fds.fd = sockfd;      
+		fds.events = POLLOUT;
+        int i32Ret = poll(&fds, 1, i32TimeOutMic);
+        if (i32Ret <= 0) {
+            return -1;
+        } 
+#endif
         /* The connection is established if SO_ERROR and optval are set to 0 */
         rc = getsockopt(sockfd, SOL_SOCKET, SO_ERROR, (void *) &optval, &optlen);
         if (rc == 0 && optval == 0) {
@@ -482,12 +494,26 @@ static int _modbus_tcp_flush(modbus_t *ctx)
 
         tv.tv_sec = 0;
         tv.tv_usec = 0;
+#ifdef _WIN32
         FD_ZERO(&rset);
         FD_SET(ctx->s, &rset);
         rc = select(ctx->s + 1, &rset, NULL, NULL, &tv);
         if (rc == -1) {
             return -1;
         }
+#else
+        struct pollfd fds;
+        int i32TimeOutMic = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+        fds.fd = ctx->s;
+        fds.events = POLLIN;
+		fds.revents = 0;  
+        int i32Ret = poll(&fds, 1, i32TimeOutMic);
+		if (i32Ret == -1) {
+		    return -1;
+		}
+
+#endif
+
 
         if (rc == 1) {
             /* There is data to flush */
@@ -764,7 +790,8 @@ static int
 _modbus_tcp_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int length_to_read)
 {
     int s_rc;
-    while ((s_rc = select(ctx->s + 1, rset, NULL, NULL, tv)) == -1) {
+#ifdef _WIN32
+	while ((s_rc = select(ctx->s + 1, rset, NULL, NULL, tv)) == -1) {
         if (errno == EINTR) {
             if (ctx->debug) {
                 fprintf(stderr, "A non blocked signal was caught\n");
@@ -776,6 +803,30 @@ _modbus_tcp_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int length_t
             return -1;
         }
     }
+#else
+    struct timeval ttv = *tv;
+    struct pollfd fds;
+    int i32TimeOutMic = ttv.tv_sec * 1000 + ttv.tv_usec / 1000;
+    fds.fd = ctx->s;
+    fds.events = POLLIN;
+    fds.revents = 0;
+    while ((s_rc = poll(&fds, 1, i32TimeOutMic)) == -1) {
+	    if (errno == EINTR) {
+	        if (ctx->debug) {
+	            fprintf(stderr, "A non blocked signal was caught\n");
+	        }
+	        // 信号中断后重新初始化（对应原FD_ZERO和FD_SET）
+	        fds.revents = 0;  // 重置返回事件
+	        // 无需重新设置fd和events，因为它们未改变
+	        // 超时时间如果是相对时间，可能需要重新计算（根据实际需求）
+	    } else {
+	        // 其他错误，与原逻辑一致
+	        return -1;
+	    }
+	}
+#endif
+
+
 
     if (s_rc == 0) {
         errno = ETIMEDOUT;
