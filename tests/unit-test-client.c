@@ -673,7 +673,7 @@ int main(int argc, char *argv[])
 
     // Invalid in TCP or RTU mode...
     modbus_t *invalid_ctx = modbus_new_tcp("1.2.3.4", 1502);
-    modbus_set_response_timeout(ctx, 0, 1);
+    modbus_set_response_timeout(invalid_ctx, 0, 1);
     rc = modbus_connect(invalid_ctx);
     printf("8/8 Connection timeout: ");
     ASSERT_TRUE(rc == -1 && errno == ETIMEDOUT, "");
