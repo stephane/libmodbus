@@ -63,6 +63,7 @@ int main(int argc, char *argv[])
     const int NB_REPORT_SLAVE_ID = 2 + 3 + strlen(LIBMODBUS_VERSION_STRING);
     uint8_t *tab_rp_bits = NULL;
     uint16_t *tab_rp_registers = NULL;
+    uint16_t *tab_file_records = NULL;  /* table to hold file records */
     uint16_t *tab_rp_registers_bad = NULL;
     modbus_t *ctx = NULL;
     int i;
@@ -309,6 +310,142 @@ int main(int argc, char *argv[])
                     tab_rp_registers[i],
                     UT_INPUT_REGISTERS_TAB[i]);
     }
+
+    /** FILE OPERATIONS **/
+    printf("\nTEST FILE OPERATIONS\n");
+    /* Read the whole of the all the files on server to prove they are empty */
+    for (value = UT_FILE_ADDRESS; value < (UT_FILE_ADDRESS + UT_FILE_NB); value++) {
+        tab_file_records = (uint16_t *) malloc(UT_RECORDS_NB * sizeof(uint16_t));
+        memset(tab_file_records, 0, UT_RECORDS_NB * sizeof(uint16_t));
+
+        rc = modbus_read_file_record(ctx, value, 0,
+                                     UT_RECORDS_NB, tab_file_records);
+        printf("%d/6 modbus_read_file_record: ", value);
+        ASSERT_TRUE(rc == UT_RECORDS_NB, "FAILED (nb points %d)\n", rc);
+
+        for (i=0; i < UT_RECORDS_NB; i++) {
+            ASSERT_TRUE(tab_file_records[i] == 0x0,
+                        "%d: FAILED (%0X != %0X)\n",
+                        i, tab_file_records[i], 0x0);
+        }
+        free(tab_file_records);
+    }
+
+    /* Write three records to file 1 on server, starting at record 2 */
+    rc = modbus_write_file_record(ctx, UT_FILE, UT_RECORD_ADDRESS,
+                                  UT_REGISTERS_NB, UT_REGISTERS_TAB);
+    printf("3/6 modbus_write_file_record: ");
+    ASSERT_TRUE(rc == UT_REGISTERS_NB, "FAILED (nb records written %d)\n", rc);
+    /* Write four more records to file 1 on server, starting at record 5,
+     * i.e. after previous records */
+    nb_points = UT_RECORD_ADDRESS + UT_REGISTERS_NB;
+    rc = modbus_write_file_record(ctx, UT_FILE, nb_points,
+                                  UT_FILE_RECORD_NB, UT_FILE_TAB);
+    printf("4/6 modbus_write_file_record: ");
+    ASSERT_TRUE(rc == UT_FILE_RECORD_NB, "FAILED (nb records written %d)\n", rc);
+
+    /* Read back all 7 records and make sure the values are correct.
+     * Allocate and initialize the memory to store the registers as we need more.
+     */
+    nb_points = UT_REGISTERS_NB + UT_FILE_RECORD_NB;
+
+    tab_file_records = (uint16_t *) malloc(nb_points * sizeof(uint16_t));
+    memset(tab_file_records, 0, nb_points * sizeof(uint16_t));
+
+    rc = modbus_read_file_record(ctx, UT_FILE, UT_RECORD_ADDRESS,
+                                 nb_points, tab_file_records);
+    printf("5/6 modbus_read_file_record: ");
+    ASSERT_TRUE(rc == nb_points, "FAILED (nb points %d)\n", rc);
+
+    for (i=0; i < nb_points; i++) {
+        if (i < UT_REGISTERS_NB) { /* first three in UT_REGISTERS_TAB */
+            ASSERT_TRUE(tab_file_records[i] == UT_REGISTERS_TAB[i],
+                    "%d: FAILED (%0X != %0X)\n",
+                    i, tab_file_records[i], UT_REGISTERS_TAB[i]);
+        } else { /* Rest in UT_FILE_TAB */
+            /* calculate the index in this table */
+            rc = i - UT_REGISTERS_NB;
+            ASSERT_TRUE(tab_file_records[i] == UT_FILE_TAB[rc],
+                    "%d: FAILED (%0X != %0X)\n",
+                    i, tab_file_records[i], UT_FILE_TAB[rc]);
+        }
+    }
+    free(tab_file_records);
+
+    /* Read the whole of the all the files except the first to prove they are still empty */
+    for (value = UT_FILE_ADDRESS + 1; value < (UT_FILE_ADDRESS + UT_FILE_NB); value++) {
+        tab_file_records = (uint16_t *) malloc(UT_RECORDS_NB * sizeof(uint16_t));
+        memset(tab_file_records, 0, UT_RECORDS_NB * sizeof(uint16_t));
+
+        rc = modbus_read_file_record(ctx, value, 0,
+                                     UT_RECORDS_NB, tab_file_records);
+        printf("%d/6 modbus_read_file_record: ", value + 4);
+        ASSERT_TRUE(rc == UT_RECORDS_NB, "FAILED (nb points %d)\n", rc);
+
+        for (i=0; i < UT_RECORDS_NB; i++) {
+            ASSERT_TRUE(tab_file_records[i] == 0x0,
+                        "%d: FAILED (%0X != %0X)\n",
+                        i, tab_file_records[i], 0x0);
+        }
+        free(tab_file_records);
+    }
+    printf("Intentionally making bad requests to test server error handling ...\n");
+    /* Write three records to file 1 on server, starting at record 16 (beyond file end) */
+    errno = 0;
+    rc = modbus_write_file_record(ctx, UT_FILE, UT_RECORDS_NB + 1,
+                                  UT_REGISTERS_NB, UT_REGISTERS_TAB);
+    printf("1/4 modbus_write_file_record: rc %d, err %s, ", rc, modbus_strerror(errno));
+    ASSERT_TRUE(((rc == -1) && (errno == EMBXILADD)), "FAILED (incorrect error handling)\n");
+    /* Write three records to file 1 on server, starting at record 14
+     * (before file end, but write goes over) */
+    errno = 0;
+    rc = modbus_write_file_record(ctx, UT_FILE, UT_RECORDS_NB - 1,
+                                  UT_REGISTERS_NB, UT_REGISTERS_TAB);
+    printf("2/4 modbus_write_file_record: rc %d, err %s, ", rc, modbus_strerror(errno));
+    ASSERT_TRUE(((rc == -1) && (errno == EMBXILADD)), "FAILED (incorrect error handling)\n");
+    /* Write three records to file 3 on server (which does not exist),
+     * starting at record 1 (which is OK) */
+    errno = 0;
+    rc = modbus_write_file_record(ctx, UT_FILE + 2, 1,
+                                  UT_REGISTERS_NB, UT_REGISTERS_TAB);
+    printf("3/4 modbus_write_file_record: rc %d, err %s, ", rc, modbus_strerror(errno));
+    ASSERT_TRUE(((rc == -1) && (errno == EMBXILADD)), "FAILED (incorrect error handling)\n");
+    /* Write three records to file 0 on server (which is not allowed),
+     * starting at record 1 (which is OK) */
+    errno = 0;
+    rc = modbus_write_file_record(ctx, 0, 1,
+                                  UT_REGISTERS_NB, UT_REGISTERS_TAB);
+    printf("4/4 modbus_write_file_record: rc %d, err %s, ", rc, modbus_strerror(errno));
+    ASSERT_TRUE(((rc == -1) && (errno == EMBXILADD)), "FAILED (incorrect error handling)\n");
+
+    tab_file_records = (uint16_t *) malloc(UT_REGISTERS_NB * sizeof(uint16_t));
+    /* Read three records from file 1 on server, starting at record 16 (beyond file end) */
+    errno = 0;
+    rc = modbus_read_file_record(ctx, UT_FILE, UT_RECORDS_NB + 1,
+                                  UT_REGISTERS_NB, tab_file_records);
+    printf("1/4 modbus_read_file_record: rc %d, err %s, ", rc, modbus_strerror(errno));
+    ASSERT_TRUE(((rc == -1) && (errno == EMBXILADD)), "FAILED (incorrect error handling)\n");
+    /* Read three records to file 1 on server, starting at record 14
+     * (before file end, but read goes over) */
+    errno = 0;
+    rc = modbus_read_file_record(ctx, UT_FILE, UT_RECORDS_NB - 1,
+                                  UT_REGISTERS_NB, tab_file_records);
+    printf("2/4 modbus_read_file_record: rc %d, err %s, ", rc, modbus_strerror(errno));
+    ASSERT_TRUE(((rc == -1) && (errno == EMBXILADD)), "FAILED (incorrect error handling)\n");
+    /* Read three records to file 3 on server (which does not exist),
+     * starting at record 1 (which is OK) */
+    errno = 0;
+    rc = modbus_read_file_record(ctx, UT_FILE + 2, 1,
+                                  UT_REGISTERS_NB, tab_file_records);
+    printf("3/4 modbus_read_file_record: rc %d, err %s, ", rc, modbus_strerror(errno));
+    ASSERT_TRUE(((rc == -1) && (errno == EMBXILADD)), "FAILED (incorrect error handling)\n");
+    /* Write three records to file 0 on server (which is not allowed),
+     * starting at record 1 (which is OK) */
+    errno = 0;
+    rc = modbus_write_file_record(ctx, 0, 1,
+                                  UT_REGISTERS_NB, tab_file_records);
+    printf("4/4 modbus_read_file_record: rc %d, err %s, ", rc, modbus_strerror(errno));
+    ASSERT_TRUE(((rc == -1) && (errno == EMBXILADD)), "FAILED (incorrect error handling)\n");
 
     /* MASKS */
     printf("1/1 Write mask: ");

@@ -11,14 +11,17 @@ modbus_mapping_t* modbus_mapping_new_start_address(
     int start_bits, int nb_bits,
     int start_input_bits, int nb_input_bits,
     int start_registers, int nb_registers,
-    int start_input_registers, int nb_input_registers);
+    int start_input_registers, int nb_input_registers,
+    int 'start_files', int 'nb_files',
+    int 'nb_records');
 ```
 
 ## Description
 
-The `modbus_mapping_new_start_address()` function shall allocate four arrays to
-store bits, input bits, registers and inputs registers. The pointers are stored
-in *modbus_mapping_t* structure. All values of the arrays are initialized to zero.
+The `modbus_mapping_new_start_address()` function shall allocate five arrays to
+store bits, input bits, registers, inputs registers, files and file records. The
+pointers are stored in *modbus_mapping_t* structure. All values of the arrays
+are initialized to zero.
 
 The different starting addresses make it possible to place the mapping at any
 address in each address space. This way, you can give access to clients to
@@ -26,7 +29,7 @@ values stored at high addresses without allocating memory from the address zero,
 for example to make available registers from 340 to 349, you can use:
 
 ```c
-mb_mapping = modbus_mapping_new_start_address(0, 0, 0, 0, 340, 10, 0, 0);
+mb_mapping = modbus_mapping_new_start_address(0, 0, 0, 0, 340, 10, 0, 0, 0, 0, 0);
 ```
 
 The newly created `mb_mapping` will have the following arrays:
@@ -35,6 +38,7 @@ The newly created `mb_mapping` will have the following arrays:
 - `tab_input_bits` set to NULL
 - `tab_registers` allocated to store 10 registers (`uint16_t`)
 - `tab_input_registers` set to NULL
+- `files` set to NULL
 
 The clients can read the first register by using the address 340 in its request.
 On the server side, you should use the first index of the array to set the value
@@ -67,7 +71,8 @@ mb_mapping = modbus_mapping_new_start_address(
     BITS_ADDRESS, BITS_NB,
     INPUT_BITS_ADDRESS, INPUT_BITS_NB,
     REGISTERS_ADDRESS, REGISTERS_NB,
-    INPUT_REGISTERS_ADDRESS, INPUT_REGISTERS_NB
+    INPUT_REGISTERS_ADDRESS, INPUT_REGISTERS_NB,
+    FILES_ADDRESS, FILES_NB, RECORDS_NB
 );
 if (mb_mapping == NULL) {
     fprintf(

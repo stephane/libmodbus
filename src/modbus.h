@@ -70,6 +70,8 @@ MODBUS_BEGIN_DECLS
 #define MODBUS_FC_WRITE_MULTIPLE_COILS     0x0F
 #define MODBUS_FC_WRITE_MULTIPLE_REGISTERS 0x10
 #define MODBUS_FC_REPORT_SLAVE_ID          0x11
+#define MODBUS_FC_READ_FILE_RECORD         0x14
+#define MODBUS_FC_WRITE_FILE_RECORD        0x15
 #define MODBUS_FC_MASK_WRITE_REGISTER      0x16
 #define MODBUS_FC_WRITE_AND_READ_REGISTERS 0x17
 
@@ -82,6 +84,11 @@ MODBUS_BEGIN_DECLS
  */
 #define MODBUS_MAX_READ_BITS  2000
 #define MODBUS_MAX_WRITE_BITS 1968
+
+/* Modbus_Application_Protocol_V1_1b.pdf (chapter 6 section 14 page 33)
+ * Sub-Req. x, Record Number (2 bytes): 1 to 9999 (0x270F)
+ */
+#define MODBUS_MAX_FILE_RECORD_NUMBER     9999
 
 /* Modbus_Application_Protocol_V1_1b.pdf (chapter 6 section 3 page 15)
  * Quantity of Registers to read (2 bytes): 1 to 125 (0x7D)
@@ -156,6 +163,11 @@ extern const unsigned int libmodbus_version_micro;
 
 typedef struct _modbus modbus_t;
 
+typedef struct _modbus_file_t {
+    int nb_records;     /* Maximum number of records in file */
+    uint16_t *records;  /* Pointer to memory for record storage */
+} modbus_file_t;
+
 /*! Memory layout in tab_xxx arrays is processor-endianness.
     When receiving modbus data, it is converted to processor-endianness,
     see read_registers().
@@ -169,10 +181,13 @@ typedef struct _modbus_mapping_t {
     int start_input_registers;
     int nb_registers;
     int start_registers;
+    int nb_files;
+    int start_files;
     uint8_t *tab_bits;
     uint8_t *tab_input_bits;
     uint16_t *tab_input_registers;
     uint16_t *tab_registers;
+    modbus_file_t *files;
 } modbus_mapping_t;
 
 typedef enum {
@@ -241,6 +256,16 @@ MODBUS_API int modbus_write_and_read_registers(modbus_t *ctx,
                                                int read_nb,
                                                uint16_t *dest);
 MODBUS_API int modbus_report_slave_id(modbus_t *ctx, int max_dest, uint8_t *dest);
+MODBUS_API int modbus_write_file_record(modbus_t *ctx,
+                                        int addr,
+                                        int sub_addr,
+                                        int nb,
+                                        const uint16_t *src);
+MODBUS_API int modbus_read_file_record(modbus_t *ctx,
+                                       int addr,
+                                       int sub_addr,
+                                       int nb,
+                                       uint16_t *dest);
 
 MODBUS_API modbus_mapping_t *
 modbus_mapping_new_start_address(unsigned int start_bits,
@@ -250,12 +275,17 @@ modbus_mapping_new_start_address(unsigned int start_bits,
                                  unsigned int start_registers,
                                  unsigned int nb_registers,
                                  unsigned int start_input_registers,
-                                 unsigned int nb_input_registers);
+                                 unsigned int nb_input_registers,
+                                 unsigned int start_files,
+                                 unsigned int nb_files,
+                                 unsigned int nb_records);
 
 MODBUS_API modbus_mapping_t *modbus_mapping_new(int nb_bits,
                                                 int nb_input_bits,
                                                 int nb_registers,
-                                                int nb_input_registers);
+                                                int nb_input_registers,
+                                                int nb_files,
+                                                int nb_records);
 MODBUS_API void modbus_mapping_free(modbus_mapping_t *mb_mapping);
 
 MODBUS_API int
