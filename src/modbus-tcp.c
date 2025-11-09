@@ -658,7 +658,9 @@ int modbus_tcp_pi_listen(modbus_t *ctx, int nb_connection)
             fprintf(stderr, "Error returned by getaddrinfo: %d\n", rc);
 #endif
         }
-        freeaddrinfo(ai_list);
+        if (ai_list != NULL) {
+            freeaddrinfo(ai_list);
+        }
         errno = ECONNREFUSED;
         return -1;
     }
