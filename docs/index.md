@@ -206,6 +206,11 @@ Information about header:
 
 - [modbus_get_header_length](modbus_get_header_length.md)
 
+Set or get the client data::
+
+- [modbus_set_client_context](modbus_set_client_context)
+- [modbus_get_client_context](modbus_get_client_context)
+
 ## Data handling
 
 Macros for data manipulation:
