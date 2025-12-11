@@ -806,6 +806,12 @@ int modbus_reply(modbus_t *ctx,
     sft.function = function;
     sft.t_id = ctx->backend->get_response_tid(req);
 
+    if (slave != 0 && slave != 255) {
+        errno = EINVAL;
+        printf("The Unit Identifier must be 0x00 or 0xFF\n");
+        return -1;
+    }
+
     /* Data are flushed on illegal number of values errors. */
     switch (function) {
     case MODBUS_FC_READ_COILS:
