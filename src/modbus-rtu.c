@@ -12,6 +12,9 @@
 #ifndef _MSC_VER
 #include <unistd.h>
 #endif
+#if defined(HAVE_STRUCT_TERMIOS2)
+#include <sys/ioctl.h>
+#endif
 #include "modbus-private.h"
 #include <assert.h>
 
@@ -503,6 +506,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 }
 #else
 
+#ifndef HAVE_STRUCT_TERMIOS2
 static speed_t _get_termios_speed(int baud, int debug)
 {
     speed_t speed;
@@ -614,13 +618,18 @@ static speed_t _get_termios_speed(int baud, int debug)
 
     return speed;
 }
+#endif
 
 /* POSIX */
 static int _modbus_rtu_connect(modbus_t *ctx)
 {
-    struct termios tios;
-    int flags;
+#ifdef HAVE_STRUCT_TERMIOS2
+    struct termios2 tios;
+#else
     speed_t speed;
+    struct termios tios;
+#endif
+    int flags;
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
 
     if (ctx->debug) {
@@ -656,9 +665,13 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     }
 
     /* Save */
+#ifdef HAVE_STRUCT_TERMIOS2
+    ioctl(ctx->s, TCGETS2, &ctx_rtu->old_tios);
+#else
     tcgetattr(ctx->s, &ctx_rtu->old_tios);
+#endif
 
-    memset(&tios, 0, sizeof(struct termios));
+    memset(&tios, 0, sizeof(tios));
 
     /* C_ISPEED     Input baud (new interface)
        C_OSPEED     Output baud (new interface)
@@ -666,11 +679,16 @@ static int _modbus_rtu_connect(modbus_t *ctx)
 
     /* Set the baud rate */
 
+#ifdef HAVE_STRUCT_TERMIOS2
+	tios.c_cflag |= BOTHER;  /* Allow custom baud rate. */
+	tios.c_ispeed = ctx_rtu->baud;  /* Set input baud rate. */
+	tios.c_ospeed = ctx_rtu->baud;  /* Set output baud rate. */
+#else
     /*
     On MacOS, constants of baud rates are equal to the integer in argument but
     that's not the case under Linux so we have to find the corresponding
-    constant. Until the code is upgraded to termios2, the list of possible
-    values is limited (no 14400 for example).
+    constant. Without termios2, the list of possible values is limited
+    (no 14400 for example).
     */
     if (9600 == B9600) {
         speed = ctx_rtu->baud;
@@ -683,6 +701,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
         ctx->s = -1;
         return -1;
     }
+#endif
 
     /* C_CFLAG      Control options
        CLOCAL       Local line - do not change "owner" of port
@@ -852,11 +871,28 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     tios.c_cc[VMIN] = 0;
     tios.c_cc[VTIME] = 0;
 
+#ifdef HAVE_STRUCT_TERMIOS2
+    if (ioctl(ctx->s, TCSETS2, &tios) < 0) {
+        close(ctx->s);
+        ctx->s = -1;
+        return -1;
+    }
+    if (ctx->debug) {
+        ioctl(ctx->s, TCGETS2, &tios);
+        if (tios.c_ispeed != (unsigned int)ctx_rtu->baud) {
+            fprintf(stderr,
+                    "WARNING Failed to set baud rate %d (%d used)\n",
+                    ctx_rtu->baud,
+                    tios.c_ispeed);
+        }
+    }
+#else
     if (tcsetattr(ctx->s, TCSANOW, &tios) < 0) {
         close(ctx->s);
         ctx->s = -1;
         return -1;
     }
+#endif
 
     return 0;
 }
@@ -1106,6 +1142,12 @@ static void _modbus_rtu_close(modbus_t *ctx)
         fprintf(stderr,
                 "ERROR Error while closing handle (LastError %d)\n",
                 (int) GetLastError());
+    }
+#elif defined(HAVE_STRUCT_TERMIOS2)
+    if (ctx->s >= 0) {
+        ioctl(ctx->s, TCSETS2, &ctx_rtu->old_tios);
+        close(ctx->s);
+        ctx->s = -1;
     }
 #else
     if (ctx->s >= 0) {
