@@ -42,7 +42,7 @@ for (;;) {
 }
 ...
 
-modbus_close(s);
+close(s);
 modbus_free(ctx);
 ```
 
