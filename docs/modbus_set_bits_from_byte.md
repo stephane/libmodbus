@@ -19,7 +19,7 @@ at `index` position.
 
 ## Return value
 
-There is no return values.
+There is no return value.
 
 ## See also
 

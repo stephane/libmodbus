@@ -19,8 +19,8 @@ from the standard.
 In that case, you can enable a specific quirk to workaround the issue, libmodbus
 offers the following flags:
 
-- `MODBUS_QUIRK_MAX_SLAVE` allows slave adresses between 247 and 255.
-- `MODBUS_QUIRK_REPLY_TO_BROADCAST` force a reply to a broacast request when the
+- `MODBUS_QUIRK_MAX_SLAVE` allows slave addresses between 247 and 255.
+- `MODBUS_QUIRK_REPLY_TO_BROADCAST` force a reply to a broadcast request when the
   device is a slave in RTU mode (should be enabled on the slave device).
 
 You can combine the flags by using the bitwise OR operator.

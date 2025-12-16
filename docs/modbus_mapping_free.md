@@ -17,7 +17,7 @@ the *modbus_mapping_t* itself referenced by `mb_mapping`.
 
 ## Return value
 
-There is no return values.
+There is no return value.
 
 ## See also
 
