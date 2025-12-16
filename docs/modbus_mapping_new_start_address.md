@@ -8,10 +8,10 @@ modbus_mapping_new_start_address - allocate four arrays of bits and registers ac
 
 ```c
 modbus_mapping_t* modbus_mapping_new_start_address(
-    int start_bits, int nb_bits,
-    int start_input_bits, int nb_input_bits,
-    int start_registers, int nb_registers,
-    int start_input_registers, int nb_input_registers);
+    unsigned int start_bits, unsigned int nb_bits,
+    unsigned int start_input_bits, unsigned int nb_input_bits,
+    unsigned int start_registers, unsigned int nb_registers,
+    unsigned int start_input_registers, unsigned int nb_input_registers);
 ```
 
 ## Description

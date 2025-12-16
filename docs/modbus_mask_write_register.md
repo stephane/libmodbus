@@ -7,7 +7,7 @@ modbus_mask_write_register - mask a single register
 ## Synopsis
 
 ```c
-int modbus_mask_write_register(modbus_t *ctx, int addr, uint16_t and, uint16_t or);
+int modbus_mask_write_register(modbus_t *ctx, int addr, uint16_t and_mask, uint16_t or_mask);
 ```
 
 ## Description
@@ -15,7 +15,7 @@ int modbus_mask_write_register(modbus_t *ctx, int addr, uint16_t and, uint16_t o
 The *modbus_mask_write_register()* function shall modify the value of the
 holding register at the address 'addr' of the remote device using the algorithm:
 
-  new value = (current value AND 'and') OR ('or' AND (NOT 'and'))
+  new value = (current value AND 'and_mask') OR ('or_mask' AND (NOT 'and_mask'))
 
 The function uses the Modbus function code 0x16 (mask single register).
 

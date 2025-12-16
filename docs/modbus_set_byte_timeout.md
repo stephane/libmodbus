@@ -7,7 +7,7 @@ modbus_set_byte_timeout - set timeout between bytes
 ## Synopsis
 
 ```c
-void modbus_set_byte_timeout(modbus_t *ctx, uint32_t to_sec, uint32_t to_usec);
+int modbus_set_byte_timeout(modbus_t *ctx, uint32_t to_sec, uint32_t to_usec);
 ```
 
 ## Description

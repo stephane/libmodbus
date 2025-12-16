@@ -29,10 +29,10 @@ The `parity` argument can have one of the following values:
 - `E` for even
 - `O` for odd
 
-The `data_bits` argument specifies the number of bits of data, the allowed
+The `data_bit` argument specifies the number of bits of data, the allowed
 values are 5, 6, 7 and 8.
 
-The `stop_bits` argument specifies the bits of stop, the allowed values are 1
+The `stop_bit` argument specifies the bits of stop, the allowed values are 1
 and 2.
 
 Once the `modbus_t` structure is initialized, you can connect to the serial bus
