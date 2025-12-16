@@ -1274,12 +1274,12 @@ int modbus_read_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest)
 {
     int rc;
 
-    if (ctx == NULL) {
+    if (ctx == NULL || dest == NULL) {
         errno = EINVAL;
         return -1;
     }
 
-    if (nb > MODBUS_MAX_READ_BITS) {
+    if (nb < 1 || nb > MODBUS_MAX_READ_BITS) {
         if (ctx->debug) {
             fprintf(stderr,
                     "ERROR Too many bits requested (%d > %d)\n",
@@ -1303,12 +1303,12 @@ int modbus_read_input_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest)
 {
     int rc;
 
-    if (ctx == NULL) {
+    if (ctx == NULL || dest == NULL) {
         errno = EINVAL;
         return -1;
     }
 
-    if (nb > MODBUS_MAX_READ_BITS) {
+    if (nb < 1 || nb > MODBUS_MAX_READ_BITS) {
         if (ctx->debug) {
             fprintf(stderr,
                     "ERROR Too many discrete inputs requested (%d > %d)\n",
@@ -1378,12 +1378,12 @@ int modbus_read_registers(modbus_t *ctx, int addr, int nb, uint16_t *dest)
 {
     int status;
 
-    if (ctx == NULL) {
+    if (ctx == NULL || dest == NULL) {
         errno = EINVAL;
         return -1;
     }
 
-    if (nb > MODBUS_MAX_READ_REGISTERS) {
+    if (nb < 1 || nb > MODBUS_MAX_READ_REGISTERS) {
         if (ctx->debug) {
             fprintf(stderr,
                     "ERROR Too many registers requested (%d > %d)\n",
@@ -1403,12 +1403,12 @@ int modbus_read_input_registers(modbus_t *ctx, int addr, int nb, uint16_t *dest)
 {
     int status;
 
-    if (ctx == NULL) {
+    if (ctx == NULL || dest == NULL) {
         errno = EINVAL;
         return -1;
     }
 
-    if (nb > MODBUS_MAX_READ_REGISTERS) {
+    if (nb < 1 || nb > MODBUS_MAX_READ_REGISTERS) {
         if (ctx->debug) {
             fprintf(stderr,
                     "ERROR Too many input registers requested (%d > %d)\n",
