@@ -23,5 +23,5 @@ There is no return value.
 
 ## See also
 
-- [modbus_set_bits_from_byte](modbus_set_bits_from_byte.md)
+- [modbus_get_byte_from_bits](modbus_get_byte_from_bits.md)
 - [modbus_set_bits_from_bytes](modbus_set_bits_from_bytes.md)
