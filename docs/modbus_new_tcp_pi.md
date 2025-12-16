@@ -7,7 +7,7 @@ modbus_new_tcp_pi - create a libmodbus context for TCP Protocol Independent
 ## Synopsis
 
 ```c
-*modbus_t *modbus_new_tcp_pi(const char *node, const char *service);
+modbus_t *modbus_new_tcp_pi(const char *node, const char *service);
 ```
 
 ## Description
