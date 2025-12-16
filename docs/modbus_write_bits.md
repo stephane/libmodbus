@@ -14,7 +14,11 @@ int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *src);
 
 The *modbus_write_bits()* function shall write the status of the `nb` bits
 (coils) from `src` at the address `addr` of the remote device. The
-`src` array must contains bytes set to `TRUE` or `FALSE`.
+`src` array must contain bytes set to `TRUE` or `FALSE`.
+
+The `src` array must be allocated with at least `nb` elements. It is the
+caller's responsibility to ensure the buffer is large enough to hold all the
+bits to be written.
 
 The function uses the Modbus function code 0x0F (force multiple coils).
 
@@ -25,7 +29,8 @@ shall return -1 and set errno.
 
 ## Errors
 
-- *EMBMDATA*, writing too many bits.
+- *EINVAL*, the `ctx` or `src` argument is NULL, or `nb` is less than 1.
+- *EMBMDATA*, writing too many bits (nb > MODBUS_MAX_WRITE_BITS).
 
 ## See also
 
