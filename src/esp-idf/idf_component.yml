@@ -1,0 +1,13 @@
+dependencies:
+  idf:
+    version: '>=5.0'
+description: A Modbus library for Linux, Mac OS, FreeBSD and Windows
+files:
+  exclude:
+  - docs/**/*
+  - docs
+  - tests/**/*
+  - tests
+url: https://github.com/stephane/libmodbus
+version: 3.1.10
+
