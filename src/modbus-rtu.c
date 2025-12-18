@@ -11,6 +11,7 @@
 #include <string.h>
 #ifndef _MSC_VER
 #include <unistd.h>
+#include <poll.h>
 #endif
 #include "modbus-private.h"
 #include <assert.h>
@@ -1132,6 +1133,8 @@ _modbus_rtu_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int length_t
 {
     int s_rc;
 #if defined(_WIN32)
+    FD_ZERO(&rset);
+    FD_SET(ctx->s, &rset);
     s_rc = win32_ser_select(
         &((modbus_rtu_t *) ctx->backend_data)->w_ser, length_to_read, tv);
     if (s_rc == 0) {
@@ -1143,18 +1146,32 @@ _modbus_rtu_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int length_t
         return -1;
     }
 #else
-    while ((s_rc = select(ctx->s + 1, rset, NULL, NULL, tv)) == -1) {
-        if (errno == EINTR) {
-            if (ctx->debug) {
-                fprintf(stderr, "A non blocked signal was caught\n");
-            }
-            /* Necessary after an error */
-            FD_ZERO(rset);
-            FD_SET(ctx->s, rset);
-        } else {
-            return -1;
-        }
-    }
+	struct pollfd fds;
+
+	// 初始化pollfd结构（对应FD_ZERO和FD_SET）
+	fds.fd = ctx->s;          // 要监控的文件描述符
+	fds.events = POLLIN;      // 监控读事件
+	fds.revents = 0;          // 初始化返回事件
+
+	// 转换超时时间为毫秒（根据tv计算）
+	int timeout_ms = (tv != NULL) ? (tv->tv_sec * 1000 + tv->tv_usec / 1000) : -1;
+
+	// 替换select循环，处理EINTR信号中断
+	while ((s_rc = poll(&fds, 1, timeout_ms)) == -1) {
+	    if (errno == EINTR) {
+	        if (ctx->debug) {
+	            fprintf(stderr, "A non blocked signal was caught\n");
+	        }
+	        // 信号中断后重新初始化（对应原FD_ZERO和FD_SET）
+	        fds.revents = 0;  // 重置返回事件
+	        // 无需重新设置fd和events，因为它们未改变
+	        // 超时时间如果是相对时间，可能需要重新计算（根据实际需求）
+	    } else {
+	        // 其他错误，与原逻辑一致
+	        return -1;
+	    }
+	}
+
 
     if (s_rc == 0) {
         /* Timeout */

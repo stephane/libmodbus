@@ -21,6 +21,12 @@
 
 #include "modbus-version.h"
 
+#ifdef _WIN32
+#include <winsock2.h>
+#include <windows.h>
+#pragma comment ( lib, "ws2_32.lib" )
+#endif
+
 #if defined(_MSC_VER)
 # if defined(DLLBUILD)
 /* define DLLBUILD when building the DLL */
@@ -332,6 +338,9 @@ MODBUS_API void modbus_set_float_cdab(float f, uint16_t *dest);
 
 #include "modbus-rtu.h"
 #include "modbus-tcp.h"
+
+typedef void(*debuglog)(const char*);
+void MODBUS_API register_debuglog(debuglog pf);
 
 MODBUS_END_DECLS
 
