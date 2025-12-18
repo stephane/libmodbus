@@ -275,6 +275,10 @@ MODBUS_API int modbus_reply(modbus_t *ctx,
                             int req_length,
                             modbus_mapping_t *mb_mapping);
 MODBUS_API int
+modbus_reply_construct(modbus_t *ctx, const uint8_t *req,
+                       int req_length, modbus_mapping_t *mb_mapping, uint8_t *rsp);
+MODBUS_API int modbus_reply_send(modbus_t *ctx, uint8_t *rsp, int rsp_length);
+MODBUS_API int
 modbus_reply_exception(modbus_t *ctx, const uint8_t *req, unsigned int exception_code);
 MODBUS_API int modbus_enable_quirks(modbus_t *ctx, unsigned int quirks_mask);
 MODBUS_API int modbus_disable_quirks(modbus_t *ctx, unsigned int quirks_mask);
