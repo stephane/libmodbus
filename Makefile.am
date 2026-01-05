@@ -1,6 +1,8 @@
 CLEANFILES =
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
-AM_MAKEFLAGS = --no-print-directory
+
+# GNU make-ism, precludes builds with BSD and Sun Makes at least
+#AM_MAKEFLAGS = --no-print-directory
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libmodbus.pc
