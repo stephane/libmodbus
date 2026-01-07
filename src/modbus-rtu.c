@@ -269,6 +269,7 @@ static ssize_t _modbus_rtu_suppress_echo_write(int fd, int debug, const uint8_t 
 
     // return immediately on error
     if (count < 0) {
+      errno = EMBBADECHO;
       return -1;
     }
 
@@ -291,6 +292,7 @@ static ssize_t _modbus_rtu_suppress_echo_write(int fd, int debug, const uint8_t 
             "ERROR: during echo suppression, sent %d bytes, read back %d bytes\n",
             write_size,
             read_size);
+    errno = EMBBADECHO;
     return -1;
   }
 
@@ -304,6 +306,7 @@ static ssize_t _modbus_rtu_suppress_echo_write(int fd, int debug, const uint8_t 
               i,
               req_echo[i],
               i);
+      errno = EMBBADECHO;
       return -1;
     }
   }
