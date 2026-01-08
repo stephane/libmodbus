@@ -279,6 +279,9 @@ modbus_reply_exception(modbus_t *ctx, const uint8_t *req, unsigned int exception
 MODBUS_API int modbus_enable_quirks(modbus_t *ctx, unsigned int quirks_mask);
 MODBUS_API int modbus_disable_quirks(modbus_t *ctx, unsigned int quirks_mask);
 
+MODBUS_API int modbus_set_client_context(modbus_t *ctx, const void *cctx);
+MODBUS_API const void* modbus_get_client_context(modbus_t *ctx);
+
 /**
  * UTILS FUNCTIONS
  **/
