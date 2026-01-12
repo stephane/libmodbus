@@ -287,6 +287,135 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
 #endif
 }
 
+
+/* read and print messages from the wire as long as *cnt is not 0
+ * if *cnt > 0 decrease it after reading a message successfully
+ * if *cnt < 0 don't change it and don't stop sniffing
+ *
+ * if msg_received is NULL a timestamp and the message is printed on stdout
+ *
+ * if msg_received is not NULL it is called for every received message
+ * this lets the calling program work with the message received and
+ * control when to stop sniffing by setting *cnt
+ * this execution time for this function has to be short to not miss
+ * the start of the next message
+ */
+
+int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t cnt, void (*msg_received) (modbus_sniffed_msg_t *s_msg, int16_t *cnt))
+{
+    int			 rc;
+    fd_set		 rset;
+    struct timeval	 pause_tv, tv, date;
+    int			 length_to_read;
+    modbus_sniffed_msg_t s_msg;
+
+    if (ctx->debug) {
+	printf("Sniffing on the wire for messages ...\n");
+    }
+
+    /* Add a file descriptor to the set */
+    FD_ZERO       (&rset);
+    FD_SET(ctx->s, &rset);
+
+    /* calc the minimum time between two messages (3.5 bytes long): pause_tv
+     * maybe this could be added to the backend_data ? */
+    pause_tv.tv_sec  = 0;
+    pause_tv.tv_usec = (int) (3.5 * 8 / ((modbus_rtu_t *)ctx->backend_data)->baud * 1000000) + 1; /* round up by 1*/
+
+    /* wait for pause between messages */
+    do {
+	ctx->backend->flush(ctx);
+/* or	modbus_flush(ctx);		? */
+	tv.tv_sec  = pause_tv.tv_sec;
+	tv.tv_usec = pause_tv.tv_usec;
+	rc = ctx->backend->select(ctx, &rset, &tv, MODBUS_RTU_MAX_ADU_LENGTH);
+    } while (rc > 0);
+
+    if (rc == -1) {
+	_error_print(ctx, "select");
+	if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) {
+	    int saved_errno = errno;
+
+	    if (errno == ETIMEDOUT) {
+		_sleep_response_timeout(ctx);
+		modbus_flush(ctx);
+	    } else if (errno == EBADF) {
+		modbus_close(ctx);
+		modbus_connect(ctx);
+	    }
+	    errno = saved_errno;
+	}
+	return -1;
+    }
+
+    /* read messages until cnt == 0 */
+    while ( cnt != 0 ) {
+
+	/* try to read until a pause between two messages */
+	do {
+	    length_to_read   = MODBUS_RTU_MAX_ADU_LENGTH;
+	    s_msg.msg_length = 0;
+
+	    rc = ctx->backend->recv(ctx, s_msg.msg + s_msg.msg_length, length_to_read);
+
+	    /* Sums bytes received */
+	    s_msg.msg_length += rc;
+	    /* Computes remaining bytes */
+	    length_to_read   -= rc;
+
+	    tv.tv_sec  = pause_tv.tv_sec;
+	    tv.tv_usec = pause_tv.tv_usec;
+	    rc = ctx->backend->select(ctx, &rset, &tv, length_to_read);
+
+	    if (rc == -1) {
+		_error_print(ctx, "select");
+		if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) {
+		    int saved_errno = errno;
+
+		    if (errno == ETIMEDOUT) {
+			_sleep_response_timeout(ctx);
+			modbus_flush(ctx);
+		    } else if (errno == EBADF) {
+			modbus_close(ctx);
+			modbus_connect(ctx);
+		    }
+		    errno = saved_errno;
+		}
+		return -1;
+	    }
+	} while (rc > 0);
+
+	s_msg.crc_ok = ( crc16(s_msg.msg, s_msg.msg_length - 2) ==
+			 ((s_msg.msg[s_msg.msg_length - 2] << 8) | s_msg.msg[s_msg.msg_length - 1])
+		       );
+
+	if (msg_received != NULL)
+	    msg_received(&s_msg, &cnt);
+	else {
+	    if (0 == gettimeofday(&date, NULL)) {
+		int i;
+		printf("%ld.%d ", date.tv_sec, (int) (date.tv_usec / 100));
+
+		/* Display the hex code of each character of the message (except crc) on one line */
+		for (i=0; i < s_msg.msg_length - 2; i++)
+		    printf("%.2X ", s_msg.msg[i]);
+		if (s_msg.crc_ok)
+		    printf("CRC_OK\n");
+		else
+		    printf("CRC_ERROR\n");
+	    } else { /* error getting time of day - stop listening */
+		printf("DATE_ERROR\n");
+		cnt = 0;
+	    }
+	}
+
+	if (cnt > 0)
+	    cnt--;
+    }
+    return cnt;
+}
+
+
 static int _modbus_rtu_receive(modbus_t *ctx, uint8_t *req)
 {
     int rc;

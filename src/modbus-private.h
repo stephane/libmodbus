@@ -111,6 +111,7 @@ struct _modbus {
 void _modbus_init_common(modbus_t *ctx);
 void _error_print(modbus_t *ctx, const char *context);
 int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type);
+void _sleep_response_timeout(modbus_t *ctx);
 
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *dest, const char *src, size_t dest_size);

@@ -38,6 +38,14 @@ MODBUS_API int modbus_rtu_set_custom_rts(modbus_t *ctx,
 MODBUS_API int modbus_rtu_set_rts_delay(modbus_t *ctx, int us);
 MODBUS_API int modbus_rtu_get_rts_delay(modbus_t *ctx);
 
+typedef struct {
+    uint8_t  msg[MODBUS_RTU_MAX_ADU_LENGTH],
+	     msg_length,
+	     crc_ok;
+} modbus_sniffed_msg_t;
+
+MODBUS_API int modbus_rtu_sniff_msg(modbus_t *ctx, int16_t cnt, void (*msg_received) (modbus_sniffed_msg_t *s_msg, int16_t *cnt));
+
 MODBUS_END_DECLS
 
 #endif /* MODBUS_RTU_H */
