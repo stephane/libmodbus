@@ -7,7 +7,7 @@ modbus_receive - receive an indication request
 ## Synopsis
 
 ```c
-int modbus_receive(modbus_t *'ctx', uint8_t *'req');
+int modbus_receive(modbus_t *ctx, uint8_t *req);
 ```
 
 ## Description

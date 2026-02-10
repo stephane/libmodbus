@@ -16,7 +16,7 @@ The *modbus_new_tcp()* function shall allocate and initialize a *modbus_t*
 structure to communicate with a Modbus TCP IPv4 server.
 
 The `ip` argument specifies the IP address of the server to which the client
-wants to establish a connection. A NULL value can be used to listen any addresses in
+wants to establish a connection. A NULL value can be used to listen on any addresses in
 server mode.
 
 The `port` argument is the TCP port to use. Set the port to

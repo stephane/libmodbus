@@ -293,7 +293,7 @@ static int _modbus_rtu_receive(modbus_t *ctx, uint8_t *req)
     modbus_rtu_t *ctx_rtu = ctx->backend_data;
 
     if (ctx_rtu->confirmation_to_ignore) {
-        _modbus_receive_msg(ctx, req, MSG_CONFIRMATION);
+        (void) _modbus_receive_msg(ctx, req, MSG_CONFIRMATION);
         /* Ignore errors and reset the flag */
         ctx_rtu->confirmation_to_ignore = FALSE;
         rc = 0;
@@ -638,8 +638,8 @@ static int _modbus_rtu_connect(modbus_t *ctx)
        signals and so forth) will affect your process
 
        Timeouts are ignored in canonical input mode or when the
-       NDELAY option is set on the file via open or fcntl */
-    flags = O_RDWR | O_NOCTTY | O_NDELAY | O_EXCL;
+       NONBLOCK option is set on the file via open or fcntl */
+    flags = O_RDWR | O_NOCTTY | O_NONBLOCK | O_EXCL;
 #ifdef O_CLOEXEC
     flags |= O_CLOEXEC;
 #endif
@@ -816,7 +816,7 @@ static int _modbus_rtu_connect(modbus_t *ctx)
        UNIX serial interface drivers provide the ability to
        specify character and packet timeouts. Two elements of the
        c_cc array are used for timeouts: VMIN and VTIME. Timeouts
-       are ignored in canonical input mode or when the NDELAY
+       are ignored in canonical input mode or when the NONBLOCK
        option is set on the file via open or fcntl.
 
        VMIN specifies the minimum number of characters to read. If
@@ -846,9 +846,9 @@ static int _modbus_rtu_connect(modbus_t *ctx)
        VTIME specifies the amount of time to wait for incoming
        characters in tenths of seconds. If VTIME is set to 0 (the
        default), reads will block (wait) indefinitely unless the
-       NDELAY option is set on the port with open or fcntl.
+       NONBLOCK option is set on the port with open or fcntl.
     */
-    /* Unused because we use open with the NDELAY option */
+    /* Unused because we use open with the NONBLOCK option */
     tios.c_cc[VMIN] = 0;
     tios.c_cc[VTIME] = 0;
 

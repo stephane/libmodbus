@@ -7,7 +7,7 @@ modbus_get_socket - get the current socket of the context
 ## Synopsis
 
 ```c
-int modbus_get_socket(modbus_t *'ctx');
+int modbus_get_socket(modbus_t *ctx);
 ```
 
 ## Description

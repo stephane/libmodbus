@@ -525,7 +525,8 @@ static int _modbus_tcp_flush(modbus_t *ctx)
         }
     } while (rc == MODBUS_TCP_MAX_ADU_LENGTH);
 
-    return rc_sum;
+    /* Cast is safe: uint16_t always fits in int, and overflow is checked above */
+    return (int) rc_sum;
 }
 
 /* Listens for any request from one or many modbus masters in TCP */

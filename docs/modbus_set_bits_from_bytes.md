@@ -18,7 +18,7 @@ bytes. All the bits of the bytes read from the first position of the array
 
 ## Return value
 
-There is no return values.
+There is no return value.
 
 ## See also
 

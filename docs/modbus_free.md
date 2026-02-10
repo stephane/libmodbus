@@ -16,4 +16,4 @@ The *modbus_free()* function shall free an allocated *modbus_t* structure.
 
 ## Return value
 
-There is no return values.
+There is no return value.

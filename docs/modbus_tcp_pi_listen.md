@@ -38,11 +38,11 @@ modbus_tcp_pi_accept(ctx, &s);
 
 for (;;) {
     rc = modbus_receive(ctx, query);
-    modbus_replay(ctx, query, rc, mb_mapping);
+    modbus_reply(ctx, query, rc, mb_mapping);
 }
 ...
 
-modbus_close(s);
+close(s);
 modbus_free(ctx);
 ```
 

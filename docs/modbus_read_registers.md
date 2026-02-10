@@ -16,8 +16,9 @@ The *modbus_read_registers()* function shall read the content of the `nb`
 holding registers to the address `addr` of the remote device. The result of
 reading is stored in `dest` array as word values (16 bits).
 
-You must take care to allocate enough memory to store the results in `dest`
-(at least `nb * sizeof(uint16_t)`).
+The `dest` array must be allocated with at least `nb * sizeof(uint16_t)` bytes.
+It is the caller's responsibility to ensure the buffer is large enough to hold
+all the registers to be read.
 
 The function uses the Modbus function code 0x03 (read holding registers).
 
@@ -28,7 +29,8 @@ if successful. Otherwise it shall return -1 and set errno.
 
 ## Errors
 
-- *EMBMDATA*, too many registers requested.
+- *EINVAL*, the `ctx` or `dest` argument is NULL, or `nb` is less than 1.
+- *EMBMDATA*, too many registers requested (nb > MODBUS_MAX_READ_REGISTERS).
 
 ## Example
 

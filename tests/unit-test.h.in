@@ -33,9 +33,10 @@
  *   const variable must be considered a constant expression.
  *   It is legal for a compiler to extend this...
  */
+#define UT_BITS_NB_VAL 0x25
+const uint16_t UT_BITS_NB = UT_BITS_NB_VAL;
 #define UT_BITS_ADDRESS_VAL	0x130
 const uint16_t UT_BITS_ADDRESS = UT_BITS_ADDRESS_VAL;
-const uint16_t UT_BITS_NB = 0x25;
 const uint8_t UT_BITS_TAB[] = { 0xCD, 0x6B, 0xB2, 0x0E, 0x1B };
 const uint16_t UT_BITS_ADDRESS_INVALID_REQUEST_LENGTH = UT_BITS_ADDRESS_VAL + 2;
 
