@@ -118,7 +118,7 @@ Modbus devices:
 
 - [modbus_connect](modbus_connect.md) establishes a connection.
 - [modbus_close](modbus_close.md) closes a connection.
-- [modbus_flush](modbus_flush.md) flushed a connection.
+- [modbus_flush](modbus_flush.md) flushes a connection.
 
 In RTU, you should define the slave ID of your client with
 [modbus_set_slave](modbus_set_slave.md).

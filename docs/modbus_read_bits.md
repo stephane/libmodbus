@@ -16,8 +16,9 @@ The *modbus_read_bits()* function shall read the status of the `nb` bits (coils)
 to the address `addr` of the remote device. The result of reading is stored in
 `dest` array as unsigned bytes (8 bits) set to `TRUE` or `FALSE`.
 
-You must take care to allocate enough memory to store the results in `dest`
-(at least `nb * sizeof(uint8_t)`).
+The `dest` array must be allocated with at least `nb * sizeof(uint8_t)` bytes.
+It is the caller's responsibility to ensure the buffer is large enough to hold
+all the bits to be read.
 
 The function uses the Modbus function code 0x01 (read coil status).
 
@@ -28,7 +29,8 @@ shall return -1 and set errno.
 
 ## Errors
 
-- *EMBMDATA*, too many bits requested
+- *EINVAL*, the `ctx` or `dest` argument is NULL, or `nb` is less than 1.
+- *EMBMDATA*, too many bits requested (nb > MODBUS_MAX_READ_BITS).
 
 ## See also
 

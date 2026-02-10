@@ -35,7 +35,7 @@ modbus_tcp_accept(ctx, &s);
 
 ...
 
-close(s)
+close(s);
 modbus_free(ctx);
 ```
 
