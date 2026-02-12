@@ -800,7 +800,16 @@ int modbus_reply(modbus_t *ctx,
     offset = ctx->backend->header_length;
     slave = req[offset - 1];
     function = req[offset];
-    address = (req[offset + 1] << 8) + req[offset + 2];
+
+    /* Some function codes (eg. FC_READ_EXCEPTION_STATUS, FC_REPORT_SLAVE_ID)
+       carry no address in the request PDU, so only read when available. Reading
+       them is safe as it fits within MODBUS_MAX_ADU_LENGTH, it's just for
+       coherency.
+    */
+    if (req_length >= (int) (offset + 3))
+        address = (req[offset + 1] << 8) + req[offset + 2];
+    else
+        address = 0;
 
     sft.slave = slave;
     sft.function = function;
@@ -1093,7 +1102,7 @@ int modbus_reply(modbus_t *ctx,
             uint16_t and = (req[offset + 3] << 8) + req[offset + 4];
             uint16_t or = (req[offset + 5] << 8) + req[offset + 6];
 
-            data = (data & and) | (or &(~and) );
+            data = (data & and) | (or & (~and));
             mb_mapping->tab_registers[mapping_address] = data;
 
             rsp_length = compute_response_length_from_request(ctx, (uint8_t *) req);
