@@ -787,7 +787,7 @@ int modbus_reply(modbus_t *ctx,
     unsigned int offset;
     int slave;
     int function;
-    uint16_t address;
+    uint16_t address = 0;
     uint8_t rsp[MAX_MESSAGE_LENGTH];
     int rsp_length = 0;
     sft_t sft;
@@ -800,11 +800,34 @@ int modbus_reply(modbus_t *ctx,
     offset = ctx->backend->header_length;
     slave = req[offset - 1];
     function = req[offset];
-    address = (req[offset + 1] << 8) + req[offset + 2];
+
+    if (req_length >= (int) offset + 3) {
+        address = (req[offset + 1] << 8) + req[offset + 2];
+    }
 
     sft.slave = slave;
     sft.function = function;
     sft.t_id = ctx->backend->get_response_tid(req);
+
+    switch (function) {
+    case MODBUS_FC_READ_COILS:
+    case MODBUS_FC_READ_DISCRETE_INPUTS:
+    case MODBUS_FC_READ_HOLDING_REGISTERS:
+    case MODBUS_FC_READ_INPUT_REGISTERS:
+    case MODBUS_FC_WRITE_SINGLE_COIL:
+    case MODBUS_FC_WRITE_SINGLE_REGISTER:
+    case MODBUS_FC_WRITE_MULTIPLE_COILS:
+    case MODBUS_FC_WRITE_MULTIPLE_REGISTERS:
+    case MODBUS_FC_MASK_WRITE_REGISTER:
+    case MODBUS_FC_WRITE_AND_READ_REGISTERS:
+        if (req_length < (int) offset + 3) {
+            /* Incomplete request: ignore */
+            return 0;
+        }
+        break;
+    default:
+        break;
+    }
 
     /* Data are flushed on illegal number of values errors. */
     switch (function) {
