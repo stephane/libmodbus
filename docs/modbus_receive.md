@@ -26,6 +26,22 @@ length if successful. The returned request length can be zero if the indication
 request is ignored (eg. a query for another slave in RTU mode). Otherwise it
 shall return -1 and set errno.
 
+## Buffer size
+
+The maximum size of the request depends on the used backend, in RTU the `req`
+array must be `MODBUS_RTU_MAX_ADU_LENGTH` bytes and in TCP it must be
+`MODBUS_TCP_MAX_ADU_LENGTH` bytes. If you want to write code compatible with
+both, you can use the constant `MODBUS_MAX_ADU_LENGTH` (maximum value of all
+libmodbus backends). Take care to allocate enough memory to store requests to
+avoid crashes of your server.
+
+## Example
+
+```c
+uint8_t req[MODBUS_MAX_ADU_LENGTH];
+rc = modbus_receive(ctx, req);
+```
+
 ## See also
 
 - [modbus_set_socket](modbus_set_socket.md)
