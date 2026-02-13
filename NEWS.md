@@ -1,5 +1,9 @@
 # NEWS
 
+## libmodbus 3.X (202X-XX-XX)
+
+- Fix documentation examples of `modbus_get_float_*` functions.
+
 ## libmodbus 3.1.12 (2026-02-13)
 
 - Fix FD_SET overflow when socket fd >= FD_SETSIZE.

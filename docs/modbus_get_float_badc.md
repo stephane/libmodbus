@@ -14,8 +14,8 @@ float modbus_get_float_badc(const uint16_t *src);
 
 The *modbus_get_float_badc()* function shall get a float from 4 bytes with
 swapped bytes (BADC instead of ABCD). The `src` array must be a pointer on two
-16 bits values, for example, if the first word is set to 0x2000 and the second
-to 0x47F1, the float value will be read as 123456.0.
+16 bits values, for example, if the first word is set to 0xF147 and the second
+to 0x0020, the float value will be read as 123456.0.
 
 ## Return value
 

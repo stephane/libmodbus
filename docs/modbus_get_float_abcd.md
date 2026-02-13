@@ -14,7 +14,7 @@ float modbus_get_float_abcd(const uint16_t *src);
 
 The *modbus_get_float_abcd()* function shall get a float from 4 bytes in usual
 Modbus format. The `src` array must be a pointer on two 16 bits values, for
-example, if the first word is set to 0x0020 and the second to 0xF147, the float
+example, if the first word is set to 0x47F1 and the second to 0x2000, the float
 value will be read as 123456.0.
 
 ## Return value
