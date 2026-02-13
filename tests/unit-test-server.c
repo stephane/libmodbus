@@ -151,7 +151,12 @@ int main(int argc, char *argv[])
         }
 
         uint8_t function = query[header_length];
-        uint16_t address = MODBUS_GET_INT16_FROM_INT8(query, header_length + 1);
+        uint16_t address = 0;
+
+        /* Only read address when the request carries one (some function
+           codes like FC 0x07/0x11 have no address in the PDU). */
+        if (rc >= header_length + 3)
+            address = MODBUS_GET_INT16_FROM_INT8(query, header_length + 1);
 
         /** Special server behavior to test client **/
         if (function == MODBUS_FC_READ_HOLDING_REGISTERS) {
