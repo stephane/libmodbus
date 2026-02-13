@@ -1,5 +1,21 @@
 # NEWS
 
+## libmodbus 3.1.12 (2026-02-13)
+
+- Fix FD_SET overflow when socket fd >= FD_SETSIZE.
+- Check dest pointer not null and nb in read functions.
+- NULL check for src and nb < 1 validation in write functions.
+- `modbus_reply`: don't compute address for FC 0x07/0x11.
+- Use O_NONBLOCK instead of deprecated O_NDELAY (closes #710).
+- Explicit cast for Coverity CID 416366.
+- Document required buffer size of `modbus_receive`.
+- Document macros for error codes corresponding to Modbus exceptions (#758).
+- Fix example of `modbus_rtu_set_serial_mode` (closes #552).
+- Test filesystem provides symlink in autogen.sh (closes #414).
+- Sync API signatures with the documentation.
+- Many documentation fixes and typo corrections.
+- Add coverage target and helper script.
+
 ## libmodbus 3.1.11 (2024-10-22)
 
 - RTU - Check CRC before filtering on slave ID
