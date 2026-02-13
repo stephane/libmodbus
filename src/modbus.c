@@ -1086,11 +1086,12 @@ int modbus_reply(modbus_t *ctx,
         rsp[byte_count_pos] = rsp_length - byte_count_pos - 1;
     } break;
     case MODBUS_FC_READ_EXCEPTION_STATUS:
-        if (ctx->debug) {
-            fprintf(stderr, "FIXME Not implemented\n");
-        }
-        errno = ENOPROTOOPT;
-        return -1;
+        rsp_length = response_exception(ctx,
+                                        &sft,
+                                        MODBUS_EXCEPTION_ILLEGAL_FUNCTION,
+                                        rsp,
+                                        TRUE,
+                                        "Unsupported function: READ EXCEPTION STATUS (0x07)\n");
         break;
     case MODBUS_FC_MASK_WRITE_REGISTER: {
         int mapping_address = address - mb_mapping->start_registers;
