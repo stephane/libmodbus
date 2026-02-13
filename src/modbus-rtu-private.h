@@ -16,6 +16,13 @@
 #if defined(_WIN32)
 #include <windows.h>
 #else
+#if defined(HAVE_STRUCT_TERMIOS2)
+/* Prevent duplicate definitions of "struct termios"
+ * when including <asm/termbits.h> and <termios.h>. */
+#define termios
+#include <asm/termbits.h>
+#undef termios
+#endif
 #include <termios.h>
 #endif
 
@@ -57,6 +64,9 @@ typedef struct _modbus_rtu {
 #if defined(_WIN32)
     struct win32_ser w_ser;
     DCB old_dcb;
+#elif defined(HAVE_STRUCT_TERMIOS2)
+    /* Save old termios settings */
+    struct termios2 old_tios;
 #else
     /* Save old termios settings */
     struct termios old_tios;
