@@ -30,6 +30,10 @@ AC_INIT([libmodbus],
 AC_CONFIG_SRCDIR([src/modbus.c])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([foreign 1.11 silent-rules tar-pax subdir-objects])
+
+# Check if user provided CFLAGS before AC_PROG_CC sets defaults
+user_set_cflags="${CFLAGS+set}"
+
 AC_PROG_CC
 AC_USE_SYSTEM_EXTENSIONS
 AC_SYS_LARGEFILE
@@ -178,13 +182,18 @@ AC_ARG_ENABLE([debug],
   [enable_debug=$enableval],
   [enable_debug=no])
 
+# Set project-specific optimization flags based on debug mode.
+# These are added via AM_CFLAGS in Makefile.am, preserving user's CFLAGS.
 AS_IF([test "x$enable_debug" = "xyes"], [
-  CFLAGS="-g -O0"
-  CXXFLAGS="-g -O0"
+  LIBMODBUSCFLAGS="-g -O0"
+  # Clear AC_PROG_CC's default -O2 so debug mode works, unless user set CFLAGS
+  AS_IF([test "x$user_set_cflags" != "xset"], [
+    CFLAGS="-g"
+  ])
 ], [
-  CFLAGS="-O2"
-  CXXFLAGS="-O2"
+  LIBMODBUSCFLAGS="-O2"
 ])
+AC_SUBST([LIBMODBUSCFLAGS])
 
 AC_OUTPUT
 AC_MSG_RESULT([
@@ -197,7 +206,7 @@ AC_MSG_RESULT([
         includedir:             ${includedir}
 
         compiler:               ${CC}
-        cflags:                 ${CFLAGS} ${WARNING_CFLAGS}
+        cflags:                 ${LIBMODBUSCFLAGS} ${WARNING_CFLAGS} ${CFLAGS}
         ldflags:                ${LDFLAGS}
 
         tests:                  ${enable_tests}
