@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #ifndef _MSC_VER
 #include <unistd.h>
 #endif
@@ -251,6 +252,68 @@ static void _modbus_rtu_ioctl_rts(modbus_t *ctx, int on)
 }
 #endif
 
+static ssize_t _modbus_rtu_suppress_echo_write(int fd, int debug, const uint8_t *req, int req_length) {
+  ssize_t write_size, read_size, count;
+  uint8_t req_echo[MODBUS_RTU_MAX_ADU_LENGTH];
+  time_t start_time;
+
+  write_size = write(fd, req, req_length);
+
+  read_size = 0;
+  count = 0;
+  start_time = time(NULL);
+  // Time limit the loop to 3 seconds in case the read continuously returns 0 bytes read
+  while (read_size < write_size && difftime(time(NULL), start_time) < 3)
+  {
+    count += read(fd, &req_echo[read_size], write_size - read_size);
+
+    // return immediately on error
+    if (count < 0) {
+      errno = EMBBADECHO;
+      return -1;
+    }
+
+    read_size += count;
+  }
+
+  if (debug)
+  {
+    printf("Read back %d bytes echoed from the socket\n", read_size);
+    for (int i = 0; i < read_size; i++)
+    {
+      fprintf(stderr, "|%02X|", req_echo[i]);
+    }
+    fprintf(stderr, "\n");
+  }
+
+  if (read_size != write_size)
+  {
+    fprintf(stderr,
+            "ERROR: during echo suppression, sent %d bytes, read back %d bytes\n",
+            write_size,
+            read_size);
+    errno = EMBBADECHO;
+    return -1;
+  }
+
+  for (int i = 0; i < read_size; i++)
+  {
+    if (req[i] != req_echo[i])
+    {
+      fprintf(stderr,
+              "ERROR: during echo suppression, sent 0x%02X for byte req[%d] of the request, read back 0x%02X for byte echo[%d] of the echo\n",
+              req[i],
+              i,
+              req_echo[i],
+              i);
+      errno = EMBBADECHO;
+      return -1;
+    }
+  }
+
+  return write_size;
+}
+
 static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_length)
 {
 #if defined(_WIN32)
@@ -272,7 +335,11 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
         ctx_rtu->set_rts(ctx, ctx_rtu->rts == MODBUS_RTU_RTS_UP);
         usleep(ctx_rtu->rts_delay);
 
-        size = write(ctx->s, req, req_length);
+        if (!ctx_rtu->is_echo_suppressing) {
+            size = write(ctx->s, req, req_length);
+        } else {
+            size = _modbus_rtu_suppress_echo_write(ctx->s, ctx->debug, req, req_length);
+        }
 
         usleep(ctx_rtu->onebyte_time * req_length + ctx_rtu->rts_delay);
         ctx_rtu->set_rts(ctx, ctx_rtu->rts != MODBUS_RTU_RTS_UP);
@@ -280,7 +347,11 @@ static ssize_t _modbus_rtu_send(modbus_t *ctx, const uint8_t *req, int req_lengt
         return size;
     } else {
 #endif
-        return write(ctx->s, req, req_length);
+        if (!ctx_rtu->is_echo_suppressing) {
+            return write(ctx->s, req, req_length);
+        } else {
+            return _modbus_rtu_suppress_echo_write(ctx->s, ctx->debug, req, req_length);
+        }
 #if HAVE_DECL_TIOCM_RTS
     }
 #endif
@@ -1089,6 +1160,43 @@ int modbus_rtu_set_rts_delay(modbus_t *ctx, int us)
     }
 }
 
+int modbus_rtu_set_suppress_echo(modbus_t* ctx, int on) {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
+        modbus_rtu_t* rtu = (modbus_rtu_t*) ctx->backend_data;
+        rtu->is_echo_suppressing = on;
+        return 0;
+    } else {
+        errno = EINVAL;
+        return -1;
+    }
+
+    errno = EINVAL;
+    return -1;
+}
+
+int modbus_rtu_get_suppress_echo(modbus_t* ctx) {
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
+        modbus_rtu_t* rtu = (modbus_rtu_t*) ctx->backend_data;
+        return rtu->is_echo_suppressing;
+    } else {
+        errno = EINVAL;
+        return -1;
+    }
+
+    errno = EINVAL;
+    return -1;
+}
+
 static void _modbus_rtu_close(modbus_t *ctx)
 {
     /* Restore line settings and close file descriptor in RTU mode */
@@ -1287,6 +1395,7 @@ modbus_new_rtu(const char *device, int baud, char parity, int data_bit, int stop
 #endif
 
     ctx_rtu->confirmation_to_ignore = FALSE;
+    ctx_rtu->is_echo_suppressing = FALSE;
 
     return ctx;
 }
