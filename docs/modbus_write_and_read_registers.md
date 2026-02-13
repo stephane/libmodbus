@@ -34,7 +34,7 @@ it shall return -1 and set errno.
 
 ## Errors
 
-- *EMBMDATA*, too many registers requested, Too many registers to write
+- *EMBXILVAL*, too many registers requested, Too many registers to write
 
 ## See also
 

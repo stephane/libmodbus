@@ -457,31 +457,31 @@ int main(int argc, char *argv[])
 
     rc = modbus_read_bits(ctx, UT_BITS_ADDRESS, MODBUS_MAX_READ_BITS + 1, tab_rp_bits);
     printf("* modbus_read_bits: ");
-    ASSERT_TRUE(rc == -1 && errno == EMBMDATA, "");
+    ASSERT_TRUE(rc == -1 && errno == EMBXILVAL, "");
 
     rc = modbus_read_input_bits(
         ctx, UT_INPUT_BITS_ADDRESS, MODBUS_MAX_READ_BITS + 1, tab_rp_bits);
     printf("* modbus_read_input_bits: ");
-    ASSERT_TRUE(rc == -1 && errno == EMBMDATA, "");
+    ASSERT_TRUE(rc == -1 && errno == EMBXILVAL, "");
 
     rc = modbus_read_registers(
         ctx, UT_REGISTERS_ADDRESS, MODBUS_MAX_READ_REGISTERS + 1, tab_rp_registers);
     printf("* modbus_read_registers: ");
-    ASSERT_TRUE(rc == -1 && errno == EMBMDATA, "");
+    ASSERT_TRUE(rc == -1 && errno == EMBXILVAL, "");
 
     rc = modbus_read_input_registers(
         ctx, UT_INPUT_REGISTERS_ADDRESS, MODBUS_MAX_READ_REGISTERS + 1, tab_rp_registers);
     printf("* modbus_read_input_registers: ");
-    ASSERT_TRUE(rc == -1 && errno == EMBMDATA, "");
+    ASSERT_TRUE(rc == -1 && errno == EMBXILVAL, "");
 
     rc = modbus_write_bits(ctx, UT_BITS_ADDRESS, MODBUS_MAX_WRITE_BITS + 1, tab_rp_bits);
     printf("* modbus_write_bits: ");
-    ASSERT_TRUE(rc == -1 && errno == EMBMDATA, "");
+    ASSERT_TRUE(rc == -1 && errno == EMBXILVAL, "");
 
     rc = modbus_write_registers(
         ctx, UT_REGISTERS_ADDRESS, MODBUS_MAX_WRITE_REGISTERS + 1, tab_rp_registers);
     printf("* modbus_write_registers: ");
-    ASSERT_TRUE(rc == -1 && errno == EMBMDATA, "");
+    ASSERT_TRUE(rc == -1 && errno == EMBXILVAL, "");
 
     /** SLAVE ADDRESS **/
     old_slave = modbus_get_slave(ctx);

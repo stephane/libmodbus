@@ -30,7 +30,7 @@ if successful. Otherwise it shall return -1 and set errno.
 ## Errors
 
 - *EINVAL*, the `ctx` or `dest` argument is NULL, or `nb` is less than 1.
-- *EMBMDATA*, too many registers requested (nb > MODBUS_MAX_READ_REGISTERS).
+- *EMBXILVAL*, too many registers requested (nb > MODBUS_MAX_READ_REGISTERS).
 
 ## Example
 

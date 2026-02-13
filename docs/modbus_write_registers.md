@@ -29,7 +29,7 @@ successful. Otherwise it shall return -1 and set errno.
 ## Errors
 
 - *EINVAL*, the `ctx` or `src` argument is NULL, or `nb` is less than 1.
-- *EMBMDATA*, writing too many registers (nb > MODBUS_MAX_WRITE_REGISTERS).
+- *EMBXILVAL*, writing too many registers (nb > MODBUS_MAX_WRITE_REGISTERS).
 
 ## See also
 

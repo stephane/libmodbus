@@ -1302,7 +1302,7 @@ int modbus_read_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest)
                     nb,
                     MODBUS_MAX_READ_BITS);
         }
-        errno = EMBMDATA;
+        errno = EMBXILVAL;
         return -1;
     }
 
@@ -1331,7 +1331,7 @@ int modbus_read_input_bits(modbus_t *ctx, int addr, int nb, uint8_t *dest)
                     nb,
                     MODBUS_MAX_READ_BITS);
         }
-        errno = EMBMDATA;
+        errno = EMBXILVAL;
         return -1;
     }
 
@@ -1358,7 +1358,7 @@ static int read_registers(modbus_t *ctx, int function, int addr, int nb, uint16_
                     nb,
                     MODBUS_MAX_READ_REGISTERS);
         }
-        errno = EMBMDATA;
+        errno = EMBXILVAL;
         return -1;
     }
 
@@ -1406,7 +1406,7 @@ int modbus_read_registers(modbus_t *ctx, int addr, int nb, uint16_t *dest)
                     nb,
                     MODBUS_MAX_READ_REGISTERS);
         }
-        errno = EMBMDATA;
+        errno = EMBXILVAL;
         return -1;
     }
 
@@ -1431,7 +1431,7 @@ int modbus_read_input_registers(modbus_t *ctx, int addr, int nb, uint16_t *dest)
                     nb,
                     MODBUS_MAX_READ_REGISTERS);
         }
-        errno = EMBMDATA;
+        errno = EMBXILVAL;
         return -1;
     }
 
@@ -1515,7 +1515,7 @@ int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *src)
                     nb,
                     MODBUS_MAX_WRITE_BITS);
         }
-        errno = EMBMDATA;
+        errno = EMBXILVAL;
         return -1;
     }
 
@@ -1576,7 +1576,7 @@ int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *src)
                     nb,
                     MODBUS_MAX_WRITE_REGISTERS);
         }
-        errno = EMBMDATA;
+        errno = EMBXILVAL;
         return -1;
     }
 
@@ -1672,7 +1672,7 @@ int modbus_write_and_read_registers(modbus_t *ctx,
                     write_nb,
                     MODBUS_MAX_WR_WRITE_REGISTERS);
         }
-        errno = EMBMDATA;
+        errno = EMBXILVAL;
         return -1;
     }
 
@@ -1683,7 +1683,7 @@ int modbus_write_and_read_registers(modbus_t *ctx,
                     read_nb,
                     MODBUS_MAX_WR_READ_REGISTERS);
         }
-        errno = EMBMDATA;
+        errno = EMBXILVAL;
         return -1;
     }
     req_length = ctx->backend->build_request_basis(

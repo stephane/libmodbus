@@ -30,7 +30,7 @@ shall return -1 and set errno.
 ## Errors
 
 - *EINVAL*, the `ctx` or `src` argument is NULL, or `nb` is less than 1.
-- *EMBMDATA*, writing too many bits (nb > MODBUS_MAX_WRITE_BITS).
+- *EMBXILVAL*, writing too many bits (nb > MODBUS_MAX_WRITE_BITS).
 
 ## See also
 
