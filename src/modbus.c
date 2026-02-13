@@ -791,11 +791,31 @@ int modbus_reply(modbus_t *ctx,
                  int req_length,
                  modbus_mapping_t *mb_mapping)
 {
+    uint8_t rsp[MAX_MESSAGE_LENGTH];
+    int rsp_length;
+
+    rsp_length = modbus_reply_construct(ctx, req, req_length, mb_mapping, rsp);
+    if (rsp_length > 0) {
+        return send_msg(ctx, rsp, rsp_length);
+    }
+    return rsp_length;
+}
+
+/* Analyses the request and constructs a response.
+
+   If an error occurs, this function constructs the response
+   accordingly.
+*/
+int modbus_reply_construct(modbus_t *ctx,
+                           const uint8_t *req,
+                           int req_length,
+                           modbus_mapping_t *mb_mapping,
+                           uint8_t *rsp)
+{
     unsigned int offset;
     int slave;
     int function;
     uint16_t address;
-    uint8_t rsp[MAX_MESSAGE_LENGTH];
     int rsp_length = 0;
     sft_t sft;
 
@@ -1206,7 +1226,15 @@ int modbus_reply(modbus_t *ctx,
         !(ctx->quirks & MODBUS_QUIRK_REPLY_TO_BROADCAST)) {
         return 0;
     }
-    return send_msg(ctx, rsp, rsp_length);
+    return rsp_length;
+}
+
+int modbus_reply_send(modbus_t *ctx, uint8_t *rsp, int rsp_length)
+{
+    if (rsp_length > 0) {
+        return send_msg(ctx, rsp, rsp_length);
+    }
+    return rsp_length;
 }
 
 int modbus_reply_exception(modbus_t *ctx, const uint8_t *req, unsigned int exception_code)
