@@ -809,6 +809,18 @@ int modbus_tcp_accept(modbus_t *ctx, int *s)
         return -1;
     }
 
+    if (_modbus_tcp_set_ipv4_options(ctx->s) == -1) {
+        if (ctx->debug) {
+            fprintf(
+                stderr,
+                "ERROR Failed to set IPv4 options on accepted socket %d\n",
+                ctx->s);
+        }
+        close(ctx->s);
+        ctx->s = -1;
+        return -1;
+    }
+
     if (ctx->debug) {
         char buf[INET_ADDRSTRLEN];
         if (inet_ntop(AF_INET, &(addr.sin_addr), buf, INET_ADDRSTRLEN) == NULL) {
