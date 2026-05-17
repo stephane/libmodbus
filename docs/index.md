@@ -47,7 +47,7 @@ The function will return an opaque structure called `modbus_t` containing all
 necessary information to establish a connection with other Modbus devices
 according to the selected backend.
 
-Once this context has been created, you can use use the common API provided by
+Once this context has been created, you can use the common API provided by
 *libmodbus* to read/write or set the various timeouts. With this common API,
 it's easy to switch the backend of your application from RTU to TCP IPv6 for
 example.
