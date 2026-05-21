@@ -804,9 +804,22 @@ _modbus_tcp_select(modbus_t *ctx, fd_set *rset, struct timeval *tv, int length_t
         }
     }
 #else
-    struct timeval ttv = *tv;
     struct pollfd fds;
-    int i32TimeOutMic = ttv.tv_sec * 1000 + ttv.tv_usec / 1000;
+
+    int i32TimeOutMic = -1;
+
+    if (tv) {
+        long long t = (long long) tv->tv_sec * 1000 + tv->tv_usec / 1000;
+
+        if (t < 0) {
+            i32TimeOutMic = -1;
+        } else if (t > 2147483647) {
+            i32TimeOutMic = 2147483647;
+        } else {
+            i32TimeOutMic = (int) t;
+        }
+    }
+
     fds.fd = ctx->s;
     fds.events = POLLIN;
     fds.revents = 0;
