@@ -387,17 +387,21 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
         return -1;
     }
 
-    /* Add a file descriptor to the set */
-    FD_ZERO(&rset);
-    if (ctx->s < 0 || ctx->s >= FD_SETSIZE) {
-        if (ctx->debug) {
-            fprintf(stderr, "ERROR Invalid socket descriptor %d\n", ctx->s);
+#ifdef _WIN32
+    if (ctx->backend->backend_type != _MODBUS_BACKEND_TYPE_RTU)
+#endif
+    {
+        /* Add a file descriptor to the set */
+        FD_ZERO(&rset);
+        if (ctx->s < 0 || ctx->s >= FD_SETSIZE) {
+            if (ctx->debug) {
+                fprintf(stderr, "ERROR Invalid socket descriptor %d\n", ctx->s);
+            }
+            errno = EINVAL;
+            return -1;
         }
-        errno = EINVAL;
-        return -1;
+        FD_SET(ctx->s, &rset);
     }
-    FD_SET(ctx->s, &rset);
-
     /* We need to analyse the message step by step.  At the first step, we want
      * to reach the function code because all packets contain this
      * information. */
@@ -423,32 +427,39 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     }
 
     while (length_to_read != 0) {
-        rc = ctx->backend->select(ctx, &rset, p_tv, length_to_read);
-        if (rc == -1) {
-            _error_print(ctx, "select");
-            if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) {
 #ifdef _WIN32
-                wsa_err = WSAGetLastError();
-
-                // no equivalent to ETIMEDOUT when select fails on Windows
-                if (wsa_err == WSAENETDOWN || wsa_err == WSAENOTSOCK) {
-                    modbus_close(ctx);
-                    modbus_connect(ctx);
-                }
-#else
-                int saved_errno = errno;
-
-                if (errno == ETIMEDOUT) {
-                    _sleep_response_timeout(ctx);
-                    modbus_flush(ctx);
-                } else if (errno == EBADF) {
-                    modbus_close(ctx);
-                    modbus_connect(ctx);
-                }
-                errno = saved_errno;
+        if (ctx->backend->backend_type != _MODBUS_BACKEND_TYPE_RTU) {
+            Sleep(1);
+            rc = 1; // 模拟就绪
+        } else {
 #endif
+            rc = ctx->backend->select(ctx, &rset, p_tv, length_to_read);
+            if (rc == -1) {
+                _error_print(ctx, "select");
+                if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) {
+#ifdef _WIN32
+                    wsa_err = WSAGetLastError();
+
+                    // no equivalent to ETIMEDOUT when select fails on Windows
+                    if (wsa_err == WSAENETDOWN || wsa_err == WSAENOTSOCK) {
+                        modbus_close(ctx);
+                        modbus_connect(ctx);
+                    }
+#else
+                    int saved_errno = errno;
+
+                    if (errno == ETIMEDOUT) {
+                        _sleep_response_timeout(ctx);
+                        modbus_flush(ctx);
+                    } else if (errno == EBADF) {
+                        modbus_close(ctx);
+                        modbus_connect(ctx);
+                    }
+                    errno = saved_errno;
+#endif
+                }
+                return -1;
             }
-            return -1;
         }
 
         rc = ctx->backend->recv(ctx, msg + msg_length, length_to_read);
@@ -536,7 +547,6 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
 
     return ctx->backend->check_integrity(ctx, msg, msg_length);
 }
-
 /* Receive the request from a modbus master */
 int modbus_receive(modbus_t *ctx, uint8_t *req)
 {
