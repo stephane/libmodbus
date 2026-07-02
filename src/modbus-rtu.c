@@ -924,9 +924,8 @@ static int _modbus_rtu_connect(modbus_t *ctx)
     }
 #else
     if (tcsetattr(ctx->s, TCSANOW, &tios) < 0) {
-        close(ctx->s);
-        ctx->s = -1;
-        return -1;
+        fprintf(stderr, "Failed to set termios! Line control must be set manually!"
+		" err: %s\n", strerror(errno));
     }
 #endif
 
