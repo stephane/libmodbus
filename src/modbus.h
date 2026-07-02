@@ -284,6 +284,9 @@ MODBUS_API int modbus_proxy(modbus_t *frontend_ctx,
 MODBUS_API int modbus_enable_quirks(modbus_t *ctx, unsigned int quirks_mask);
 MODBUS_API int modbus_disable_quirks(modbus_t *ctx, unsigned int quirks_mask);
 
+MODBUS_API int modbus_set_client_context(modbus_t *ctx, const void *cctx);
+MODBUS_API const void* modbus_get_client_context(modbus_t *ctx);
+
 /**
  * UTILS FUNCTIONS
  **/
