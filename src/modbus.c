@@ -444,7 +444,7 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
 #else
                 int saved_errno = errno;
 
-                if (errno == ETIMEDOUT) {
+                if (errno == ETIMEDOUT && msg_type == MSG_CONFIRMATION) {
                     _sleep_response_timeout(ctx);
                     modbus_flush(ctx);
                 } else if (errno == EBADF) {
