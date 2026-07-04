@@ -112,6 +112,29 @@ static void _sleep_response_timeout(modbus_t *ctx)
 #endif
 }
 
+static uint64_t _timeval_to_usec(const struct timeval *tv)
+{
+    return ((uint64_t) tv->tv_sec * 1000000U) + (uint64_t) tv->tv_usec;
+}
+
+static void _timeval_from_usec(uint64_t usec, struct timeval *tv)
+{
+    tv->tv_sec = (long) (usec / 1000000U);
+    tv->tv_usec = (long) (usec % 1000000U);
+}
+
+static uint64_t _get_monotonic_time_usec(void)
+{
+#if defined(HAVE_GETTIMEOFDAY)
+    struct timeval tv;
+
+    gettimeofday(&tv, NULL);
+    return _timeval_to_usec(&tv);
+#else
+    return (uint64_t) time(NULL) * 1000000U;
+#endif
+}
+
 int modbus_flush(modbus_t *ctx)
 {
     int rc;
@@ -585,6 +608,9 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req, uint8_t *rsp, int rsp
     if (ctx->backend->pre_check_confirmation) {
         rc = ctx->backend->pre_check_confirmation(ctx, req, rsp, rsp_length);
         if (rc == -1) {
+            if (errno == EMBBADSLAVE) {
+                return -1;
+            }
             if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_PROTOCOL) {
                 _sleep_response_timeout(ctx);
                 modbus_flush(ctx);
@@ -731,6 +757,51 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req, uint8_t *rsp, int rsp
         rc = -1;
     }
 
+    return rc;
+}
+
+static int receive_confirmation(modbus_t *ctx, uint8_t *req, uint8_t *rsp)
+{
+    int rc;
+    int saved_errno = 0;
+    const struct timeval original_response_timeout = ctx->response_timeout;
+    const uint64_t deadline =
+        _get_monotonic_time_usec() + _timeval_to_usec(&original_response_timeout);
+
+    for (;;) {
+        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        if (rc == -1) {
+            saved_errno = errno;
+            break;
+        }
+
+        rc = check_confirmation(ctx, req, rsp, rc);
+        if (rc != -1) {
+            break;
+        }
+
+        if (errno != EMBBADSLAVE) {
+            saved_errno = errno;
+            break;
+        }
+
+        {
+            const uint64_t now = _get_monotonic_time_usec();
+
+            if (now >= deadline) {
+                saved_errno = ETIMEDOUT;
+                rc = -1;
+                break;
+            }
+
+            _timeval_from_usec(deadline - now, &ctx->response_timeout);
+        }
+    }
+
+    ctx->response_timeout = original_response_timeout;
+    if (rc == -1) {
+        errno = saved_errno;
+    }
     return rc;
 }
 
@@ -1374,8 +1445,8 @@ int modbus_proxy(modbus_t *frontend_ctx,
         return -1;
     }
 
-    /* Receive the response from the backend */
-    backend_rsp_length = _modbus_receive_msg(backend_ctx, backend_rsp, MSG_CONFIRMATION);
+    /* Receive and validate the response from the backend. */
+    backend_rsp_length = receive_confirmation(backend_ctx, backend_req, backend_rsp);
     if (backend_rsp_length == -1) {
         if (errno == ETIMEDOUT)
             modbus_reply_exception(
@@ -1384,33 +1455,6 @@ int modbus_proxy(modbus_t *frontend_ctx,
             modbus_reply_exception(
                 frontend_ctx, req, MODBUS_EXCEPTION_GATEWAY_PATH);
         return -1;
-    }
-
-    /* Check the backend response integrity */
-    if (backend_ctx->backend->pre_check_confirmation) {
-        /* Build a minimal req for the pre_check (only header matters for TID/slave check).
-           We reuse the backend_req buffer which still holds our sent data. */
-        uint8_t check_req[MAX_MESSAGE_LENGTH];
-        int check_req_length;
-        sft_t check_sft;
-
-        check_sft.slave = sft.slave;
-        check_sft.function = sft.function;
-        check_sft.t_id = 0;
-        check_req_length = backend_ctx->backend->build_response_basis(&check_sft, check_req);
-        /* Append enough data so the length is valid */
-        if (backend_req_length > 2) {
-            memcpy(check_req + check_req_length, backend_req + 2, backend_req_length - 2);
-            check_req_length += backend_req_length - 2;
-        }
-
-        rc = backend_ctx->backend->pre_check_confirmation(
-            backend_ctx, check_req, backend_rsp, backend_rsp_length);
-        if (rc == -1) {
-            modbus_reply_exception(
-                frontend_ctx, req, MODBUS_EXCEPTION_GATEWAY_TARGET);
-            return -1;
-        }
     }
 
     /* Extract the PDU from the backend response and wrap it for the frontend.
@@ -1463,11 +1507,7 @@ static int read_io_status(modbus_t *ctx, int function, int addr, int nb, uint8_t
         unsigned int offset_end;
         unsigned int i;
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
-        if (rc == -1)
-            return -1;
-
-        rc = check_confirmation(ctx, req, rsp, rc);
+        rc = receive_confirmation(ctx, req, rsp);
         if (rc == -1)
             return -1;
 
@@ -1572,11 +1612,7 @@ static int read_registers(modbus_t *ctx, int function, int addr, int nb, uint16_
         unsigned int offset;
         int i;
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
-        if (rc == -1)
-            return -1;
-
-        rc = check_confirmation(ctx, req, rsp, rc);
+        rc = receive_confirmation(ctx, req, rsp);
         if (rc == -1)
             return -1;
 
@@ -1663,11 +1699,7 @@ static int write_single(modbus_t *ctx, int function, int addr, const uint16_t va
         /* Used by write_bit and write_register */
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
-        if (rc == -1)
-            return -1;
-
-        rc = check_confirmation(ctx, req, rsp, rc);
+        rc = receive_confirmation(ctx, req, rsp);
     }
 
     return rc;
@@ -1748,11 +1780,7 @@ int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *src)
     if (rc > 0) {
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
-        if (rc == -1)
-            return -1;
-
-        rc = check_confirmation(ctx, req, rsp, rc);
+        rc = receive_confirmation(ctx, req, rsp);
     }
 
     return rc;
@@ -1797,11 +1825,7 @@ int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *src)
     if (rc > 0) {
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
-        if (rc == -1)
-            return -1;
-
-        rc = check_confirmation(ctx, req, rsp, rc);
+        rc = receive_confirmation(ctx, req, rsp);
     }
 
     return rc;
@@ -1840,11 +1864,7 @@ int modbus_mask_write_register(modbus_t *ctx,
         /* Used by write_bit and write_register */
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
-        if (rc == -1)
-            return -1;
-
-        rc = check_confirmation(ctx, req, rsp, rc);
+        rc = receive_confirmation(ctx, req, rsp);
     }
 
     return rc;
@@ -1913,11 +1933,7 @@ int modbus_write_and_read_registers(modbus_t *ctx,
     if (rc > 0) {
         unsigned int offset;
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
-        if (rc == -1)
-            return -1;
-
-        rc = check_confirmation(ctx, req, rsp, rc);
+        rc = receive_confirmation(ctx, req, rsp);
         if (rc == -1)
             return -1;
 
@@ -1956,11 +1972,7 @@ int modbus_report_slave_id(modbus_t *ctx, int max_dest, uint8_t *dest)
         unsigned int offset;
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
-        if (rc == -1)
-            return -1;
-
-        rc = check_confirmation(ctx, req, rsp, rc);
+        rc = receive_confirmation(ctx, req, rsp);
         if (rc == -1)
             return -1;
 
