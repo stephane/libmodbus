@@ -78,6 +78,8 @@ const char *modbus_strerror(int errnum)
         return "Too many data";
     case EMBBADSLAVE:
         return "Response not from requested slave";
+    case EMBBADECHO:
+        return "Failed echo suppression";
     default:
         return strerror(errnum);
     }
@@ -214,8 +216,12 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
                     modbus_flush(ctx);
                 }
                 errno = saved_errno;
-#endif
+            } else if (errno == EMBBADECHO) {
+                modbus_close(ctx);
+                _sleep_response_timeout(ctx);
+                modbus_connect(ctx);
             }
+#endif
         }
     } while ((ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) && rc == -1);
 
