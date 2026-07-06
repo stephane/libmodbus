@@ -907,7 +907,7 @@ int modbus_reply(modbus_t *ctx,
                                             rsp,
                                             FALSE,
                                             "Illegal data address 0x%0X in %s\n",
-                                            mapping_address < 0 ? address : address + nb,
+                                            mapping_address < 0 ? address : address + nb - 1,
                                             name);
         } else {
             rsp_length = ctx->backend->build_response_basis(&sft, rsp);
@@ -948,7 +948,7 @@ int modbus_reply(modbus_t *ctx,
                                             rsp,
                                             FALSE,
                                             "Illegal data address 0x%0X in %s\n",
-                                            mapping_address < 0 ? address : address + nb,
+                                            mapping_address < 0 ? address : address + nb - 1,
                                             name);
         } else {
             int i;
@@ -1072,7 +1072,7 @@ int modbus_reply(modbus_t *ctx,
                                             rsp,
                                             FALSE,
                                             "Illegal data address 0x%0X in write_bits\n",
-                                            mapping_address < 0 ? address : address + nb);
+                                            mapping_address < 0 ? address : address + nb - 1);
         } else {
             /* 6 = byte count */
             modbus_set_bits_from_bytes(
@@ -1108,7 +1108,7 @@ int modbus_reply(modbus_t *ctx,
                                    rsp,
                                    FALSE,
                                    "Illegal data address 0x%0X in write_registers\n",
-                                   mapping_address < 0 ? address : address + nb);
+                                   mapping_address < 0 ? address : address + nb - 1);
         } else {
             int i, j;
             for (i = mapping_address, j = 6; i < mapping_address + nb; i++, j += 2) {
@@ -1221,7 +1221,7 @@ int modbus_reply(modbus_t *ctx,
                 "Illegal data read address 0x%0X or write address 0x%0X "
                 "write_and_read_registers\n",
                 mapping_address < 0 ? address : address + nb,
-                mapping_address_write < 0 ? address_write : address_write + nb_write);
+                mapping_address_write < 0 ? address_write : address_write + nb_write - 1);
         } else {
             int i, j;
             rsp_length = ctx->backend->build_response_basis(&sft, rsp);
