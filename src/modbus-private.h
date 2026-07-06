@@ -14,7 +14,9 @@
 #else
 # include "stdint.h"
 # include <time.h>
+#ifndef ssize_t
 typedef int ssize_t;
+#endif
 #endif
 // clang-format on
 #include <config.h>
