@@ -392,7 +392,7 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
 
     /* Add a file descriptor to the set */
     FD_ZERO(&rset);
-    if (ctx->s < 0 || ctx->s >= FD_SETSIZE) {
+    if (ctx->s < 0 || MODBUS_FD_OUT_OF_RANGE(ctx->s)) {
         if (ctx->debug) {
             fprintf(stderr, "ERROR Invalid socket descriptor %d\n", ctx->s);
         }
