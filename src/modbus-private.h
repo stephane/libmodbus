@@ -22,6 +22,21 @@ typedef int ssize_t;
 
 #include "modbus.h"
 
+/* select()/FD_SET treat a descriptor as an index into a fixed-size bitmask on
+ * POSIX, so a descriptor greater than or equal to FD_SETSIZE would write past
+ * the end of the fd_set and must be rejected. On Windows a SOCKET is an opaque
+ * handle whose numeric value is unrelated to FD_SETSIZE, and an fd_set is a
+ * counted array of sockets (fd_count + fd_array[]) rather than a bitmask. Since
+ * libmodbus only ever registers a single socket in a set, it can never overflow
+ * fd_array; the POSIX range check therefore does not apply on Windows and, if
+ * kept, wrongly rejects valid sockets whose handle value happens to reach
+ * FD_SETSIZE (64 by default). Restrict the check to non-Windows platforms. */
+#if defined(_WIN32)
+#define MODBUS_FD_OUT_OF_RANGE(fd) (0)
+#else
+#define MODBUS_FD_OUT_OF_RANGE(fd) ((fd) >= FD_SETSIZE)
+#endif
+
 MODBUS_BEGIN_DECLS
 
 /* It's not really the minimal length (the real one is report slave ID
