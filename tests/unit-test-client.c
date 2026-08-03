@@ -779,6 +779,29 @@ int main(int argc, char *argv[])
     printf("* modbus_read_registers at special address: ");
     ASSERT_TRUE(rc == -1 && errno == EMBXSBUSY, "");
 
+    {
+        int i;
+        int header_length = modbus_get_header_length(ctx);
+        const uint8_t invalid_functions[] = {0x80, 0xFF};
+        uint8_t invalid_req[MODBUS_TCP_MAX_ADU_LENGTH] = {0};
+
+        invalid_req[header_length - 1] = (use_backend == RTU) ? SERVER_ID : MODBUS_TCP_SLAVE;
+
+        for (i = 0; i < 2; i++) {
+            invalid_req[header_length] = invalid_functions[i];
+
+            errno = 0;
+            rc = modbus_reply_exception(
+                ctx, invalid_req, MODBUS_EXCEPTION_ILLEGAL_FUNCTION);
+
+            printf("* reject function code 0x%02X: ", invalid_functions[i]);
+            ASSERT_TRUE(rc == -1 && errno == EMBXILFUN,
+                        "FAILED (rc=%d, errno=%d)\n",
+                        rc,
+                        errno);
+        }
+    }
+
     /** Run a few tests to challenge the server code **/
     if (test_server(ctx, use_backend) == -1) {
         goto close;

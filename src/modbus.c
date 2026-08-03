@@ -1283,7 +1283,11 @@ int modbus_reply_exception(modbus_t *ctx, const uint8_t *req, unsigned int excep
     function = req[offset];
 
     sft.slave = slave;
-    sft.function = function + 0x80;
+    if (function > 0x7F) {
+        errno = EMBXILFUN; /* Modbus: illegal function code */
+        return -1;
+    }
+    sft.function = function | 0x80;
     sft.t_id = ctx->backend->get_response_tid(req);
     rsp_length = ctx->backend->build_response_basis(&sft, rsp);
 
