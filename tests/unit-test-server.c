@@ -227,6 +227,17 @@ int main(int argc, char *argv[])
                        "value (%d) in modbus_reply\n",
                        rc);
             }
+        } else if (function == MODBUS_FC_MASK_WRITE_REGISTER) {
+            if (address == UT_REGISTERS_ADDRESS_BAD_MASK_WRITE_ADDRESS) {
+                printf("Reply with a mismatched address for FC22\n");
+                MODBUS_SET_INT16_TO_INT8(query, header_length + 1, address + 1);
+            } else if (address == UT_REGISTERS_ADDRESS_BAD_MASK_WRITE_AND) {
+                printf("Reply with a mismatched AND mask for FC22\n");
+                query[header_length + 3] ^= 0xFF;
+            } else if (address == UT_REGISTERS_ADDRESS_BAD_MASK_WRITE_OR) {
+                printf("Reply with a mismatched OR mask for FC22\n");
+                query[header_length + 5] ^= 0xFF;
+            }
         }
 
         rc = modbus_reply(ctx, query, rc, mb_mapping);
