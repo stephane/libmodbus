@@ -690,6 +690,17 @@ static int check_confirmation(modbus_t *ctx, uint8_t *req, uint8_t *rsp, int rsp
             /* 1 Write functions & others */
             req_nb_value = rsp_nb_value = 1;
             break;
+        case MODBUS_FC_MASK_WRITE_REGISTER:
+            /* FC22 confirmations echo the address and both masks. */
+            if ((req[offset + 1] != rsp[offset + 1]) ||
+                (req[offset + 2] != rsp[offset + 2])) {
+                resp_addr_ok = FALSE;
+            }
+            if (memcmp(req + offset + 3, rsp + offset + 3, 4) != 0) {
+                resp_data_ok = FALSE;
+            }
+            req_nb_value = rsp_nb_value = 1;
+            break;
         default:
             /* 1 Write functions & others */
             req_nb_value = rsp_nb_value = 1;

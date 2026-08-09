@@ -319,6 +319,19 @@ int main(int argc, char *argv[])
     ASSERT_TRUE(
         tab_rp_registers[0] == 0x17, "FAILED (%0X != %0X)\n", tab_rp_registers[0], 0x17);
 
+    printf("1/3 Reject mismatched mask-write address: ");
+    rc = modbus_mask_write_register(
+        ctx, UT_REGISTERS_ADDRESS_BAD_MASK_WRITE_ADDRESS, 0xF2, 0x25);
+    ASSERT_TRUE(rc == -1 && errno == EMBBADDATA, "");
+    printf("2/3 Reject mismatched mask-write AND mask: ");
+    rc = modbus_mask_write_register(
+        ctx, UT_REGISTERS_ADDRESS_BAD_MASK_WRITE_AND, 0xF2, 0x25);
+    ASSERT_TRUE(rc == -1 && errno == EMBBADDATA, "");
+    printf("3/3 Reject mismatched mask-write OR mask: ");
+    rc = modbus_mask_write_register(
+        ctx, UT_REGISTERS_ADDRESS_BAD_MASK_WRITE_OR, 0xF2, 0x25);
+    ASSERT_TRUE(rc == -1 && errno == EMBBADDATA, "");
+
     printf("\nTEST FLOATS\n");
     /** FLOAT **/
     printf("1/4 Set/get float ABCD: ");

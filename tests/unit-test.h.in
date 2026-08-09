@@ -49,6 +49,10 @@ const uint16_t UT_REGISTERS_ADDRESS_INVALID_TID_OR_SLAVE = 0x171;
 const uint16_t UT_REGISTERS_ADDRESS_SLEEP_500_MS = 0x172;
 /* The server will wait for 5 ms before sending each byte */
 const uint16_t UT_REGISTERS_ADDRESS_BYTE_SLEEP_5_MS = 0x173;
+/* The server corrupts one echoed FC22 field for each of these requests. */
+const uint16_t UT_REGISTERS_ADDRESS_BAD_MASK_WRITE_ADDRESS = 0x174;
+const uint16_t UT_REGISTERS_ADDRESS_BAD_MASK_WRITE_AND = 0x175;
+const uint16_t UT_REGISTERS_ADDRESS_BAD_MASK_WRITE_OR = 0x176;
 
 /* If the following value is used, a bad response is sent.
    It's better to test with a lower value than
