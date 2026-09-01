@@ -225,6 +225,18 @@ static int _modbus_tcp_pre_check_confirmation(modbus_t *ctx,
         return -1;
     }
 
+    /* Check if response slave ID matches request slave ID*/
+    if (req[6] != rsp[6]) {
+        if (ctx->debug) {
+            fprintf(stderr,
+                    "The responding slave %d isn't the requested slave %d\n",
+                    rsp[6],
+                    req[6]);
+        }
+        errno = EMBBADSLAVE;
+        return -1;
+    }
+
     return 0;
 }
 
