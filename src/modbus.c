@@ -785,8 +785,17 @@ static int response_exception(modbus_t *ctx,
         modbus_flush(ctx);
     }
 
-    /* Build exception response */
-    sft->function = sft->function + 0x80;
+    /* Build exception response. Per the Modbus spec the exception function
+       code is formed by setting the top bit of the request's function code.
+       An unrecognized function code can already have that bit set (any raw
+       byte from 0x80 to 0xFF ends up here through the "default" case in
+       modbus_reply's switch), so adding 0x80 can carry past 0xFF and the
+       truncation to a single byte in build_response_basis then wraps the
+       result back below 0x80. That leaves the response looking like a
+       plain, non-exception function code to the client. A bitwise OR gives
+       the same result as the addition when the top bit was clear and stays
+       correct when it was already set. */
+    sft->function = sft->function | 0x80;
     rsp_length = ctx->backend->build_response_basis(sft, rsp);
     rsp[rsp_length++] = exception_code;
 

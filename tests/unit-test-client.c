@@ -868,6 +868,10 @@ int test_server(modbus_t *ctx, int use_backend)
     const int INVALID_FC = 0x42;
     const int INVALID_FC_REQ_LEN = 6;
     uint8_t invalid_fc_raw_req[] = {slave, 0x42, 0x00, 0x00, 0x00, 0x00};
+    /* Same idea, but the function byte already has its top bit set, as a
+       real function code >= 0x80 would. */
+    const int INVALID_FC_HIGH = 0xFF;
+    uint8_t invalid_fc_high_raw_req[] = {slave, 0xFF, 0x00, 0x00, 0x00, 0x00};
 
     int req_length;
     uint8_t rsp[MODBUS_TCP_MAX_ADU_LENGTH];
@@ -997,6 +1001,22 @@ int test_server(modbus_t *ctx, int use_backend)
     printf("Return an exception on unknown function code: ");
     ASSERT_TRUE(rc == (backend_length + EXCEPTION_RC) &&
                     rsp[backend_offset] == (0x80 + INVALID_FC),
+                "")
+
+    /* Same test with a function code that already has its top bit set. The
+       server used to build the exception response by adding 0x80 to the
+       function code with plain arithmetic, so a request byte >= 0x80 made
+       the sum carry past 0xFF; once that got truncated to a single byte for
+       the wire, the result wrapped back below 0x80 and looked like a
+       perfectly normal function code to the client instead of an
+       exception. */
+    modbus_send_raw_request(
+        ctx, invalid_fc_high_raw_req, INVALID_FC_REQ_LEN * sizeof(uint8_t));
+    rc = modbus_receive_confirmation(ctx, rsp);
+    printf("Return an exception on unknown function code with the top bit "
+           "already set: ");
+    ASSERT_TRUE(rc == (backend_length + EXCEPTION_RC) &&
+                    rsp[backend_offset] == (0x80 | INVALID_FC_HIGH),
                 "")
 
     modbus_set_response_timeout(ctx, old_response_to_sec, old_response_to_usec);
