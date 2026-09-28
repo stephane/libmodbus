@@ -150,9 +150,9 @@ enum {
 #define EMBMDATA    (EMBXGTAR + 5)
 #define EMBBADSLAVE (EMBXGTAR + 6)
 
-extern const unsigned int libmodbus_version_major;
-extern const unsigned int libmodbus_version_minor;
-extern const unsigned int libmodbus_version_micro;
+MODBUS_API extern const unsigned int libmodbus_version_major;
+MODBUS_API extern const unsigned int libmodbus_version_minor;
+MODBUS_API extern const unsigned int libmodbus_version_micro;
 
 typedef struct _modbus modbus_t;
 
