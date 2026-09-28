@@ -331,8 +331,12 @@ static int _modbus_rtu_receive(modbus_t *ctx, uint8_t *req)
         }
     } else {
         rc = _modbus_receive_msg(ctx, req, MSG_INDICATION);
-        if (rc == 0) {
-            /* The next expected message is a confirmation to ignore */
+        if (rc == 0 && !ctx_rtu->slave_filter_active) {
+            /* An indication for another slave was ignored: on a shared bus the
+             * addressed slave will answer, so the next message is a
+             * confirmation to ignore. A multi-slave server (slave filter set)
+             * is the authoritative responder for its unit ids and keeps
+             * listening for the next indication instead. */
             ctx_rtu->confirmation_to_ignore = TRUE;
         }
     }
@@ -371,6 +375,20 @@ static int _modbus_rtu_pre_check_confirmation(modbus_t *ctx,
     }
 }
 
+/* Returns TRUE if an indication addressed to unit identifier `slave` must be
+   handled by this context. With a slave filter set (multi-slave mode) the
+   decision is a bitmap lookup; otherwise only ctx->slave matches. Broadcast is
+   handled by the caller. */
+static int _modbus_rtu_slave_accepted(modbus_t *ctx, int slave)
+{
+    modbus_rtu_t *ctx_rtu = ctx->backend_data;
+
+    if (ctx_rtu->slave_filter_active) {
+        return (ctx_rtu->slave_filter[slave / 8] >> (slave % 8)) & 1;
+    }
+    return slave == ctx->slave;
+}
+
 /* The check_crc16 function shall return 0 if the message is ignored and the
    message length if the CRC is valid. Otherwise it shall return -1 and set
    errno to EMBBADCRC. */
@@ -400,9 +418,9 @@ static int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg, const int ms
     }
 
     /* Filter on the Modbus unit identifier (slave) in RTU mode */
-    if (slave != ctx->slave && slave != MODBUS_BROADCAST_ADDRESS) {
+    if (slave != MODBUS_BROADCAST_ADDRESS && !_modbus_rtu_slave_accepted(ctx, slave)) {
         if (ctx->debug) {
-            printf("Request for slave %d ignored (not %d)\n", slave, ctx->slave);
+            printf("Request for slave %d ignored\n", slave);
         }
         /* Following call to check_confirmation handles this error */
         return 0;
@@ -1025,6 +1043,48 @@ int modbus_rtu_get_serial_mode(modbus_t *ctx)
     }
 }
 
+int modbus_rtu_set_slave_filter(modbus_t *ctx,
+                                const uint8_t *slaves,
+                                unsigned int count)
+{
+    modbus_rtu_t *ctx_rtu;
+    int max_slave;
+    unsigned int i;
+
+    if (ctx == NULL || ctx->backend->backend_type != _MODBUS_BACKEND_TYPE_RTU) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    ctx_rtu = ctx->backend_data;
+
+    /* A NULL list or a count of 0 clears the filter and restores the default
+       behaviour (only ctx->slave and broadcast are accepted). */
+    if (slaves == NULL || count == 0) {
+        ctx_rtu->slave_filter_active = FALSE;
+        memset(ctx_rtu->slave_filter, 0, sizeof(ctx_rtu->slave_filter));
+        return 0;
+    }
+
+    /* Validate every id before mutating so a bad entry leaves the filter
+       unchanged. */
+    max_slave = (ctx->quirks & MODBUS_QUIRK_MAX_SLAVE) ? 255 : 247;
+    for (i = 0; i < count; i++) {
+        if (slaves[i] > max_slave) {
+            errno = EINVAL;
+            return -1;
+        }
+    }
+
+    memset(ctx_rtu->slave_filter, 0, sizeof(ctx_rtu->slave_filter));
+    for (i = 0; i < count; i++) {
+        ctx_rtu->slave_filter[slaves[i] / 8] |= (uint8_t) (1 << (slaves[i] % 8));
+    }
+    ctx_rtu->slave_filter_active = TRUE;
+
+    return 0;
+}
+
 int modbus_rtu_get_rts(modbus_t *ctx)
 {
     if (ctx == NULL) {
@@ -1394,6 +1454,11 @@ modbus_new_rtu(const char *device, int baud, char parity, int data_bit, int stop
 #endif
 
     ctx_rtu->confirmation_to_ignore = FALSE;
+
+    /* No slave filter by default: only ctx->slave is accepted in slave mode
+     * (see modbus_rtu_set_slave_filter for multi-slave servers). */
+    ctx_rtu->slave_filter_active = FALSE;
+    memset(ctx_rtu->slave_filter, 0, sizeof(ctx_rtu->slave_filter));
 
     return ctx;
 }

@@ -82,6 +82,12 @@ typedef struct _modbus_rtu {
 #endif
     /* To handle many slaves on the same link */
     int confirmation_to_ignore;
+    /* Multi-slave mode: when slave_filter_active is set, an indication is
+     * accepted if its unit identifier has its bit set in slave_filter (a
+     * 256-bit bitmap). Otherwise only ctx->slave (and broadcast) is accepted,
+     * which preserves the historical single-slave behaviour. */
+    int slave_filter_active;
+    uint8_t slave_filter[32];
 } modbus_rtu_t;
 
 #endif /* MODBUS_RTU_PRIVATE_H */

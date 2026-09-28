@@ -92,6 +92,9 @@ You can tweak the serial mode with the following functions:
 - [modbus_rtu_get_rts_delay](modbus_rtu_get_rts_delay.md)
 - [modbus_rtu_set_rts_delay](modbus_rtu_set_rts_delay.md)
 
+To serve several slaves from a single RTU context, use
+[modbus_rtu_set_slave_filter](modbus_rtu_set_slave_filter.md).
+
 ### TCP (IPv4) Context
 
 The TCP backend implements a Modbus variant used for communications over
