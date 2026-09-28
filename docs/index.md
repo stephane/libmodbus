@@ -178,11 +178,13 @@ Data mapping:
 Receive:
 
 - [modbus_receive](modbus_receive.md)
+- [modbus_get_request_slave](modbus_get_request_slave.md)
 
 Reply:
 
 - [modbus_reply](modbus_reply.md)
 - [modbus_reply_exception](modbus_reply_exception.md)
+- [modbus_reply_router](modbus_reply_router.md)
 
 Proxy:
 

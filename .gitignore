@@ -48,6 +48,7 @@ tests/random-test-server
 tests/proxy-test-client
 tests/proxy-test-server
 tests/unit-test-client
+tests/unit-test-reply-router
 tests/unit-test-server
 tests/version
 tests/stamp-h2

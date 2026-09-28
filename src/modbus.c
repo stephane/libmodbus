@@ -1297,6 +1297,52 @@ int modbus_reply_exception(modbus_t *ctx, const uint8_t *req, unsigned int excep
     }
 }
 
+/* Return the unit identifier (slave) addressed by a request or indication.
+   The identifier sits just before the function code, at the end of the backend
+   header (offset 0 in RTU, 6 in TCP). */
+int modbus_get_request_slave(modbus_t *ctx, const uint8_t *req)
+{
+    if (ctx == NULL || req == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    return req[ctx->backend->header_length - 1];
+}
+
+/* Reply to an indication using the mapping returned by `resolve` for the
+   addressed unit identifier. This is a convenience over modbus_reply() for a
+   server that handles several slaves, each with its own mapping. When `resolve`
+   returns NULL, a gateway path exception is sent so the client learns the unit
+   is unavailable. */
+int modbus_reply_router(modbus_t *ctx,
+                        const uint8_t *req,
+                        int req_length,
+                        modbus_mapping_resolver_t resolve,
+                        void *user)
+{
+    int slave;
+    modbus_mapping_t *mb_mapping;
+
+    if (ctx == NULL || req == NULL || resolve == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (req_length < (int) (ctx->backend->header_length + 1)) {
+        errno = EMBBADDATA;
+        return -1;
+    }
+
+    slave = req[ctx->backend->header_length - 1];
+    mb_mapping = resolve(slave, user);
+    if (mb_mapping == NULL) {
+        return modbus_reply_exception(ctx, req, MODBUS_EXCEPTION_GATEWAY_PATH);
+    }
+
+    return modbus_reply(ctx, req, req_length, mb_mapping);
+}
+
 /* Forward a request received on one context to another and relay the response back.
    This function is useful to implement a Modbus gateway/proxy that bridges
    two different backends (eg. TCP to RTU). */

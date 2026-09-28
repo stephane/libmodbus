@@ -276,6 +276,15 @@ MODBUS_API int modbus_reply(modbus_t *ctx,
                             modbus_mapping_t *mb_mapping);
 MODBUS_API int
 modbus_reply_exception(modbus_t *ctx, const uint8_t *req, unsigned int exception_code);
+
+/* Resolve the data mapping serving a unit identifier, or NULL if none. */
+typedef modbus_mapping_t *(*modbus_mapping_resolver_t)(int slave, void *user);
+MODBUS_API int modbus_reply_router(modbus_t *ctx,
+                                   const uint8_t *req,
+                                   int req_length,
+                                   modbus_mapping_resolver_t resolve,
+                                   void *user);
+MODBUS_API int modbus_get_request_slave(modbus_t *ctx, const uint8_t *req);
 MODBUS_API int modbus_proxy(modbus_t *frontend_ctx,
                             modbus_t *backend_ctx,
                             const uint8_t *req,
