@@ -187,6 +187,7 @@ Reply:
 Proxy:
 
 - [modbus_proxy](modbus_proxy.md)
+- [modbus_proxy_router](modbus_proxy_router.md)
 
 ## Advanced functions
 

@@ -281,6 +281,14 @@ MODBUS_API int modbus_proxy(modbus_t *frontend_ctx,
                             const uint8_t *req,
                             int req_length);
 
+/* Resolve the backend context serving a unit identifier, or NULL if none. */
+typedef modbus_t *(*modbus_backend_resolver_t)(int slave, void *user);
+MODBUS_API int modbus_proxy_router(modbus_t *frontend_ctx,
+                                   const uint8_t *req,
+                                   int req_length,
+                                   modbus_backend_resolver_t resolve,
+                                   void *user);
+
 MODBUS_API int modbus_enable_quirks(modbus_t *ctx, unsigned int quirks_mask);
 MODBUS_API int modbus_disable_quirks(modbus_t *ctx, unsigned int quirks_mask);
 

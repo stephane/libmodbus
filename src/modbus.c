@@ -1444,6 +1444,44 @@ int modbus_proxy(modbus_t *frontend_ctx,
     return send_msg(frontend_ctx, frontend_rsp, frontend_rsp_length);
 }
 
+/* Forward a request to the backend context serving its unit identifier and relay
+   the response, using `resolve` to pick the backend. A convenience over
+   modbus_proxy() for a gateway that bridges to several downstream links. When
+   `resolve` returns NULL, a gateway path exception is sent so the client learns
+   the unit is unroutable; backend failures are reported by modbus_proxy(). */
+int modbus_proxy_router(modbus_t *frontend_ctx,
+                        const uint8_t *req,
+                        int req_length,
+                        modbus_backend_resolver_t resolve,
+                        void *user)
+{
+    modbus_t *backend_ctx;
+
+    if (frontend_ctx == NULL || req == NULL || resolve == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (req_length < (int) (frontend_ctx->backend->header_length + 1)) {
+        errno = EMBBADDATA;
+        return -1;
+    }
+
+    backend_ctx = resolve(req[frontend_ctx->backend->header_length - 1], user);
+    if (backend_ctx == NULL) {
+        /* Tell the client the unit is unroutable, then the caller. A failure to
+           send the exception is more specific, so it keeps its own errno. */
+        if (modbus_reply_exception(frontend_ctx, req, MODBUS_EXCEPTION_GATEWAY_PATH) ==
+            -1) {
+            return -1;
+        }
+        errno = EMBXGPATH;
+        return -1;
+    }
+
+    return modbus_proxy(frontend_ctx, backend_ctx, req, req_length);
+}
+
 /* Reads IO status */
 static int read_io_status(modbus_t *ctx, int function, int addr, int nb, uint8_t *dest)
 {
