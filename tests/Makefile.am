@@ -8,6 +8,7 @@ noinst_PROGRAMS = \
 	random-test-client \
 	unit-test-server \
 	unit-test-client \
+	unit-test-transport \
 	proxy-test-server \
 	proxy-test-client \
 	version
@@ -36,6 +37,9 @@ unit_test_server_LDADD = $(common_ldflags)
 unit_test_client_SOURCES = unit-test-client.c unit-test.h
 unit_test_client_LDADD = $(common_ldflags)
 
+unit_test_transport_SOURCES = unit-test-transport.c
+unit_test_transport_LDADD = $(common_ldflags)
+
 proxy_test_server_SOURCES = proxy-test-server.c
 proxy_test_server_LDADD = $(common_ldflags)
 
@@ -57,4 +61,4 @@ AM_CFLAGS = $(LIBMODBUSCFLAGS) $(WARNING_CFLAGS)
 CLEANFILES = *~ *.log
 
 noinst_SCRIPTS=unit-tests.sh
-TESTS=./unit-tests.sh
+TESTS=./unit-tests.sh unit-test-transport

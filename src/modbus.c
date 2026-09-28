@@ -121,7 +121,11 @@ int modbus_flush(modbus_t *ctx)
         return -1;
     }
 
-    rc = ctx->backend->flush(ctx);
+    if (ctx->transport && ctx->transport->flush) {
+        rc = ctx->transport->flush(ctx->transport);
+    } else {
+        rc = ctx->backend->flush(ctx);
+    }
     if (rc != -1 && ctx->debug) {
         /* Not all backends are able to return the number of bytes flushed */
         printf("Bytes flushed (%d)\n", rc);
@@ -182,39 +186,48 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
     /* In recovery mode, the write command will be issued until to be
        successful! Disabled by default. */
     do {
-        rc = ctx->backend->send(ctx, msg, msg_length);
+        if (ctx->transport && ctx->transport->send) {
+            rc = ctx->transport->send(ctx->transport, msg, msg_length);
+        } else {
+            rc = ctx->backend->send(ctx, msg, msg_length);
+        }
         if (rc == -1) {
             _error_print(ctx, NULL);
             if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) {
 #ifdef _WIN32
-                int saved_errno = errno;
-                const int wsa_err = WSAGetLastError();
+                /* Only the socket backend reports its errors through Winsock; a
+                   transport sets errno, as on every other platform. */
+                if (!ctx->transport) {
+                    int saved_errno = errno;
+                    const int wsa_err = WSAGetLastError();
 
-                if (wsa_err == WSAENETRESET || wsa_err == WSAENOTCONN ||
-                    wsa_err == WSAENOTSOCK || wsa_err == WSAESHUTDOWN ||
-                    wsa_err == WSAEHOSTUNREACH || wsa_err == WSAECONNABORTED ||
-                    wsa_err == WSAECONNRESET || wsa_err == WSAETIMEDOUT) {
-                    modbus_close(ctx);
-                    _sleep_response_timeout(ctx);
-                    modbus_connect(ctx);
-                } else {
-                    _sleep_response_timeout(ctx);
-                    modbus_flush(ctx);
-                }
-                errno = saved_errno;
-#else
-                int saved_errno = errno;
-
-                if ((errno == EBADF || errno == ECONNRESET || errno == EPIPE)) {
-                    modbus_close(ctx);
-                    _sleep_response_timeout(ctx);
-                    modbus_connect(ctx);
-                } else {
-                    _sleep_response_timeout(ctx);
-                    modbus_flush(ctx);
-                }
-                errno = saved_errno;
+                    if (wsa_err == WSAENETRESET || wsa_err == WSAENOTCONN ||
+                        wsa_err == WSAENOTSOCK || wsa_err == WSAESHUTDOWN ||
+                        wsa_err == WSAEHOSTUNREACH || wsa_err == WSAECONNABORTED ||
+                        wsa_err == WSAECONNRESET || wsa_err == WSAETIMEDOUT) {
+                        modbus_close(ctx);
+                        _sleep_response_timeout(ctx);
+                        modbus_connect(ctx);
+                    } else {
+                        _sleep_response_timeout(ctx);
+                        modbus_flush(ctx);
+                    }
+                    errno = saved_errno;
+                } else
 #endif
+                {
+                    int saved_errno = errno;
+
+                    if ((errno == EBADF || errno == ECONNRESET || errno == EPIPE)) {
+                        modbus_close(ctx);
+                        _sleep_response_timeout(ctx);
+                        modbus_connect(ctx);
+                    } else {
+                        _sleep_response_timeout(ctx);
+                        modbus_flush(ctx);
+                    }
+                    errno = saved_errno;
+                }
             }
         }
     } while ((ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) && rc == -1);
@@ -383,23 +396,36 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
         }
     }
 
-    if (!ctx->backend->is_connected(ctx)) {
-        if (ctx->debug) {
-            fprintf(stderr, "ERROR The connection is not established.\n");
+    /* Connection check: transport tracks its own state; backend uses ctx->s */
+    if (ctx->transport) {
+        if (!ctx->transport->connected) {
+            if (ctx->debug) {
+                fprintf(stderr, "ERROR Transport is not connected.\n");
+            }
+            errno = EBADF;
+            return -1;
         }
-        return -1;
+    } else {
+        if (!ctx->backend->is_connected(ctx)) {
+            if (ctx->debug) {
+                fprintf(stderr, "ERROR The connection is not established.\n");
+            }
+            return -1;
+        }
     }
 
-    /* Add a file descriptor to the set */
+    /* fd_set only used by the default backend select path */
     FD_ZERO(&rset);
-    if (ctx->s < 0 || ctx->s >= FD_SETSIZE) {
-        if (ctx->debug) {
-            fprintf(stderr, "ERROR Invalid socket descriptor %d\n", ctx->s);
+    if (!ctx->transport) {
+        if (ctx->s < 0 || ctx->s >= FD_SETSIZE) {
+            if (ctx->debug) {
+                fprintf(stderr, "ERROR Invalid socket descriptor %d\n", ctx->s);
+            }
+            errno = EINVAL;
+            return -1;
         }
-        errno = EINVAL;
-        return -1;
+        FD_SET(ctx->s, &rset);
     }
-    FD_SET(ctx->s, &rset);
 
     /* We need to analyse the message step by step.  At the first step, we want
      * to reach the function code because all packets contain this
@@ -426,38 +452,56 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     }
 
     while (length_to_read != 0) {
-        rc = ctx->backend->select(ctx, &rset, p_tv, length_to_read);
+        if (ctx->transport && ctx->transport->select) {
+            rc = ctx->transport->select(ctx->transport, p_tv);
+            if (rc == 0) {
+                /* Timeout, as select(2) reports it. The backends return -1 with
+                   ETIMEDOUT instead, which the code below expects. */
+                errno = ETIMEDOUT;
+                rc = -1;
+            }
+        } else {
+            rc = ctx->backend->select(ctx, &rset, p_tv, length_to_read);
+        }
         if (rc == -1) {
             _error_print(ctx, "select");
             if (ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) {
 #ifdef _WIN32
-                int saved_errno = errno;
+                if (!ctx->transport) {
+                    int saved_errno = errno;
 
-                wsa_err = WSAGetLastError();
+                    wsa_err = WSAGetLastError();
 
-                // no equivalent to ETIMEDOUT when select fails on Windows
-                if (wsa_err == WSAENETDOWN || wsa_err == WSAENOTSOCK) {
-                    modbus_close(ctx);
-                    modbus_connect(ctx);
-                }
-                errno = saved_errno;
-#else
-                int saved_errno = errno;
-
-                if (errno == ETIMEDOUT) {
-                    _sleep_response_timeout(ctx);
-                    modbus_flush(ctx);
-                } else if (errno == EBADF) {
-                    modbus_close(ctx);
-                    modbus_connect(ctx);
-                }
-                errno = saved_errno;
+                    // no equivalent to ETIMEDOUT when select fails on Windows
+                    if (wsa_err == WSAENETDOWN || wsa_err == WSAENOTSOCK) {
+                        modbus_close(ctx);
+                        modbus_connect(ctx);
+                    }
+                    errno = saved_errno;
+                } else
 #endif
+                {
+                    int saved_errno = errno;
+
+                    if (errno == ETIMEDOUT) {
+                        _sleep_response_timeout(ctx);
+                        modbus_flush(ctx);
+                    } else if (errno == EBADF) {
+                        modbus_close(ctx);
+                        modbus_connect(ctx);
+                    }
+                    errno = saved_errno;
+                }
             }
             return -1;
         }
 
-        rc = ctx->backend->recv(ctx, msg + msg_length, length_to_read);
+        if (ctx->transport && ctx->transport->recv) {
+            rc = ctx->transport->recv(ctx->transport,
+                                      msg + msg_length, length_to_read);
+        } else {
+            rc = ctx->backend->recv(ctx, msg + msg_length, length_to_read);
+        }
         if (rc == 0) {
             errno = ECONNRESET;
             rc = -1;
@@ -466,28 +510,31 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
         if (rc == -1) {
             _error_print(ctx, "read");
 #ifdef _WIN32
-            wsa_err = WSAGetLastError();
-            if ((ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) &&
-                (wsa_err == WSAENOTCONN || wsa_err == WSAENETRESET ||
-                 wsa_err == WSAENOTSOCK || wsa_err == WSAESHUTDOWN ||
-                 wsa_err == WSAECONNABORTED || wsa_err == WSAETIMEDOUT ||
-                 wsa_err == WSAECONNRESET)) {
-                int saved_errno = errno;
-                modbus_close(ctx);
-                modbus_connect(ctx);
-                /* Could be removed by previous calls */
-                errno = saved_errno;
-            }
-#else
-            if ((ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) &&
-                (errno == ECONNRESET || errno == ECONNREFUSED || errno == EBADF)) {
-                int saved_errno = errno;
-                modbus_close(ctx);
-                modbus_connect(ctx);
-                /* Could be removed by previous calls */
-                errno = saved_errno;
-            }
+            if (!ctx->transport) {
+                wsa_err = WSAGetLastError();
+                if ((ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) &&
+                    (wsa_err == WSAENOTCONN || wsa_err == WSAENETRESET ||
+                     wsa_err == WSAENOTSOCK || wsa_err == WSAESHUTDOWN ||
+                     wsa_err == WSAECONNABORTED || wsa_err == WSAETIMEDOUT ||
+                     wsa_err == WSAECONNRESET)) {
+                    int saved_errno = errno;
+                    modbus_close(ctx);
+                    modbus_connect(ctx);
+                    /* Could be removed by previous calls */
+                    errno = saved_errno;
+                }
+            } else
 #endif
+            {
+                if ((ctx->error_recovery & MODBUS_ERROR_RECOVERY_LINK) &&
+                    (errno == ECONNRESET || errno == ECONNREFUSED || errno == EBADF)) {
+                    int saved_errno = errno;
+                    modbus_close(ctx);
+                    modbus_connect(ctx);
+                    /* Could be removed by previous calls */
+                    errno = saved_errno;
+                }
+            }
             return -1;
         }
 
@@ -1994,6 +2041,9 @@ void _modbus_init_common(modbus_t *ctx)
 
     ctx->indication_timeout.tv_sec = 0;
     ctx->indication_timeout.tv_usec = 0;
+
+    /* No pluggable transport by default; use the backend I/O path. */
+    ctx->transport = NULL;
 }
 
 /* Define the slave number */
@@ -2170,6 +2220,13 @@ int modbus_connect(modbus_t *ctx)
         return -1;
     }
 
+    if (ctx->transport && ctx->transport->connect) {
+        int rc = ctx->transport->connect(ctx->transport);
+        if (rc == 0) {
+            ctx->transport->connected = 1;
+        }
+        return rc;
+    }
     return ctx->backend->connect(ctx);
 }
 
@@ -2178,6 +2235,13 @@ void modbus_close(modbus_t *ctx)
     if (ctx == NULL)
         return;
 
+    if (ctx->transport) {
+        if (ctx->transport->close) {
+            ctx->transport->close(ctx->transport);
+        }
+        ctx->transport->connected = 0;
+        return;
+    }
     ctx->backend->close(ctx);
 }
 
@@ -2186,6 +2250,11 @@ void modbus_free(modbus_t *ctx)
     if (ctx == NULL)
         return;
 
+    /* Free transport resources before the backend (which frees ctx itself) */
+    if (ctx->transport && ctx->transport->free) {
+        ctx->transport->free(ctx->transport);
+        ctx->transport = NULL;
+    }
     ctx->backend->free(ctx);
 }
 
@@ -2366,3 +2435,27 @@ size_t strlcpy(char *dest, const char *src, size_t dest_size)
     return (s - src - 1); /* count does not include NUL */
 }
 #endif
+
+/* Pluggable transport API (see modbus-transport.h) */
+
+int modbus_set_transport(modbus_t *ctx, modbus_transport_t *transport)
+{
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+    /* NULL detaches without freeing; the caller owns any previous transport */
+    ctx->transport = transport;
+    if (transport) {
+        transport->connected = 0;
+    }
+    return 0;
+}
+
+modbus_transport_t *modbus_get_transport(modbus_t *ctx)
+{
+    if (ctx == NULL) {
+        return NULL;
+    }
+    return ctx->transport;
+}

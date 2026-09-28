@@ -206,6 +206,11 @@ Setter/getter of internal socket:
 - [modbus_set_socket](modbus_set_socket.md)
 - [modbus_get_socket](modbus_get_socket.md)
 
+Pluggable I/O transport:
+
+- [modbus_set_transport](modbus_set_transport.md)
+- [modbus_get_transport](modbus_get_transport.md)
+
 Information about header:
 
 - [modbus_get_header_length](modbus_get_header_length.md)

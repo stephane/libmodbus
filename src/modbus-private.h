@@ -21,6 +21,7 @@ typedef int ssize_t;
 #include <sys/types.h>
 
 #include "modbus.h"
+#include "modbus-transport.h"
 
 MODBUS_BEGIN_DECLS
 
@@ -106,6 +107,9 @@ struct _modbus {
     struct timeval indication_timeout;
     const modbus_backend_t *backend;
     void *backend_data;
+    /* Optional pluggable I/O transport (see modbus-transport.h).
+     * NULL means use the default backend I/O path. */
+    modbus_transport_t *transport;
 };
 
 void _modbus_init_common(modbus_t *ctx);
