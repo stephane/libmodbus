@@ -95,6 +95,24 @@ void _error_print(modbus_t *ctx, const char *context)
     }
 }
 
+/* Monotonic time in microseconds */
+static int64_t _modbus_time_usec(void)
+{
+#ifdef _WIN32
+    LARGE_INTEGER freq, now;
+
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&now);
+    return (int64_t) (now.QuadPart / freq.QuadPart) * 1000000 +
+           (int64_t) (now.QuadPart % freq.QuadPart) * 1000000 / freq.QuadPart;
+#else
+    struct timespec ts;
+
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (int64_t) ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
+#endif
+}
+
 static void _sleep_response_timeout(modbus_t *ctx)
 {
     /* Response timeout is always positive */
@@ -368,6 +386,7 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     fd_set rset;
     struct timeval tv;
     struct timeval *p_tv;
+    int64_t deadline = 0;
     unsigned int length_to_read;
     int msg_length = 0;
     _step_t step;
@@ -425,7 +444,22 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
         p_tv = &tv;
     }
 
+    if (p_tv != NULL) {
+        deadline = _modbus_time_usec() + (int64_t) tv.tv_sec * 1000000 + tv.tv_usec;
+    }
+
     while (length_to_read != 0) {
+        if (deadline != 0) {
+            /* Only Linux updates the timeout passed to select(), so give it
+               what is left before the deadline */
+            int64_t remaining = deadline - _modbus_time_usec();
+
+            if (remaining < 0) {
+                remaining = 0;
+            }
+            tv.tv_sec = (long) (remaining / 1000000);
+            tv.tv_usec = (long) (remaining % 1000000);
+        }
         rc = ctx->backend->select(ctx, &rset, p_tv, length_to_read);
         if (rc == -1) {
             _error_print(ctx, "select");
@@ -535,9 +569,10 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
             tv.tv_sec = ctx->byte_timeout.tv_sec;
             tv.tv_usec = ctx->byte_timeout.tv_usec;
             p_tv = &tv;
+            deadline = 0;
         }
-        /* else timeout isn't set again, the full response must be read before
-           expiration of response timeout (for CONFIRMATION only) */
+        /* else the whole message must be read before the deadline set from the
+           response or indication timeout */
     }
 
     if (ctx->debug)
