@@ -674,6 +674,41 @@ int modbus_receive_confirmation(modbus_t *ctx, uint8_t *rsp)
     return _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
 }
 
+/* Receives the response to req. Over TCP, the response to a request that timed
+   out can still arrive later, ahead of the response to req: it is then read
+   whole and skipped. A server answers the requests of a connection in order, so
+   only the first response after a timeout can be such a late one, and only one
+   response is skipped per timeout: a peer can't make the client wait longer than
+   one more response timeout by sending responses with other transaction IDs. */
+static int receive_confirmation(modbus_t *ctx, const uint8_t *req, uint8_t *rsp)
+{
+    int rc;
+
+    for (;;) {
+        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        if (ctx->backend->backend_type != _MODBUS_BACKEND_TYPE_TCP) {
+            return rc;
+        }
+        if (rc == -1) {
+            if (errno == ETIMEDOUT) {
+                ctx->late_response = TRUE;
+            }
+            return -1;
+        }
+        if (!ctx->late_response || (rsp[0] == req[0] && rsp[1] == req[1])) {
+            ctx->late_response = FALSE;
+            return rc;
+        }
+
+        if (ctx->debug) {
+            fprintf(stderr,
+                    "Skip a late response (transaction ID 0x%X)\n",
+                    (rsp[0] << 8) + rsp[1]);
+        }
+        ctx->late_response = FALSE;
+    }
+}
+
 static int check_confirmation(modbus_t *ctx, uint8_t *req, uint8_t *rsp, int rsp_length)
 {
     int rc;
@@ -1593,7 +1628,7 @@ static int read_io_status(modbus_t *ctx, int function, int addr, int nb, uint8_t
         unsigned int offset_end;
         unsigned int i;
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = receive_confirmation(ctx, req, rsp);
         if (rc == -1)
             return -1;
 
@@ -1702,7 +1737,7 @@ static int read_registers(modbus_t *ctx, int function, int addr, int nb, uint16_
         unsigned int offset;
         int i;
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = receive_confirmation(ctx, req, rsp);
         if (rc == -1)
             return -1;
 
@@ -1793,7 +1828,7 @@ static int write_single(modbus_t *ctx, int function, int addr, const uint16_t va
         /* Used by write_bit and write_register */
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = receive_confirmation(ctx, req, rsp);
         if (rc == -1)
             return -1;
 
@@ -1878,7 +1913,7 @@ int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *src)
     if (rc > 0) {
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = receive_confirmation(ctx, req, rsp);
         if (rc == -1)
             return -1;
 
@@ -1927,7 +1962,7 @@ int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *src)
     if (rc > 0) {
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = receive_confirmation(ctx, req, rsp);
         if (rc == -1)
             return -1;
 
@@ -1970,7 +2005,7 @@ int modbus_mask_write_register(modbus_t *ctx,
         /* Used by write_bit and write_register */
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = receive_confirmation(ctx, req, rsp);
         if (rc == -1)
             return -1;
 
@@ -2043,7 +2078,7 @@ int modbus_write_and_read_registers(modbus_t *ctx,
     if (rc > 0) {
         unsigned int offset;
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = receive_confirmation(ctx, req, rsp);
         if (rc == -1)
             return -1;
 
@@ -2086,7 +2121,7 @@ int modbus_report_slave_id(modbus_t *ctx, int max_dest, uint8_t *dest)
         unsigned int offset;
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = receive_confirmation(ctx, req, rsp);
         if (rc == -1)
             return -1;
 
@@ -2124,6 +2159,8 @@ void _modbus_init_common(modbus_t *ctx)
 
     ctx->indication_timeout.tv_sec = 0;
     ctx->indication_timeout.tv_usec = 0;
+
+    ctx->late_response = FALSE;
 }
 
 /* Define the slave number */
@@ -2300,6 +2337,8 @@ int modbus_connect(modbus_t *ctx)
         return -1;
     }
 
+    /* No response of a previous connection can arrive on a new one */
+    ctx->late_response = FALSE;
     return ctx->backend->connect(ctx);
 }
 
@@ -2308,6 +2347,7 @@ void modbus_close(modbus_t *ctx)
     if (ctx == NULL)
         return;
 
+    ctx->late_response = FALSE;
     ctx->backend->close(ctx);
 }
 

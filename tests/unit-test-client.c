@@ -734,6 +734,21 @@ int main(int argc, char *argv[])
     printf("7/8 Disable byte timeout: ");
     ASSERT_TRUE(rc == 1, "");
 
+    if (use_backend != RTU) {
+        /* The response to a request that timed out arrives while the client
+           waits for the response to its next request: it must be skipped */
+        modbus_set_response_timeout(ctx, 0, 200000);
+        rc = modbus_read_registers(
+            ctx, UT_REGISTERS_ADDRESS_SLEEP_500_MS, 1, tab_rp_registers);
+        printf("* request timed out: ");
+        ASSERT_TRUE(rc == -1 && errno == ETIMEDOUT, "");
+
+        modbus_set_response_timeout(ctx, 1, 0);
+        rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS, 1, tab_rp_registers);
+        printf("* its late response skipped: ");
+        ASSERT_TRUE(rc == 1, "FAILED (%d)\n", rc);
+    }
+
     // Invalid in TCP or RTU mode...
     modbus_t *invalid_ctx = modbus_new_tcp("1.2.3.4", 1502);
     modbus_set_response_timeout(invalid_ctx, 0, 1);

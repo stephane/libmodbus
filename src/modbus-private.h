@@ -104,6 +104,9 @@ struct _modbus {
     struct timeval response_timeout;
     struct timeval byte_timeout;
     struct timeval indication_timeout;
+    /* TCP only: a response timed out on this connection, so it can still
+       arrive, late, instead of the response to a later request */
+    int late_response;
     const modbus_backend_t *backend;
     void *backend_data;
 };
