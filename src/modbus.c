@@ -350,6 +350,59 @@ compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     return length;
 }
 
+/* Function codes whose response layout libmodbus knows, exceptions included */
+static int is_known_response(int function)
+{
+    if (function >= 0x80) {
+        return TRUE;
+    }
+
+    switch (function) {
+    case MODBUS_FC_READ_COILS:
+    case MODBUS_FC_READ_DISCRETE_INPUTS:
+    case MODBUS_FC_READ_HOLDING_REGISTERS:
+    case MODBUS_FC_READ_INPUT_REGISTERS:
+    case MODBUS_FC_WRITE_SINGLE_COIL:
+    case MODBUS_FC_WRITE_SINGLE_REGISTER:
+    case MODBUS_FC_READ_EXCEPTION_STATUS:
+    case MODBUS_FC_WRITE_MULTIPLE_COILS:
+    case MODBUS_FC_WRITE_MULTIPLE_REGISTERS:
+    case MODBUS_FC_REPORT_SLAVE_ID:
+    case MODBUS_FC_MASK_WRITE_REGISTER:
+    case MODBUS_FC_WRITE_AND_READ_REGISTERS:
+        return TRUE;
+    default:
+        return FALSE;
+    }
+}
+
+/* Discards up to length octets, at most an ADU, that have already been
+   received, without waiting for more. errno is left unchanged. */
+static void discard_received(modbus_t *ctx, int length)
+{
+    const int saved_errno = errno;
+    uint8_t buf[MAX_MESSAGE_LENGTH];
+    fd_set rset;
+    struct timeval tv;
+    int rc;
+
+    while (length > 0) {
+        FD_ZERO(&rset);
+        FD_SET(ctx->s, &rset);
+        tv.tv_sec = 0;
+        tv.tv_usec = 0;
+        if (ctx->backend->select(ctx, &rset, &tv, length) <= 0) {
+            break;
+        }
+        rc = ctx->backend->recv(ctx, buf, length);
+        if (rc <= 0) {
+            break;
+        }
+        length -= rc;
+    }
+    errno = saved_errno;
+}
+
 /* Waits a response from a modbus server or a request from a modbus client.
    This function blocks if there is no replies (3 timeouts).
 
@@ -370,6 +423,8 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     struct timeval *p_tv;
     unsigned int length_to_read;
     int msg_length = 0;
+    /* TCP response read by its content: where its MBAP length ends it */
+    int mbap_end = 0;
     _step_t step;
 #ifdef _WIN32
     int wsa_err;
@@ -506,6 +561,44 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
         if (length_to_read == 0) {
             switch (step) {
             case _STEP_FUNCTION:
+                if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_TCP) {
+                    /* Over TCP, a message ends where the length field of the MBAP
+                       header (bytes 4 and 5) says. It counts the unit identifier
+                       and the function code, already read. Reading exactly that
+                       much leaves the next message intact in the socket, so it is
+                       neither lost nor parsed from its middle. */
+                    const int remaining = ((msg[4] << 8) + msg[5]) - 2;
+                    const int valid_length =
+                        remaining >= 0 &&
+                        msg_length + remaining <= (int) ctx->backend->max_adu_length;
+
+                    /* A protocol identifier other than 0 is not Modbus, or a
+                       header read where no request starts */
+                    if (msg_type == MSG_INDICATION && (msg[2] != 0 || msg[3] != 0)) {
+                        errno = EMBBADDATA;
+                        _error_print(ctx, "invalid protocol identifier");
+                        return -1;
+                    }
+                    if (msg_type == MSG_INDICATION ||
+                        !is_known_response(msg[ctx->backend->header_length])) {
+                        if (!valid_length) {
+                            errno = EMBBADDATA;
+                            _error_print(ctx, "invalid MBAP length");
+                            return -1;
+                        }
+                        length_to_read = remaining;
+                        step = _STEP_DATA;
+                        break;
+                    }
+                    /* A response of known layout is read by its content, as some
+                       gateways announce a longer MBAP length than they send, or
+                       even a meaningless one. A valid MBAP length tells which
+                       octets beyond it to discard once read; another is ignored,
+                       as it always was. */
+                    if (valid_length) {
+                        mbap_end = msg_length + remaining;
+                    }
+                }
                 /* Function code position */
                 length_to_read = compute_meta_length_after_function(
                     msg[ctx->backend->header_length], msg_type);
@@ -543,6 +636,12 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     if (ctx->debug)
         printf("\n");
 
+    /* Octets a peer adds beyond its response, within its MBAP length, would
+       otherwise be read as the start of the next response */
+    if (mbap_end > msg_length) {
+        discard_received(ctx, mbap_end - msg_length);
+    }
+
     return ctx->backend->check_integrity(ctx, msg, msg_length);
 }
 
@@ -573,6 +672,41 @@ int modbus_receive_confirmation(modbus_t *ctx, uint8_t *rsp)
     }
 
     return _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+}
+
+/* Receives the response to req. Over TCP, the response to a request that timed
+   out can still arrive later, ahead of the response to req: it is then read
+   whole and skipped. A server answers the requests of a connection in order, so
+   only the first response after a timeout can be such a late one, and only one
+   response is skipped per timeout: a peer can't make the client wait longer than
+   one more response timeout by sending responses with other transaction IDs. */
+static int receive_confirmation(modbus_t *ctx, const uint8_t *req, uint8_t *rsp)
+{
+    int rc;
+
+    for (;;) {
+        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        if (ctx->backend->backend_type != _MODBUS_BACKEND_TYPE_TCP) {
+            return rc;
+        }
+        if (rc == -1) {
+            if (errno == ETIMEDOUT) {
+                ctx->late_response = TRUE;
+            }
+            return -1;
+        }
+        if (!ctx->late_response || (rsp[0] == req[0] && rsp[1] == req[1])) {
+            ctx->late_response = FALSE;
+            return rc;
+        }
+
+        if (ctx->debug) {
+            fprintf(stderr,
+                    "Skip a late response (transaction ID 0x%X)\n",
+                    (rsp[0] << 8) + rsp[1]);
+        }
+        ctx->late_response = FALSE;
+    }
 }
 
 static int check_confirmation(modbus_t *ctx, uint8_t *req, uint8_t *rsp, int rsp_length)
@@ -779,8 +913,10 @@ static int response_exception(modbus_t *ctx,
         va_end(ap);
     }
 
-    /* Flush if required */
-    if (to_flush) {
+    /* Flush if required. Over TCP there is nothing to discard: the request has
+       been read up to the length given by its MBAP header, and what is left in
+       the socket belongs to the next request. */
+    if (to_flush && ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
         _sleep_response_timeout(ctx);
         modbus_flush(ctx);
     }
@@ -791,6 +927,28 @@ static int response_exception(modbus_t *ctx,
     rsp[rsp_length++] = exception_code;
 
     return rsp_length;
+}
+
+/* Function codes modbus_reply() answers other than by an illegal function
+   exception */
+static int is_handled_function(int function)
+{
+    switch (function) {
+    case MODBUS_FC_READ_COILS:
+    case MODBUS_FC_READ_DISCRETE_INPUTS:
+    case MODBUS_FC_READ_HOLDING_REGISTERS:
+    case MODBUS_FC_READ_INPUT_REGISTERS:
+    case MODBUS_FC_WRITE_SINGLE_COIL:
+    case MODBUS_FC_WRITE_SINGLE_REGISTER:
+    case MODBUS_FC_WRITE_MULTIPLE_COILS:
+    case MODBUS_FC_WRITE_MULTIPLE_REGISTERS:
+    case MODBUS_FC_REPORT_SLAVE_ID:
+    case MODBUS_FC_MASK_WRITE_REGISTER:
+    case MODBUS_FC_WRITE_AND_READ_REGISTERS:
+        return TRUE;
+    default:
+        return FALSE;
+    }
 }
 
 /* Send a response to the received request.
@@ -813,6 +971,7 @@ int modbus_reply(modbus_t *ctx,
     sft_t sft;
     uint8_t meta_length;
     int data_length;
+    int expected_length;
 
     if (ctx == NULL || req == NULL || mb_mapping == NULL) {
         errno = EINVAL;
@@ -845,11 +1004,14 @@ int modbus_reply(modbus_t *ctx,
     sft.function = function;
     sft.t_id = ctx->backend->get_response_tid(req);
 
-    /* Ensure the request is long enough to contain the meta fields (address,
-       quantity, byte count...) and the declared data read by the handlers
-       below. On the canonical modbus_receive() path the framing layer already
-       guarantees a complete PDU; this check defends direct callers that pass a
-       truncated or untrusted request to modbus_reply(). */
+    /* Ensure the request has the length its function code requires: the meta
+       fields (address, quantity, byte count...) and the declared data read by
+       the handlers below. Over TCP, modbus_receive() frames the request by its
+       MBAP length, which can differ from it; this check also defends direct
+       callers that pass a truncated or untrusted request to modbus_reply().
+       A longer request is rejected too, rather than executed without its extra
+       octets; only a truncated one may have more octets to flush. Function
+       codes not handled below get an illegal function exception instead. */
     meta_length = compute_meta_length_after_function(function, MSG_INDICATION);
     data_length = 0;
     if (req_length >= (int) (offset + 1 + meta_length)) {
@@ -857,15 +1019,18 @@ int modbus_reply(modbus_t *ctx,
            declared data length can be read safely. */
         data_length = compute_data_length_after_meta(ctx, (uint8_t *) req, MSG_INDICATION);
     }
-    if (req_length < (int) (offset + 1 + meta_length + data_length)) {
+    expected_length = offset + 1 + meta_length + data_length;
+    if (req_length < expected_length ||
+        (req_length > expected_length && is_handled_function(function))) {
         rsp_length = response_exception(ctx,
                                         &sft,
                                         MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE,
                                         rsp,
-                                        TRUE,
-                                        "Truncated request (length %d) for function "
-                                        "0x%0X in modbus_reply\n",
+                                        req_length < expected_length,
+                                        "Invalid request length %d (%d expected) for "
+                                        "function 0x%0X in modbus_reply\n",
                                         req_length,
+                                        expected_length,
                                         function);
         /* Suppress responses to broadcasts in RTU, see below. */
         if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU &&
@@ -1463,7 +1628,7 @@ static int read_io_status(modbus_t *ctx, int function, int addr, int nb, uint8_t
         unsigned int offset_end;
         unsigned int i;
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = receive_confirmation(ctx, req, rsp);
         if (rc == -1)
             return -1;
 
@@ -1572,7 +1737,7 @@ static int read_registers(modbus_t *ctx, int function, int addr, int nb, uint16_
         unsigned int offset;
         int i;
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = receive_confirmation(ctx, req, rsp);
         if (rc == -1)
             return -1;
 
@@ -1663,7 +1828,7 @@ static int write_single(modbus_t *ctx, int function, int addr, const uint16_t va
         /* Used by write_bit and write_register */
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = receive_confirmation(ctx, req, rsp);
         if (rc == -1)
             return -1;
 
@@ -1748,7 +1913,7 @@ int modbus_write_bits(modbus_t *ctx, int addr, int nb, const uint8_t *src)
     if (rc > 0) {
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = receive_confirmation(ctx, req, rsp);
         if (rc == -1)
             return -1;
 
@@ -1797,7 +1962,7 @@ int modbus_write_registers(modbus_t *ctx, int addr, int nb, const uint16_t *src)
     if (rc > 0) {
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = receive_confirmation(ctx, req, rsp);
         if (rc == -1)
             return -1;
 
@@ -1840,7 +2005,7 @@ int modbus_mask_write_register(modbus_t *ctx,
         /* Used by write_bit and write_register */
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = receive_confirmation(ctx, req, rsp);
         if (rc == -1)
             return -1;
 
@@ -1913,7 +2078,7 @@ int modbus_write_and_read_registers(modbus_t *ctx,
     if (rc > 0) {
         unsigned int offset;
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = receive_confirmation(ctx, req, rsp);
         if (rc == -1)
             return -1;
 
@@ -1956,7 +2121,7 @@ int modbus_report_slave_id(modbus_t *ctx, int max_dest, uint8_t *dest)
         unsigned int offset;
         uint8_t rsp[MAX_MESSAGE_LENGTH];
 
-        rc = _modbus_receive_msg(ctx, rsp, MSG_CONFIRMATION);
+        rc = receive_confirmation(ctx, req, rsp);
         if (rc == -1)
             return -1;
 
@@ -1994,6 +2159,8 @@ void _modbus_init_common(modbus_t *ctx)
 
     ctx->indication_timeout.tv_sec = 0;
     ctx->indication_timeout.tv_usec = 0;
+
+    ctx->late_response = FALSE;
 }
 
 /* Define the slave number */
@@ -2170,6 +2337,8 @@ int modbus_connect(modbus_t *ctx)
         return -1;
     }
 
+    /* No response of a previous connection can arrive on a new one */
+    ctx->late_response = FALSE;
     return ctx->backend->connect(ctx);
 }
 
@@ -2178,6 +2347,7 @@ void modbus_close(modbus_t *ctx)
     if (ctx == NULL)
         return;
 
+    ctx->late_response = FALSE;
     ctx->backend->close(ctx);
 }
 

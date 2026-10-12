@@ -49,6 +49,13 @@ const uint16_t UT_REGISTERS_ADDRESS_INVALID_TID_OR_SLAVE = 0x171;
 const uint16_t UT_REGISTERS_ADDRESS_SLEEP_500_MS = 0x172;
 /* The server will wait for 5 ms before sending each byte */
 const uint16_t UT_REGISTERS_ADDRESS_BYTE_SLEEP_5_MS = 0x173;
+/* The MBAP length of the response of the server will announce two octets more
+   than its content requires, sent after it (TCP only) */
+const uint16_t UT_REGISTERS_ADDRESS_TRAILING_OCTETS = 0x174;
+/* The same two octets announced, but not sent (TCP only) */
+const uint16_t UT_REGISTERS_ADDRESS_OVERSTATED_LENGTH = 0x175;
+/* An MBAP length of 0 instead (TCP only) */
+const uint16_t UT_REGISTERS_ADDRESS_INVALID_MBAP_LENGTH = 0x176;
 
 /* If the following value is used, a bad response is sent.
    It's better to test with a lower value than

@@ -11,6 +11,19 @@
 #include <string.h>
 #include <unistd.h>
 
+// clang-format off
+#ifdef _WIN32
+# include <winsock2.h>
+#else
+# include <sys/socket.h>
+#endif
+
+/* For MinGW */
+#ifndef MSG_NOSIGNAL
+# define MSG_NOSIGNAL 0
+#endif
+// clang-format on
+
 #include "unit-test.h"
 
 const int EXCEPTION_RC = 2;
@@ -721,6 +734,21 @@ int main(int argc, char *argv[])
     printf("7/8 Disable byte timeout: ");
     ASSERT_TRUE(rc == 1, "");
 
+    if (use_backend != RTU) {
+        /* The response to a request that timed out arrives while the client
+           waits for the response to its next request: it must be skipped */
+        modbus_set_response_timeout(ctx, 0, 200000);
+        rc = modbus_read_registers(
+            ctx, UT_REGISTERS_ADDRESS_SLEEP_500_MS, 1, tab_rp_registers);
+        printf("* request timed out: ");
+        ASSERT_TRUE(rc == -1 && errno == ETIMEDOUT, "");
+
+        modbus_set_response_timeout(ctx, 1, 0);
+        rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS, 1, tab_rp_registers);
+        printf("* its late response skipped: ");
+        ASSERT_TRUE(rc == 1, "FAILED (%d)\n", rc);
+    }
+
     // Invalid in TCP or RTU mode...
     modbus_t *invalid_ctx = modbus_new_tcp("1.2.3.4", 1502);
     modbus_set_response_timeout(invalid_ctx, 0, 1);
@@ -770,6 +798,29 @@ int main(int argc, char *argv[])
     printf("* modbus_read_registers: ");
     ASSERT_TRUE(rc == -1 && errno == EMBBADDATA, "");
     free(tab_rp_registers_bad);
+
+    if (use_backend != RTU) {
+        /* A response whose MBAP length announces two octets more than it
+           holds is used, whether the server sends them or not, and they are
+           not read as the response to the next request. So is a response
+           with an MBAP length of 0, which is ignored. */
+        const uint16_t wrong_mbap_address[] = {UT_REGISTERS_ADDRESS_TRAILING_OCTETS,
+                                               UT_REGISTERS_ADDRESS_OVERSTATED_LENGTH,
+                                               UT_REGISTERS_ADDRESS_INVALID_MBAP_LENGTH};
+        const char *wrong_mbap_case[] = {"two octets too long, sent",
+                                         "two octets too long, not sent",
+                                         "0"};
+
+        for (i = 0; i < 3; i++) {
+            rc = modbus_read_registers(ctx, wrong_mbap_address[i], 1, tab_rp_registers);
+            printf("* MBAP length %s: ", wrong_mbap_case[i]);
+            ASSERT_TRUE(rc == 1 && tab_rp_registers[0] == 0, "FAILED (%d)\n", rc);
+
+            rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS, 1, tab_rp_registers);
+            printf("  next response: ");
+            ASSERT_TRUE(rc == 1, "FAILED (%d)\n", rc);
+        }
+    }
 
     /** MANUAL EXCEPTION **/
     printf("\nTEST MANUAL EXCEPTION:\n");
@@ -896,8 +947,8 @@ int test_server(modbus_t *ctx, int use_backend)
     uint32_t old_response_to_usec;
 
     /* This requests can generate flushes server side so we need a higher
-     * response timeout than the server. The server uses the defined response
-     * timeout to sleep before flushing.
+     * response timeout than the server. Over RTU, the server uses the defined
+     * response timeout to sleep before flushing.
      * The old timeouts are restored at the end.
      */
     modbus_get_response_timeout(ctx, &old_response_to_sec, &old_response_to_usec);
@@ -990,7 +1041,11 @@ int test_server(modbus_t *ctx, int use_backend)
     if (rc == -1)
         goto close;
 
-    /* Test invalid function code */
+    /* Test invalid function code. Over TCP the server must answer without
+       waiting for its response timeout, so a shorter one is enough here. */
+    if (use_backend != RTU) {
+        modbus_set_response_timeout(ctx, 0, 100000);
+    }
     modbus_send_raw_request(
         ctx, invalid_fc_raw_req, INVALID_FC_REQ_LEN * sizeof(uint8_t));
     rc = modbus_receive_confirmation(ctx, rsp);
@@ -998,6 +1053,147 @@ int test_server(modbus_t *ctx, int use_backend)
     ASSERT_TRUE(rc == (backend_length + EXCEPTION_RC) &&
                     rsp[backend_offset] == (0x80 + INVALID_FC),
                 "")
+
+    if (use_backend != RTU) {
+        /* An unknown function code whose MBAP header announces 4 more octets,
+           immediately followed by a valid read. The server must answer both, in
+           order, whether the two requests arrive together or the first one is
+           cut after its function code. */
+        uint8_t pipelined_req[] = {/* TID 9, unknown function code */
+                                   0x00,
+                                   0x09,
+                                   0x00,
+                                   0x00,
+                                   0x00,
+                                   0x06,
+                                   slave,
+                                   INVALID_FC,
+                                   0x00,
+                                   0x00,
+                                   0x00,
+                                   0x02,
+                                   /* TID 10, read one register */
+                                   0x00,
+                                   0x0A,
+                                   0x00,
+                                   0x00,
+                                   0x00,
+                                   0x06,
+                                   slave,
+                                   MODBUS_FC_READ_HOLDING_REGISTERS,
+                                   UT_REGISTERS_ADDRESS >> 8,
+                                   UT_REGISTERS_ADDRESS & 0xFF,
+                                   0x00,
+                                   0x01};
+        /* MBAP header and function code of the first request */
+        const int cut = 8;
+        int s = modbus_get_socket(ctx);
+        int j;
+
+        for (j = 0; j < 2; j++) {
+            if (j == 0) {
+                printf("* pipelined requests after an unknown function code: ");
+                rc = send(
+                    s, (const char *) pipelined_req, sizeof(pipelined_req), MSG_NOSIGNAL);
+            } else {
+                printf("* unknown function code cut after the function code: ");
+                rc = send(s, (const char *) pipelined_req, cut, MSG_NOSIGNAL);
+                if (rc == cut) {
+                    usleep(50000);
+                    rc = send(s,
+                              (const char *) pipelined_req + cut,
+                              sizeof(pipelined_req) - cut,
+                              MSG_NOSIGNAL);
+                }
+            }
+            ASSERT_TRUE(rc > 0, "FAILED (send %d)\n", rc);
+
+            rc = modbus_receive_confirmation(ctx, rsp);
+            printf("  exception to TID 9: ");
+            ASSERT_TRUE(rc == (backend_length + EXCEPTION_RC) && rsp[1] == 0x09 &&
+                            rsp[backend_offset] == (0x80 + INVALID_FC),
+                        "FAILED (%d)\n",
+                        rc);
+
+            rc = modbus_receive_confirmation(ctx, rsp);
+            printf("  response to TID 10: ");
+            ASSERT_TRUE(rc == (backend_length + 4) && rsp[1] == 0x0A &&
+                            rsp[backend_offset] == MODBUS_FC_READ_HOLDING_REGISTERS,
+                        "FAILED (%d)\n",
+                        rc);
+        }
+
+        /* A write whose MBAP length covers two octets more than its byte
+           count: rejected as a whole, the register is left unchanged */
+        uint16_t before;
+        uint16_t after;
+
+        rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS, 1, &before);
+        ASSERT_TRUE(rc == 1, "FAILED (read %d)\n", rc);
+        {
+            uint8_t long_write_req[] = {0x00,
+                                        0x0B,
+                                        0x00,
+                                        0x00,
+                                        0x00,
+                                        0x0B,
+                                        slave,
+                                        MODBUS_FC_WRITE_MULTIPLE_REGISTERS,
+                                        UT_REGISTERS_ADDRESS >> 8,
+                                        UT_REGISTERS_ADDRESS & 0xFF,
+                                        0x00,
+                                        0x01,
+                                        0x02,
+                                        (uint8_t) ~(before >> 8),
+                                        (uint8_t) ~(before & 0xFF),
+                                        0xAA,
+                                        0xBB};
+
+            rc = send(s,
+                      (const char *) long_write_req,
+                      sizeof(long_write_req),
+                      MSG_NOSIGNAL);
+            ASSERT_TRUE(rc > 0, "FAILED (send %d)\n", rc);
+        }
+        rc = modbus_receive_confirmation(ctx, rsp);
+        printf("* write longer than its byte count rejected: ");
+        ASSERT_TRUE(rc == (backend_length + EXCEPTION_RC) && rsp[1] == 0x0B &&
+                        rsp[backend_offset] ==
+                            (0x80 + MODBUS_FC_WRITE_MULTIPLE_REGISTERS) &&
+                        rsp[backend_offset + 1] == MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE,
+                    "FAILED (%d)\n",
+                    rc);
+
+        rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS, 1, &after);
+        printf("  register unchanged: ");
+        ASSERT_TRUE(rc == 1 && after == before, "FAILED (%d, 0x%X)\n", rc, after);
+
+        /* Last test on this connection: a read with protocol identifier 1 is
+           not executed, and the test server closes the connection on the
+           error, as advised for EMBBADDATA */
+        {
+            uint8_t bad_pid_req[] = {0x00,
+                                     0x0C,
+                                     0x00,
+                                     0x01,
+                                     0x00,
+                                     0x06,
+                                     slave,
+                                     MODBUS_FC_READ_HOLDING_REGISTERS,
+                                     UT_REGISTERS_ADDRESS >> 8,
+                                     UT_REGISTERS_ADDRESS & 0xFF,
+                                     0x00,
+                                     0x01};
+
+            rc = send(
+                s, (const char *) bad_pid_req, sizeof(bad_pid_req), MSG_NOSIGNAL);
+            ASSERT_TRUE(rc > 0, "FAILED (send %d)\n", rc);
+        }
+        modbus_set_error_recovery(ctx, MODBUS_ERROR_RECOVERY_NONE);
+        rc = modbus_receive_confirmation(ctx, rsp);
+        printf("* request with protocol identifier 1 rejected: ");
+        ASSERT_TRUE(rc == -1 && errno == ECONNRESET, "FAILED (%d)\n", rc);
+    }
 
     modbus_set_response_timeout(ctx, old_response_to_sec, old_response_to_usec);
     return 0;
