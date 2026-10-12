@@ -506,6 +506,33 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
         if (length_to_read == 0) {
             switch (step) {
             case _STEP_FUNCTION:
+                if (msg_type == MSG_INDICATION &&
+                    ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_TCP) {
+                    /* Over TCP, a request ends where the length field of the MBAP
+                       header (bytes 4 and 5) says, whatever its function code. It
+                       counts the unit identifier and the function code, already
+                       read. Reading exactly that much leaves the next request
+                       intact in the socket, so it is neither lost nor parsed from
+                       its middle. */
+                    const int remaining = ((msg[4] << 8) + msg[5]) - 2;
+
+                    /* A protocol identifier other than 0 is not Modbus, or a
+                       header read where no request starts */
+                    if (msg_type == MSG_INDICATION && (msg[2] != 0 || msg[3] != 0)) {
+                        errno = EMBBADDATA;
+                        _error_print(ctx, "invalid protocol identifier");
+                        return -1;
+                    }
+                    if (remaining < 0 ||
+                        msg_length + remaining > (int) ctx->backend->max_adu_length) {
+                        errno = EMBBADDATA;
+                        _error_print(ctx, "invalid MBAP length");
+                        return -1;
+                    }
+                    length_to_read = remaining;
+                    step = _STEP_DATA;
+                    break;
+                }
                 /* Function code position */
                 length_to_read = compute_meta_length_after_function(
                     msg[ctx->backend->header_length], msg_type);
@@ -779,8 +806,10 @@ static int response_exception(modbus_t *ctx,
         va_end(ap);
     }
 
-    /* Flush if required */
-    if (to_flush) {
+    /* Flush if required. Over TCP there is nothing to discard: the request has
+       been read up to the length given by its MBAP header, and what is left in
+       the socket belongs to the next request. */
+    if (to_flush && ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU) {
         _sleep_response_timeout(ctx);
         modbus_flush(ctx);
     }
@@ -791,6 +820,28 @@ static int response_exception(modbus_t *ctx,
     rsp[rsp_length++] = exception_code;
 
     return rsp_length;
+}
+
+/* Function codes modbus_reply() answers other than by an illegal function
+   exception */
+static int is_handled_function(int function)
+{
+    switch (function) {
+    case MODBUS_FC_READ_COILS:
+    case MODBUS_FC_READ_DISCRETE_INPUTS:
+    case MODBUS_FC_READ_HOLDING_REGISTERS:
+    case MODBUS_FC_READ_INPUT_REGISTERS:
+    case MODBUS_FC_WRITE_SINGLE_COIL:
+    case MODBUS_FC_WRITE_SINGLE_REGISTER:
+    case MODBUS_FC_WRITE_MULTIPLE_COILS:
+    case MODBUS_FC_WRITE_MULTIPLE_REGISTERS:
+    case MODBUS_FC_REPORT_SLAVE_ID:
+    case MODBUS_FC_MASK_WRITE_REGISTER:
+    case MODBUS_FC_WRITE_AND_READ_REGISTERS:
+        return TRUE;
+    default:
+        return FALSE;
+    }
 }
 
 /* Send a response to the received request.
@@ -813,6 +864,7 @@ int modbus_reply(modbus_t *ctx,
     sft_t sft;
     uint8_t meta_length;
     int data_length;
+    int expected_length;
 
     if (ctx == NULL || req == NULL || mb_mapping == NULL) {
         errno = EINVAL;
@@ -845,11 +897,14 @@ int modbus_reply(modbus_t *ctx,
     sft.function = function;
     sft.t_id = ctx->backend->get_response_tid(req);
 
-    /* Ensure the request is long enough to contain the meta fields (address,
-       quantity, byte count...) and the declared data read by the handlers
-       below. On the canonical modbus_receive() path the framing layer already
-       guarantees a complete PDU; this check defends direct callers that pass a
-       truncated or untrusted request to modbus_reply(). */
+    /* Ensure the request has the length its function code requires: the meta
+       fields (address, quantity, byte count...) and the declared data read by
+       the handlers below. Over TCP, modbus_receive() frames the request by its
+       MBAP length, which can differ from it; this check also defends direct
+       callers that pass a truncated or untrusted request to modbus_reply().
+       A longer request is rejected too, rather than executed without its extra
+       octets; only a truncated one may have more octets to flush. Function
+       codes not handled below get an illegal function exception instead. */
     meta_length = compute_meta_length_after_function(function, MSG_INDICATION);
     data_length = 0;
     if (req_length >= (int) (offset + 1 + meta_length)) {
@@ -857,15 +912,18 @@ int modbus_reply(modbus_t *ctx,
            declared data length can be read safely. */
         data_length = compute_data_length_after_meta(ctx, (uint8_t *) req, MSG_INDICATION);
     }
-    if (req_length < (int) (offset + 1 + meta_length + data_length)) {
+    expected_length = offset + 1 + meta_length + data_length;
+    if (req_length < expected_length ||
+        (req_length > expected_length && is_handled_function(function))) {
         rsp_length = response_exception(ctx,
                                         &sft,
                                         MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE,
                                         rsp,
-                                        TRUE,
-                                        "Truncated request (length %d) for function "
-                                        "0x%0X in modbus_reply\n",
+                                        req_length < expected_length,
+                                        "Invalid request length %d (%d expected) for "
+                                        "function 0x%0X in modbus_reply\n",
                                         req_length,
+                                        expected_length,
                                         function);
         /* Suppress responses to broadcasts in RTU, see below. */
         if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_RTU &&

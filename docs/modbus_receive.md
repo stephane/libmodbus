@@ -26,6 +26,13 @@ length if successful. The returned request length can be zero if the indication
 request is ignored (eg. a query for another slave in RTU mode). Otherwise it
 shall return -1 and set errno.
 
+## Errors
+
+- *EMBBADDATA*, over TCP: the MBAP header of the request is invalid (protocol
+  identifier other than 0, length below 2 or beyond the maximum ADU size). Where
+  the next request starts can't be known, so the connection should be closed
+  rather than read further.
+
 ## Buffer size
 
 The maximum size of the request depends on the used backend, in RTU the `req`
