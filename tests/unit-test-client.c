@@ -784,6 +784,29 @@ int main(int argc, char *argv[])
     ASSERT_TRUE(rc == -1 && errno == EMBBADDATA, "");
     free(tab_rp_registers_bad);
 
+    if (use_backend != RTU) {
+        /* A response whose MBAP length announces two octets more than it
+           holds is used, whether the server sends them or not, and they are
+           not read as the response to the next request. So is a response
+           with an MBAP length of 0, which is ignored. */
+        const uint16_t wrong_mbap_address[] = {UT_REGISTERS_ADDRESS_TRAILING_OCTETS,
+                                               UT_REGISTERS_ADDRESS_OVERSTATED_LENGTH,
+                                               UT_REGISTERS_ADDRESS_INVALID_MBAP_LENGTH};
+        const char *wrong_mbap_case[] = {"two octets too long, sent",
+                                         "two octets too long, not sent",
+                                         "0"};
+
+        for (i = 0; i < 3; i++) {
+            rc = modbus_read_registers(ctx, wrong_mbap_address[i], 1, tab_rp_registers);
+            printf("* MBAP length %s: ", wrong_mbap_case[i]);
+            ASSERT_TRUE(rc == 1 && tab_rp_registers[0] == 0, "FAILED (%d)\n", rc);
+
+            rc = modbus_read_registers(ctx, UT_REGISTERS_ADDRESS, 1, tab_rp_registers);
+            printf("  next response: ");
+            ASSERT_TRUE(rc == 1, "FAILED (%d)\n", rc);
+        }
+    }
+
     /** MANUAL EXCEPTION **/
     printf("\nTEST MANUAL EXCEPTION:\n");
     rc = modbus_read_registers(

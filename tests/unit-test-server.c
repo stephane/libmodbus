@@ -209,6 +209,36 @@ int main(int argc, char *argv[])
                     }
                 }
                 continue;
+            } else if ((address == UT_REGISTERS_ADDRESS_TRAILING_OCTETS ||
+                        address == UT_REGISTERS_ADDRESS_OVERSTATED_LENGTH ||
+                        address == UT_REGISTERS_ADDRESS_INVALID_MBAP_LENGTH) &&
+                       use_backend != RTU) {
+                /* Read of one register: the response needs an MBAP length of 5
+                   (unit identifier, function, byte count, one register). It
+                   announces 7, and the 2 octets beyond are sent or not, or it
+                   announces 0 */
+                uint8_t rsp[] = "\x00\x00\x00\x00\x00\x07\xFF\x03\x02\x00\x00\xAA\xBB";
+                int rsp_length =
+                    (address == UT_REGISTERS_ADDRESS_TRAILING_OCTETS) ? 13 : 11;
+                int w_s = modbus_get_socket(ctx);
+                if (w_s == -1) {
+                    fprintf(stderr, "Unable to get a valid socket in special test\n");
+                    continue;
+                }
+
+                if (address == UT_REGISTERS_ADDRESS_INVALID_MBAP_LENGTH) {
+                    rsp[5] = 0x00;
+                }
+                printf("Reply with a wrong MBAP length\n");
+                /* Copy TID and unit identifier */
+                rsp[0] = query[0];
+                rsp[1] = query[1];
+                rsp[6] = query[6];
+                rc = send(w_s, (const char *) rsp, rsp_length, MSG_NOSIGNAL);
+                if (rc == -1) {
+                    break;
+                }
+                continue;
             }
         } else if (function == MODBUS_FC_WRITE_SINGLE_COIL) {
             if (address == UT_BITS_ADDRESS_INVALID_REQUEST_LENGTH) {

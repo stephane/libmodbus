@@ -350,6 +350,59 @@ compute_data_length_after_meta(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     return length;
 }
 
+/* Function codes whose response layout libmodbus knows, exceptions included */
+static int is_known_response(int function)
+{
+    if (function >= 0x80) {
+        return TRUE;
+    }
+
+    switch (function) {
+    case MODBUS_FC_READ_COILS:
+    case MODBUS_FC_READ_DISCRETE_INPUTS:
+    case MODBUS_FC_READ_HOLDING_REGISTERS:
+    case MODBUS_FC_READ_INPUT_REGISTERS:
+    case MODBUS_FC_WRITE_SINGLE_COIL:
+    case MODBUS_FC_WRITE_SINGLE_REGISTER:
+    case MODBUS_FC_READ_EXCEPTION_STATUS:
+    case MODBUS_FC_WRITE_MULTIPLE_COILS:
+    case MODBUS_FC_WRITE_MULTIPLE_REGISTERS:
+    case MODBUS_FC_REPORT_SLAVE_ID:
+    case MODBUS_FC_MASK_WRITE_REGISTER:
+    case MODBUS_FC_WRITE_AND_READ_REGISTERS:
+        return TRUE;
+    default:
+        return FALSE;
+    }
+}
+
+/* Discards up to length octets, at most an ADU, that have already been
+   received, without waiting for more. errno is left unchanged. */
+static void discard_received(modbus_t *ctx, int length)
+{
+    const int saved_errno = errno;
+    uint8_t buf[MAX_MESSAGE_LENGTH];
+    fd_set rset;
+    struct timeval tv;
+    int rc;
+
+    while (length > 0) {
+        FD_ZERO(&rset);
+        FD_SET(ctx->s, &rset);
+        tv.tv_sec = 0;
+        tv.tv_usec = 0;
+        if (ctx->backend->select(ctx, &rset, &tv, length) <= 0) {
+            break;
+        }
+        rc = ctx->backend->recv(ctx, buf, length);
+        if (rc <= 0) {
+            break;
+        }
+        length -= rc;
+    }
+    errno = saved_errno;
+}
+
 /* Waits a response from a modbus server or a request from a modbus client.
    This function blocks if there is no replies (3 timeouts).
 
@@ -370,6 +423,8 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     struct timeval *p_tv;
     unsigned int length_to_read;
     int msg_length = 0;
+    /* TCP response read by its content: where its MBAP length ends it */
+    int mbap_end = 0;
     _step_t step;
 #ifdef _WIN32
     int wsa_err;
@@ -506,15 +561,16 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
         if (length_to_read == 0) {
             switch (step) {
             case _STEP_FUNCTION:
-                if (msg_type == MSG_INDICATION &&
-                    ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_TCP) {
-                    /* Over TCP, a request ends where the length field of the MBAP
-                       header (bytes 4 and 5) says, whatever its function code. It
-                       counts the unit identifier and the function code, already
-                       read. Reading exactly that much leaves the next request
-                       intact in the socket, so it is neither lost nor parsed from
-                       its middle. */
+                if (ctx->backend->backend_type == _MODBUS_BACKEND_TYPE_TCP) {
+                    /* Over TCP, a message ends where the length field of the MBAP
+                       header (bytes 4 and 5) says. It counts the unit identifier
+                       and the function code, already read. Reading exactly that
+                       much leaves the next message intact in the socket, so it is
+                       neither lost nor parsed from its middle. */
                     const int remaining = ((msg[4] << 8) + msg[5]) - 2;
+                    const int valid_length =
+                        remaining >= 0 &&
+                        msg_length + remaining <= (int) ctx->backend->max_adu_length;
 
                     /* A protocol identifier other than 0 is not Modbus, or a
                        header read where no request starts */
@@ -523,15 +579,25 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
                         _error_print(ctx, "invalid protocol identifier");
                         return -1;
                     }
-                    if (remaining < 0 ||
-                        msg_length + remaining > (int) ctx->backend->max_adu_length) {
-                        errno = EMBBADDATA;
-                        _error_print(ctx, "invalid MBAP length");
-                        return -1;
+                    if (msg_type == MSG_INDICATION ||
+                        !is_known_response(msg[ctx->backend->header_length])) {
+                        if (!valid_length) {
+                            errno = EMBBADDATA;
+                            _error_print(ctx, "invalid MBAP length");
+                            return -1;
+                        }
+                        length_to_read = remaining;
+                        step = _STEP_DATA;
+                        break;
                     }
-                    length_to_read = remaining;
-                    step = _STEP_DATA;
-                    break;
+                    /* A response of known layout is read by its content, as some
+                       gateways announce a longer MBAP length than they send, or
+                       even a meaningless one. A valid MBAP length tells which
+                       octets beyond it to discard once read; another is ignored,
+                       as it always was. */
+                    if (valid_length) {
+                        mbap_end = msg_length + remaining;
+                    }
                 }
                 /* Function code position */
                 length_to_read = compute_meta_length_after_function(
@@ -569,6 +635,12 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
 
     if (ctx->debug)
         printf("\n");
+
+    /* Octets a peer adds beyond its response, within its MBAP length, would
+       otherwise be read as the start of the next response */
+    if (mbap_end > msg_length) {
+        discard_received(ctx, mbap_end - msg_length);
+    }
 
     return ctx->backend->check_integrity(ctx, msg, msg_length);
 }
