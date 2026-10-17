@@ -38,5 +38,5 @@ libmodbusincludedir = $(includedir)/modbus
 libmodbusinclude_HEADERS = modbus.h modbus-version.h modbus-rtu.h modbus-tcp.h
 
 DISTCLEANFILES = modbus-version.h
-EXTRA_DIST += modbus-version.h.in
+EXTRA_DIST += modbus-version.h.in meson.build
 CLEANFILES = *~

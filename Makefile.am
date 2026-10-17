@@ -4,7 +4,7 @@ AM_MAKEFLAGS = --no-print-directory
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libmodbus.pc
-EXTRA_DIST = libmodbus.pc.in
+EXTRA_DIST = libmodbus.pc.in meson.build meson_options.txt
 CLEANFILES += libmodbus.pc
 
 dist_doc_DATA = AUTHORS NEWS.md README.md

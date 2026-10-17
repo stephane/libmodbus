@@ -1,4 +1,4 @@
-EXTRA_DIST = README.md unit-tests.sh proxy-tests.sh LICENSE
+EXTRA_DIST = README.md unit-tests.sh proxy-tests.sh LICENSE meson.build
 
 noinst_PROGRAMS = \
 	bandwidth-server-one \

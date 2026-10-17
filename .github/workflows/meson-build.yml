@@ -1,0 +1,22 @@
+name: Meson build libmodbus
+
+on:
+    push:
+        branches: ["master"]
+    pull_request:
+        branches: ["master"]
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v6.0.1
+            - name: install meson
+              run: sudo apt-get update && sudo apt-get install -y meson ninja-build
+            - name: meson setup
+              run: meson setup build
+            - name: meson compile
+              run: meson compile -C build
+            - name: meson test
+              run: meson test -C build --print-errorlogs
