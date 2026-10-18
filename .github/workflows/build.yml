@@ -32,7 +32,7 @@ jobs:
             - name: make
               run: make
             - name: make check
-              run: make check
+              run: make check || { cat tests/test-suite.log tests/unit-test-*.log; exit 1; }
 
     build-windows:
         runs-on: windows-latest
@@ -42,6 +42,10 @@ jobs:
                 shell: msys2 {0}
 
         steps:
+            # Keep LF line endings, autotools fail on CRLF
+            - name: disable autocrlf
+              shell: pwsh
+              run: git config --global core.autocrlf false
             - uses: actions/checkout@v6.0.1
             - uses: msys2/setup-msys2@v2
               with:
