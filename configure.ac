@@ -11,6 +11,8 @@
 # Take care to update the libtool versioning when required (LIBMODBUS_LD_*).
 # http://www.gnu.org/software/libtool/manual/html_node/Libtool-versioning.html
 #
+# Keep the version and ABI numbers in meson.build in sync.
+#
 m4_define([libmodbus_version_major], [3])
 m4_define([libmodbus_version_minor], [2])
 m4_define([libmodbus_version_micro], [0])

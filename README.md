@@ -39,6 +39,21 @@ date (run `ldconfig` as root if required).
 The library provides a _libmodbus.pc_ file to use with `pkg-config` to ease your
 program compilation and linking.
 
+### Meson (experimental)
+
+The library can also be built with [Meson](https://mesonbuild.com) (0.56 or
+later) as an experimental alternative to autotools:
+
+```shell
+meson setup build
+meson compile -C build
+meson test -C build
+meson install -C build
+```
+
+Use `-Dtests=false` to skip building the tests and `-Ddefault_library=static`
+(or `both`) to build a static library.
+
 If you want to compile with Microsoft Visual Studio, you should follow the
 instructions in `./src/win32/README.md`.
 
@@ -66,7 +81,8 @@ For a quick test of libmodbus, you can run the following programs in two shells:
 
 By default, all TCP unit tests will be executed (see --help for options).
 
-It's also possible to run the unit tests with `make check`.
+It's also possible to run the unit tests with `make check` (or `meson test -C
+build` with Meson).
 
 ## To report a bug or to contribute
 
