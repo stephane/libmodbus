@@ -898,11 +898,12 @@ int test_server(modbus_t *ctx, int use_backend)
 
     /* This requests can generate flushes server side so we need a higher
      * response timeout than the server. The server uses the defined response
-     * timeout to sleep before flushing.
+     * timeout (0.5s) to sleep before flushing, so keep a wide margin for
+     * loaded (eg. virtualized CI) machines.
      * The old timeouts are restored at the end.
      */
     modbus_get_response_timeout(ctx, &old_response_to_sec, &old_response_to_usec);
-    modbus_set_response_timeout(ctx, 0, 600000);
+    modbus_set_response_timeout(ctx, 2, 0);
 
     int old_s = modbus_get_socket(ctx);
     modbus_set_socket(ctx, -1);
