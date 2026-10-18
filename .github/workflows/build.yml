@@ -18,3 +18,45 @@ jobs:
               run: make
             - name: make distcheck
               run: make distcheck
+
+    build-macos:
+        runs-on: macos-latest
+
+        steps:
+            - uses: actions/checkout@v6.0.1
+            - name: install dependencies
+              run: brew install autoconf automake libtool
+            - name: configure
+              # Homebrew installs libtoolize as glibtoolize
+              run: LIBTOOLIZE=glibtoolize ./autogen.sh && ./configure
+            - name: make
+              run: make
+            - name: make check
+              run: make check || { cat tests/test-suite.log tests/unit-test-*.log; exit 1; }
+
+    build-windows:
+        runs-on: windows-latest
+
+        defaults:
+            run:
+                shell: msys2 {0}
+
+        steps:
+            # Keep LF line endings, autotools fail on CRLF
+            - name: disable autocrlf
+              shell: pwsh
+              run: git config --global core.autocrlf false
+            - uses: actions/checkout@v6.0.1
+            - uses: msys2/setup-msys2@v2
+              with:
+                  msystem: UCRT64
+                  update: true
+                  install: >-
+                      mingw-w64-ucrt-x86_64-autotools
+                      mingw-w64-ucrt-x86_64-gcc
+            - name: configure
+              run: ./autogen.sh && ./configure
+            # Tests are only built: unit-tests.sh relies on killall which
+            # isn't available under MSYS2
+            - name: make
+              run: make

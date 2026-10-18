@@ -747,11 +747,12 @@ int main(int argc, char *argv[])
         usleep(11 * 5000);
         modbus_flush(ctx);
 
-        /* Timeout of 7ms between bytes */
-        modbus_set_byte_timeout(ctx, 0, 7000);
+        /* Timeout of 50ms between bytes, the margin absorbs the server
+         * oversleeping on loaded (eg. virtualized CI) machines */
+        modbus_set_byte_timeout(ctx, 0, 50000);
         rc = modbus_read_registers(
             ctx, UT_REGISTERS_ADDRESS_BYTE_SLEEP_5_MS, 1, tab_rp_registers);
-        printf("2/2 Adapted byte timeout (7ms > 5ms): ");
+        printf("2/2 Adapted byte timeout (50ms > 5ms): ");
         ASSERT_TRUE(rc == 1, "");
     }
 
@@ -897,11 +898,12 @@ int test_server(modbus_t *ctx, int use_backend)
 
     /* This requests can generate flushes server side so we need a higher
      * response timeout than the server. The server uses the defined response
-     * timeout to sleep before flushing.
+     * timeout (0.5s) to sleep before flushing, so keep a wide margin for
+     * loaded (eg. virtualized CI) machines.
      * The old timeouts are restored at the end.
      */
     modbus_get_response_timeout(ctx, &old_response_to_sec, &old_response_to_usec);
-    modbus_set_response_timeout(ctx, 0, 600000);
+    modbus_set_response_timeout(ctx, 2, 0);
 
     int old_s = modbus_get_socket(ctx);
     modbus_set_socket(ctx, -1);

@@ -16,6 +16,8 @@
 # include <winsock2.h>
 #else
 # include <sys/socket.h>
+# include <netinet/in.h>
+# include <netinet/tcp.h>
 #endif
 
 /* For MinGW */
@@ -197,6 +199,13 @@ int main(int argc, char *argv[])
                     fprintf(stderr, "Unable to get a valid socket in special test\n");
                     continue;
                 }
+
+                /* Disable Nagle's algorithm, otherwise the bytes after the
+                 * first one can be held back until the client ACKs it, which
+                 * is delayed on some systems (eg. macOS) far beyond 5 ms */
+                int nodelay = 1;
+                setsockopt(w_s, IPPROTO_TCP, TCP_NODELAY, (const char *) &nodelay,
+                           sizeof(nodelay));
 
                 /* Copy TID */
                 req[1] = query[1];
