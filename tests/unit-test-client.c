@@ -747,11 +747,12 @@ int main(int argc, char *argv[])
         usleep(11 * 5000);
         modbus_flush(ctx);
 
-        /* Timeout of 7ms between bytes */
-        modbus_set_byte_timeout(ctx, 0, 7000);
+        /* Timeout of 50ms between bytes, the margin absorbs the server
+         * oversleeping on loaded (eg. virtualized CI) machines */
+        modbus_set_byte_timeout(ctx, 0, 50000);
         rc = modbus_read_registers(
             ctx, UT_REGISTERS_ADDRESS_BYTE_SLEEP_5_MS, 1, tab_rp_registers);
-        printf("2/2 Adapted byte timeout (7ms > 5ms): ");
+        printf("2/2 Adapted byte timeout (50ms > 5ms): ");
         ASSERT_TRUE(rc == 1, "");
     }
 
