@@ -990,6 +990,52 @@ int test_server(modbus_t *ctx, int use_backend)
     if (rc == -1)
         goto close;
 
+    /* Reject oversized coil byte counts for aligned and unaligned quantities
+     * without modifying the mapping. */
+    {
+        const int quantities[] = {1, 8, 9};
+        uint8_t bits[9] = {0};
+        const uint8_t zero_bits[9] = {0};
+        uint8_t req[] = {slave,
+                         MODBUS_FC_WRITE_MULTIPLE_COILS,
+                         UT_BITS_ADDRESS >> 8,
+                         UT_BITS_ADDRESS & 0xFF,
+                         0,
+                         0,
+                         0,
+                         0xFF,
+                         0xFF,
+                         0xFF};
+
+        for (i = 0; i < 3; i++) {
+            int nb = quantities[i];
+            int nb_bytes = (nb / 8) + ((nb % 8) ? 1 : 0) + 1;
+
+            rc = modbus_write_bits(ctx, UT_BITS_ADDRESS, nb, zero_bits);
+            printf("* Prepare %d coils for oversized byte count: ", nb);
+            ASSERT_TRUE(rc == nb, "FAILED (%d)\n", rc);
+
+            req[5] = nb;
+            req[6] = nb_bytes;
+            rc = modbus_send_raw_request(ctx, req, 7 + nb_bytes);
+            printf("* Send oversized byte count for %d coils: ", nb);
+            ASSERT_TRUE(rc == backend_length + 6 + nb_bytes, "FAILED (%d)\n", rc);
+
+            rc = modbus_receive_confirmation(ctx, rsp);
+            printf("* Reject oversized byte count for %d coils: ", nb);
+            ASSERT_TRUE(
+                rc == backend_length + EXCEPTION_RC &&
+                    rsp[backend_offset] == (0x80 + MODBUS_FC_WRITE_MULTIPLE_COILS) &&
+                    rsp[backend_offset + 1] == MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE,
+                "FAILED (%d)\n",
+                rc);
+
+            rc = modbus_read_bits(ctx, UT_BITS_ADDRESS, nb, bits);
+            printf("* Preserve %d coils after invalid byte count: ", nb);
+            ASSERT_TRUE(rc == nb && memcmp(bits, zero_bits, nb) == 0, "FAILED\n");
+        }
+    }
+
     /* Test invalid function code */
     modbus_send_raw_request(
         ctx, invalid_fc_raw_req, INVALID_FC_REQ_LEN * sizeof(uint8_t));
