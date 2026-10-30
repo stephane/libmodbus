@@ -868,6 +868,19 @@ int test_server(modbus_t *ctx, int use_backend)
     const int INVALID_FC = 0x42;
     const int INVALID_FC_REQ_LEN = 6;
     uint8_t invalid_fc_raw_req[] = {slave, 0x42, 0x00, 0x00, 0x00, 0x00};
+    /* 4 coils need a byte count of 1, not 2 */
+    const int WRITE_COILS_RAW_REQ_LEN = 9;
+    uint8_t write_coils_raw_req[] = {slave,
+                                     MODBUS_FC_WRITE_MULTIPLE_COILS,
+                                     UT_BITS_ADDRESS >> 8,
+                                     UT_BITS_ADDRESS & 0xFF,
+                                     0x00,
+                                     0x04,
+                                     0x02,
+                                     0xFF,
+                                     0x01};
+    uint8_t tab_bits_before[4];
+    uint8_t tab_bits_after[4];
 
     int req_length;
     uint8_t rsp[MODBUS_TCP_MAX_ADU_LENGTH];
@@ -998,6 +1011,25 @@ int test_server(modbus_t *ctx, int use_backend)
     ASSERT_TRUE(rc == (backend_length + EXCEPTION_RC) &&
                     rsp[backend_offset] == (0x80 + INVALID_FC),
                 "")
+
+    /* Test a byte count larger than the number of coils needs */
+    rc = modbus_read_bits(ctx, UT_BITS_ADDRESS, 4, tab_bits_before);
+    printf("* modbus_read_bits before write_bits with a too large byte count: ");
+    ASSERT_TRUE(rc == 4, "FAILED (%d)\n", rc);
+
+    modbus_send_raw_request(
+        ctx, write_coils_raw_req, WRITE_COILS_RAW_REQ_LEN * sizeof(uint8_t));
+    rc = modbus_receive_confirmation(ctx, rsp);
+    printf("Return an exception on a too large byte count in write_bits: ");
+    ASSERT_TRUE(rc == (backend_length + EXCEPTION_RC) &&
+                    rsp[backend_offset] == (0x80 + MODBUS_FC_WRITE_MULTIPLE_COILS) &&
+                    rsp[backend_offset + 1] == MODBUS_EXCEPTION_ILLEGAL_DATA_VALUE,
+                "")
+
+    rc = modbus_read_bits(ctx, UT_BITS_ADDRESS, 4, tab_bits_after);
+    printf("* coils unchanged: ");
+    ASSERT_TRUE(rc == 4 && is_memory_equal(tab_bits_before, tab_bits_after, 4),
+                "FAILED\n");
 
     modbus_set_response_timeout(ctx, old_response_to_sec, old_response_to_usec);
     return 0;
