@@ -1052,7 +1052,8 @@ int modbus_reply(modbus_t *ctx,
         int nb_bits = req[offset + 5];
         int mapping_address = address - mb_mapping->start_bits;
 
-        if (nb < 1 || MODBUS_MAX_WRITE_BITS < nb || nb_bits * 8 < nb) {
+        if (nb < 1 || MODBUS_MAX_WRITE_BITS < nb ||
+            nb_bits != (nb / 8) + ((nb % 8) ? 1 : 0)) {
             /* May be the indication has been truncated on reading because of
              * invalid address (eg. nb is 0 but the request contains values to
              * write) so it's necessary to flush. */
