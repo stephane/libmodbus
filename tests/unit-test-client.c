@@ -868,6 +868,10 @@ int test_server(modbus_t *ctx, int use_backend)
     const int INVALID_FC = 0x42;
     const int INVALID_FC_REQ_LEN = 6;
     uint8_t invalid_fc_raw_req[] = {slave, 0x42, 0x00, 0x00, 0x00, 0x00};
+    /* 0x80 to 0xFF are reserved for exception responses */
+    const int RESERVED_FC = 0x81;
+    const int RESERVED_FC_REQ_LEN = 6;
+    uint8_t reserved_fc_raw_req[] = {slave, 0x81, 0x00, 0x00, 0x00, 0x00};
 
     int req_length;
     uint8_t rsp[MODBUS_TCP_MAX_ADU_LENGTH];
@@ -997,6 +1001,17 @@ int test_server(modbus_t *ctx, int use_backend)
     printf("Return an exception on unknown function code: ");
     ASSERT_TRUE(rc == (backend_length + EXCEPTION_RC) &&
                     rsp[backend_offset] == (0x80 + INVALID_FC),
+                "")
+
+    /* Test a function code reserved for exception responses: the answer
+       must still have the exception bit set */
+    modbus_send_raw_request(
+        ctx, reserved_fc_raw_req, RESERVED_FC_REQ_LEN * sizeof(uint8_t));
+    rc = modbus_receive_confirmation(ctx, rsp);
+    printf("Return an exception on reserved function code: ");
+    ASSERT_TRUE(rc == (backend_length + EXCEPTION_RC) &&
+                    rsp[backend_offset] == RESERVED_FC &&
+                    rsp[backend_offset + 1] == MODBUS_EXCEPTION_ILLEGAL_FUNCTION,
                 "")
 
     modbus_set_response_timeout(ctx, old_response_to_sec, old_response_to_usec);
