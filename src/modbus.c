@@ -373,6 +373,10 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
     _step_t step;
 #ifdef _WIN32
     int wsa_err;
+    /* The RTU backend waits on a serial HANDLE, not on a socket */
+    const int uses_fd_set = ctx->backend->backend_type != _MODBUS_BACKEND_TYPE_RTU;
+#else
+    const int uses_fd_set = 1;
 #endif
 
     if (ctx->debug) {
@@ -390,16 +394,20 @@ int _modbus_receive_msg(modbus_t *ctx, uint8_t *msg, msg_type_t msg_type)
         return -1;
     }
 
-    /* Add a file descriptor to the set */
+    /* Add a file descriptor to the set. On Windows the RTU backend leaves ctx->s
+     * at -1 and ignores the set (see _modbus_rtu_select), so there is no
+     * descriptor to check nor to register. */
     FD_ZERO(&rset);
-    if (ctx->s < 0 || ctx->s >= FD_SETSIZE) {
-        if (ctx->debug) {
-            fprintf(stderr, "ERROR Invalid socket descriptor %d\n", ctx->s);
+    if (uses_fd_set) {
+        if (ctx->s < 0 || ctx->s >= FD_SETSIZE) {
+            if (ctx->debug) {
+                fprintf(stderr, "ERROR Invalid socket descriptor %d\n", ctx->s);
+            }
+            errno = EINVAL;
+            return -1;
         }
-        errno = EINVAL;
-        return -1;
+        FD_SET(ctx->s, &rset);
     }
-    FD_SET(ctx->s, &rset);
 
     /* We need to analyse the message step by step.  At the first step, we want
      * to reach the function code because all packets contain this
