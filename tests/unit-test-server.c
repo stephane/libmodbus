@@ -15,6 +15,8 @@
 #ifdef _WIN32
 # include <winsock2.h>
 #else
+# include <netinet/in.h>
+# include <netinet/tcp.h>
 # include <sys/socket.h>
 #endif
 
@@ -200,6 +202,19 @@ int main(int argc, char *argv[])
 
                 /* Copy TID */
                 req[1] = query[1];
+
+                /* Send each byte as soon as it is written. Without TCP_NODELAY,
+                 * Nagle's algorithm may hold a byte until the previous one is
+                 * acknowledged, so the gap between bytes can exceed the client's
+                 * byte timeout (seen on QNX 8.0 over IPv4). */
+                {
+                    int option = 1;
+                    setsockopt(w_s,
+                               IPPROTO_TCP,
+                               TCP_NODELAY,
+                               (const char *) &option,
+                               sizeof(option));
+                }
                 for (i = 0; i < req_length; i++) {
                     printf("(%.2X)", req[i]);
                     usleep(5000);
