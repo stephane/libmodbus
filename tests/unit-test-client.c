@@ -866,8 +866,11 @@ int test_server(modbus_t *ctx, int use_backend)
                                0x00,
                                0x64};
     const int INVALID_FC = 0x42;
-    const int INVALID_FC_REQ_LEN = 6;
-    uint8_t invalid_fc_raw_req[] = {slave, 0x42, 0x00, 0x00, 0x00, 0x00};
+    /* Slave and function code only: with an unknown function code an RTU
+     * server can't know the request length, so any payload would be read
+     * as part of the CRC and the request would never get a reply. */
+    const int INVALID_FC_REQ_LEN = 2;
+    uint8_t invalid_fc_raw_req[] = {slave, 0x42};
 
     int req_length;
     uint8_t rsp[MODBUS_TCP_MAX_ADU_LENGTH];
@@ -1020,6 +1023,7 @@ int send_crafted_request(modbus_t *ctx,
 
     for (j = 0; j < 2; j++) {
         int rc;
+        int len = req_len;
 
         req[1] = function;
         if (j == 0) {
@@ -1027,8 +1031,12 @@ int send_crafted_request(modbus_t *ctx,
             req[4] = 0x00;
             req[5] = 0x00;
             if (bytes) {
-                /* Write query */
+                /* Write query: a byte count of 0 must not be followed by
+                 * data, otherwise an RTU server, which frames the request
+                 * from the byte count, reads the data bytes as the start
+                 * of a new request and never replies. */
                 req[6] = 0x00;
+                len = req_len - bytes;
             }
         } else {
             /* Try to read or write max values + 1 on second iteration */
@@ -1040,7 +1048,7 @@ int send_crafted_request(modbus_t *ctx,
             }
         }
 
-        modbus_send_raw_request(ctx, req, req_len * sizeof(uint8_t));
+        modbus_send_raw_request(ctx, req, len * sizeof(uint8_t));
         if (j == 0) {
             printf(
                 "* try function 0x%X: %s 0 values: ", function, bytes ? "write" : "read");
